@@ -1,6 +1,6 @@
 "use client";
 
-import { competenciaAtual, formatarCompetencia, formatarKwh, formatarReais, historicoContas, periodosDeLeitura, type ContaMensal, type LeituraRelogio } from "@ee/core";
+import { competenciaAtual, formatarCompetencia, formatarKwh, formatarReais, historicoContas, periodosDeLeitura, type ContaMensal } from "@ee/core";
 import { Gauge, Pencil, Plus, Receipt } from "lucide-react";
 import { useState } from "react";
 import { useCasa } from "@/aplicacao/casa";
@@ -290,5 +290,3 @@ function Relogio({ estimativaKwhDia }: { estimativaKwhDia: number }) {
     </>
   );
 }
-
-export type { LeituraRelogio };
