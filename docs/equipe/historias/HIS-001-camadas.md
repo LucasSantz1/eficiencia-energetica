@@ -587,6 +587,14 @@ O `#comodo-<id>` (rolar até o cômodo) não é capturado: o fluxo chega aos cô
   ESLint da HIS-002. **Atenção futura:** se um `*.servidor.ts` ganhar teste no Vitest (fora do Next), o import não
   resolve; aí instalamos `server-only` como devDependency com versão exata ou criamos um alias no `vitest.config`.
 
+- [ ] `[para: tech-lead]` (frontend, 2026-10-29 — não bloqueia o QA; bloqueia fechar o item 11 do plano de testes)
+  O JS baixado em `/casa` **sem casa** cresceu 1 449 B (limite 1 024) por causa da divisão do `ui.tsx` (decisão 2): os
+  componentes que só as páginas usam (`Pilulas`, `Folha`, `Contador`, `Opcao`) agora se repetem nos chunks das abas que
+  o Next pré-carrega. O JS que cada página precisa para abrir ficou menor em todas as rotas, e o código único baixado
+  também (números na minha nota). Aceita a diferença como esperada (e o QA passa a medir o JS do HTML de cada rota além do
+  total com prefetch), ou prefere outra saída? As que vejo vão contra o desenho: juntar os componentes de novo num módulo
+  (decisões 2 e 7) ou mudar o agrupamento de chunks no `next.config.ts` (R14).
+
 ## Conversa da equipe
 
 ### [scrum-master] 2026-10-29 — história refinada e pronta para o desenho técnico
@@ -676,3 +684,68 @@ O `#comodo-<id>` (rolar até o cômodo) não é capturado: o fluxo chega aos cô
   a página é estática e o redirecionamento vai dentro do conteúdo (`NEXT_REDIRECT;replace;/casa/comodos;307`) e acontece no
   navegador. O script confere as duas coisas; sugiro trocar a expectativa do R9. **qa (eu, etapa 5)** — comparação
   completa + teclado, zoom 200% e nomes acessíveis no "depois".
+
+### [frontend] 2026-10-29 — HIS-001 implementada nos passos 1–8; tudo igual na tela, uma diferença de peso explicada
+- O que fiz: segui a seção 8 do desenho, com um commit local por passo e `git mv` em todo arquivo que mudou de lugar.
+  Commits: `87bb6ba` Cria o verificador de camadas do ADR-001 · `74cd08d` Separa os componentes genéricos de interface
+  em ui/ · `df8c6fb` Move o store e os dados públicos para infraestrutura/ e cria aplicacao/ · `a1c23d8` Reúne os
+  componentes de aparelho em ui/aparelho/ e tira o store do editor · `acb65fc` Separa a página inicial em rota fina,
+  funcionalidade e leitura de servidor · `ddd061b` Move o assistente de cadastro para funcionalidades/cadastro ·
+  `bd85f7e` Move as telas de /casa para funcionalidades/ e deixa as rotas finas · `4bcc7e8` Liga o verificador de
+  camadas ao pnpm typecheck (e o commit desta nota).
+- Decisões e porquê (onde o desenho deixava escolha ou não funcionava como escrito):
+  1. **Regex do `import(` não literal:** a expressão da seção 6 (`/\bimport\s*\(\s*(?!…)/`) dá falso positivo com
+     espaço antes das aspas (`import( "x")`), porque o `\s*` recua e o lookahead olha o espaço. Usei a mesma regra com o
+     `\s*` dentro do lookahead: `/\bimport\s*\((?!\s*["'][^"'`]+["']\s*\))/`. O sentido é o mesmo, só sem o recuo.
+  2. **Arquivo `.servidor`** = `/\.servidor\.tsx?$/`, a mesma definição para "módulo do Node só em
+     infraestrutura/**/*.servidor.ts" e para "todo .servidor começa com server-only". `server-only` precisa ser o
+     **primeiro** import pela posição no arquivo. No domínio, só `./` é aceito (nem `../`).
+  3. **`Variante`, `estilosBotao` e `baseBotao`** continuam sem `export` em `ui/Botao.tsx`, como no `ui.tsx`: ninguém
+     usa e, exportados de um módulo `"use client"`, viravam a armadilha da A7. `Acoes` e `nomeDoComodo` também seguem sem export.
+  4. Ao tirar `export type { LeituraRelogio }` do `Acompanhamento.tsx`, tirei também o `type LeituraRelogio` do import,
+     que ficou sem uso. Os ids e textos não mudaram.
+  5. **Histórico do git:** `ui.tsx → ui/Botao.tsx` e as rotas `app/casa/*/page.tsx` → `funcionalidades/*` aparecem como
+     "apaga + cria" no `git diff -M` (o arquivo dividido ficou abaixo de 50% de semelhança; a rota continua existindo no
+     mesmo caminho). **Revisem com `git diff -M -C main -- apps/web/src`**: aí cada corpo aparece como cópia com 2–47
+     linhas mudadas (só imports e o nome da função).
+- Arquivos alterados: `scripts/verificar-camadas.mjs` (novo), `package.json` (scripts `camadas` e `typecheck`) e todo
+  `apps/web/src` (estrutura da seção 5, igual à do desenho; `components/` e `lib/` não existem mais). Nenhuma dependência,
+  `next.config.ts`, lockfile, `globals.css` ou CI mudou.
+- Como verifiquei:
+  - `pnpm typecheck` (com `Camadas: tudo certo (64 arquivos)`), `pnpm test` (37 + 11) e `pnpm build` verdes. Tabela de
+    rotas igual à do `main` (8 rotas estáticas, `/` com revalidate de 1 dia); prerender da `/` com `86400` e `htmlSize`
+    66 350 (igual). `grep -rn '@/components\|@/lib' apps/web/src` vazio.
+  - Conferi por conta própria R1, R3, R4, R5, R7, R8, R14 e R15: um só `create` e uma só chave da casa (1 arquivo em
+    `.next/static`), `useCasa` ausente de `ui/`, `node:`/`process.cwd` só em `arquivos.servidor.ts`, nada de
+    `readFile`/`relatorio.json` em `.next/static`, diretivas iguais à tabela da seção 3, `revalidate` só em `app/page.tsx`.
+  - **Script de camadas:** 36 verificações em cópias no scratchpad (`…/his001/teste-camadas/testar.mjs`), todas certas:
+    cópia limpa rodada de `/` (código 0, 64 arquivos), link simbólico ignorado e 34 casos negativos com código 1 e a
+    mensagem da regra (todos os do item 7 e do R13, mais `import type` em várias linhas, `export { } from`, `.servidor`
+    com extensão e BOM, `server-only` fora do lugar ou depois de outro import, 0 arquivos no domínio, `app`/`aplicacao`/
+    `infraestrutura`/`config` importando para cima). Rodei também contra a árvore sintética antes do passo 2. Nenhuma violação ficou no repositório.
+  - **Comparação do QA** (`capturar …/his001/depois` e `comparar …/antes …/depois`): **84 capturas iguais e 98
+    textos/DOM/casas salvas iguais**; 21 transições por largura, migração v1/v2, portão de hidratação, ids no editor,
+    remover do plano, apagar tudo e console com 0 erro iguais à linha de base; ruído de rasterização ≤ 16/255 em 2
+    capturas (aviso, como no controle). Olhei 390 (`16-acompanhamento`, `23-comodos-editor-aparelho`) e 1280
+    (`01-inicio`, `08-cadastro-comodo-2`, `29-minha-casa`). O `comparar` sai com 1 por 4 itens:
+    - `controle-comparacao.txt` falta no "depois", `build.log` e `saida-capturar.txt` diferentes: são logs de evidência
+      (o `build.log` difere só nos tempos de compilação). Não são o site.
+    - **JS de `/casa` sem casa: 231 010 → 232 459 B (+1 449, limite 1 024).** Com casa: +567; `/` e `/comecar`: −823.
+      Investiguei com builds do `main` e de cada commit numa cópia no scratchpad: o aumento nasce no passo 2 (+4 887),
+      e os passos 4 e 7 devolvem parte. **Não é código novo:** somando os módulos sem repetição, a visita baixa menos código
+      que antes (≈ 643 → 636 KB brutos); o que cresce é a **repetição** de módulos entre chunks (≈ 97 → 113 KB brutos).
+      No `main`, o `ui.tsx` inteiro entrava no chunk do layout de `/casa` (a `Casca` o importava) e servia a todas as
+      páginas. Agora a `Casca` só usa `Aviso` e `Botao`, e `Pilulas`, `Folha`, `Contador` e `Opcao` vão para o chunk de
+      cada página: na visita "sem casa", `Pilulas`/`Folha`/`Contador` aparecem em 4 chunks (antes 1), porque o Next
+      pré-carrega as outras abas e o cadastro pelos `<Link>`. O JS que **cada página precisa para abrir** (o que o HTML
+      referencia) ficou menor em todas as rotas: `/` 205 544 → 203 839, `/comecar` 213 221 → 212 188, `/casa` 216 308 →
+      214 680, `/casa/comodos` 213 014 → 212 577, `/casa/dicas` 207 028 → 205 653, `/casa/ajustes` 204 091 → 203 592 B gzip.
+      **Não corrigi:** voltar a juntar os componentes num módulo desfaz a decisão 2 (um arquivo por componente) ou é um
+      barril (decisão 7), e mexer no agrupamento de chunks exige mudar o `next.config.ts` (R14). Fica para o tech-lead
+      decidir (pergunta abaixo).
+- Para o próximo: **qa** — etapa 5 (teclado, zoom 200%, nomes acessíveis). O item 11 vai continuar vermelho só em
+  `/casa` sem casa até o tech-lead responder; sugiro medir também o JS do HTML de cada rota (o que bloqueia a abertura),
+  além do total depois do prefetch. **seguranca** — R2 (`git diff main:apps/web/src/lib/store.ts
+  HEAD:apps/web/src/infraestrutura/armazenamento/casa.ts`: só o import e a saída do `novoId`), R4 no `EditorAparelho`
+  (`aoSalvar(limpo, id)` → `aoFechar()`; `aoRemover(r.id!)` → `aoFechar()`; o hook usa as três ações do store) e R12/R13
+  no script (a regex do item 1 acima é diferente da escrita no desenho). **tech-lead** — a pergunta aberta sobre o peso.
