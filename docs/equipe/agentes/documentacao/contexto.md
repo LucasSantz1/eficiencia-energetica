@@ -7,6 +7,12 @@
 | `README.md` | quem chega ao repositório |
 | `docs/README.md` | índice de toda a documentação |
 | `docs/sistema/guia-de-uso.md` | quem usa o site (linguagem simples) |
+| `docs/sistema/funcionalidades.md` | especificação de cada tela |
+| `docs/sistema/diagramas.md` | diagramas das funções (Mermaid) |
+| `docs/sistema/referencia-do-dominio.md` | desenvolvedores e quem confere o catálogo e as dicas |
+| `docs/sistema/site.md` | desenvolvedores do site |
+| `docs/sistema/desenvolvimento.md` | quem vai rodar, testar ou publicar |
+| `docs/sistema/glossario.md` | todos |
 | `docs/sistema/calculos-e-fontes.md` | quem quer conferir os números (ONGs, órgãos públicos, pesquisadores) |
 | `docs/sistema/dados.md` | quem mantém a rotina de dados |
 | `docs/sistema/privacidade-e-seguranca.md` | quem avalia LGPD e segurança |

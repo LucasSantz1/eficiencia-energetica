@@ -17,6 +17,13 @@ Leia `CLAUDE.md`, a história inteira (todas as notas da equipe) e os arquivos a
 - `README.md` — visão do produto, como rodar, estrutura, fontes de dados.
 - `docs/README.md` — índice de toda a documentação.
 - `docs/sistema/guia-de-uso.md` — guia para quem usa o site, em linguagem simples, com passo a passo.
+- `docs/sistema/funcionalidades.md` — especificação de cada tela, campo e regra.
+- `docs/sistema/diagramas.md` — diagramas Mermaid das funções (validar com `mmdc` antes de publicar).
+- `docs/sistema/referencia-do-dominio.md` — módulos e funções do `@ee/core`, catálogo, cômodos e dicas
+  (as tabelas de catálogo e dicas são geradas a partir do código; regenere quando o catálogo mudar).
+- `docs/sistema/site.md` — rotas, componentes, estado, armazenamento, aparência e movimento.
+- `docs/sistema/desenvolvimento.md` — instalar, rodar, testar, CI e publicar.
+- `docs/sistema/glossario.md` — termos.
 - `docs/sistema/calculos-e-fontes.md` — fórmulas, regras e fontes oficiais de cada número.
 - `docs/sistema/dados.md` — de onde vem cada dado, como a rotina funciona, como depurar.
 - `docs/sistema/privacidade-e-seguranca.md` — LGPD e medidas de segurança, para quem avalia o projeto.
