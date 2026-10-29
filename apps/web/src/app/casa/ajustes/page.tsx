@@ -1,6 +1,6 @@
 "use client";
 
-import { formatarReais, type Beneficio, type Distribuidora, type Ligacao, type Municipio } from "@ee/core";
+import { formatarReais, precoKwh, type Beneficio, type Distribuidora, type Ligacao, type Municipio } from "@ee/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -130,7 +130,11 @@ export default function Ajustes() {
         </div>
         {contaSalva && residencia.contaReferencia && (
           <div className="mt-4">
-            <Aviso>Pronto. O kWh na sua conta sai por {formatarReais(residencia.contaReferencia.valor / residencia.contaReferencia.kwh)}, e o resumo já usa esse valor.</Aviso>
+            {precoKwh(residencia, distribuidora, undefined).origem === "conta" ? (
+              <Aviso>Pronto. O kWh na sua conta sai por {formatarReais(precoKwh(residencia, distribuidora, undefined).valor)}, e o resumo já usa esse valor.</Aviso>
+            ) : (
+              <Aviso tom="faisca">Com a Tarifa Social, quase todo o consumo dessa conta foi isento, então ela não mostra o preço do kWh. Continuamos usando a tarifa da ANEEL.</Aviso>
+            )}
           </div>
         )}
       </Secao>

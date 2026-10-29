@@ -49,13 +49,16 @@ export interface PrecoKwh {
  * impostos e taxas. Senão, usamos a tarifa da ANEEL (TE + TUSD) mais o adicional da bandeira do mês.
  */
 export function precoKwh(
-  residencia: Pick<Residencia, "contaReferencia">,
+  residencia: Partial<Pick<Residencia, "contaReferencia" | "beneficio">>,
   distribuidora: Pick<Distribuidora, "tarifaKwh"> | undefined,
   bandeira: Pick<BandeiraMes, "adicionalKwh"> | undefined,
 ): PrecoKwh {
   const conta = residencia.contaReferencia;
-  if (conta && conta.kwh > 0 && conta.valor > 0) {
-    return { valor: conta.valor / conta.kwh, origem: "conta", adicionalBandeira: 0, incluiImpostos: true };
+  // Na Tarifa Social a conta já vem sem os primeiros 80 kWh: o preço real é o valor dividido só pelo que foi cobrado.
+  // Se quase tudo foi isento, a conta não diz o preço do kWh, e usamos a tarifa da ANEEL.
+  const kwhCobradosNaConta = conta ? (residencia.beneficio === "tarifa-social" ? conta.kwh - TARIFA_SOCIAL_ISENCAO_KWH : conta.kwh) : 0;
+  if (conta && conta.valor > 0 && kwhCobradosNaConta >= 10) {
+    return { valor: conta.valor / kwhCobradosNaConta, origem: "conta", adicionalBandeira: 0, incluiImpostos: true };
   }
   if (distribuidora) {
     const adicional = bandeira?.adicionalKwh ?? 0;

@@ -59,6 +59,12 @@ describe("preço do kWh", () => {
     expect(p.adicionalBandeira).toBe(0);
   });
 
+  it("na Tarifa Social, divide o valor da conta só pelos kWh cobrados", () => {
+    const p = precoKwh({ beneficio: "tarifa-social", contaReferencia: { kwh: 180, valor: 100 } }, { tarifaKwh: 0.8 }, undefined);
+    expect(p.valor).toBeCloseTo(1, 8);
+    expect(precoKwh({ beneficio: "tarifa-social", contaReferencia: { kwh: 85, valor: 12 } }, { tarifaKwh: 0.8 }, undefined).origem).toBe("aneel");
+  });
+
   it("ignora conta com valores zerados", () => {
     expect(precoKwh({ contaReferencia: { kwh: 0, valor: 50 } }, { tarifaKwh: 0.8 }, undefined).origem).toBe("aneel");
   });
