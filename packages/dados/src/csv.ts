@@ -7,7 +7,7 @@ import { parse } from "csv-parse";
 import type { Linha } from "./util";
 
 /** Baixa um arquivo para o disco (em streaming — o CSV de tarifas da ANEEL é grande). */
-export async function baixar(url: string, destino: string, tentativas = 3): Promise<void> {
+export async function baixar(url: string, destino: string, tentativas = 6): Promise<void> {
   await mkdir(dirname(destino), { recursive: true });
   let ultimoErro: unknown;
   for (let i = 1; i <= tentativas; i++) {
@@ -21,7 +21,7 @@ export async function baixar(url: string, destino: string, tentativas = 3): Prom
     } catch (erro) {
       ultimoErro = erro;
       console.warn(`  tentativa ${i}/${tentativas} falhou: ${(erro as Error).message}`);
-      if (i < tentativas) await new Promise((r) => setTimeout(r, 3000 * i));
+      if (i < tentativas) await new Promise((r) => setTimeout(r, 10_000 * i)); // o portal da ANEEL às vezes demora a responder
     }
   }
   throw ultimoErro;
