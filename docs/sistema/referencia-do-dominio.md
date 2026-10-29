@@ -112,7 +112,7 @@ Consumo padrão = consumo de uma unidade com o tempo, a frequência e as respost
 | Computador de mesa | potência × tempo | 180 W (60–700 W) | 4 horas, todos os dias | 21,6 kWh/mês | Para que é usado? (Para estudo e trabalho, Gamer, Tudo em um (all-in-one)) |
 | Notebook | potência × tempo | 60 W (30–230 W) | 4 horas, todos os dias | 7,2 kWh/mês | — |
 | Monitor extra | potência × tempo | 25 W (15–60 W) | 4 horas, 5 dias por semana | 2,1 kWh/mês | — |
-| Impressora | potência × tempo | 30 W (10–500 W) | 10 min, 2 dias por semana | 0 kWh/mês | — |
+| Impressora | potência × tempo | 30 W (10–500 W) | 10 min, 2 dias por semana | menos de 0,1 kWh/mês | — |
 | Videogame (PS5/Xbox Series) | potência × tempo | 200 W (10–250 W) | 2 horas, todos os dias | 12 kWh/mês | Qual videogame? (PS5 ou Xbox Series, PS4 ou Xbox One, Nintendo Switch ou portátil) |
 | Carregador de celular | potência × tempo | 15 W (5–65 W) | 2 horas, todos os dias | 0,9 kWh/mês | — |
 | Roteador ou modem de internet | potência × tempo | 12 W (6–25 W) | o dia todo, todos os dias | 8,6 kWh/mês | — |
@@ -157,7 +157,7 @@ Ao montar um cômodo, estes aparelhos já aparecem (`SUGESTOES_COMODO` e `ILUMIN
 ## Tempo de uso e frequência
 
 - **Atalhos de tempo por dia** (`TEMPOS_RAPIDOS`): 2 min, 5 min, 10 min, 15 min, 30 min, 1 hora, 2 horas, 3 horas, 5 horas, 8 horas, 12 horas, O dia todo. Também dá para ajustar minuto a minuto.
-- **Frequência** (`FREQUENCIAS`, guardada como dias por semana, que pode ser fracionário): Todo dia (7), 5 dias por semana (5), 3 dias por semana (3), 2 dias por semana (2), 1 dia por semana (1), 2 vezes por mês (0,5), 1 vez por mês (0,2).
+- **Frequência** (`FREQUENCIAS`, guardada como dias por semana, que pode ser fracionário): Todo dia (7), 5 dias por semana (5), 3 dias por semana (3), 2 dias por semana (2), 1 dia por semana (1), 2 vezes por mês (14/30), 1 vez por mês (7/30).
 
 ## Bandeiras tarifárias
 
