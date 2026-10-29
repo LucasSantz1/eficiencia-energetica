@@ -31,10 +31,15 @@ export function formatarTempo(minutos: number): string {
   return `${h} h ${m} min`;
 }
 
-/** 7 → "todos os dias"; 1 → "1 dia por semana" */
+/** 7 → "todos os dias"; 1 → "1 dia por semana"; 7/30 → "1 vez por mês" */
 export function formatarDias(dias: number): string {
   if (dias >= 7) return "todos os dias";
-  return dias === 1 ? "1 dia por semana" : `${dias} dias por semana`;
+  if (dias < 1) {
+    const vezes = Math.max(1, Math.round((dias * 30) / 7));
+    return vezes === 1 ? "1 vez por mês" : `${vezes} vezes por mês`;
+  }
+  const d = Math.round(dias * 10) / 10;
+  return d === 1 ? "1 dia por semana" : `${numero1.format(d)} dias por semana`;
 }
 
 /** 0,234 → "23%" */

@@ -16,19 +16,20 @@ export const TARIFA_SOCIAL_ISENCAO_KWH = 80;
 export const DESCONTO_SOCIAL_LIMITE_KWH = 120;
 
 /** E = P × t — consumo diário de um aparelho, em kWh (já multiplicado pela quantidade). */
-export function consumoDiarioKwh(a: Pick<Aparelho, "potenciaW" | "minutosPorDia" | "quantidade" | "diasPorSemana" | "kwhMesInformado">): number {
+export function consumoDiarioKwh(a: Pick<Aparelho, "potenciaW" | "minutosPorDia" | "quantidade" | "diasPorSemana" | "kwhMesInformado" | "fatorCiclo">): number {
   return consumoMensalKwh(a) / DIAS_NO_MES;
 }
 
 /** Consumo mensal de um aparelho, em kWh (já multiplicado pela quantidade). */
-export function consumoMensalKwh(a: Pick<Aparelho, "potenciaW" | "minutosPorDia" | "quantidade" | "diasPorSemana" | "kwhMesInformado">): number {
+export function consumoMensalKwh(a: Pick<Aparelho, "potenciaW" | "minutosPorDia" | "quantidade" | "diasPorSemana" | "kwhMesInformado" | "fatorCiclo">): number {
   const quantidade = Math.max(0, a.quantidade);
   if (a.kwhMesInformado !== undefined && a.kwhMesInformado > 0) {
     return a.kwhMesInformado * quantidade;
   }
   const horasPorDia = Math.max(0, a.minutosPorDia) / 60;
   const diasNoMes = (clamp(a.diasPorSemana, 0, 7) / 7) * DIAS_NO_MES;
-  return (Math.max(0, a.potenciaW) / 1000) * horasPorDia * diasNoMes * quantidade;
+  const ciclo = a.fatorCiclo === undefined ? 1 : clamp(a.fatorCiclo, 0, 1);
+  return (Math.max(0, a.potenciaW) / 1000) * horasPorDia * diasNoMes * ciclo * quantidade;
 }
 
 export type OrigemPreco = "conta" | "aneel" | "indisponivel";
@@ -174,7 +175,7 @@ export function resumirCasa(aparelhos: Aparelho[], residencia: Pick<Residencia, 
 }
 
 /** Valor mensal de um aparelho isolado, pelo preço do kWh (sem rateio de mínimo ou benefício). */
-export function valorMensalAparelho(a: Pick<Aparelho, "potenciaW" | "minutosPorDia" | "quantidade" | "diasPorSemana" | "kwhMesInformado">, preco: PrecoKwh): number {
+export function valorMensalAparelho(a: Pick<Aparelho, "potenciaW" | "minutosPorDia" | "quantidade" | "diasPorSemana" | "kwhMesInformado" | "fatorCiclo">, preco: PrecoKwh): number {
   return consumoMensalKwh(a) * preco.valor;
 }
 

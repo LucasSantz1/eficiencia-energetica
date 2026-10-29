@@ -1,6 +1,6 @@
 "use client";
 
-import { COMODOS_PADRAO, itemDoCatalogo, type Aparelho, type Comodo, type ContaMensal, type LeituraRelogio, type Residencia, type TipoComodo } from "@ee/core";
+import { aparelhoInicial, COMODOS_PADRAO, itemDoCatalogo, type Aparelho, type Comodo, type ContaMensal, type LeituraRelogio, type Residencia, type TipoComodo } from "@ee/core";
 import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -105,18 +105,7 @@ export const useCasa = create<DadosCasa & Acoes>()(
           const existente = get().comodos.find((c) => c.tipo === item.comodoSugerido);
           comodoId = existente?.id ?? get().adicionarComodo(item.comodoSugerido).id;
         }
-        return get().adicionarAparelho({
-          catalogoId: item.id,
-          nome: item.nome,
-          quantidade: 1,
-          potenciaW: item.potenciaW,
-          minutosPorDia: item.minutosPorDia,
-          diasPorSemana: item.diasPorSemana,
-          kwhMesInformado: item.modo === "etiqueta" ? item.kwhMes : undefined,
-          banho: item.banho ? { ...item.banho } : undefined,
-          ...extra,
-          comodoId,
-        });
+        return get().adicionarAparelho({ ...aparelhoInicial(item), ...extra, comodoId });
       },
       adicionarAparelho: (dados) => {
         const aparelho: Aparelho = { ...dados, id: novoId() };

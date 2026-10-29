@@ -1,18 +1,12 @@
 "use client";
 
-import { consumoMensalKwh, formatarKwh, formatarReais, formatarTempo, itemDoCatalogo, TEMPOS_RAPIDOS, type Aparelho, type PrecoKwh } from "@ee/core";
+import { consumoMensalKwh, formatarKwh, formatarReais, itemDoCatalogo, type Aparelho, type PrecoKwh } from "@ee/core";
 import { CircleHelp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCasa } from "@/lib/store";
+import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
 import { Botao, Campo, Contador, Entrada, Folha, Pilulas } from "./ui";
 
-const DIAS = [
-  { valor: 7, rotulo: "Todo dia" },
-  { valor: 5, rotulo: "5 dias" },
-  { valor: 3, rotulo: "3 dias" },
-  { valor: 2, rotulo: "2 dias" },
-  { valor: 1, rotulo: "1 dia" },
-];
 
 type Rascunho = Omit<Aparelho, "id"> & { id?: string };
 
@@ -26,13 +20,11 @@ export function EditorAparelho({ aparelho, aberto, aoFechar, preco }: { aparelho
   const atualizarAparelho = useCasa((s) => s.atualizarAparelho);
   const removerAparelho = useCasa((s) => s.removerAparelho);
   const [r, setR] = useState<Rascunho | undefined>(aparelho);
-  const [tempoLivre, setTempoLivre] = useState(false);
   const [semEtiqueta, setSemEtiqueta] = useState(false);
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
 
   useEffect(() => {
     setR(aparelho);
-    setTempoLivre(aparelho ? !TEMPOS_RAPIDOS.some((t) => t.minutos === aparelho.minutosPorDia) : false);
     setSemEtiqueta(false);
     setConfirmarRemocao(false);
   }, [aparelho]);
@@ -53,8 +45,6 @@ export function EditorAparelho({ aparelho, aberto, aoFechar, preco }: { aparelho
     aoFechar();
   };
 
-  const horas = Math.floor(r.minutosPorDia / 60);
-  const minutos = r.minutosPorDia % 60;
 
   return (
     <Folha
@@ -92,6 +82,8 @@ export function EditorAparelho({ aparelho, aberto, aoFechar, preco }: { aparelho
           <span className="font-bold">Quantidade</span>
           <Contador valor={r.quantidade} aoMudar={(quantidade) => mudar({ quantidade })} min={1} max={60} rotulo="quantidade" />
         </div>
+
+        {item && <SeletorVariantes catalogo={item} escolhas={r.variantes} aoMudar={mudar} />}
 
         {modo === "etiqueta" && !semEtiqueta && (
           <Campo
@@ -154,39 +146,8 @@ export function EditorAparelho({ aparelho, aberto, aoFechar, preco }: { aparelho
 
         {modo === "tempo" && (
           <>
-            <div className="space-y-3">
-              <span className="block font-bold">Quanto tempo fica ligado por dia?</span>
-              <Pilulas
-                rotulo="Tempo por dia"
-                opcoes={[...TEMPOS_RAPIDOS.map((t) => ({ valor: String(t.minutos), rotulo: t.rotulo })), { valor: "outro", rotulo: "Outro tempo" }]}
-                valor={tempoLivre ? "outro" : String(r.minutosPorDia)}
-                aoMudar={(v) => {
-                  if (v === "outro") setTempoLivre(true);
-                  else {
-                    setTempoLivre(false);
-                    mudar({ minutosPorDia: Number(v) });
-                  }
-                }}
-              />
-              {tempoLivre && (
-                <div className="flex flex-wrap gap-4 rounded-[var(--radius-controle)] bg-fundo p-3">
-                  <div className="space-y-1">
-                    <span className="block text-[0.95rem] font-bold text-tinta-suave">Horas</span>
-                    <Contador valor={horas} min={0} max={24} rotulo="horas" aoMudar={(h) => mudar({ minutosPorDia: Math.min(1440, h * 60 + (h === 24 ? 0 : minutos)) })} />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="block text-[0.95rem] font-bold text-tinta-suave">Minutos</span>
-                    <Contador valor={minutos} min={0} max={55} passo={5} rotulo="minutos" aoMudar={(m) => mudar({ minutosPorDia: Math.min(1440, horas * 60 + m) })} />
-                  </div>
-                </div>
-              )}
-              <p className="text-[0.95rem] text-tinta-suave">Total: {formatarTempo(r.minutosPorDia)} por dia.</p>
-            </div>
-
-            <div className="space-y-3">
-              <span className="block font-bold">Em quantos dias da semana?</span>
-              <Pilulas rotulo="Dias por semana" opcoes={DIAS} valor={r.diasPorSemana} aoMudar={(diasPorSemana) => mudar({ diasPorSemana })} />
-            </div>
+            <SeletorFrequencia diasPorSemana={r.diasPorSemana} aoMudar={(diasPorSemana) => mudar({ diasPorSemana })} />
+            <SeletorTempo key={r.id ?? "novo"} minutosPorDia={r.minutosPorDia} diario={r.diasPorSemana >= 1} aoMudar={(minutosPorDia) => mudar({ minutosPorDia })} />
           </>
         )}
 

@@ -8,6 +8,8 @@ Projeto de pesquisa da Fatec Presidente Prudente (Análise e Desenvolvimento de 
 
 - **Cadastro da casa em poucos toques:** estado, cidade, distribuidora (escolhida sozinha quando só uma atende a cidade), benefício (Tarifa Social) e pessoas na casa.
 - **Cômodo por cômodo:** quantos cômodos de cada tipo, com nome próprio ("Quarto do casal"); cada um já vem com os aparelhos comuns, a quantidade de cada (2 TVs, 3 lâmpadas), o tempo de uso estimado e a iluminação.
+- **Catálogo com quase 60 aparelhos**, com perguntas que mudam o consumo: ar-condicionado split inverter, split comum, de janela ou portátil e os BTUs; geladeira por modelo e idade; TV por tecnologia e tamanho; chuveiro por potência e aquecimento solar, entre outros.
+- **Tempo de uso flexível:** de 2 minutos ao dia inteiro (com ajuste minuto a minuto), todo dia, alguns dias por semana ou só 1 ou 2 vezes por mês.
 - **Painel geral:** junta os aparelhos iguais de todos os cômodos, com quantidade total, onde estão, uso médio por dia, kWh e R$.
 - **Acompanhamento editável:** conta estimada, cômodos, quem mais gasta, histórico das contas de luz mês a mês e leituras do relógio de luz, com gráfico comparando o real com a estimativa.
 - **Tarifa real:** TE + TUSD residencial (B1, convencional) vigente da distribuidora, mais o adicional da bandeira do mês, direto dos dados abertos da ANEEL.

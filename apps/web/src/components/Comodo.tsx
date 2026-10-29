@@ -1,38 +1,23 @@
 "use client";
 
-import {
-  consumoMensalKwh,
-  formatarReais,
-  formatarTempo,
-  horasPorDiaMedia,
-  itemDoCatalogo,
-  TEMPOS_RAPIDOS,
-  type Aparelho,
-  type PrecoKwh,
-} from "@ee/core";
+import { consumoMensalKwh, formatarDias, formatarReais, formatarTempo, horasPorDiaMedia, itemDoCatalogo, type Aparelho, type PrecoKwh } from "@ee/core";
 import { useState } from "react";
 import { Icone } from "./Icone";
 import { ValorAnimado } from "./Movimento";
+import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
 import { Contador, Pilulas } from "./ui";
 
 /** Aparelho em edição (no cadastro ainda não tem id definitivo). */
 export type ItemComodo = Omit<Aparelho, "id" | "comodoId"> & { id: string };
 
-const DIAS = [
-  { valor: 7, rotulo: "Todo dia" },
-  { valor: 5, rotulo: "5 dias" },
-  { valor: 3, rotulo: "3 dias" },
-  { valor: 2, rotulo: "2 dias" },
-  { valor: 1, rotulo: "1 dia" },
-];
-
 /** Frase curta com o tempo de uso estimado, como aparece nas listas. */
 export function descreverUso(a: Pick<Aparelho, "minutosPorDia" | "diasPorSemana" | "kwhMesInformado" | "banho">): string {
   if (a.kwhMesInformado !== undefined) return "Fica ligada o dia todo";
   if (a.banho) return `${a.banho.banhosPorDia} ${a.banho.banhosPorDia === 1 ? "banho" : "banhos"} de ${a.banho.minutosPorBanho} min por dia`;
+  if (a.diasPorSemana < 1) return `Usado ${formatarTempo(a.minutosPorDia)}, ${formatarDias(a.diasPorSemana)}`;
   const tempo = a.minutosPorDia >= 1440 ? "o dia todo" : `${formatarTempo(a.minutosPorDia)} por dia`;
   if (a.diasPorSemana >= 7) return `Ligado ${tempo}`;
-  return `Ligado ${tempo}, ${a.diasPorSemana} ${a.diasPorSemana === 1 ? "dia" : "dias"} por semana`;
+  return `Ligado ${tempo}, ${formatarDias(a.diasPorSemana)}`;
 }
 
 /** Média de uso em horas por dia, para o painel ("≈ 2,1 h/dia"). */
@@ -64,7 +49,7 @@ export function LinhaAparelho({
   const catalogo = itemDoCatalogo(item.catalogoId);
   const ativo = item.quantidade > 0;
   const valor = preco ? consumoMensalKwh(item) * preco.valor : undefined;
-  const opcoesTempo = [...new Set([...TEMPOS_RAPIDOS.map((t) => t.minutos), item.minutosPorDia])].sort((a, b) => a - b);
+  const temPerguntas = Boolean(catalogo?.variantes?.length);
 
   return (
     <li className={`rounded-[var(--radius-controle)] border-2 px-3 py-3 transition-[background-color,border-color] duration-300 sm:px-4 ${ativo ? "border-linha bg-papel" : "border-transparent bg-papel/50"}`}>
@@ -83,10 +68,22 @@ export function LinhaAparelho({
           {ativo && (
             <button type="button" onClick={() => setAjustando((v) => !v)} className="block text-left text-[0.95rem] text-tinta-suave underline decoration-dotted underline-offset-4 hover:text-tinta" aria-expanded={ajustando}>
               {descreverUso(item)}
+              {temPerguntas && !ajustando && <span className="block font-bold text-energia">Escolher o tipo</span>}
             </button>
           )}
         </div>
-        <Contador compacto valor={item.quantidade} aoMudar={(quantidade) => aoMudar({ quantidade })} min={minimo} max={30} rotulo={`quantidade de ${item.nome}`} />
+        <Contador
+          compacto
+          valor={item.quantidade}
+          aoMudar={(quantidade) => {
+            // Ao marcar um aparelho com tipos (ar, geladeira, TV...), já abre as perguntas.
+            if (item.quantidade === 0 && quantidade > 0 && temPerguntas) setAjustando(true);
+            aoMudar({ quantidade });
+          }}
+          min={minimo}
+          max={30}
+          rotulo={`quantidade de ${item.nome}`}
+        />
       </div>
 
       {ativo && valor !== undefined && (
@@ -97,8 +94,9 @@ export function LinhaAparelho({
 
       {ativo && ajustando && (
         <div className="surgir mt-3 space-y-4 border-t border-linha pt-3 sm:pl-14" style={{ animationDuration: "300ms" }}>
+          {catalogo && <SeletorVariantes catalogo={catalogo} escolhas={item.variantes} aoMudar={aoMudar} />}
           {catalogo?.modo === "etiqueta" ? (
-            <p className="text-[0.95rem] text-tinta-suave">Geladeiras e freezers ficam ligados o tempo todo; o consumo vem da etiqueta ({Math.round(item.kwhMesInformado ?? 0)} kWh por mês).</p>
+            <p className="text-[0.95rem] text-tinta-suave">Fica ligado o tempo todo e o motor liga e desliga sozinho. Consumo estimado: {Math.round(item.kwhMesInformado ?? 0)} kWh por mês.</p>
           ) : item.banho ? (
             <>
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -123,14 +121,8 @@ export function LinhaAparelho({
             </>
           ) : (
             <>
-              <div className="space-y-2">
-                <span className="block font-bold">Quanto tempo ligado por dia?</span>
-                <Pilulas rotulo="Tempo por dia" opcoes={opcoesTempo.map((m) => ({ valor: m, rotulo: m >= 1440 ? "O dia todo" : formatarTempo(m) }))} valor={item.minutosPorDia} aoMudar={(minutosPorDia) => aoMudar({ minutosPorDia })} />
-              </div>
-              <div className="space-y-2">
-                <span className="block font-bold">Em quantos dias da semana?</span>
-                <Pilulas rotulo="Dias por semana" opcoes={DIAS} valor={item.diasPorSemana} aoMudar={(diasPorSemana) => aoMudar({ diasPorSemana })} />
-              </div>
+              <SeletorFrequencia diasPorSemana={item.diasPorSemana} aoMudar={(diasPorSemana) => aoMudar({ diasPorSemana })} />
+              <SeletorTempo minutosPorDia={item.minutosPorDia} diario={item.diasPorSemana >= 1} aoMudar={(minutosPorDia) => aoMudar({ minutosPorDia })} />
             </>
           )}
           <button type="button" onClick={() => setAjustando(false)} className="font-bold text-energia">

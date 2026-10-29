@@ -1,4 +1,4 @@
-import { COMODOS_PADRAO, ILUMINACAO_PADRAO, itemDoCatalogo, nomesPadrao, SUGESTOES_COMODO, type Aparelho, type Comodo, type TipoComodo } from "@ee/core";
+import { aparelhoInicial, COMODOS_PADRAO, ILUMINACAO_PADRAO, itemDoCatalogo, nomesPadrao, SUGESTOES_COMODO, type Aparelho, type Comodo, type TipoComodo } from "@ee/core";
 import type { ItemComodo } from "@/components/Comodo";
 import { novoId } from "./store";
 
@@ -14,18 +14,7 @@ export interface ComodoRascunho {
 export function itemDoCatalogoParaComodo(catalogoId: string, extra: Partial<ItemComodo> = {}): ItemComodo {
   const item = itemDoCatalogo(catalogoId);
   if (!item) throw new Error(`Aparelho desconhecido: ${catalogoId}`);
-  return {
-    id: novoId(),
-    catalogoId: item.id,
-    nome: item.nome,
-    quantidade: 1,
-    potenciaW: item.potenciaW,
-    minutosPorDia: item.minutosPorDia,
-    diasPorSemana: item.diasPorSemana,
-    kwhMesInformado: item.modo === "etiqueta" ? item.kwhMes : undefined,
-    banho: item.banho ? { ...item.banho } : undefined,
-    ...extra,
-  };
+  return { ...aparelhoInicial(item), id: novoId(), ...extra };
 }
 
 /** Cria um cômodo já com os aparelhos comuns daquele tipo. */

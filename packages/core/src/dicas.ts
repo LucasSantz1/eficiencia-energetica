@@ -1,4 +1,5 @@
 import { resumirCasa, type PrecoKwh } from "./calculos";
+import { aplicarVariantes, itemDoCatalogo } from "./catalogo";
 import { ehLampada } from "./comodos";
 import { formatarReais } from "./formatacao";
 import type { Aparelho, BandeiraMes, Residencia } from "./tipos";
@@ -51,6 +52,14 @@ interface Mudanca {
   aplicar: (a: Aparelho, casa: Aparelho[]) => Aparelho[] | undefined;
 }
 
+/** Consumo de uma geladeira nova do mesmo modelo (selo A, até 5 anos). */
+function consumoGeladeiraNova(a: Aparelho): number | undefined {
+  const item = itemDoCatalogo("geladeira");
+  if (!item) return undefined;
+  if (!a.variantes) return a.catalogoId === "geladeira-duplex" ? 40 : 25;
+  return aplicarVariantes(item, { ...a.variantes, idade: "nova" }).kwhMesInformado;
+}
+
 const trocar = (casa: Aparelho[], novo: Aparelho) => casa.map((x) => (x.id === novo.id ? novo : x));
 const doCatalogo = (...ids: string[]) => (a: Aparelho) => ids.includes(a.catalogoId ?? "");
 
@@ -98,11 +107,14 @@ const MUDANCAS: Mudanca[] = [
     id: "geladeira-nova",
     tipo: "troca",
     icone: "refrigerator",
-    vale: (a) => (a.catalogoId === "geladeira" && (a.kwhMesInformado ?? 0) >= 35) || (a.catalogoId === "geladeira-duplex" && (a.kwhMesInformado ?? 0) >= 55),
-    titulo: "Trocar a geladeira por uma com selo A",
+    vale: (a) => {
+      if (a.catalogoId === "geladeira" && a.variantes) return a.variantes.idade !== "nova" && (a.kwhMesInformado ?? 0) > (consumoGeladeiraNova(a) ?? Infinity) + 5;
+      return (a.catalogoId === "geladeira" && (a.kwhMesInformado ?? 0) >= 35) || (a.catalogoId === "geladeira-duplex" && (a.kwhMesInformado ?? 0) >= 55);
+    },
+    titulo: "Trocar a geladeira por uma nova com selo A",
     texto: (a) =>
-      `Sua geladeira gasta ${Math.round(a.kwhMesInformado ?? 0)} kWh por mês. Uma nova com selo Procel A gasta por volta de ${a.catalogoId === "geladeira" ? 25 : 40} kWh. Vale pesquisar programas de troca da sua distribuidora, que às vezes doam geladeiras para famílias de baixa renda.`,
-    aplicar: (a, casa) => trocar(casa, { ...a, kwhMesInformado: a.catalogoId === "geladeira" ? 25 : 40 }),
+      `A sua gasta cerca de ${Math.round(a.kwhMesInformado ?? 0)} kWh por mês. Uma nova do mesmo tipo, com selo Procel A, gasta por volta de ${Math.round(consumoGeladeiraNova(a) ?? 25)} kWh. Vale pesquisar os programas de troca da sua distribuidora, que às vezes doam geladeiras para famílias de baixa renda.`,
+    aplicar: (a, casa) => trocar(casa, { ...a, kwhMesInformado: consumoGeladeiraNova(a) ?? 25, variantes: a.variantes ? { ...a.variantes, idade: "nova" } : undefined }),
   },
   {
     id: "geladeira-cuidados",
@@ -177,6 +189,18 @@ const MUDANCAS: Mudanca[] = [
     },
   },
   {
+    id: "ar-inverter",
+    tipo: "troca",
+    icone: "air-vent",
+    vale: (a) => a.catalogoId === "ar-condicionado" && Boolean(a.variantes) && a.variantes!.tipo !== "split-inverter",
+    titulo: "Na hora de trocar o ar-condicionado, escolha um inverter",
+    texto: "O inverter ajusta a velocidade do motor em vez de ficar ligando e desligando. Gasta de 30% a 50% menos para refrescar o mesmo cômodo.",
+    aplicar: (a, casa) => {
+      const item = itemDoCatalogo("ar-condicionado")!;
+      return trocar(casa, { ...a, ...aplicarVariantes(item, { ...a.variantes, tipo: "split-inverter" }) });
+    },
+  },
+  {
     id: "aquecedor-uma-hora",
     tipo: "habito",
     icone: "thermometer",
@@ -221,13 +245,25 @@ const MUDANCAS: Mudanca[] = [
     id: "desligar-quem-nao-usa",
     tipo: "habito",
     icone: "power",
-    vale: (a) => ["tv-pequena", "tv-grande", "computador", "videogame"].includes(a.catalogoId ?? "") && a.minutosPorDia >= 120 && a.minutosPorDia < 1440,
+    vale: (a) => ["tv", "tv-pequena", "tv-grande", "computador", "videogame"].includes(a.catalogoId ?? "") && a.minutosPorDia >= 120 && a.minutosPorDia < 1440,
     titulo: (a) => (a.catalogoId?.startsWith("tv") ? "Desligue a TV quando ninguém estiver assistindo" : "Desligue quando ninguém estiver usando"),
     texto: (a) =>
       a.catalogoId?.startsWith("tv")
         ? "Use o timer da TV para dormir e baixe o brilho da tela. A conta considera uma hora a menos por dia."
         : "Configure para suspender sozinho depois de alguns minutos parado. A conta considera uma hora a menos por dia.",
     aplicar: (a, casa) => trocar(casa, { ...a, minutosPorDia: a.minutosPorDia - 60 }),
+  },
+  {
+    id: "tv-led",
+    tipo: "troca",
+    icone: "tv",
+    vale: (a) => a.catalogoId === "tv" && Boolean(a.variantes) && ["lcd", "plasma", "tubo"].includes(a.variantes!.tecnologia ?? "") && a.minutosPorDia >= 60,
+    titulo: "Na hora de trocar a TV, prefira uma de LED",
+    texto: "TVs de plasma, de tubo e as LCD antigas gastam de 2 a 4 vezes mais que uma TV LED do mesmo tamanho.",
+    aplicar: (a, casa) => {
+      const item = itemDoCatalogo("tv")!;
+      return trocar(casa, { ...a, ...aplicarVariantes(item, { ...a.variantes, tecnologia: "led" }) });
+    },
   },
   {
     id: "notebook-no-lugar",

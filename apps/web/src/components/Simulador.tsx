@@ -1,6 +1,6 @@
 "use client";
 
-import { bandeiraDoMes, competenciaAtual, consumoMensalKwh, formatarKwh, formatarReais, formatarTempo, itemDoCatalogo, precoKwh } from "@ee/core";
+import { aparelhoInicial, bandeiraDoMes, competenciaAtual, consumoMensalKwh, formatarKwh, formatarReais, formatarTempo, itemDoCatalogo, precoKwh } from "@ee/core";
 import { useMemo, useState } from "react";
 import { useTarifas } from "@/lib/dados";
 import { tarifaMedia } from "@/lib/resumo";
@@ -10,13 +10,13 @@ import { Contador } from "./ui";
 const OPCOES = [
   { id: "chuveiro", rotulo: "Chuveiro", min: 2, max: 30, passo: 1, unidade: "min", pergunta: "Minutos de cada banho" },
   { id: "ar-condicionado", rotulo: "Ar-condicionado", min: 1, max: 24, passo: 1, unidade: "h", pergunta: "Horas ligado por noite" },
-  { id: "tv-grande", rotulo: "TV", min: 1, max: 24, passo: 1, unidade: "h", pergunta: "Horas ligada por dia" },
+  { id: "tv", rotulo: "TV", min: 1, max: 24, passo: 1, unidade: "h", pergunta: "Horas ligada por dia" },
   { id: "ferro", rotulo: "Ferro", min: 1, max: 7, passo: 1, unidade: "dias", pergunta: "Dias por semana, 1 hora cada" },
 ] as const;
 
 type IdOpcao = (typeof OPCOES)[number]["id"];
 
-const INICIAL: Record<IdOpcao, number> = { chuveiro: 10, "ar-condicionado": 8, "tv-grande": 5, ferro: 2 };
+const INICIAL: Record<IdOpcao, number> = { chuveiro: 10, "ar-condicionado": 8, tv: 5, ferro: 2 };
 
 /** Simulador da página inicial: muda o tempo de uso e vê o valor mudar na hora. */
 export function Simulador() {
@@ -31,15 +31,17 @@ export function Simulador() {
     const media = tarifaMedia(tarifas.dados);
     const bandeira = tarifas.dados ? bandeiraDoMes(tarifas.dados.bandeiras, competenciaAtual()) : undefined;
     const preco = precoKwh({}, media ?? { tarifaKwh: 0.8 }, bandeira?.bandeira);
+    // Parte do aparelho típico do catálogo (com o tipo mais comum já escolhido) e muda só o tempo.
+    const base = aparelhoInicial(item);
     const aparelho =
       escolhido === "chuveiro"
-        ? { potenciaW: item.potenciaW, minutosPorDia: valor, quantidade: 1, diasPorSemana: 7 }
+        ? { ...base, minutosPorDia: valor, diasPorSemana: 7 }
         : escolhido === "ferro"
-          ? { potenciaW: item.potenciaW, minutosPorDia: 60, quantidade: 1, diasPorSemana: valor }
-          : { potenciaW: item.potenciaW, minutosPorDia: valor * 60, quantidade: 1, diasPorSemana: 7 };
+          ? { ...base, minutosPorDia: 60, diasPorSemana: valor }
+          : { ...base, minutosPorDia: valor * 60, diasPorSemana: 7 };
     const kwh = consumoMensalKwh(aparelho);
     return { kwh, reais: kwh * preco.valor, temTarifa: Boolean(media) };
-  }, [tarifas.dados, escolhido, valor, item.potenciaW]);
+  }, [tarifas.dados, escolhido, valor, item]);
 
   return (
     <section aria-labelledby="simulador-titulo" className="rounded-[1.75rem] bg-tinta p-5 text-white sm:p-7">

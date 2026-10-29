@@ -137,6 +137,13 @@ export interface Aparelho {
   /** Para chuveiros: banhos por dia × minutos por banho (minutosPorDia é o produto dos dois). */
   banho?: { banhosPorDia: number; minutosPorBanho: number };
   /**
+   * Parte do tempo ligado em que o aparelho puxa a potência cheia (0 a 1). Ex.: o compressor do
+   * ar-condicionado desliga sozinho quando o cômodo esfria. Sem valor, conta como 1.
+   */
+  fatorCiclo?: number;
+  /** Respostas sobre o modelo (ex.: { tipo: "split-inverter", btus: "12000" }). */
+  variantes?: Record<string, string>;
+  /**
    * Consumo mensal informado diretamente (kWh/mês), como na etiqueta do INMETRO.
    * Quando presente, substitui o cálculo potência × tempo — usado para geladeiras e freezers,
    * que ligam e desligam o motor sozinhos.

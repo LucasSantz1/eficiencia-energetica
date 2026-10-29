@@ -1,6 +1,6 @@
 "use client";
 
-import { CATALOGO, CATEGORIAS } from "@ee/core";
+import { CATALOGO_VISIVEL, CATEGORIAS } from "@ee/core";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Icone } from "./Icone";
@@ -20,7 +20,7 @@ export function SeletorCatalogo({ aberto, aoFechar, aoEscolher }: { aberto: bool
     () =>
       CATEGORIAS.map((c) => ({
         ...c,
-        itens: CATALOGO.filter((i) => i.categoria === c.id && (!termo || semAcento(i.nome).includes(termo) || i.id === "outro")),
+        itens: CATALOGO_VISIVEL.filter((i) => i.categoria === c.id && (!termo || semAcento(i.nome).includes(termo) || i.id === "outro")),
       })).filter((g) => g.itens.length > 0),
     [termo],
   );

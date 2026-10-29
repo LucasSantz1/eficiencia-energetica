@@ -1,7 +1,7 @@
 "use client";
 
 import { agregarAparelhos, COMODOS_PADRAO, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
-import { ArrowLeft, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, ChevronDown, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { BuscaCidade } from "@/components/BuscaCidade";
@@ -221,22 +221,35 @@ export function Cadastro() {
           {tarifas.carregando && !tarifas.dados ? (
             <Carregando />
           ) : (
-            <ul className="mt-6 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-              {estados.map((e) => (
-                <li key={e.uf}>
-                  <Opcao
-                    selecionada={uf === e.uf}
-                    onClick={() => {
-                      if (uf !== e.uf) setMunicipio(undefined);
-                      setUf(e.uf);
-                      irPara("cidade");
-                    }}
-                  >
-                    {e.nome}
-                  </Opcao>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-6 space-y-5">
+              <label htmlFor="estado" className="block font-bold">
+                Estado
+              </label>
+              <div className="relative -mt-3">
+                <select
+                  id="estado"
+                  value={uf ?? ""}
+                  onChange={(e) => {
+                    if (uf !== e.target.value) setMunicipio(undefined);
+                    setUf(e.target.value || undefined);
+                  }}
+                  className="min-h-14 w-full appearance-none rounded-[var(--radius-controle)] border-2 border-linha bg-papel py-3 pr-12 pl-4 text-lg font-bold focus:border-energia"
+                >
+                  <option value="" disabled>
+                    Escolha o seu estado
+                  </option>
+                  {estados.map((e) => (
+                    <option key={e.uf} value={e.uf}>
+                      {e.nome} ({e.uf})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute top-1/2 right-4 size-6 -translate-y-1/2 text-tinta-suave" aria-hidden />
+              </div>
+              <Botao largo onClick={() => irPara("cidade", "adiante")} disabled={!uf}>
+                Continuar
+              </Botao>
+            </div>
           )}
         </>
       )}
