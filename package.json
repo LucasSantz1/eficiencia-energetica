@@ -9,6 +9,7 @@
     "build": "pnpm --filter @ee/web build",
     "start": "pnpm --filter @ee/web start",
     "test": "pnpm -r --if-present test",
+    "camadas": "node scripts/verificar-camadas.mjs",
     "typecheck": "pnpm -r --if-present typecheck",
     "dados:atualizar": "pnpm --filter @ee/dados atualizar",
     "dados:exemplo": "pnpm --filter @ee/dados exemplo"
