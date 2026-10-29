@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCasa, useCasaCarregada } from "@/lib/store";
-import { ENTRAR_NO_PAINEL, IR_ADIANTE } from "./Movimento";
+import { ENTRAR_NO_PAINEL, IR_ADIANTE } from "@/ui/Movimento";
 
 const ESTILOS = {
   /** Botão amarelo, para fundos escuros. */

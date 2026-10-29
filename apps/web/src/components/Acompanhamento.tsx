@@ -4,8 +4,13 @@ import { competenciaAtual, formatarCompetencia, formatarKwh, formatarReais, hist
 import { Gauge, Pencil, Plus, Receipt } from "lucide-react";
 import { useState } from "react";
 import { useCasa } from "@/lib/store";
-import { Barras } from "./Barras";
-import { Aviso, Botao, Campo, Entrada, Folha, Pilulas } from "./ui";
+import { Barras } from "@/ui/Barras";
+import { Aviso } from "@/ui/Aviso";
+import { Botao } from "@/ui/Botao";
+import { Campo } from "@/ui/Campo";
+import { Entrada } from "@/ui/Entrada";
+import { Folha } from "@/ui/Folha";
+import { Pilulas } from "@/ui/Pilulas";
 
 const MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const mesCurto = (competencia: string) => {

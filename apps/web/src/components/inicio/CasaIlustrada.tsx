@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Icone } from "../Icone";
+import { Icone } from "@/ui/Icone";
 
 /** Exemplo de casa com 3 pessoas, calculado com a tarifa da Energisa Sul-Sudeste (out/2026). */
 const COMODOS = [

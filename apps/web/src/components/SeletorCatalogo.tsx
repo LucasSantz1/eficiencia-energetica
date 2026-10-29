@@ -3,8 +3,8 @@
 import { CATALOGO_VISIVEL, CATEGORIAS } from "@ee/core";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Icone } from "./Icone";
-import { Folha } from "./ui";
+import { Icone } from "@/ui/Icone";
+import { Folha } from "@/ui/Folha";
 
 const semAcento = (t: string) =>
   t

@@ -3,10 +3,10 @@
 import { formatarKwh, formatarReais, type Dica } from "@ee/core";
 import { Check } from "lucide-react";
 import { useState } from "react";
-import { EspacoReservado } from "@/components/EspacoReservado";
-import { Icone } from "@/components/Icone";
-import { ValorAnimado } from "@/components/Movimento";
-import { Pilulas } from "@/components/ui";
+import { EspacoReservado } from "@/ui/EspacoReservado";
+import { Icone } from "@/ui/Icone";
+import { ValorAnimado } from "@/ui/Movimento";
+import { Pilulas } from "@/ui/Pilulas";
 import { useResumo } from "@/lib/resumo";
 import { useCasa } from "@/lib/store";
 

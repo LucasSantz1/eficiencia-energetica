@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
 import { useResumo } from "@/lib/resumo";
 import { useCasa, useCasaCarregada } from "@/lib/store";
-import { Marca } from "./Marca";
-import { IR_ADIANTE, TransicaoTela, VOLTAR } from "./Movimento";
-import { Aviso, BotaoLink } from "./ui";
+import { Marca } from "@/ui/Marca";
+import { IR_ADIANTE, TransicaoTela, VOLTAR } from "@/ui/Movimento";
+import { Aviso } from "@/ui/Aviso";
+import { BotaoLink } from "@/ui/Botao";
 
 const ITENS: { href: string; rotulo: string; curto?: string; Icone: typeof Lightbulb }[] = [
   { href: "/casa", rotulo: "Acompanhamento", curto: "Acompanhar", Icone: ChartNoAxesColumn },

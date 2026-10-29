@@ -2,10 +2,11 @@
 
 import { consumoMensalKwh, formatarDias, formatarReais, formatarTempo, horasPorDiaMedia, itemDoCatalogo, type Aparelho, type PrecoKwh } from "@ee/core";
 import { useState } from "react";
-import { Icone } from "./Icone";
-import { ValorAnimado } from "./Movimento";
+import { Icone } from "@/ui/Icone";
+import { ValorAnimado } from "@/ui/Movimento";
 import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
-import { Contador, Pilulas } from "./ui";
+import { Contador } from "@/ui/Contador";
+import { Pilulas } from "@/ui/Pilulas";
 
 /** Aparelho em edição (no cadastro ainda não tem id definitivo). */
 export type ItemComodo = Omit<Aparelho, "id" | "comodoId"> & { id: string };

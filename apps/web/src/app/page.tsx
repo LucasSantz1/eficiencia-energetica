@@ -3,12 +3,12 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import Link from "next/link";
 import { BotaoComecar } from "@/components/BotaoComecar";
-import { BarraEtiqueta } from "@/components/Etiqueta";
-import { Icone } from "@/components/Icone";
-import { EspacoReservado } from "@/components/EspacoReservado";
+import { BarraEtiqueta } from "@/ui/Etiqueta";
+import { Icone } from "@/ui/Icone";
+import { EspacoReservado } from "@/ui/EspacoReservado";
 import { CasaIlustrada } from "@/components/inicio/CasaIlustrada";
-import { Marca } from "@/components/Marca";
-import { Contagem, Revelar, TransicaoTela } from "@/components/Movimento";
+import { Marca } from "@/ui/Marca";
+import { Contagem, Revelar, TransicaoTela } from "@/ui/Movimento";
 import { Simulador } from "@/components/Simulador";
 
 // Os números da página vêm dos dados da ANEEL, que são atualizados todo dia.

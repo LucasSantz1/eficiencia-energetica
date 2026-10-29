@@ -4,8 +4,13 @@ import { formatarReais, precoKwh, type Beneficio, type Distribuidora, type Ligac
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { BuscaCidade } from "@/components/BuscaCidade";
-import { Aviso, Botao, Campo, Entrada, Folha, Opcao } from "@/components/ui";
+import { BuscaCidade } from "@/ui/BuscaCidade";
+import { Aviso } from "@/ui/Aviso";
+import { Botao } from "@/ui/Botao";
+import { Campo } from "@/ui/Campo";
+import { Entrada } from "@/ui/Entrada";
+import { Folha } from "@/ui/Folha";
+import { Opcao } from "@/ui/Opcao";
 import { useMunicipios } from "@/lib/dados";
 import { nomeDistribuidora, useResumo } from "@/lib/resumo";
 import { useCasa } from "@/lib/store";

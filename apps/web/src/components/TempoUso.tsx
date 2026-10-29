@@ -2,7 +2,8 @@
 
 import { aplicarVariantes, formatarTempo, FREQUENCIAS, frequenciaMaisProxima, TEMPOS_RAPIDOS, type Aparelho, type ItemCatalogo } from "@ee/core";
 import { useState } from "react";
-import { Contador, Pilulas } from "./ui";
+import { Contador } from "@/ui/Contador";
+import { Pilulas } from "@/ui/Pilulas";
 
 /**
  * Perguntas sobre o modelo do aparelho (tipo, tamanho, idade...). Cada resposta recalcula

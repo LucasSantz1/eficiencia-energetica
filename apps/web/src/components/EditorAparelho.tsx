@@ -5,7 +5,12 @@ import { CircleHelp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCasa } from "@/lib/store";
 import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
-import { Botao, Campo, Contador, Entrada, Folha, Pilulas } from "./ui";
+import { Botao } from "@/ui/Botao";
+import { Campo } from "@/ui/Campo";
+import { Contador } from "@/ui/Contador";
+import { Entrada } from "@/ui/Entrada";
+import { Folha } from "@/ui/Folha";
+import { Pilulas } from "@/ui/Pilulas";
 
 
 type Rascunho = Omit<Aparelho, "id"> & { id?: string };

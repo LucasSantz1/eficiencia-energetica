@@ -17,10 +17,14 @@ import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { BlocoIluminacao, horasPorDiaTexto, LinhaAparelho, type ItemComodo } from "@/components/Comodo";
 import { EditorAparelho } from "@/components/EditorAparelho";
-import { Icone } from "@/components/Icone";
+import { Icone } from "@/ui/Icone";
 import { SeletorCatalogo } from "@/components/SeletorCatalogo";
-import { ValorAnimado } from "@/components/Movimento";
-import { Botao, Campo, Entrada, Folha, Pilulas } from "@/components/ui";
+import { ValorAnimado } from "@/ui/Movimento";
+import { Botao } from "@/ui/Botao";
+import { Campo } from "@/ui/Campo";
+import { Entrada } from "@/ui/Entrada";
+import { Folha } from "@/ui/Folha";
+import { Pilulas } from "@/ui/Pilulas";
 import { useResumo } from "@/lib/resumo";
 import { useCasa } from "@/lib/store";
 

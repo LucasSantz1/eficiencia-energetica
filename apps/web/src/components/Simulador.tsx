@@ -4,8 +4,8 @@ import { aparelhoInicial, bandeiraDoMes, competenciaAtual, consumoMensalKwh, for
 import { useMemo, useState } from "react";
 import { useTarifas } from "@/lib/dados";
 import { tarifaMedia } from "@/lib/resumo";
-import { Icone } from "./Icone";
-import { Contador } from "./ui";
+import { Icone } from "@/ui/Icone";
+import { Contador } from "@/ui/Contador";
 
 const OPCOES = [
   { id: "chuveiro", rotulo: "Chuveiro", min: 2, max: 30, passo: 1, unidade: "min", pergunta: "Minutos de cada banho" },

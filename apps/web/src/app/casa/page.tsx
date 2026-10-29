@@ -7,11 +7,12 @@ import { useState } from "react";
 import { Acompanhamento } from "@/components/Acompanhamento";
 import { descreverUso } from "@/components/Comodo";
 import { EditorAparelho } from "@/components/EditorAparelho";
-import { EspacoReservado } from "@/components/EspacoReservado";
-import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/components/Etiqueta";
-import { Icone } from "@/components/Icone";
-import { ValorAnimado } from "@/components/Movimento";
-import { Aviso, BotaoLink } from "@/components/ui";
+import { EspacoReservado } from "@/ui/EspacoReservado";
+import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
+import { Icone } from "@/ui/Icone";
+import { ValorAnimado } from "@/ui/Movimento";
+import { Aviso } from "@/ui/Aviso";
+import { BotaoLink } from "@/ui/Botao";
 import { nomeDistribuidora, useResumo } from "@/lib/resumo";
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
