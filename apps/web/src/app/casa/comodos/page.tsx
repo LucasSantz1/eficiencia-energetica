@@ -15,10 +15,13 @@ import {
 } from "@ee/core";
 import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { BlocoIluminacao, horasPorDiaTexto, LinhaAparelho, type ItemComodo } from "@/components/Comodo";
-import { EditorAparelho } from "@/components/EditorAparelho";
+import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
+import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
+import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
+import type { ItemComodo } from "@/ui/aparelho/tipos";
+import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
 import { Icone } from "@/ui/Icone";
-import { SeletorCatalogo } from "@/components/SeletorCatalogo";
+import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
@@ -26,7 +29,7 @@ import { Entrada } from "@/ui/Entrada";
 import { Folha } from "@/ui/Folha";
 import { Pilulas } from "@/ui/Pilulas";
 import { useResumo } from "@/aplicacao/resumo";
-import { useCasa } from "@/aplicacao/casa";
+import { useCasa, useEdicaoDeAparelho } from "@/aplicacao/casa";
 
 export default function Comodos() {
   const { resumo, preco, comodos, aparelhos } = useResumo();
@@ -34,6 +37,7 @@ export default function Comodos() {
   const [visao, setVisao] = useState<"comodos" | "geral">("comodos");
   const [seletorPara, setSeletorPara] = useState<string>();
   const [detalhes, setDetalhes] = useState<Aparelho>();
+  const edicao = useEdicaoDeAparelho();
   const [novoComodo, setNovoComodo] = useState(false);
   const [editandoComodo, setEditandoComodo] = useState<TipoComodoCasa>();
   const adicionarDoCatalogo = useCasa((s) => s.adicionarDoCatalogo);
@@ -102,7 +106,7 @@ export default function Comodos() {
           }
         }}
       />
-      <EditorAparelho aparelho={detalhes} aberto={Boolean(detalhes)} aoFechar={() => setDetalhes(undefined)} preco={preco} />
+      <EditorAparelho aparelho={detalhes} aberto={Boolean(detalhes)} aoFechar={() => setDetalhes(undefined)} preco={preco} comodos={edicao.comodos} aoSalvar={edicao.salvar} aoRemover={edicao.remover} />
       <NovoComodo aberto={novoComodo} aoFechar={() => setNovoComodo(false)} aoCriar={(tipo) => adicionarComodo(tipo)} />
       <EditarComodo comodo={editandoComodo} aoFechar={() => setEditandoComodo(undefined)} quantidade={aparelhos.filter((a) => a.comodoId === editandoComodo?.id).length} />
     </div>

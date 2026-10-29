@@ -5,14 +5,15 @@ import { ChevronRight, Info } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Acompanhamento } from "@/components/Acompanhamento";
-import { descreverUso } from "@/components/Comodo";
-import { EditorAparelho } from "@/components/EditorAparelho";
+import { descreverUso } from "@/ui/aparelho/textosDeUso";
+import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Aviso } from "@/ui/Aviso";
 import { BotaoLink } from "@/ui/Botao";
+import { useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
@@ -20,6 +21,7 @@ const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-fa
 export default function PainelAcompanhamento() {
   const { resumo, resumoPlano, plano, preco, bandeira, distribuidora, residencia, comodos, aparelhos, dicas, carregando, erro } = useResumo();
   const [editando, setEditando] = useState<Aparelho>();
+  const edicao = useEdicaoDeAparelho();
   const { conta } = resumo;
   const maior = resumo.aparelhos[0]?.kwhMes ?? 0;
   const melhor = dicas.find((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id));
@@ -206,7 +208,7 @@ export default function PainelAcompanhamento() {
         Os valores são estimativas feitas com os tempos de uso que você informou. A conta real pode variar com impostos, taxa de iluminação pública e dias de leitura.
       </p>
 
-      <EditorAparelho aparelho={editando} aberto={Boolean(editando)} aoFechar={() => setEditando(undefined)} preco={preco} />
+      <EditorAparelho aparelho={editando} aberto={Boolean(editando)} aoFechar={() => setEditando(undefined)} preco={preco} comodos={edicao.comodos} aoSalvar={edicao.salvar} aoRemover={edicao.remover} />
     </div>
   );
 }

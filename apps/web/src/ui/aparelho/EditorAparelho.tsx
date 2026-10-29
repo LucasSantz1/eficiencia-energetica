@@ -1,29 +1,42 @@
 "use client";
 
-import { consumoMensalKwh, formatarKwh, formatarReais, itemDoCatalogo, type Aparelho, type PrecoKwh } from "@ee/core";
+import { consumoMensalKwh, formatarKwh, formatarReais, itemDoCatalogo, type Aparelho, type Comodo, type PrecoKwh } from "@ee/core";
 import { CircleHelp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useCasa } from "@/aplicacao/casa";
-import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
 import { Contador } from "@/ui/Contador";
 import { Entrada } from "@/ui/Entrada";
 import { Folha } from "@/ui/Folha";
 import { Pilulas } from "@/ui/Pilulas";
+import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
 
 
 type Rascunho = Omit<Aparelho, "id"> & { id?: string };
 
 /**
  * Formulário para criar ou ajustar um aparelho. Mostra na hora quanto ele custa por mês,
- * para a pessoa ver o efeito de cada mudança.
+ * para a pessoa ver o efeito de cada mudança. Não lê a casa: os cômodos entram por props e
+ * salvar/remover saem por callbacks (quem liga à casa é useEdicaoDeAparelho, em aplicacao/casa.ts).
  */
-export function EditorAparelho({ aparelho, aberto, aoFechar, preco }: { aparelho: Rascunho | undefined; aberto: boolean; aoFechar: () => void; preco: PrecoKwh }) {
-  const comodos = useCasa((s) => s.comodos);
-  const adicionarAparelho = useCasa((s) => s.adicionarAparelho);
-  const atualizarAparelho = useCasa((s) => s.atualizarAparelho);
-  const removerAparelho = useCasa((s) => s.removerAparelho);
+export function EditorAparelho({
+  aparelho,
+  aberto,
+  aoFechar,
+  preco,
+  comodos,
+  aoSalvar,
+  aoRemover,
+}: {
+  aparelho: Rascunho | undefined;
+  aberto: boolean;
+  aoFechar: () => void;
+  preco: PrecoKwh;
+  comodos: Comodo[];
+  /** Com id, atualiza o aparelho; sem id, cria um novo. */
+  aoSalvar: (dados: Omit<Aparelho, "id">, id?: string) => void;
+  aoRemover: (id: string) => void;
+}) {
   const [r, setR] = useState<Rascunho | undefined>(aparelho);
   const [semEtiqueta, setSemEtiqueta] = useState(false);
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
@@ -45,8 +58,7 @@ export function EditorAparelho({ aparelho, aberto, aoFechar, preco }: { aparelho
   const salvar = () => {
     const { id, ...dados } = r;
     const limpo = { ...dados, nome: dados.nome.trim() || item?.nome || "Aparelho" };
-    if (id) atualizarAparelho(id, limpo);
-    else adicionarAparelho(limpo);
+    aoSalvar(limpo, id);
     aoFechar();
   };
 
@@ -192,7 +204,7 @@ export function EditorAparelho({ aparelho, aberto, aoFechar, preco }: { aparelho
                 <Botao
                   variante="perigo"
                   onClick={() => {
-                    removerAparelho(r.id!);
+                    aoRemover(r.id!);
                     aoFechar();
                   }}
                 >
