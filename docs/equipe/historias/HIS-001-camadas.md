@@ -208,6 +208,7 @@ const edicao = useEdicaoDeAparelho();
 
 ```ts
 // infraestrutura/dados-publicos/arquivos.servidor.ts (sem diretiva) — único lugar com node:fs
+import "server-only"; // primeiro import: o build falha se este arquivo chegar ao navegador
 import type { ArquivoTarifas } from "@ee/core";
 export interface RelatorioDados { municipios: number; municipiosSemDistribuidora: number }
 export function lerTarifasPublicadas(): Promise<ArquivoTarifas>;  // lê public/dados/tarifas.json (process.cwd() na chamada)
@@ -215,6 +216,7 @@ export function lerRelatorioPublicado(): Promise<RelatorioDados>; // lê public/
 // Os `as` de hoje ficam aqui, na fronteira; a validação com zod entra na HIS-003.
 
 // aplicacao/numeros-do-inicio.servidor.ts (sem diretiva)
+import "server-only";
 import type { BandeiraMes } from "@ee/core";
 export interface NumerosDoInicio { distribuidoras: number; cidades: number; bandeira: BandeiraMes | undefined }
 /** Igual ao numerosReais() de hoje: lê tarifas e depois relatório; qualquer erro devolve undefined. */
@@ -256,14 +258,23 @@ apps/web/src/
 
 ### 6. Verificação de camadas até o ESLint (HIS-002)
 
-Script **`scripts/verificar-camadas.mjs` na raiz do repositório**, Node 22 puro (`node:fs`, `node:path`), sem dependência.
+Script **`scripts/verificar-camadas.mjs` na raiz do repositório**, Node 22 puro (`node:fs`, `node:path`, `node:module`),
+sem dependência. _(Revisado em 2026-10-29 com os ajustes (a)–(f) do seguranca, ameaças A6, A13 e A14.)_
 
-- **Arquivos lidos:** `apps/web/src/**/*.{ts,tsx,mts,mjs}` e `packages/core/src/**/*.ts`.
+- **Raiz e arquivos lidos:** raiz = `path.resolve(import.meta.dirname, "..")` (funciona de qualquer `cwd`). Lê
+  `apps/web/src/**/*.{ts,tsx,mts,mjs}` e `packages/core/src/**/*.ts`, com `readdirSync(..., { withFileTypes: true })`,
+  **pulando links simbólicos**, `node_modules` e `.next`. Se qualquer uma das duas pastas render **0 arquivos** → erro
+  "nenhum arquivo lido em <pasta>" e código 1.
 - **Imports extraídos** (aceita import em várias linhas e `import type`):
   `/\bfrom\s+["']([^"']+)["']/g`, `/\bimport\s*\(\s*["']([^"']+)["']\s*\)/g`, `/^\s*import\s+["']([^"']+)["']/gm`.
+- **Proibidos em qualquer arquivo:** `/\brequire\s*\(/` (o projeto é ESM) e `import(` cujo argumento não é um texto fixo
+  entre aspas (`/\bimport\s*\(\s*(?!["'][^"'`]+["']\s*\))/` — pega variável e template string) → erro "import que o
+  verificador não consegue conferir". Texto parecido em comentário também acusa: preferimos o falso positivo.
 - **Resolução:** `@/x` → `apps/web/src/x`; `./` e `../` → `path.resolve(pasta do arquivo, x)`; o resto é pacote externo.
-- **Camada** = primeira pasta abaixo de `src/`: `app`, `funcionalidades/<nome>`, `ui`, `aplicacao`, `infraestrutura`,
-  `config`. Arquivo ou destino fora delas (ex.: `components/`, `lib/`) → erro "fora das camadas".
+- **Camada** = primeira pasta abaixo de `src/` (para `funcionalidades`, as duas primeiras): `app`,
+  `funcionalidades/<nome>`, `ui`, `aplicacao`, `infraestrutura`, `config`. Erro "fora das camadas" quando o arquivo ou o
+  destino resolvido: está em outra pasta (`components/`, `lib/`); fica solto em `src/` ou direto em `funcionalidades/`
+  sem subpasta; ou fica **fora de `apps/web/src`** (ex.: `../../public/dados/tarifas.json`).
 - **Regras** (destino interno permitido por origem; o resto é erro):
 
 | Origem | Pode importar |
@@ -275,17 +286,34 @@ Script **`scripts/verificar-camadas.mjs` na raiz do repositório**, Node 22 puro
 | `infraestrutura` | `infraestrutura`, `config` |
 | `config` | `config` |
 
-- **Regras de pacote externo:** `zustand` e `zustand/*` só em `infraestrutura`; `node:*`, `fs`, `fs/promises`, `path`
-  só em `infraestrutura/**/*.servidor.ts`; `@ee/core`, `react`, `next/*`, `lucide-react` em qualquer camada.
-- **Cliente × servidor:** arquivo cujo primeiro comando é `"use client"` não pode importar caminho terminado em `.servidor`.
+- **Regras de pacote externo:**
+  - `zustand` e `zustand/*` só em `infraestrutura`.
+  - **Módulos do Node** = começa com `node:` **ou** está em `builtinModules` de `node:module` (inclui `fs/promises`,
+    `child_process`, `os`, `crypto`, `url`…; comparar o nome inteiro e a parte antes da primeira `/`): só em
+    `infraestrutura/**/*.servidor.ts`.
+  - `server-only` só em arquivos `*.servidor.ts`, e **todo** `*.servidor.ts` precisa dele (próximo item).
+  - `@ee/core`, `react`, `react-dom`, `next/*`, `lucide-react` em qualquer camada.
+- **Cliente × servidor:**
+  - Diretiva: tirar o BOM (`﻿`), pular espaços, comentários `//` e `/* */` do começo e conferir
+    `/^["']use client["']\s*;?/`. Assim `'use client'` e diretiva depois de comentário contam.
+  - Arquivo com `"use client"` não pode importar destino que case `/\.servidor(\.tsx?)?$/` (com ou sem extensão).
+  - Todo arquivo `*.servidor.ts` tem `import "server-only";` como **primeiro import**. O Next 16 trata esse import
+    internamente, sem pacote novo (`next/dist/docs/01-app/01-getting-started/05-server-and-client-components.md`, "Preventing
+    environment poisoning"; o módulo vem em `next/dist/compiled/server-only`), e falha o build se o arquivo chegar ao
+    navegador **por qualquer caminho** — inclusive o indireto, que o script não vê.
 - **Domínio (ADR-001 regra 6):** em `packages/core/src`, só import relativo (`./`); qualquer outro → erro.
 - **Pastas antigas:** se `apps/web/src/components` ou `apps/web/src/lib` existir → erro "pasta antiga ainda existe".
+- **O script é inofensivo (A14):** só lê arquivos; sem `child_process`, `eval`, `import()` dos arquivos lidos, rede ou
+  escrita; sem `try/catch` que engula erro — qualquer exceção termina com código diferente de 0.
 - **Saída:** uma linha por problema, ex.:
   `apps/web/src/ui/Botao.tsx → @/aplicacao/casa: ui não pode importar aplicacao (ADR-001, regra 4)`;
   no fim `N problema(s)` e código de saída 1; sem problemas, `Camadas: tudo certo (N arquivos)` e código 0.
 - **Ligação:** no `package.json` da raiz, `"camadas": "node scripts/verificar-camadas.mjs"` (passo 1) e, no último passo,
   `"typecheck": "pnpm camadas && pnpm -r --if-present typecheck"`. O CI (`ci.yml`) já roda `pnpm typecheck`: não muda.
   Durante a migração, `pnpm camadas` falha listando o que falta mover — serve de lista de tarefas.
+- **Fora do script (recusado, com motivo):** não seguimos imports **indiretos** (grafo completo cliente → … → servidor):
+  o `server-only` já cobre isso no build com a mensagem do próprio Next, e um resolvedor de grafo deixaria o script grande.
+  Também não interpretamos JavaScript (sem parser): regex + falso positivo é suficiente até o ESLint.
 - Na HIS-002 decidimos se o ESLint `no-restricted-imports` substitui o script ou se os dois convivem.
 
 ### 7. O que NÃO muda
@@ -302,7 +330,8 @@ Script **`scripts/verificar-camadas.mjs` na raiz do repositório**, Node 22 puro
 ### 8. Ordem de execução (cada passo compila: `pnpm typecheck` verde no fim de cada um)
 
 0. **QA, antes de tudo:** capturas, "fotos" do DOM e bytes de script por rota no `main` (ver seção 10).
-1. Criar `scripts/verificar-camadas.mjs` e o script `camadas` (ainda fora do `typecheck`).
+1. Criar `scripts/verificar-camadas.mjs` (seção 6 inteira, inclusive os ajustes (a)–(f)) e o script `camadas` (ainda
+   fora do `typecheck`). Antes de seguir, conferir os casos negativos da seção 10, item 7.
 2. **`ui/` genérico:** dividir `ui.tsx`; `git mv` de Icone, Marca, Movimento, Barras, Etiqueta, EspacoReservado,
    BuscaCidade; corrigir imports em todos os arquivos.
 3. **`infraestrutura/` + `aplicacao/`:** store, identificador, `navegador.ts`, `aplicacao/casa.ts` (por enquanto sem
@@ -310,7 +339,8 @@ Script **`scripts/verificar-camadas.mjs` na raiz do repositório**, Node 22 puro
    `@/lib/dados` → `@/aplicacao/dados-publicos`, `@/lib/resumo` → `@/aplicacao/resumo` (o `rascunho` ainda fica em `lib/`).
 4. **`ui/aparelho/`:** dividir `Comodo.tsx`, mover TempoUso, SeletorCatalogo, EditorAparelho (props novas) e criar
    `useEdicaoDeAparelho`; ajustar `app/casa/page.tsx`, `app/casa/comodos/page.tsx`, `Cadastro.tsx` e `lib/rascunho.ts`.
-5. **`funcionalidades/inicio/`** + `arquivos.servidor.ts` + `numeros-do-inicio.servidor.ts`; `app/page.tsx` fino.
+5. **`funcionalidades/inicio/`** + `arquivos.servidor.ts` + `numeros-do-inicio.servidor.ts` (os dois com
+   `import "server-only";` como primeiro import); `app/page.tsx` fino.
    Rodar `pnpm build` e conferir a `/` no manifesto de prerender e os bytes de script (seção 10, item 6).
 6. **`funcionalidades/cadastro/`:** `Cadastro.tsx` e `rascunho.ts`; `lib/` some.
 7. **`casca`, `acompanhamento`, `comodos`, `dicas`, `ajustes`;** rotas finas; `components/` some.
@@ -326,7 +356,7 @@ Sugestão para quem orquestra: um commit por passo (com `git mv`, para o histór
 | Import quebrado ou esquecido | `pnpm typecheck` a cada passo + `grep` do passo 8 + `pnpm camadas` |
 | `"use client"` perdido ou fora do topo ao dividir arquivos (quebra hooks/onClick) | primeira linha de cada arquivo marcado `uc` na tabela; `pnpm build` acusa |
 | `"use client"` posto por engano na `PaginaInicial` ou numa rota fina: a `/` inteira vira JavaScript no celular | tabela diz "sem"; comparar os bytes de script da `/` antes/depois (passo 5) |
-| `node:fs` chegando ao navegador (erro de build) | só em `*.servidor.ts`; o script barra `"use client"` → `.servidor` |
+| `node:fs` chegando ao navegador (erro de build) | só em `*.servidor.ts`; o script barra `"use client"` → `.servidor` (direto) e o `import "server-only"` barra no build qualquer caminho |
 | `revalidate` movido para fora da rota (Next ignora em silêncio e a `/` para de atualizar) | fica em `app/page.tsx`; conferir no manifesto de prerender (seção 10, item 6) |
 | Dois stores (casa "some" ao navegar) | um só `create` em `infraestrutura/armazenamento/casa.ts`; `aplicacao` só reexporta |
 | Perda de dados salvos | store copiado byte a byte; QA testa casa salva na versão 2 e na versão 1 (seção 10) |
@@ -361,8 +391,13 @@ O QA compara **antes (main `57700ab`) × depois**, com o mesmo `tarifas.json` de
    mostra `86400` e um `htmlSize` parecido com o de antes (hoje ≈ 66 kB); e, no Playwright, a soma de
    `performance.getEntriesByType("resource")` com `initiatorType === "script"` (`encodedBodySize`) em `/`, `/comecar` e
    `/casa` não cresce mais que 1 kB.
-7. **Teste do próprio script:** pôr temporariamente `import { useCasa } from "@/aplicacao/casa";` em `ui/Botao.tsx` →
-   `pnpm camadas` falha com a mensagem da regra 4; tirar → volta a passar.
+7. **Teste do próprio script:** um caso por vez (numa cópia ou revertendo depois), `pnpm camadas` tem que sair com 1 e
+   a mensagem da regra: `ui/Botao.tsx` → `@/aplicacao/casa`; `funcionalidades/a` → `@/funcionalidades/b/X` e `../b/X`;
+   funcionalidade → `@/infraestrutura/…`; `require("x")`; ``import(`@/${x}`)``; `'use client'` depois de um comentário
+   importando `.servidor`; `fs`, `node:fs` e `child_process` fora de `.servidor`; `.servidor.ts` sem `server-only`;
+   `zustand` fora de `infraestrutura`; `../../public/dados/tarifas.json`; `src/lib/` recriada; `react` em
+   `packages/core/src`. E `cd / && node <repo>/scripts/verificar-camadas.mjs` dá o mesmo número de arquivos e código 0
+   (lista completa nos pontos R13 da seção "Ameaças").
 
 ### 11. Fora desta história (dívida registrada no contexto do tech-lead)
 
@@ -467,7 +502,7 @@ _(qa — a preencher)_ Teste de ponta a ponta antes e depois com as mesmas captu
 
 - [x] `[para: tech-lead]` Os componentes compartilhados de aparelho vão para `ui/aparelho/` ou ficam em `funcionalidades/comodos/` exportados por um `index.ts` público?
   — **resposta (tech-lead, 2026-10-29):** vão para `ui/aparelho/`, sem store (props entram, callbacks saem). `EditorAparelho` também, ligado à casa pelo hook `useEdicaoDeAparelho()` de `aplicacao/casa.ts`. Um `index.ts` em `comodos` faria o cadastro e o acompanhamento importarem outra funcionalidade. `ui/` pode chamar funções puras do `@ee/core`; ADR-001 regra 4 revisada. Detalhes no desenho técnico, seções 2 e 4.
-- [ ] `[para: tech-lead]` (seguranca, 2026-10-29 — responder **antes do passo 1**; não bloqueia o resto do desenho)
+- [x] `[para: tech-lead]` (seguranca, 2026-10-29 — responder **antes do passo 1**; não bloqueia o resto do desenho)
   Aceita estes ajustes na seção 6 para o `verificar-camadas.mjs` não ter falso negativo (ameaça A13)?
   (a) achar a raiz pelo `import.meta.dirname`, não pelo `cwd`, e **falhar se ler 0 arquivos**;
   (b) `require("…")` e `import(` com argumento que não é texto fixo viram erro;
@@ -477,6 +512,18 @@ _(qa — a preencher)_ Teste de ponta a ponta antes e depois com as mesmas captu
   (f) destino fora de `apps/web/src` (ex.: JSON de `public/`) e arquivo solto em `funcionalidades/` = erro "fora das camadas".
   E aceita `import "server-only";` na 1ª linha de `arquivos.servidor.ts` e `numeros-do-inicio.servidor.ts` (ameaça A6)?
   O Next 16 trata esse import internamente (sem pacote novo) e barra no build o caso **indireto** que o script não vê.
+  — **resposta (tech-lead, 2026-10-29): aceito (a)–(f) e o `server-only`**, já escritos na seção 6 e nos passos 1 e 5.
+  Detalhes: (a) raiz por `import.meta.dirname` e erro com 0 arquivos em **cada** pasta lida; (b) `require(` e `import(`
+  sem texto fixo viram erro mesmo em comentário (falso positivo é preferível); (c) `builtinModules` + prefixo `node:`;
+  (d) BOM, comentários e os dois tipos de aspas; (e) `/\.servidor(\.tsx?)?$/`; (f) destino fora de `apps/web/src` e
+  arquivo solto em `src/` ou direto em `funcionalidades/` = "fora das camadas". `server-only`: conferi em
+  `next/dist/docs/01-app/01-getting-started/05-server-and-client-components.md` (instalar é **opcional**, o Next trata o
+  import internamente e traz os tipos) e o módulo existe em `next/dist/compiled/server-only` — sem pacote novo, sem mudar
+  o lockfile. Acrescentei: o script exige `import "server-only";` como primeiro import de **todo** `*.servidor.ts` e só
+  aceita `server-only` nesses arquivos. **Recusado:** seguir imports indiretos dentro do script (grafo completo) — o
+  `server-only` cobre isso no build e o script ficaria grande; e trocar regex por um parser (dependência nova) antes do
+  ESLint da HIS-002. **Atenção futura:** se um `*.servidor.ts` ganhar teste no Vitest (fora do Next), o import não
+  resolve; aí instalamos `server-only` como devDependency com versão exata ou criamos um alias no `vitest.config`.
 
 ## Conversa da equipe
 
@@ -528,3 +575,13 @@ _(qa — a preencher)_ Teste de ponta a ponta antes e depois com as mesmas captu
   direto mostra "você já cadastrou", não o passo "estado"; (2) editar um aparelho pelo "Quem mais gasta" e pelos
   cômodos mantém o mesmo `id` e a mesma quantidade de aparelhos no JSON salvo; (3) remover um aparelho que está no plano
   tira as dicas dele do `plano`; (4) depois de "Apagar todos os meus dados", `state` sem `residencia` e cinco listas vazias.
+
+### [tech-lead] 2026-10-29 — pergunta do seguranca sobre o script respondida; seção 6 revisada
+- O que fiz: aceitei os ajustes (a)–(f) da A13 e o `import "server-only"` da A6; reescrevi a seção 6 e ajustei os
+  passos 1 e 5, o contrato 4.4, a linha de risco do `node:fs` e o item 7 da seção 10 (casos negativos alinhados com R13).
+- Decisões e porquê: barreira que diz "tudo certo" sem ter lido nada é pior que nenhuma; o `server-only` é tratado pelo
+  próprio Next 16 (doc conferida, sem pacote novo) e cobre o caso indireto. Recusei o grafo de imports no script e o
+  parser: o build e o ESLint (HIS-002) cobrem, e o script continua pequeno e sem dependência.
+- Arquivos alterados: esta história (seções 4.4, 6, 8, 9, 10 e "Perguntas abertas"); meu `diario.md`. Não mexi em "Plano de testes".
+- Como verifiquei: li a seção do Next 16 sobre `server-only` e conferi `next/dist/compiled/server-only` no `node_modules`.
+- Para o próximo (frontend, depois do passo 0 do qa): o passo 1 já inclui as regras novas do script e os casos negativos.

@@ -1,0 +1,239 @@
+{
+  "state": {
+    "residencia": {
+      "uf": "SP",
+      "municipioIbge": 3541406,
+      "municipioNome": "Presidente Prudente",
+      "distribuidoraId": "ess",
+      "beneficio": "tarifa-social",
+      "ligacao": "nao-sei",
+      "pessoas": 4
+    },
+    "comodos": [
+      {
+        "id": "00000000-0000-4000-8000-000000000013",
+        "tipo": "cozinha",
+        "nome": "Cozinha"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000023",
+        "tipo": "sala",
+        "nome": "Sala"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000034",
+        "tipo": "quarto",
+        "nome": "Quarto 1"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000045",
+        "tipo": "quarto",
+        "nome": "Quarto 2"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000050",
+        "tipo": "banheiro",
+        "nome": "Banheiro"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000057",
+        "tipo": "lavanderia",
+        "nome": "Lavanderia"
+      }
+    ],
+    "aparelhos": [
+      {
+        "catalogoId": "lampada-led",
+        "nome": "Lâmpada de LED",
+        "quantidade": 2,
+        "potenciaW": 9,
+        "minutosPorDia": 240,
+        "diasPorSemana": 7,
+        "id": "00000000-0000-4000-8000-000000000075",
+        "comodoId": "00000000-0000-4000-8000-000000000013"
+      },
+      {
+        "catalogoId": "tv",
+        "nome": "TV LED até 32 polegadas",
+        "quantidade": 1,
+        "potenciaW": 45,
+        "minutosPorDia": 300,
+        "diasPorSemana": 7,
+        "variantes": {
+          "tecnologia": "led",
+          "tamanho": "ate-32"
+        },
+        "id": "00000000-0000-4000-8000-000000000076",
+        "comodoId": "00000000-0000-4000-8000-000000000023"
+      },
+      {
+        "catalogoId": "roteador",
+        "nome": "Roteador ou modem de internet",
+        "quantidade": 1,
+        "potenciaW": 12,
+        "minutosPorDia": 1440,
+        "diasPorSemana": 7,
+        "id": "00000000-0000-4000-8000-000000000077",
+        "comodoId": "00000000-0000-4000-8000-000000000023"
+      },
+      {
+        "catalogoId": "lampada-led",
+        "nome": "Lâmpada de LED",
+        "quantidade": 2,
+        "potenciaW": 9,
+        "minutosPorDia": 300,
+        "diasPorSemana": 7,
+        "id": "00000000-0000-4000-8000-000000000078",
+        "comodoId": "00000000-0000-4000-8000-000000000023"
+      },
+      {
+        "catalogoId": "ventilador",
+        "nome": "Ventilador",
+        "quantidade": 1,
+        "potenciaW": 130,
+        "minutosPorDia": 480,
+        "diasPorSemana": 7,
+        "variantes": {
+          "tipo": "40"
+        },
+        "id": "00000000-0000-4000-8000-000000000079",
+        "comodoId": "00000000-0000-4000-8000-000000000034"
+      },
+      {
+        "catalogoId": "carregador-celular",
+        "nome": "Carregador de celular",
+        "quantidade": 1,
+        "potenciaW": 15,
+        "minutosPorDia": 120,
+        "diasPorSemana": 7,
+        "id": "00000000-0000-4000-8000-000000000080",
+        "comodoId": "00000000-0000-4000-8000-000000000034"
+      },
+      {
+        "catalogoId": "lampada-led",
+        "nome": "Lâmpada de LED",
+        "quantidade": 1,
+        "potenciaW": 9,
+        "minutosPorDia": 180,
+        "diasPorSemana": 7,
+        "id": "00000000-0000-4000-8000-000000000081",
+        "comodoId": "00000000-0000-4000-8000-000000000034"
+      },
+      {
+        "catalogoId": "ventilador",
+        "nome": "Ventilador",
+        "quantidade": 1,
+        "potenciaW": 130,
+        "minutosPorDia": 480,
+        "diasPorSemana": 7,
+        "variantes": {
+          "tipo": "40"
+        },
+        "id": "00000000-0000-4000-8000-000000000082",
+        "comodoId": "00000000-0000-4000-8000-000000000045"
+      },
+      {
+        "catalogoId": "carregador-celular",
+        "nome": "Carregador de celular",
+        "quantidade": 1,
+        "potenciaW": 15,
+        "minutosPorDia": 120,
+        "diasPorSemana": 7,
+        "id": "00000000-0000-4000-8000-000000000083",
+        "comodoId": "00000000-0000-4000-8000-000000000045"
+      },
+      {
+        "catalogoId": "lampada-led",
+        "nome": "Lâmpada de LED",
+        "quantidade": 1,
+        "potenciaW": 9,
+        "minutosPorDia": 180,
+        "diasPorSemana": 7,
+        "id": "00000000-0000-4000-8000-000000000084",
+        "comodoId": "00000000-0000-4000-8000-000000000045"
+      },
+      {
+        "catalogoId": "chuveiro",
+        "nome": "Chuveiro elétrico",
+        "quantidade": 1,
+        "potenciaW": 5500,
+        "minutosPorDia": 32,
+        "diasPorSemana": 7,
+        "banho": {
+          "banhosPorDia": 4,
+          "minutosPorBanho": 8
+        },
+        "fatorCiclo": 1,
+        "variantes": {
+          "potencia": "5500",
+          "aquecimento": "nao"
+        },
+        "id": "00000000-0000-4000-8000-000000000085",
+        "comodoId": "00000000-0000-4000-8000-000000000050"
+      },
+      {
+        "catalogoId": "lampada-led",
+        "nome": "Lâmpada de LED",
+        "quantidade": 1,
+        "potenciaW": 9,
+        "minutosPorDia": 60,
+        "diasPorSemana": 7,
+        "id": "00000000-0000-4000-8000-000000000086",
+        "comodoId": "00000000-0000-4000-8000-000000000050"
+      },
+      {
+        "catalogoId": "maquina-lavar",
+        "nome": "Máquina de lavar",
+        "quantidade": 1,
+        "potenciaW": 500,
+        "minutosPorDia": 60,
+        "diasPorSemana": 3,
+        "variantes": {
+          "tipo": "lavadora"
+        },
+        "id": "00000000-0000-4000-8000-000000000087",
+        "comodoId": "00000000-0000-4000-8000-000000000057"
+      },
+      {
+        "catalogoId": "lampada-led",
+        "nome": "Lâmpada de LED",
+        "quantidade": 1,
+        "potenciaW": 9,
+        "minutosPorDia": 60,
+        "diasPorSemana": 7,
+        "id": "00000000-0000-4000-8000-000000000088",
+        "comodoId": "00000000-0000-4000-8000-000000000057"
+      }
+    ],
+    "contas": [
+      {
+        "id": "00000000-0000-4000-8000-000000000089",
+        "competencia": "2026-09",
+        "kwh": 182,
+        "valor": 151.37
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000090",
+        "competencia": "2026-10",
+        "kwh": 168,
+        "valor": 140.25
+      }
+    ],
+    "leituras": [
+      {
+        "id": "00000000-0000-4000-8000-000000000091",
+        "data": "2026-10-20",
+        "valorKwh": 12000
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000092",
+        "data": "2026-10-29",
+        "valorKwh": 12052
+      }
+    ],
+    "plano": [
+      "00000000-0000-4000-8000-000000000085:banho-curto"
+    ]
+  },
+  "version": 2
+}

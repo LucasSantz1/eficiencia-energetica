@@ -10,6 +10,17 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-29 · HIS-001 · script de camadas endurecido e `server-only` (pergunta do seguranca)
+- O que fiz: respondi a pergunta `[para: tech-lead]` da A13/A6; reescrevi a seção 6 do desenho e ajustei os passos 1 e 5,
+  o contrato 4.4, a linha de risco do `node:fs` e os casos negativos da verificação.
+- Decisões e porquê: aceitos (a) raiz por `import.meta.dirname` e erro com 0 arquivos, (b) `require`/`import()` não
+  literal = erro, (c) `builtinModules`, (d) diretiva com BOM/comentário/aspas simples, (e) `.servidor` com extensão,
+  (f) destino fora de `src/` = erro; `import "server-only"` obrigatório em todo `*.servidor.ts` (o Next 16 trata sem
+  pacote novo — doc `05-server-and-client-components.md`, módulo em `next/dist/compiled/server-only`). Recusados:
+  grafo de imports indiretos no script e parser (o build e o ESLint cobrem).
+- Arquivos: `docs/equipe/historias/HIS-001-camadas.md`, este diário.
+- Próximos passos: se um `*.servidor.ts` ganhar teste no Vitest, instalar `server-only` (versão exata) ou fazer alias.
+
 ## 2026-10-29 · HIS-001 · desenho técnico definitivo da reorganização em camadas
 - O que fiz: li todo o `apps/web/src` e mapeei os imports; escrevi o desenho técnico na história (tabela arquivo → destino
   com a diretiva de cada arquivo, contratos de `aplicacao/casa.ts`, `EditorAparelho` e página inicial, estrutura final,

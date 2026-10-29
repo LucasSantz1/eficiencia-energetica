@@ -57,8 +57,9 @@ no CI) desde a HIS-001. Na HIS-002 decide-se se o `no-restricted-imports` do ESL
   várias telas, ela vira um hook em `aplicacao/` (ex.: `useEdicaoDeAparelho`). É ali que a sincronização com o servidor
   vai entrar (E4) sem mudar as telas.
 - **Código só de servidor:** `node:fs` e afins só aparecem em `infraestrutura/**/*.servidor.ts`; quem depende deles
-  também termina em `.servidor.ts` (ex.: `aplicacao/numeros-do-inicio.servidor.ts`). Um arquivo com `"use client"`
-  nunca importa um `.servidor`.
+  também termina em `.servidor.ts` (ex.: `aplicacao/numeros-do-inicio.servidor.ts`) e tem `import "server-only";` como
+  primeiro import (o Next trata esse import sem pacote novo e falha o build se o arquivo chegar ao navegador). Um arquivo
+  com `"use client"` nunca importa um `.servidor`.
 - **Sem barris `index.ts`:** importa-se o arquivo direto, para não misturar módulos cliente e servidor nem atrapalhar o
   tree-shaking. Imports entre pastas usam `@/`; `./` só dentro da mesma pasta.
 - O app Expo reaproveita `@ee/core` e copia a mesma organização.
