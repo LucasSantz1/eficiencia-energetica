@@ -374,7 +374,90 @@ O QA compara **antes (main `57700ab`) × depois**, com o mesmo `tarifas.json` de
 
 ## Ameaças
 
-_(seguranca — a preencher na etapa 3)_ Risco principal: regressão (site quebrar) e perda de dados salvos.
+_(seguranca, 2026-10-29 — análise de ameaças da etapa 3, feita contra o desenho técnico e o código de `57700ab`/`e49a14f`.)_
+
+**Ativos:** a casa salva no aparelho da pessoa (`localStorage["eficiencia-energetica:casa"]`: residência, cômodos,
+aparelhos, contas, leituras, plano); o direito de apagar tudo (LGPD); a garantia de que nada sai do aparelho; o site
+abrindo no celular (tela branca = família sem a ferramenta); a barreira de camadas do CI.
+**Quem "ataca":** não há atacante novo nesta história (nenhuma entrada, rota de API, banco ou dependência nova). A ameaça
+real é **o próprio refatoramento**: um erro silencioso que passa no typecheck e no build e aparece só no celular da família.
+
+**Fatos conferidos no código atual** (servem de linha de base):
+- O zustand `persist` (`node_modules/zustand/esm/middleware.mjs`, l. 397–428) **só grava ao hidratar quando a versão
+  muda** (`migrated`). Com `version: 2` igual, abrir o site não reescreve a casa: uma regressão de tela, sozinha, não
+  apaga dados. A perda só acontece se o código novo chamar `set` com estado errado ou houver dois stores.
+- `Cadastro` usa `useCasaCarregada` + `jaTemCasa` para não mostrar o assistente a quem já tem casa; terminar o
+  assistente chama `criarCasa`, que **substitui** residência, cômodos e aparelhos. É o caminho mais curto para perda de dados.
+- Build atual: a chave `eficiencia-energetica:casa` aparece em 1 arquivo de `.next/static`; nenhum `readFile`,
+  `process.cwd` ou `node:fs` em `.next/static`; os únicos endereços nos scripts do cliente são textos de bibliotecas
+  (w3.org, nextjs.org, react.dev, github.com). Nenhum `dangerouslySetInnerHTML`, `innerHTML`, `eval` ou `new Function`.
+- `packages/core/src` só tem imports relativos. CI (`ci.yml`) roda `pnpm typecheck`, `pnpm test`, `pnpm build` na raiz.
+
+| # | Ameaça | Gravidade | Mitigação |
+| --- | --- | --- | --- |
+| A1 | **Dois stores** com a mesma chave (outro `create`/`persist` em `aplicacao/`, ou o store copiado em vez de reexportado): cada um guarda uma cópia em memória e a última gravação apaga o que o outro salvou (aparelho some, conta some) | crítico | Um só `create` em `infraestrutura/armazenamento/casa.ts`; `aplicacao/casa.ts` só reexporta com `export { } from` (desenho 4.1). Conferir R1 |
+| A2 | **Formato salvo alterado** na mudança de arquivo (`name`, `version`, `partialize`, `migrate`, `storage`): versão diferente dispara `migrate` e regrava; `partialize` diferente deixa de salvar uma lista | crítico | Store copiado byte a byte; só muda o `import` de `novoId`. Conferir R2; QA testa casa v2 e v1 (seção 10, item 3) |
+| A3 | **Portão de hidratação quebrado** (`useCasaCarregada` removido, trocado de ordem ou de outra instância): `/comecar` mostra o assistente a quem já tem casa e `criarCasa` substitui tudo; a `Casca` mostra "Vamos cadastrar" | alto | Mesma instância (A1); `Cadastro`, `Casca` e `BotaoComecar` mantêm as mesmas chamadas. QA: com casa v2 salva, abrir `/comecar` direto mostra "você já cadastrou" (não o passo "estado"). Conferir R3 |
+| A4 | **Editor de aparelho grava diferente** com as props novas: `aoSalvar` sem `id` cria duplicado em vez de atualizar; remoção reimplementada fora do store não limpa o `plano` (`${id}:`); ordem salvar/fechar invertida | alto | Contrato 4.3: `salvar` usa `atualizarAparelho` quando há `id`; `remover` é o `removerAparelho` do store (não um `filter` novo); `aoSalvar(limpo, id)` → `aoFechar()`. Conferir R4; QA confere no JSON salvo que editar mantém o mesmo `id` e a mesma quantidade de aparelhos |
+| A5 | **"Apagar todos os meus dados" deixa de funcionar** (direito de apagar, LGPD) ao mover `TelaAjustes`/`Cadastro` | alto | `apagarTudo` continua sendo a ação do store; nada de limpar `localStorage` à mão. QA: depois de apagar, `state` sem `residencia` e com as cinco listas vazias, e `router.push("/")` como hoje |
+| A6 | **Código de servidor no navegador**: `node:fs`/`process.cwd` em arquivo importado (direta ou **indiretamente**) por um `"use client"`. O script só vê o import direto `"use client"` → `.servidor` | médio | `.servidor.ts` + regra do script. **Recomendado:** `import "server-only";` na 1ª linha dos dois `.servidor.ts` (o Next 16 trata esse import internamente, sem pacote novo — `next/dist/docs/01-app/01-getting-started/05-server-and-client-components.md`, l. 584–604): pega o caso indireto no build. Conferir R5 |
+| A7 | **Componente de servidor recebendo "referência de cliente"**: `PaginaInicial` (sem diretiva) importando de um módulo `"use client"` algo que não é componente (ex.: `estilosBotao`, `IR_ADIANTE`, `TIPOS`) — no servidor isso vira um objeto de referência, e a classe ou o texto sai errado em silêncio | médio | `PaginaInicial` e rotas finas só importam **componentes** de módulos `uc` (como o `app/page.tsx` faz hoje); constantes e funções vêm do `@ee/core` ou de arquivos sem diretiva. Conferir R6 |
+| A8 | **`"use client"` perdido** (hooks em componente de servidor) ou **posto a mais** (`PaginaInicial` ou rota fina → a `/` inteira vira JavaScript no celular de 3G) | médio | Tabela de diretivas da seção 3; build acusa o primeiro caso; bytes de script do QA (seção 10, item 6) acusam o segundo. Conferir R7 |
+| A9 | **`revalidate` fora da rota**: a `/` congela com a bandeira e o número de distribuidoras do dia do build (número errado = quebra da honestidade) | médio | Fica em `app/page.tsx`. Conferir R8 |
+| A10 | **Rotas e redirecionamento**: `/casa/aparelhos` deixa de redirecionar; `?visao=geral` e `#comodo-<id>` deixam de abrir; `/casa/*` muda de estática para dinâmica | médio | As mesmas 8 rotas; `redirect` intocado; o `useEffect` que lê `window.location.search` vai junto para `TelaComodos`. Conferir R9 |
+| A11 | **Import circular / ordem de inicialização** ao dividir `ui.tsx` e `Comodo.tsx` (ex.: `LinhaAparelho` ↔ `BlocoIluminacao` ↔ `TempoUso`): passa no typecheck e quebra no navegador com "Cannot access … before initialization" → tela branca | médio | `tipos.ts` e `textosDeUso.ts` só dependem do `@ee/core`; componentes de `ui/aparelho/` não se importam em ciclo. Conferir R10; QA: console sem erro em todas as rotas |
+| A12 | **Tela branca por exceção** num caminho novo (não há `app/error.tsx`; dado corrompido já quebra hoje — HIS-003) | médio (pré-existente) | Nenhum `throw` novo, nenhum acesso novo a campo da casa sem `?.`; a validação de fronteira continua na HIS-003. Conferir R11 |
+| A13 | **Falso negativo no `verificar-camadas.mjs`** (a barreira do CI some em silêncio). Lacunas do desenho da seção 6: (a) se ler **0 arquivos** (caminho relativo ao `cwd`, glob errado) diz "tudo certo" com código 0; (b) `require("…")` e `import(\`…\`)` não são extraídos; (c) módulos do Node sem `node:` além de `fs`/`path` (`child_process`, `os`, `crypto`, `http`, `url`…) passam; (d) `'use client'` com aspas simples, BOM ou comentário antes não é reconhecido; (e) `.servidor` com extensão (`.servidor.ts`) não casa; (f) destino fora de `src/` (ex.: `../../public/dados/tarifas.json`, permitido pelo `resolveJsonModule`) ou arquivo solto em `funcionalidades/` sem pasta | médio | Ajustes no script (ver pergunta aberta ao tech-lead): raiz por `import.meta.dirname`, erro se ler 0 arquivos; `require(` e `import(` não literal viram erro; `module.builtinModules` (com e sem `node:`); detectar a diretiva ignorando BOM, comentários e tipo de aspas; casar `/\.servidor(\.tsx?)?$/`; destino fora das camadas = erro. Conferir R13 com casos negativos |
+| A14 | **O script executar ou alterar algo**: ele roda no CI de todo PR | médio | Só `node:fs` (leitura), `node:path`, `node:module`/`node:url`; sem `child_process`, `eval`, `import()` dos arquivos lidos, rede ou escrita; não segue links simbólicos; ignora `node_modules` e `.next`; sem `try/catch` que engula erro e saia com 0. Conferir R12 |
+| A15 | **Algo novo saindo do aparelho** (LGPD): `fetch`/`sendBeacon` novo, dependência nova, host novo nos scripts, mudança no `next.config.ts` | alto (se acontecer) | Fora do escopo por definição: nenhuma dependência, nenhum `fetch` novo, `next.config.ts` igual. Conferir R14 |
+| A16 | Links externos sem `rel="noopener noreferrer"` (`app/page.tsx` l. 292, `app/sobre/page.tsx` l. 44–56) | baixo (pré-existente) | Sem `target="_blank"` não há troca de aba; o JSX não pode mudar nesta história. Registrado para a HIS-003 |
+| A17 | `novoId` com `Math.random` quando não há `crypto.randomUUID` | baixo | Ids só locais, não são segredo; corpo igual ao de hoje |
+
+**Pontos que vou conferir na revisão de código (etapa 6)** — `main` = `57700ab`; caminhos a partir da raiz:
+
+- **R1 · store único.** `grep -rnE "\bcreate(<|\()" apps/web/src` → 1 linha, em `infraestrutura/armazenamento/casa.ts`;
+  `grep -rn "eficiencia-energetica:casa" apps/web/src` → 1 linha; `grep -rn "from \"zustand" apps/web/src` → só esse
+  arquivo; depois do build, `grep -rl "eficiencia-energetica:casa" apps/web/.next/static | wc -l` → 1 (igual ao `main`).
+- **R2 · formato salvo.** `git diff main:apps/web/src/lib/store.ts HEAD:apps/web/src/infraestrutura/armazenamento/casa.ts`
+  → só o `import { novoId }` e a saída do `export const novoId`; `name`, `version: 2`, `storage`, `partialize`, `migrate`
+  e as 16 ações idênticos. `novoId` em `identificador.ts` com o mesmo corpo.
+- **R3 · portão de hidratação.** `grep -rn "useCasaCarregada" apps/web/src` → definida 1 vez, usada em `Casca`,
+  `Cadastro` e `BotaoComecar` como hoje; diff de `Cadastro.tsx` só nos imports.
+- **R4 · editor.** `grep -rn "useCasa" apps/web/src/ui` → vazio; diff de `EditorAparelho.tsx`: `aoSalvar(limpo, id)` →
+  `aoFechar()`, `aoRemover(r.id!)` → `aoFechar()`; `useEdicaoDeAparelho` usa `atualizarAparelho`/`adicionarAparelho`/
+  `removerAparelho` do store, sem `filter` próprio.
+- **R5 · servidor.** `grep -rnE "node:|from \"(fs|path|os|child_process|crypto)|process\.cwd" apps/web/src` → só
+  `infraestrutura/dados-publicos/arquivos.servidor.ts`; `grep -rln "\.servidor" apps/web/src` → só `app/page.tsx`,
+  `funcionalidades/inicio/PaginaInicial.tsx` (`import type`) e `aplicacao/numeros-do-inicio.servidor.ts`, nenhum com
+  `"use client"`; `grep -rlE "readFile|process\.cwd|node:fs|relatorio\.json" apps/web/.next/static` → vazio.
+- **R6 · referência de cliente.** Nos arquivos sem diretiva que são componentes de servidor (`PaginaInicial`, rotas),
+  todo import de módulo `uc` é de componente (nome com inicial maiúscula e usado como `<Nome>`).
+- **R7 · diretivas.** `for f in $(git ls-files 'apps/web/src/*.ts' 'apps/web/src/*.tsx'); do printf '%s\t%s\n' "$(head -1 $f)" $f; done`
+  bate com a coluna "Diretiva" da seção 3; rotas finas e `PaginaInicial` sem diretiva.
+- **R8 · cache da `/`.** `grep -rn "revalidate" apps/web/src` → só `app/page.tsx`; manifesto de prerender da `/` com `86400`.
+- **R9 · rotas.** Tabela de rotas do `pnpm build` igual à do `main` (mesmas 8, mesmas estáticas);
+  `curl -sI localhost:3100/casa/aparelhos` → 307 para `/casa/comodos`; `/casa/comodos?visao=geral` abre a visão geral.
+- **R10 · ciclos.** Grafo de imports de `ui/` e `ui/aparelho/` sem ciclo (script de leitura no meu scratchpad, mesmas
+  expressões do `verificar-camadas`); `tipos.ts` e `textosDeUso.ts` só importam `@ee/core`; console do QA sem erro.
+- **R11 · exceções novas.** `git diff -M main -- apps/web/src | grep -E '^\+.*\bthrow\b'` → vazio (fora linhas movidas).
+- **R12 · o script é seguro.** Ler o arquivo inteiro; `grep -nE "child_process|exec|spawn|eval|new Function|require\(|fetch|https?:|writeFile|rm(Sync)?\(|unlink" scripts/verificar-camadas.mjs`
+  → só os textos dos regex; varredura ignora `node_modules`, `.next` e links simbólicos.
+- **R13 · o script não deixa passar.** Numa cópia do repositório no meu scratchpad (sem tocar a branch), injetar um caso
+  por vez e exigir código 1 com a mensagem da regra: `ui` → `@/aplicacao/casa`; `funcionalidades/a` → `@/funcionalidades/b/X`
+  e `../b/X`; `funcionalidades` → `@/infraestrutura/…` direto; `import type` em várias linhas; `export { x } from`;
+  `import("@/infraestrutura/…")`; `'use client'` com comentário antes importando `.servidor`; `fs`, `node:fs`,
+  `child_process` fora de `.servidor`; `zustand` fora de `infraestrutura`; `../../public/dados/tarifas.json`; `require(…)`;
+  pasta `src/lib/` recriada; `react` dentro de `packages/core/src`. E rodar a cópia limpa a partir de outra pasta
+  (`cd / && node <cópia>/scripts/verificar-camadas.mjs`) → mesmo número de arquivos e código 0.
+- **R14 · nada novo sai do aparelho.** `git diff main --stat -- pnpm-lock.yaml apps/web/package.json apps/web/next.config.ts .github`
+  → vazio (no `package.json` da raiz, só `camadas` e `typecheck`); `git diff -M main -- apps/web/src | grep -E '^\+.*(fetch\(|sendBeacon|XMLHttpRequest|WebSocket|https?://|localStorage|sessionStorage|document\.cookie)'`
+  → vazio fora de linhas movidas; endereços em `.next/static` iguais à linha de base; `pnpm audit` sem alta/crítica.
+- **R15 · XSS e limpeza.** `grep -rnE "dangerouslySetInnerHTML|innerHTML|eval\(|new Function" apps/web/src scripts` → vazio;
+  `grep -rn '@/components\|@/lib' apps/web/src` → vazio.
+
+**Decisão da etapa 3:** aprovado para implementar. Nenhum risco alto fica sem mitigação no desenho; A1–A5 dependem de a
+implementação seguir o desenho à risca e serão conferidos com evidência (R1–R4 e testes do QA). A13 pede ajustes no
+script antes do passo 1 (pergunta aberta abaixo); se não entrarem, a revisão da etapa 6 aponta como médio.
 
 ## Plano de testes
 
@@ -384,6 +467,16 @@ _(qa — a preencher)_ Teste de ponta a ponta antes e depois com as mesmas captu
 
 - [x] `[para: tech-lead]` Os componentes compartilhados de aparelho vão para `ui/aparelho/` ou ficam em `funcionalidades/comodos/` exportados por um `index.ts` público?
   — **resposta (tech-lead, 2026-10-29):** vão para `ui/aparelho/`, sem store (props entram, callbacks saem). `EditorAparelho` também, ligado à casa pelo hook `useEdicaoDeAparelho()` de `aplicacao/casa.ts`. Um `index.ts` em `comodos` faria o cadastro e o acompanhamento importarem outra funcionalidade. `ui/` pode chamar funções puras do `@ee/core`; ADR-001 regra 4 revisada. Detalhes no desenho técnico, seções 2 e 4.
+- [ ] `[para: tech-lead]` (seguranca, 2026-10-29 — responder **antes do passo 1**; não bloqueia o resto do desenho)
+  Aceita estes ajustes na seção 6 para o `verificar-camadas.mjs` não ter falso negativo (ameaça A13)?
+  (a) achar a raiz pelo `import.meta.dirname`, não pelo `cwd`, e **falhar se ler 0 arquivos**;
+  (b) `require("…")` e `import(` com argumento que não é texto fixo viram erro;
+  (c) módulos do Node pela lista `builtinModules` de `node:module`, com e sem `node:` (hoje só `node:*`, `fs`, `fs/promises`, `path`);
+  (d) reconhecer a diretiva ignorando BOM, comentários e aspas simples/duplas;
+  (e) casar `.servidor` com ou sem extensão (`/\.servidor(\.tsx?)?$/`);
+  (f) destino fora de `apps/web/src` (ex.: JSON de `public/`) e arquivo solto em `funcionalidades/` = erro "fora das camadas".
+  E aceita `import "server-only";` na 1ª linha de `arquivos.servidor.ts` e `numeros-do-inicio.servidor.ts` (ameaça A6)?
+  O Next 16 trata esse import internamente (sem pacote novo) e barra no build o caso **indireto** que o script não vê.
 
 ## Conversa da equipe
 
@@ -412,3 +505,26 @@ _(qa — a preencher)_ Teste de ponta a ponta antes e depois com as mesmas captu
   implementa os passos 1–8; qa faz o passo 0 **antes** de qualquer mudança. Para documentacao (etapa 8): atualizar
   caminhos em `docs/arquitetura.md`, `docs/roteiro.md`, `docs/sistema/site.md`, a nota "Estado atual" do `CLAUDE.md` e
   `.claude/agents/ux-acessibilidade.md`, que ainda citam `components/` e `lib/`.
+
+### [seguranca] 2026-10-29 — análise de ameaças: aprovado para implementar; uma pergunta ao tech-lead antes do passo 1
+- O que fiz: li o desenho técnico inteiro e o código atual (`lib/store.ts`, `lib/dados.ts`, `lib/resumo.ts`,
+  `lib/rascunho.ts`, `app/page.tsx`, `Casca`, `Cadastro`, `EditorAparelho`, rotas de `/casa`); conferi no zustand
+  quando o `persist` grava; conferi no build atual onde aparecem a chave da casa, `node:fs` e endereços externos;
+  preenchi "Ameaças" (17 ameaças, A1–A17) e os 15 pontos verificáveis da etapa 6 (R1–R15).
+- Decisões e porquê: **aprovado para implementar**. O desenho já cobre os riscos graves: um só store (A1), formato salvo
+  byte a byte (A2), portão de hidratação (A3), contrato do editor (A4), apagar tudo (A5) e nenhum dado novo saindo (A15).
+  Eles continuam crítico/alto porque um deslize na execução apaga a casa da família — por isso viram conferência com
+  evidência na etapa 6, não confiança. O ponto fraco do desenho é o script de camadas (A13, médio): do jeito que está,
+  ele pode dizer "tudo certo" lendo 0 arquivos e não vê `require`, módulos do Node sem `node:` nem `'use client'` com
+  aspas simples. Pedi os ajustes e o `import "server-only"` ao tech-lead em "Perguntas abertas".
+- Arquivos alterados: `docs/equipe/historias/HIS-001-camadas.md` (só "Ameaças", "Perguntas abertas" e esta nota),
+  `docs/equipe/agentes/seguranca/contexto.md` e `diario.md`. Nenhum código mudou.
+- Como verifiquei: `grep` no `apps/web/src` e no `.next/static` atual (linha de base: chave da casa em 1 arquivo,
+  sem `readFile`/`process.cwd`, sem host de terceiros); leitura de `zustand/esm/middleware.mjs` (l. 397–428: só grava ao
+  hidratar quando a versão muda); docs do Next 16 sobre `server-only` (tratado internamente, sem pacote).
+- Para o próximo: **tech-lead** — responder a pergunta aberta antes do passo 1. **frontend** — seguir a tabela de
+  diretivas à risca; nada de `filter` próprio no editor nem de mexer em `localStorage` à mão; `PaginaInicial` só importa
+  componentes de módulos `"use client"`. **qa** — além da seção 10, incluir: (1) com casa v2 salva, abrir `/comecar`
+  direto mostra "você já cadastrou", não o passo "estado"; (2) editar um aparelho pelo "Quem mais gasta" e pelos
+  cômodos mantém o mesmo `id` e a mesma quantidade de aparelhos no JSON salvo; (3) remover um aparelho que está no plano
+  tira as dicas dele do `plano`; (4) depois de "Apagar todos os meus dados", `state` sem `residencia` e cinco listas vazias.
