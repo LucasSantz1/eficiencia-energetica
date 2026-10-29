@@ -1,0 +1,23 @@
+{
+  "name": "@ee/dados",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Rotina que baixa tarifas, bandeiras e municípios atendidos dos dados abertos da ANEEL e do IBGE e gera os arquivos JSON usados pelo site e pelo app.",
+  "scripts": {
+    "atualizar": "tsx src/atualizar.ts",
+    "exemplo": "tsx src/exemplo.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ee/core": "workspace:*",
+    "csv-parse": "7.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  }
+}

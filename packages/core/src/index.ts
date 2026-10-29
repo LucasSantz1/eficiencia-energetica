@@ -1,0 +1,6 @@
+export * from "./tipos";
+export * from "./calculos";
+export * from "./catalogo";
+export * from "./dicas";
+export * from "./formatacao";
+export * from "./bandeiras";

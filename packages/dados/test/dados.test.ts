@@ -1,0 +1,136 @@
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+import { adicionalParaKwh, lerBandeiras } from "../src/aneel/bandeiras";
+import { lerVinculos, mapearColunasMunicipios } from "../src/aneel/municipios";
+import { ehTarifaResidencialB1, mapearColunasTarifas, selecionarTarifasVigentes, type ColunasTarifas } from "../src/aneel/tarifas";
+import { lerCSV } from "../src/csv";
+import { montarArquivos, validar } from "../src/montar";
+import { acharColuna, dataISO, numeroBR, slug } from "../src/util";
+
+const fixture = (nome: string) => fileURLToPath(new URL(`../fixtures/${nome}`, import.meta.url));
+
+describe("utilidades", () => {
+  it("lê números brasileiros", () => {
+    expect(numeroBR("289,45")).toBe(289.45);
+    expect(numeroBR("1.234,56")).toBe(1234.56);
+    expect(numeroBR("289.45")).toBe(289.45);
+    expect(numeroBR("")).toBeUndefined();
+    expect(numeroBR("abc")).toBeUndefined();
+  });
+
+  it("lê datas em vários formatos", () => {
+    expect(dataISO("2026-10-01")).toBe("2026-10-01");
+    expect(dataISO("2026-10-01T00:00:00")).toBe("2026-10-01");
+    expect(dataISO("01/10/2026")).toBe("2026-10-01");
+    expect(dataISO("10/2026")).toBe("2026-10-01");
+    expect(dataISO("")).toBeUndefined();
+  });
+
+  it("acha colunas sem depender de maiúsculas e acentos", () => {
+    expect(acharColuna(["SIGAGENTE", "Vlr TE"], "SigAgente")).toBe("SIGAGENTE");
+    expect(acharColuna(["Código IBGE do Município"], /ibge/)).toBe("Código IBGE do Município");
+  });
+
+  it("gera ids estáveis", () => {
+    expect(slug("LIGHT SESA")).toBe("light-sesa");
+    expect(slug("CEMIG-D")).toBe("cemig-d");
+  });
+});
+
+describe("tarifas da ANEEL", () => {
+  async function ler() {
+    let colunas: ColunasTarifas | undefined;
+    const lido = await lerCSV(fixture("tarifas.csv"), {
+      aoLerCabecalho: (cab) => (colunas = mapearColunasTarifas(cab)),
+      filtro: (l) => ehTarifaResidencialB1(l, colunas!),
+    });
+    return { lido, colunas: colunas! };
+  }
+
+  it("guarda só residencial B1 convencional, tarifa de aplicação, sem baixa renda", async () => {
+    const { lido } = await ler();
+    expect(lido.total).toBe(10);
+    // ESS (2 vigências + 1 com detalhe SCEE), CEMIG-D, LIGHT SESA, COOPERATIVA X
+    expect(lido.linhas).toHaveLength(6);
+  });
+
+  it("escolhe a vigência atual, soma TE + TUSD e converte de R$/MWh para R$/kWh", async () => {
+    const { lido, colunas } = await ler();
+    const { tarifas, descartadas } = selecionarTarifasVigentes(lido.linhas, colunas, "2026-10-29");
+    const ess = tarifas.find((t) => t.sigla === "ESS");
+    expect(ess).toMatchObject({ inicioVigencia: "2026-07-12", resolucao: "REH 3.300/2026", cnpj: "07282377000120" });
+    expect(ess!.teKwh + ess!.tusdKwh).toBeCloseTo(0.7708, 6);
+    expect(tarifas.find((t) => t.sigla === "CEMIG-D")!.tusdKwh).toBeCloseTo(0.52075, 6);
+    // LIGHT: vigência terminou e não há outra publicada — usa a mais recente que já começou
+    expect(tarifas.find((t) => t.sigla === "LIGHT SESA")?.inicioVigencia).toBe("2025-03-15");
+    // Cooperativa com vigência só no futuro fica de fora
+    expect(tarifas.find((t) => t.sigla === "COOPERATIVA X")).toBeUndefined();
+    expect(descartadas.some((d) => d.startsWith("COOPERATIVA X"))).toBe(true);
+  });
+
+  it("explica qual coluna falta quando o formato muda", () => {
+    expect(() => mapearColunasTarifas(["SigAgente", "VlrTE"])).toThrow(/VlrTUSD/);
+  });
+});
+
+describe("bandeiras da ANEEL", () => {
+  it("converte o adicional para R$/kWh", async () => {
+    const lido = await lerCSV(fixture("bandeiras.csv"));
+    const { bandeiras } = lerBandeiras(lido.cabecalho, lido.linhas);
+    expect(bandeiras.map((b) => b.competencia)).toEqual(["2026-07", "2026-08", "2026-09", "2026-10"]);
+    expect(bandeiras[1]).toMatchObject({ bandeira: "amarela", adicionalKwh: 0.01885 });
+    expect(bandeiras[3]).toMatchObject({ bandeira: "vermelha-2", adicionalKwh: 0.07877 });
+  });
+
+  it("entende o valor em qualquer unidade", () => {
+    expect(adicionalParaKwh(0.04463)).toBeCloseTo(0.04463);
+    expect(adicionalParaKwh(4.463)).toBeCloseTo(0.04463);
+    expect(adicionalParaKwh(44.63)).toBeCloseTo(0.04463);
+  });
+
+  it("lê arquivos em Latin-1", async () => {
+    const lido = await lerCSV(fixture("bandeiras-latin1.csv"));
+    const { bandeiras } = lerBandeiras(lido.cabecalho, lido.linhas);
+    expect(bandeiras[0]).toMatchObject({ competencia: "2026-09", bandeira: "escassez-hidrica" });
+    expect(bandeiras[0]!.adicionalKwh).toBeCloseTo(0.142);
+  });
+});
+
+describe("montagem dos arquivos", () => {
+  it("liga municípios às distribuidoras pelo CNPJ e pela sigla, usando o ano mais recente", async () => {
+    let colunas: ColunasTarifas | undefined;
+    const t = await lerCSV(fixture("tarifas.csv"), { aoLerCabecalho: (c) => (colunas = mapearColunasTarifas(c)), filtro: (l) => ehTarifaResidencialB1(l, colunas!) });
+    const { tarifas } = selecionarTarifasVigentes(t.linhas, colunas!, "2026-10-29");
+    const m = await lerCSV(fixture("municipios.csv"));
+    const vinculos = lerVinculos(m.linhas, mapearColunasMunicipios(m.cabecalho));
+    expect(vinculos.get(3304557)).toHaveLength(1); // AMPLA (2010) sai, fica LIGHT (2025)
+
+    const b = await lerCSV(fixture("bandeiras.csv"));
+    const montagem = montarArquivos({
+      tarifas,
+      bandeiras: lerBandeiras(b.cabecalho, b.linhas).bandeiras,
+      vinculos,
+      localidades: {
+        estados: [{ uf: "SP", nome: "São Paulo" }, { uf: "MG", nome: "Minas Gerais" }, { uf: "RJ", nome: "Rio de Janeiro" }],
+        municipios: [
+          { ibge: 3541406, nome: "Presidente Prudente", uf: "SP" },
+          { ibge: 3106200, nome: "Belo Horizonte", uf: "MG" },
+          { ibge: 3304557, nome: "Rio de Janeiro", uf: "RJ" },
+          { ibge: 3550308, nome: "São Paulo", uf: "SP" },
+        ],
+      },
+      geradoEm: "2026-10-29T12:00:00Z",
+      origem: "aneel",
+      fontes: [],
+    });
+
+    const sp = montagem.municipiosPorUF.find((a) => a.uf === "SP")!;
+    expect(sp.municipios.find((x) => x.nome === "Presidente Prudente")?.distribuidoras).toEqual(["ess"]);
+    expect(montagem.tarifas.distribuidoras.find((d) => d.id === "ess")?.ufs).toEqual(["SP"]);
+    expect(montagem.tarifas.estados.find((e) => e.uf === "RJ")?.distribuidoras).toEqual(["light-sesa"]);
+    expect(montagem.relatorio.municipiosSemDistribuidora).toBe(1);
+
+    // Com tão poucos dados, a validação deve impedir a publicação
+    expect(validar(montagem, "2026-10-29").length).toBeGreaterThan(0);
+  });
+});

@@ -1,0 +1,46 @@
+name: Atualizar tarifas e bandeiras
+
+# Baixa os dados abertos da ANEEL e do IBGE todo dia e grava em apps/web/public/dados.
+# Só cria um commit quando algo mudou de verdade.
+on:
+  schedule:
+    - cron: "17 9 * * *" # 06:17 em Brasília
+  workflow_dispatch:
+    inputs:
+      forcar:
+        description: "Gravar mesmo se a validação reclamar"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atualizar-dados
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Atualizar dados
+        run: pnpm dados:atualizar ${{ inputs.forcar && '--forcar' || '' }}
+      - name: Salvar no repositório
+        run: |
+          if git diff --quiet -- apps/web/public/dados; then
+            echo "Nada mudou."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/public/dados
+          git commit -m "dados: atualiza tarifas e bandeiras da ANEEL"
+          git push
