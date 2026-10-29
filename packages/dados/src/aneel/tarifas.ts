@@ -95,7 +95,7 @@ export function selecionarTarifasVigentes(linhas: Linha[], c: ColunasTarifas, ho
     const inicio = dataISO(linha[c.inicio]);
     const te = numeroBR(linha[c.te]);
     const tusd = numeroBR(linha[c.tusd]);
-    if (!sigla || !inicio || te === undefined || tusd === undefined) continue;
+    if (!sigla || semValor(sigla) || normalizar(sigla) === "nao informado" || !inicio || te === undefined || tusd === undefined) continue;
     const unidade = c.unidade ? normalizar(linha[c.unidade]) : "mwh";
     const divisor = unidade === "kwh" ? 1 : 1000;
     const candidata: Candidata = {

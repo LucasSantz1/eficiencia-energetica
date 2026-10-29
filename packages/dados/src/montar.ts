@@ -35,10 +35,19 @@ export function montarArquivos(entrada: {
   origem: "aneel" | "exemplo";
   fontes: string[];
 }): Montagem {
-  const { tarifas, bandeiras, vinculos, localidades, geradoEm, origem, fontes } = entrada;
+  const { bandeiras, vinculos, localidades, geradoEm, origem, fontes } = entrada;
+
+  // Siglas que viram o mesmo id (ex.: "CPFL Santa Cruz" e "CPFL SANTA CRUZ"): fica a vigência mais recente.
+  const unicas = new Map<string, TarifaVigente>();
+  for (const t of entrada.tarifas) {
+    const atual = unicas.get(slug(t.sigla));
+    if (!atual || t.inicioVigencia > atual.inicioVigencia) unicas.set(slug(t.sigla), t);
+  }
+  const tarifas = [...unicas.values()];
 
   const porCnpj = new Map(tarifas.filter((t) => t.cnpj).map((t) => [t.cnpj!, t]));
   const porSigla = new Map(tarifas.map((t) => [compacto(t.sigla), t]));
+  for (const t of entrada.tarifas) if (!porSigla.has(compacto(t.sigla))) porSigla.set(compacto(t.sigla), unicas.get(slug(t.sigla))!);
   const agentesSemTarifa = new Set<string>();
 
   const acharTarifa = (v: VinculoMunicipio): TarifaVigente | undefined => {
@@ -59,18 +68,24 @@ export function montarArquivos(entrada: {
       const t = acharTarifa(v);
       if (!t) continue;
       ids.add(slug(t.sigla));
-      const ufs = ufsPorSigla.get(t.sigla) ?? new Set<string>();
+      const ufs = ufsPorSigla.get(slug(t.sigla)) ?? new Set<string>();
       ufs.add(m.uf);
-      ufsPorSigla.set(t.sigla, ufs);
+      ufsPorSigla.set(slug(t.sigla), ufs);
     }
-    return { ibge: m.ibge, nome: m.nome, uf: m.uf, distribuidoras: [...ids].sort() };
+    return { ibge: m.ibge, nome: m.nome, uf: m.uf, distribuidoras: [...ids] };
   });
+
+  // Quando a cidade tem mais de uma distribuidora, a que atende mais cidades (a concessionária principal)
+  // aparece primeiro; cooperativas locais vêm depois.
+  const abrangencia = new Map<string, number>();
+  for (const m of municipios) for (const id of m.distribuidoras) abrangencia.set(id, (abrangencia.get(id) ?? 0) + 1);
+  for (const m of municipios) m.distribuidoras.sort((a, b) => (abrangencia.get(b) ?? 0) - (abrangencia.get(a) ?? 0) || a.localeCompare(b));
 
   const distribuidoras: Distribuidora[] = tarifas.map((t) => ({
     id: slug(t.sigla),
     sigla: t.sigla,
     cnpj: t.cnpj,
-    ufs: [...(ufsPorSigla.get(t.sigla) ?? [])].sort(),
+    ufs: [...(ufsPorSigla.get(slug(t.sigla)) ?? [])].sort(),
     teKwh: arredondar(t.teKwh),
     tusdKwh: arredondar(t.tusdKwh),
     tarifaKwh: arredondar(t.teKwh + t.tusdKwh),

@@ -13,3 +13,5 @@ Thumbs.db
 /packages/dados/.cache/
 /test-results/
 /playwright-report/
+*.tsbuildinfo
+next-env.d.ts

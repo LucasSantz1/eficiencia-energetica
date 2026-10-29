@@ -1,0 +1,105 @@
+@import "tailwindcss";
+@import "@fontsource-variable/atkinson-hyperlegible-next";
+
+/*
+ * Identidade visual
+ * - Tinta azul-marinho, como a impressão de uma conta de luz.
+ * - Verde-energia como cor principal (economia, ação).
+ * - As cores da etiqueta do INMETRO (verde → vermelho) mostram quanto cada aparelho pesa na conta.
+ * - Fonte Atkinson Hyperlegible Next: feita para ser fácil de ler, inclusive com baixa visão.
+ */
+@theme {
+  --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-tinta: #13233f;
+  --color-tinta-suave: #4a5a72;
+  --color-fundo: #eef3f0;
+  --color-papel: #ffffff;
+  --color-linha: #d3ddd8;
+  --color-energia: #0a7356;
+  --color-energia-forte: #075a43;
+  --color-energia-claro: #dcefe6;
+  --color-faisca: #ffc629;
+  --color-faisca-claro: #fff4cf;
+  --color-alerta: #b42318;
+  --color-alerta-claro: #fde8e6;
+
+  /* Faixas da etiqueta (A = pesa pouco na conta, E = pesa muito) */
+  --color-faixa-a: #13853d;
+  --color-faixa-b: #6fae32;
+  --color-faixa-c: #e9b800;
+  --color-faixa-d: #ec7a1a;
+  --color-faixa-e: #d1262e;
+
+  --radius-cartao: 1.25rem;
+  --radius-controle: 0.875rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    color-scheme: light;
+  }
+  body {
+    background: var(--color-fundo);
+    color: var(--color-tinta);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    font-feature-settings: "tnum" 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-faisca);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+  ::selection {
+    background: var(--color-faisca-claro);
+  }
+  dialog::backdrop {
+    background: rgb(19 35 63 / 0.45);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility numeros {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Barra no formato da etiqueta do INMETRO: retângulo terminando em seta. */
+@utility seta-etiqueta {
+  clip-path: polygon(0 0, calc(100% - 0.85rem) 0, 100% 50%, calc(100% - 0.85rem) 100%, 0 100%);
+}
+
+/* Folha que sobe de baixo no celular e vira janela no computador. */
+@utility folha {
+  margin: auto auto 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 92dvh;
+  border-radius: 1.5rem 1.5rem 0 0;
+  @media (min-width: 640px) {
+    margin: auto;
+    max-width: 34rem;
+    border-radius: 1.5rem;
+  }
+}
+
+dialog[open].folha {
+  animation: subir 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes subir {
+  from {
+    transform: translateY(24px);
+    opacity: 0.4;
+  }
+}
