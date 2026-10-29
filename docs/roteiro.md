@@ -1,5 +1,8 @@
 # Roteiro
 
+> O planejamento detalhado, com épicos, histórias e sprints, agora está em [planejamento.md](planejamento.md).
+> Este arquivo fica como registro do roteiro original.
+
 ## Fase 1: site (feito)
 
 - Cadastro da casa sem conta: estado, cidade, distribuidora, benefício, pessoas, cômodos (quantidade e nome), aparelhos e lâmpadas por cômodo com quantidade e tempo de uso, e conta de luz opcional.

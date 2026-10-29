@@ -2,7 +2,7 @@
 
 Descubra quanto cada aparelho custa na sua conta de luz, com a **tarifa da sua distribuidora** e a **bandeira do mês**, e veja dicas para pagar menos, com a economia calculada em reais.
 
-Projeto de pesquisa da Fatec Presidente Prudente (Análise e Desenvolvimento de Sistemas): Lucas Sant’Anna Silva e Edy Ferreira Santana, com orientação da Prof.ª Dra. Ana Carolina Nicolosi da Rocha Gracioso. O foco são as famílias que mais precisam economizar, por isso o sistema é gratuito, não pede cadastro e foi desenhado para ser fácil de usar no celular.
+Projeto independente e gratuito, feito para as famílias que mais precisam economizar: não pede cadastro, não cobra nada e foi desenhado para ser fácil de usar no celular.
 
 ## O que o sistema faz
 
@@ -59,6 +59,10 @@ A rotina valida os dados antes de gravar. Se a ANEEL publicar algo quebrado, os 
 
 > Sobre a API [tarifas-energia-api](https://github.com/mpfarias/tarifas-energia-api): ela usa a mesma fonte, mas hoje considera só a TE (sem a TUSD), tem as bandeiras fixas no código (só maio e junho de 2025) e não filtra a vigência. Por isso este projeto lê os dados da ANEEL diretamente.
 
-## Próximos passos
+## Próximos passos e equipe
 
-Veja [docs/roteiro.md](docs/roteiro.md).
+- [Planejamento](docs/planejamento.md): visão, épicos, histórias e sprints.
+- [Arquitetura](docs/arquitetura.md) e [decisões](docs/equipe/decisoes/README.md).
+- [Como a equipe trabalha](docs/equipe/processo.md) e o [quadro da sprint](docs/equipe/quadro.md).
+- [Guia do projeto](CLAUDE.md): princípios, padrões de código e regras de segurança.
+- [Roteiro original](docs/roteiro.md).

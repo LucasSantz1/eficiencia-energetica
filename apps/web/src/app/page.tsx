@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BotaoComecar } from "@/components/BotaoComecar";
 import { BarraEtiqueta } from "@/components/Etiqueta";
 import { Icone } from "@/components/Icone";
+import { EspacoReservado } from "@/components/EspacoReservado";
 import { CasaIlustrada } from "@/components/inicio/CasaIlustrada";
 import { Marca } from "@/components/Marca";
 import { Contagem, Revelar, TransicaoTela } from "@/components/Movimento";
@@ -245,6 +246,8 @@ export default async function Inicio() {
         </div>
       </section>
 
+      <EspacoReservado posicao="inicio-antes-perguntas" />
+
       {/* Perguntas */}
       <section id="perguntas" aria-labelledby="titulo-perguntas" className="scroll-mt-4">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1fr_1.6fr] lg:gap-20">
@@ -277,7 +280,7 @@ export default async function Inicio() {
           <div className="mt-16 flex flex-col gap-6 border-t border-white/15 pt-8 text-white/70 md:flex-row md:items-start md:justify-between">
             <div className="space-y-3">
               <Marca />
-              <p className="max-w-[52ch]">Projeto de pesquisa da Fatec Presidente Prudente, curso de Análise e Desenvolvimento de Sistemas.</p>
+              <p className="max-w-[52ch]">Um projeto gratuito para ajudar as famílias a pagar menos na conta de luz.</p>
             </div>
             <ul className="space-y-2 font-bold">
               <li>

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Acompanhamento } from "@/components/Acompanhamento";
 import { descreverUso } from "@/components/Comodo";
 import { EditorAparelho } from "@/components/EditorAparelho";
+import { EspacoReservado } from "@/components/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/components/Etiqueta";
 import { Icone } from "@/components/Icone";
 import { ValorAnimado } from "@/components/Movimento";
@@ -173,6 +174,8 @@ export default function PainelAcompanhamento() {
           ))}
         </ul>
       </section>
+
+      <EspacoReservado posicao="painel-apos-ranking" />
 
       {melhor && (
         <section aria-labelledby="titulo-economia" className="surgir rounded-[var(--radius-cartao)] border-2 border-energia bg-energia-claro p-5 sm:p-6" style={{ animationDelay: "700ms" }}>

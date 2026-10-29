@@ -3,6 +3,7 @@
 import { formatarKwh, formatarReais, type Dica } from "@ee/core";
 import { Check } from "lucide-react";
 import { useState } from "react";
+import { EspacoReservado } from "@/components/EspacoReservado";
 import { Icone } from "@/components/Icone";
 import { ValorAnimado } from "@/components/Movimento";
 import { Pilulas } from "@/components/ui";
@@ -93,6 +94,10 @@ export default function Dicas() {
           {visiveis.length === 0 && <p className="mt-5 text-tinta-suave">Nenhuma dica desse tipo para a sua casa.</p>}
         </>
       )}
+
+      <div className="mt-10 empty:hidden">
+        <EspacoReservado posicao="dicas-apos-lista" />
+      </div>
 
       {outras.length > 0 && (
         <section aria-labelledby="outras" className="mt-12">

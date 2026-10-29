@@ -16,8 +16,8 @@ export default function Sobre() {
         <div>
           <h1 className="text-[2.2rem] leading-tight font-extrabold tracking-tight">Sobre o projeto</h1>
           <p className="mt-4 text-lg text-tinta-suave">
-            O Sistema de Eficiência Energética nasceu como projeto de pesquisa no curso de Análise e Desenvolvimento de Sistemas da Fatec Presidente Prudente, de Lucas Sant’Anna Silva e Edy Ferreira Santana, com orientação da Prof.ª Dra. Ana Carolina Nicolosi da Rocha Gracioso.
-            O objetivo é ajudar as famílias, principalmente as que mais precisam, a entender onde está o gasto de energia e como pagar menos.
+            O Eficiência Energética é um projeto independente e gratuito. O objetivo é ajudar as famílias, principalmente as que mais precisam, a entender onde está o gasto de energia e
+            como pagar menos na conta de luz.
           </p>
         </div>
 
