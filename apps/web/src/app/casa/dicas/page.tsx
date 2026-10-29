@@ -4,6 +4,7 @@ import { formatarKwh, formatarReais, type Dica } from "@ee/core";
 import { Check } from "lucide-react";
 import { useState } from "react";
 import { Icone } from "@/components/Icone";
+import { ValorAnimado } from "@/components/Movimento";
 import { Pilulas } from "@/components/ui";
 import { useResumo } from "@/lib/resumo";
 import { useCasa } from "@/lib/store";
@@ -43,11 +44,17 @@ export default function Dicas() {
               <p className="text-white/80">
                 Com {plano.length} {plano.length === 1 ? "dica" : "dicas"}, a conta vai de <span className="numeros line-through decoration-2">{formatarReais(atual)}</span> para
               </p>
-              <p className="numeros text-4xl leading-tight font-extrabold text-faisca">{formatarReais(comPlano)}</p>
+              <p className="numeros text-4xl leading-tight font-extrabold text-faisca">
+                <ValorAnimado valor={comPlano} formatar={(v) => formatarReais(v)} duracao={600} />
+              </p>
             </div>
             <div className="text-right">
-              <p className="numeros text-xl font-extrabold">−{formatarReais(economia)} por mês</p>
-              <p className="numeros text-white/80">{formatarReais(economia * 12)} em um ano</p>
+              <p className="numeros text-xl font-extrabold">
+                −<ValorAnimado valor={economia} formatar={(v) => formatarReais(v)} duracao={600} /> por mês
+              </p>
+              <p className="numeros text-white/80">
+                <ValorAnimado valor={economia * 12} formatar={(v) => formatarReais(v)} duracao={600} /> em um ano
+              </p>
             </div>
           </div>
         )}
@@ -68,8 +75,9 @@ export default function Dicas() {
             />
           </div>
           <ul className="mt-5 space-y-3">
-            {visiveis.map((d) => (
+            {visiveis.map((d, i) => (
               <CartaoDica
+                indice={i}
                 key={d.id}
                 dica={d}
                 marcada={plano.includes(d.id)}
@@ -108,9 +116,12 @@ export default function Dicas() {
   );
 }
 
-function CartaoDica({ dica, marcada, aoAlternar, onde }: { dica: Dica; marcada: boolean; aoAlternar: () => void; onde?: string }) {
+function CartaoDica({ dica, marcada, aoAlternar, onde, indice }: { dica: Dica; marcada: boolean; aoAlternar: () => void; onde?: string; indice: number }) {
   return (
-    <li className={`rounded-[var(--radius-cartao)] border-2 bg-papel p-4 transition-colors sm:p-5 ${marcada ? "border-energia" : "border-transparent"}`}>
+    <li
+      className={`surgir rounded-[var(--radius-cartao)] border-2 bg-papel p-4 transition-[border-color,box-shadow] duration-300 sm:p-5 ${marcada ? "border-energia shadow-[0_0_0_4px_var(--color-energia-claro)]" : "border-transparent"}`}
+      style={{ animationDelay: `${Math.min(indice, 8) * 60}ms` }}
+    >
       <div className="flex gap-4">
         <span className={`grid size-12 shrink-0 place-items-center rounded-2xl ${dica.tipo === "troca" ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia"}`}>
           <Icone nome={dica.icone} className="size-6" />
@@ -137,9 +148,9 @@ function CartaoDica({ dica, marcada, aoAlternar, onde }: { dica: Dica; marcada: 
               role="checkbox"
               aria-checked={marcada}
               onClick={aoAlternar}
-              className={`inline-flex min-h-12 items-center gap-2 rounded-full border-2 px-4 font-bold transition-colors ${marcada ? "border-energia bg-energia text-white" : "border-linha bg-papel hover:border-energia"}`}
+              className={`inline-flex min-h-12 items-center gap-2 rounded-full border-2 px-4 font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-95 ${marcada ? "border-energia bg-energia text-white" : "border-linha bg-papel hover:border-energia"}`}
             >
-              <span className={`grid size-6 place-items-center rounded-md border-2 ${marcada ? "border-white" : "border-linha"}`}>{marcada && <Check className="size-4" strokeWidth={3.5} />}</span>
+              <span className={`grid size-6 place-items-center rounded-md border-2 ${marcada ? "border-white" : "border-linha"}`}>{marcada && <Check className="pulo size-4" strokeWidth={3.5} />}</span>
               {marcada ? "No meu plano" : "Vou fazer"}
             </button>
           </div>

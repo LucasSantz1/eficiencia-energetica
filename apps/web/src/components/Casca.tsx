@@ -3,10 +3,11 @@
 import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { ViewTransition, type ReactNode } from "react";
 import { useResumo } from "@/lib/resumo";
 import { useCasa, useCasaCarregada } from "@/lib/store";
 import { Marca } from "./Marca";
+import { IR_ADIANTE, TransicaoTela, VOLTAR } from "./Movimento";
 import { Aviso, BotaoLink } from "./ui";
 
 const ITENS: { href: string; rotulo: string; curto?: string; Icone: typeof Lightbulb }[] = [
@@ -22,10 +23,13 @@ export function Casca({ children }: { children: ReactNode }) {
   const carregada = useCasaCarregada();
   const residencia = useCasa((s) => s.residencia);
   const { arquivo } = useResumo();
+  const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
+  // Ir para uma aba à direita desliza para a esquerda, e vice-versa.
+  const direcao = (i: number) => (i >= indiceAtual ? IR_ADIANTE : VOLTAR);
 
   return (
     <div className="min-h-dvh pb-28 sm:pb-12">
-      <header className="border-b border-linha bg-papel">
+      <header className="border-b border-linha bg-papel" style={{ viewTransitionName: "topo" }}>
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Marca href="/" />
           {residencia && (
@@ -35,17 +39,24 @@ export function Casca({ children }: { children: ReactNode }) {
           )}
         </div>
         <nav aria-label="Seções" className="mx-auto hidden max-w-4xl gap-1 px-4 sm:flex sm:px-6">
-          {ITENS.map(({ href, rotulo, Icone }) => {
+          {ITENS.map(({ href, rotulo, Icone }, i) => {
             const ativo = caminho === href;
             return (
               <Link
                 key={href}
                 href={href}
+                transitionTypes={direcao(i)}
                 aria-current={ativo ? "page" : undefined}
-                className={`-mb-px inline-flex min-h-12 items-center gap-2 border-b-[3px] px-4 font-bold ${ativo ? "border-energia text-energia" : "border-transparent text-tinta-suave hover:text-tinta"}`}
+                className={`relative inline-flex min-h-12 items-center gap-2 px-4 font-bold transition-colors ${ativo ? "text-energia" : "text-tinta-suave hover:text-tinta"}`}
               >
                 <Icone className="size-5" aria-hidden />
                 {rotulo}
+                {ativo && (
+                  // O traço da aba ativa desliza até a aba nova.
+                  <ViewTransition name="aba-ativa">
+                    <span aria-hidden className="absolute inset-x-2 -bottom-px h-[3px] rounded-full bg-energia" />
+                  </ViewTransition>
+                )}
               </Link>
             );
           })}
@@ -72,19 +83,32 @@ export function Casca({ children }: { children: ReactNode }) {
             </BotaoLink>
           </div>
         ) : (
-          children
+          <TransicaoTela chave={caminho}>
+            <div>{children}</div>
+          </TransicaoTela>
         )}
       </main>
 
-      <nav aria-label="Seções" className="fixed inset-x-0 bottom-0 z-20 border-t border-linha bg-papel pb-[env(safe-area-inset-bottom)] sm:hidden">
+      <nav aria-label="Seções" style={{ viewTransitionName: "navegacao" }} className="fixed inset-x-0 bottom-0 z-20 border-t border-linha bg-papel pb-[env(safe-area-inset-bottom)] sm:hidden">
         <ul className="grid grid-cols-4">
-          {ITENS.map(({ href, rotulo, curto, Icone }) => {
+          {ITENS.map(({ href, rotulo, curto, Icone }, i) => {
             const ativo = caminho === href;
             return (
               <li key={href}>
-                <Link href={href} aria-current={ativo ? "page" : undefined} className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[0.78rem] font-bold ${ativo ? "text-energia" : "text-tinta-suave"}`}>
-                  <span className={`grid h-8 w-14 place-items-center rounded-full ${ativo ? "bg-energia-claro" : ""}`}>
-                    <Icone className="size-6" aria-hidden strokeWidth={ativo ? 2.4 : 1.9} />
+                <Link
+                  href={href}
+                  transitionTypes={direcao(i)}
+                  aria-current={ativo ? "page" : undefined}
+                  className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[0.78rem] font-bold transition-colors ${ativo ? "text-energia" : "text-tinta-suave"}`}
+                >
+                  <span className="relative grid h-8 w-14 place-items-center">
+                    {ativo && (
+                      // A pílula verde desliza até o item tocado.
+                      <ViewTransition name="pilula-ativa">
+                        <span aria-hidden className="absolute inset-0 rounded-full bg-energia-claro" />
+                      </ViewTransition>
+                    )}
+                    <Icone className="relative size-6" aria-hidden strokeWidth={ativo ? 2.4 : 1.9} />
                   </span>
                   {curto ?? rotulo}
                 </Link>

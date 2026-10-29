@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Marca } from "@/components/Marca";
+import { TransicaoTela, VOLTAR } from "@/components/Movimento";
 
 export const metadata: Metadata = { title: "Sobre o projeto" };
 
 export default function Sobre() {
   return (
+    <TransicaoTela>
     <div className="mx-auto max-w-2xl px-4 pt-4 pb-16 sm:px-6">
       <header>
         <Marca />
@@ -67,11 +69,12 @@ export default function Sobre() {
         </section>
 
         <p>
-          <Link href="/" className="font-bold text-energia underline underline-offset-4">
+          <Link href="/" transitionTypes={VOLTAR} className="font-bold text-energia underline underline-offset-4">
             Voltar para o início
           </Link>
         </p>
       </main>
     </div>
+    </TransicaoTela>
   );
 }

@@ -12,6 +12,7 @@ import {
 } from "@ee/core";
 import { useState } from "react";
 import { Icone } from "./Icone";
+import { ValorAnimado } from "./Movimento";
 import { Contador, Pilulas } from "./ui";
 
 /** Aparelho em edição (no cadastro ainda não tem id definitivo). */
@@ -66,7 +67,7 @@ export function LinhaAparelho({
   const opcoesTempo = [...new Set([...TEMPOS_RAPIDOS.map((t) => t.minutos), item.minutosPorDia])].sort((a, b) => a - b);
 
   return (
-    <li className={`rounded-[var(--radius-controle)] border-2 px-3 py-3 transition-colors sm:px-4 ${ativo ? "border-linha bg-papel" : "border-transparent bg-papel/50"}`}>
+    <li className={`rounded-[var(--radius-controle)] border-2 px-3 py-3 transition-[background-color,border-color] duration-300 sm:px-4 ${ativo ? "border-linha bg-papel" : "border-transparent bg-papel/50"}`}>
       <div className="flex items-center gap-2.5">
         <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${ativo ? "bg-energia-claro text-energia" : "bg-fundo text-tinta-suave"}`}>
           <Icone nome={catalogo?.icone} className="size-6" />
@@ -90,12 +91,12 @@ export function LinhaAparelho({
 
       {ativo && valor !== undefined && (
         <p className="numeros mt-1 pl-14 text-[0.95rem] font-bold text-tinta-suave">
-          {formatarReais(valor)} por mês{item.quantidade > 1 ? `, ${item.quantidade} unidades` : ""}
+          <ValorAnimado valor={valor} formatar={(v) => formatarReais(v)} duracao={500} /> por mês{item.quantidade > 1 ? `, ${item.quantidade} unidades` : ""}
         </p>
       )}
 
       {ativo && ajustando && (
-        <div className="mt-3 space-y-4 border-t border-linha pt-3 sm:pl-14">
+        <div className="surgir mt-3 space-y-4 border-t border-linha pt-3 sm:pl-14" style={{ animationDuration: "300ms" }}>
           {catalogo?.modo === "etiqueta" ? (
             <p className="text-[0.95rem] text-tinta-suave">Geladeiras e freezers ficam ligados o tempo todo; o consumo vem da etiqueta ({Math.round(item.kwhMesInformado ?? 0)} kWh por mês).</p>
           ) : item.banho ? (
@@ -173,7 +174,7 @@ export function BlocoIluminacao({ lampada, aoMudar, preco }: { lampada: ItemComo
         <Contador compacto valor={lampada.quantidade} aoMudar={(quantidade) => aoMudar({ quantidade })} min={0} max={40} rotulo="quantidade de lâmpadas" />
       </div>
       {ativo && (
-        <div className="mt-3 space-y-3 border-t border-faisca/50 pt-3 sm:pl-14">
+        <div className="surgir mt-3 space-y-3 border-t border-faisca/50 pt-3 sm:pl-14" style={{ animationDuration: "300ms" }}>
           <div className="space-y-2">
             <span className="block text-[0.95rem] font-bold">Tipo</span>
             <Pilulas
@@ -190,7 +191,11 @@ export function BlocoIluminacao({ lampada, aoMudar, preco }: { lampada: ItemComo
             <span className="block text-[0.95rem] font-bold">Acesas por dia</span>
             <Pilulas rotulo="Horas acesas por dia" opcoes={horas.map((m) => ({ valor: m, rotulo: HORAS_LUZ.find((h) => h.valor === m)?.rotulo ?? formatarTempo(m) }))} valor={lampada.minutosPorDia} aoMudar={(minutosPorDia) => aoMudar({ minutosPorDia })} />
           </div>
-          {valor !== undefined && <p className="numeros text-[0.95rem] font-bold text-tinta-suave">{formatarReais(valor)} por mês com iluminação</p>}
+          {valor !== undefined && (
+            <p className="numeros text-[0.95rem] font-bold text-tinta-suave">
+              <ValorAnimado valor={valor} formatar={(v) => formatarReais(v)} duracao={500} /> por mês com iluminação
+            </p>
+          )}
         </div>
       )}
     </div>

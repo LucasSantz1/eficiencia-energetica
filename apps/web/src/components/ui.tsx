@@ -14,7 +14,7 @@ const estilosBotao: Record<Variante, string> = {
 };
 
 const baseBotao =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-controle)] px-5 py-3 text-[1.0625rem] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-45";
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-controle)] px-5 py-3 text-[1.0625rem] font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45";
 
 export const Botao = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement> & { variante?: Variante; largo?: boolean }>(
   function Botao({ variante = "principal", largo, className = "", type = "button", ...props }, ref) {
@@ -50,7 +50,7 @@ export function Opcao({
       role={papel}
       aria-checked={selecionada}
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-[var(--radius-controle)] border-2 px-4 py-3 text-left transition-colors ${
+      className={`flex w-full items-center gap-3 rounded-[var(--radius-controle)] border-2 px-4 py-3 text-left transition-[background-color,border-color,transform] duration-200 active:scale-[0.985] ${
         selecionada ? "border-energia bg-energia-claro" : "border-linha bg-papel hover:border-tinta-suave"
       } ${className}`}
     >
@@ -65,7 +65,7 @@ export function Opcao({
           selecionada ? "border-energia bg-energia" : "border-linha bg-papel"
         }`}
       >
-        {selecionada && (papel === "radio" ? <span className="size-2.5 rounded-full bg-white" /> : <Check className="size-4 text-white" strokeWidth={3.5} />)}
+        {selecionada && (papel === "radio" ? <span className="pulo size-2.5 rounded-full bg-white" /> : <Check className="pulo size-4 text-white" strokeWidth={3.5} />)}
       </span>
     </button>
   );
@@ -94,7 +94,7 @@ export function Pilulas<T extends string | number>({
             role="radio"
             aria-checked={ativa}
             onClick={() => aoMudar(o.valor)}
-            className={`min-h-11 rounded-full border-2 px-4 text-[0.98rem] font-bold transition-colors ${
+            className={`min-h-11 rounded-full border-2 px-4 text-[0.98rem] font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-95 ${
               ativa ? "border-tinta bg-tinta text-white" : "border-linha bg-papel text-tinta hover:border-tinta-suave"
             }`}
           >
@@ -135,7 +135,9 @@ export function Contador({
         <Minus className="size-5" strokeWidth={2.5} />
       </button>
       <output aria-live="polite" aria-label={rotulo} className={`numeros text-center font-extrabold ${compacto ? "min-w-9 text-lg" : "min-w-14 text-xl"}`}>
-        {valor}
+        <span key={valor} className="pulo">
+          {valor}
+        </span>
         {unidade && <span className="ml-1 text-base font-bold text-tinta-suave">{unidade}</span>}
       </output>
       <button type="button" aria-label={`Aumentar ${rotulo}`} onClick={() => mudar(valor + passo)} disabled={valor >= max} className={`grid ${botao} place-items-center text-energia disabled:text-linha`}>

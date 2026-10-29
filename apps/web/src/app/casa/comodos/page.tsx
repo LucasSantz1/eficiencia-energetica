@@ -19,6 +19,7 @@ import { BlocoIluminacao, horasPorDiaTexto, LinhaAparelho, type ItemComodo } fro
 import { EditorAparelho } from "@/components/EditorAparelho";
 import { Icone } from "@/components/Icone";
 import { SeletorCatalogo } from "@/components/SeletorCatalogo";
+import { ValorAnimado } from "@/components/Movimento";
 import { Botao, Campo, Entrada, Folha, Pilulas } from "@/components/ui";
 import { useResumo } from "@/lib/resumo";
 import { useCasa } from "@/lib/store";
@@ -63,6 +64,7 @@ export default function Comodos() {
           <div className="mt-6 space-y-4">
             {comodos.map((c, i) => (
               <CartaoComodo
+                indice={i}
                 key={c.id}
                 comodo={c}
                 aberto={i === 0}
@@ -104,6 +106,7 @@ export default function Comodos() {
 }
 
 function CartaoComodo({
+  indice,
   comodo,
   aberto: abertoInicial,
   valorMes,
@@ -112,6 +115,7 @@ function CartaoComodo({
   aoDetalhes,
   aoEditarNome,
 }: {
+  indice: number;
   comodo: TipoComodoCasa;
   aberto: boolean;
   valorMes: number;
@@ -161,7 +165,7 @@ function CartaoComodo({
   };
 
   return (
-    <section id={`comodo-${comodo.id}`} aria-labelledby={`titulo-${comodo.id}`} className="scroll-mt-28 overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
+    <section id={`comodo-${comodo.id}`} aria-labelledby={`titulo-${comodo.id}`} className="surgir scroll-mt-28 overflow-hidden rounded-[var(--radius-cartao)] bg-papel" style={{ animationDelay: `${indice * 60}ms` }}>
       <div className="flex items-center gap-3 p-4">
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-energia-claro text-energia">
           <Icone nome={icone} className="size-6" />
@@ -172,17 +176,18 @@ function CartaoComodo({
               {comodo.nome}
             </span>
             <span className="numeros block text-[0.95rem] text-tinta-suave">
-              {unidades} {unidades === 1 ? "item" : "itens"}, {formatarReais(valorMes)} por mês
+              {unidades} {unidades === 1 ? "item" : "itens"}, <ValorAnimado valor={valorMes} formatar={(v) => formatarReais(v)} duracao={500} /> por mês
             </span>
           </span>
-          <ChevronDown className={`size-6 shrink-0 text-tinta-suave transition-transform ${aberto ? "rotate-180" : ""}`} aria-hidden />
+          <ChevronDown className={`size-6 shrink-0 text-tinta-suave transition-transform duration-300 ${aberto ? "rotate-180" : ""}`} aria-hidden />
         </button>
         <button type="button" onClick={aoEditarNome} className="grid size-11 shrink-0 place-items-center rounded-full text-tinta-suave hover:bg-fundo" aria-label={`Renomear ou remover ${comodo.nome}`}>
           <Pencil className="size-5" />
         </button>
       </div>
 
-      {aberto && (
+      <div className="sanfona" data-aberta={aberto}>
+        <div inert={!aberto}>
         <div className="border-t border-linha bg-fundo/60 p-3 sm:p-4">
           <BlocoIluminacao lampada={lampadaVirtual} aoMudar={mudarLampada} preco={preco} />
           <ul className="mt-3 space-y-2">
@@ -227,7 +232,8 @@ function CartaoComodo({
             <Plus className="size-5" aria-hidden /> Outro aparelho
           </button>
         </div>
-      )}
+        </div>
+      </div>
     </section>
   );
 }
@@ -242,9 +248,9 @@ function PainelGeral() {
   return (
     <div className="mt-6">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Numero rotulo="aparelhos e lâmpadas" valor={String(linhas.reduce((s, l) => s + l.quantidade, 0))} />
-        <Numero rotulo="por mês" valor={formatarKwh(resumo.conta.consumoKwh)} />
-        <Numero rotulo="horas de uso somadas no mês" valor={Math.round(totalHoras).toLocaleString("pt-BR")} />
+        <Numero rotulo="aparelhos e lâmpadas" valor={<ValorAnimado valor={linhas.reduce((s, l) => s + l.quantidade, 0)} formatar={(v) => String(Math.round(v))} />} />
+        <Numero rotulo="por mês" valor={<ValorAnimado valor={resumo.conta.consumoKwh} formatar={(v) => formatarKwh(v)} />} />
+        <Numero rotulo="horas de uso somadas no mês" valor={<ValorAnimado valor={totalHoras} formatar={(v) => Math.round(v).toLocaleString("pt-BR")} />} />
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-[var(--radius-cartao)] bg-papel">
@@ -270,8 +276,8 @@ function PainelGeral() {
             </tr>
           </thead>
           <tbody className="divide-y divide-linha">
-            {linhas.map((l) => (
-              <tr key={l.chave}>
+            {linhas.map((l, i) => (
+              <tr key={l.chave} className="surgir" style={{ animationDelay: `${i * 40}ms` }}>
                 <td className="px-4 py-3">
                   <span className="flex items-center gap-2 font-bold">
                     <Icone nome={itemDoCatalogo(l.catalogoId)?.icone} className="size-5 shrink-0 text-energia" />
@@ -304,7 +310,7 @@ function PainelGeral() {
   );
 }
 
-function Numero({ valor, rotulo }: { valor: string; rotulo: string }) {
+function Numero({ valor, rotulo }: { valor: React.ReactNode; rotulo: string }) {
   return (
     <div className="rounded-[var(--radius-cartao)] bg-papel px-4 py-4">
       <p className="numeros text-3xl font-extrabold tracking-tight">{valor}</p>

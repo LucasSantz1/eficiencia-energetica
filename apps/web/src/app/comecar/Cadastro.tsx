@@ -3,11 +3,12 @@
 import { agregarAparelhos, COMODOS_PADRAO, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
 import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { BuscaCidade } from "@/components/BuscaCidade";
 import { BlocoIluminacao, horasPorDiaTexto, LinhaAparelho, type ItemComodo } from "@/components/Comodo";
 import { Icone } from "@/components/Icone";
 import { Marca } from "@/components/Marca";
+import { ENTRAR_NO_PAINEL, TransicaoTela } from "@/components/Movimento";
 import { SeletorCatalogo } from "@/components/SeletorCatalogo";
 import { Aviso, Botao, BotaoLink, Campo, Contador, Entrada, Opcao, Pilulas } from "@/components/ui";
 import { useMunicipios, useTarifas } from "@/lib/dados";
@@ -48,6 +49,8 @@ export function Cadastro() {
   const [contaKwh, setContaKwh] = useState("");
   const [contaValor, setContaValor] = useState("");
   const [recomecar, setRecomecar] = useState(false);
+  // Enquanto o painel abre, continua mostrando o último passo (e não "você já cadastrou").
+  const [concluindo, setConcluindo] = useState(false);
   const tituloRef = useRef<HTMLHeadingElement>(null);
 
   const municipios = useMunicipios(uf);
@@ -80,18 +83,22 @@ export function Cadastro() {
     tituloRef.current?.focus();
   }, [passo]);
 
-  const irPara = (p: Passo) => {
-    setPasso(p);
+  /** Troca de passo animada: avançar desliza para a esquerda, voltar para a direita. */
+  const irPara = (p: Passo, sentido: "adiante" | "volta" = passos.indexOf(p) < indice ? "volta" : "adiante") => {
+    startTransition(() => {
+      addTransitionType(sentido === "volta" ? "nav-back" : "nav-forward");
+      setPasso(p);
+    });
     window.scrollTo({ top: 0 });
   };
   const avancar = () => {
     const prox = passos[indice + 1];
-    if (prox) irPara(prox);
+    if (prox) irPara(prox, "adiante");
   };
   const voltar = () => {
     const ant = passos[indice - 1];
-    if (ant) irPara(ant);
-    else router.push("/");
+    if (ant) irPara(ant, "volta");
+    else router.push("/", { transitionTypes: ["nav-back"] });
   };
 
   const escolherMunicipio = (m: Municipio) => {
@@ -122,6 +129,7 @@ export function Cadastro() {
 
   const concluir = (usarConta: boolean) => {
     if (!uf || !municipio || !distribuidoraId || !beneficio) return;
+    setConcluindo(true);
     const kwh = usarConta ? Number(contaKwh.replace(",", ".")) : 0;
     const valor = usarConta ? Number(contaValor.replace(/\./g, "").replace(",", ".")) : 0;
     criarCasa({
@@ -137,16 +145,18 @@ export function Cadastro() {
       },
       ...casaFinal,
     });
-    router.push("/casa");
+    router.push("/casa", { transitionTypes: ENTRAR_NO_PAINEL });
   };
 
-  if (carregada && jaTemCasa && !recomecar) {
+  if (carregada && jaTemCasa && !recomecar && !concluindo) {
     return (
       <Moldura>
         <h1 className="text-[2rem] leading-tight font-extrabold">Você já cadastrou a sua casa</h1>
         <p className="mt-3 text-lg text-tinta-suave">Seus cômodos e aparelhos estão guardados neste aparelho. Dá para editar tudo no acompanhamento.</p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <BotaoLink href="/casa">Ir para o acompanhamento</BotaoLink>
+          <BotaoLink href="/casa" transitionTypes={ENTRAR_NO_PAINEL}>
+            Ir para o acompanhamento
+          </BotaoLink>
           <Botao variante="perigo" onClick={() => setRecomecar(true)}>
             Apagar e começar do zero
           </Botao>
@@ -154,7 +164,7 @@ export function Cadastro() {
       </Moldura>
     );
   }
-  if (recomecar && jaTemCasa) {
+  if (recomecar && jaTemCasa && !concluindo) {
     return (
       <Moldura>
         <h1 className="text-[2rem] leading-tight font-extrabold">Apagar tudo e começar de novo?</h1>
@@ -192,6 +202,8 @@ export function Cadastro() {
         </div>
       }
     >
+      <TransicaoTela chave={passo}>
+      <div>
       {tarifas.erro && (
         <Aviso tom="alerta">
           Não conseguimos carregar as tarifas. Confira sua internet.{" "}
@@ -474,6 +486,9 @@ export function Cadastro() {
           </div>
         </>
       )}
+
+      </div>
+      </TransicaoTela>
 
       <SeletorCatalogo
         aberto={Boolean(seletorPara)}

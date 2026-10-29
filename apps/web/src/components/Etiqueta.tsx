@@ -32,13 +32,21 @@ export const DESCRICAO_FAIXA: Record<Faixa, string> = {
  * O comprimento é relativo ao aparelho que mais gasta; a cor, ao peso na conta.
  * O valor fica logo depois da seta, para continuar legível mesmo quando a barra é curta.
  */
-export function BarraEtiqueta({ relativo, participacao, children }: { relativo: number; participacao: number; children?: React.ReactNode }) {
+export function BarraEtiqueta({ relativo, participacao, children, atraso = 0 }: { relativo: number; participacao: number; children?: React.ReactNode; atraso?: number }) {
   const faixa = faixaDoPeso(participacao);
   const fracao = Math.max(0, Math.min(1, relativo));
   return (
     <div className="flex h-9 items-center gap-2.5" title={DESCRICAO_FAIXA[faixa]}>
-      <div className={`seta-etiqueta h-full shrink-0 ${COR[faixa]}`} style={{ width: `max(1.6rem, calc((100% - 7rem) * ${fracao}))` }} />
-      {children && <span className="numeros shrink-0 text-[1.05rem] font-extrabold whitespace-nowrap">{children}</span>}
+      {/* Cresce da esquerda ao aparecer; depois, muda de tamanho suavemente quando o valor muda. */}
+      <div
+        className={`seta-etiqueta cresce-x h-full shrink-0 transition-[width,background-color] duration-500 ${COR[faixa]}`}
+        style={{ width: `max(1.6rem, calc((100% - 7rem) * ${fracao}))`, animationDelay: `${atraso}ms` }}
+      />
+      {children && (
+        <span className="numeros surgir shrink-0 text-[1.05rem] font-extrabold whitespace-nowrap" style={{ animationDelay: `${atraso + 350}ms` }}>
+          {children}
+        </span>
+      )}
     </div>
   );
 }

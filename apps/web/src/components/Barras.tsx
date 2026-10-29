@@ -38,7 +38,7 @@ export function Barras({ barras, referencia, unidade, rotulo }: { barras: Barra[
           )}
         </div>
         <ol className="relative flex h-52 items-end gap-[2px] pr-8" role="list">
-          {barras.map((b) => {
+          {barras.map((b, indice) => {
             const marcada = ativa?.id === b.id;
             return (
               <li key={b.id} className="flex h-full min-w-0 flex-1 flex-col justify-end">
@@ -50,7 +50,10 @@ export function Barras({ barras, referencia, unidade, rotulo }: { barras: Barra[
                   title={b.detalhe}
                   className="group flex h-[calc(100%-1.75rem)] w-full items-end justify-center px-[3px]"
                 >
-                  <span className={`block w-full max-w-12 rounded-t-[4px] transition-colors ${marcada ? "bg-energia-forte" : "bg-energia/70 group-hover:bg-energia"}`} style={{ height: `${Math.max(1.5, (b.valor / maximo) * 100)}%` }} />
+                  <span
+                    className={`cresce-y block w-full max-w-12 rounded-t-[4px] transition-[height,background-color] duration-500 ${marcada ? "bg-energia-forte" : "bg-energia/70 group-hover:bg-energia"}`}
+                    style={{ height: `${Math.max(1.5, (b.valor / maximo) * 100)}%`, animationDelay: `${indice * 60}ms` }}
+                  />
                 </button>
                 <span className={`numeros mt-1 block h-6 truncate text-center text-[0.8rem] ${marcada ? "font-bold text-tinta" : "text-tinta-suave"}`}>{b.rotulo}</span>
               </li>

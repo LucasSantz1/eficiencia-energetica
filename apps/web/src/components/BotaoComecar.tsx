@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCasa, useCasaCarregada } from "@/lib/store";
+import { ENTRAR_NO_PAINEL, IR_ADIANTE } from "./Movimento";
 
 const ESTILOS = {
   /** Botão amarelo, para fundos escuros. */
@@ -22,6 +23,7 @@ export function BotaoComecar({ estilo = "principal", compacto = false, texto }: 
   return (
     <Link
       href={jaComecou ? "/casa" : "/comecar"}
+      transitionTypes={jaComecou ? ENTRAR_NO_PAINEL : IR_ADIANTE}
       className={`inline-flex items-center justify-center rounded-[var(--radius-controle)] font-bold transition-colors ${compacto ? "min-h-11 px-4 py-2" : "min-h-14 px-7 text-lg"} ${ESTILOS[estilo]}`}
     >
       {jaComecou ? "Ver a minha casa" : compacto ? "Começar" : (texto ?? "Calcular a minha conta")}

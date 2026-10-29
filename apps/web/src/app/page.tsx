@@ -7,6 +7,7 @@ import { BarraEtiqueta } from "@/components/Etiqueta";
 import { Icone } from "@/components/Icone";
 import { CasaIlustrada } from "@/components/inicio/CasaIlustrada";
 import { Marca } from "@/components/Marca";
+import { Contagem, Revelar, TransicaoTela } from "@/components/Movimento";
 import { Simulador } from "@/components/Simulador";
 
 // Os números da página vêm dos dados da ANEEL, que são atualizados todo dia.
@@ -64,6 +65,7 @@ export default async function Inicio() {
   const infoBandeira = numeros?.bandeira ? BANDEIRAS[numeros.bandeira.bandeira] : undefined;
 
   return (
+    <TransicaoTela>
     <div className="min-h-dvh bg-papel">
       {/* Topo e abertura, em fundo noturno de largura total */}
       <div className="bg-noite text-white">
@@ -85,11 +87,13 @@ export default async function Inicio() {
 
         <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pt-14 pb-16 sm:px-8 lg:min-h-[calc(92dvh-4.5rem)] lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pt-10">
           <div>
-            <h1 className="titulo-largo text-[clamp(2.6rem,8.4vw,4.3rem)]">A conta de luz, cômodo por cômodo.</h1>
-            <p className="mt-7 max-w-[44ch] text-lg leading-relaxed text-white/80 sm:text-xl">
+            <h1 className="titulo-largo surgir text-[clamp(2.6rem,8.4vw,4.3rem)]" style={{ animationDelay: "80ms", animationDuration: "700ms" }}>
+              A conta de luz, cômodo por cômodo.
+            </h1>
+            <p className="surgir mt-7 max-w-[44ch] text-lg leading-relaxed text-white/80 sm:text-xl" style={{ animationDelay: "220ms" }}>
               Diga o que tem em cada cômodo da sua casa e descubra quanto cada aparelho custa por mês, com a tarifa da sua cidade e a bandeira do mês. Depois, veja como pagar menos.
             </p>
-            <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div className="surgir mt-9 flex flex-wrap items-center gap-x-6 gap-y-3" style={{ animationDelay: "360ms" }}>
               <BotaoComecar estilo="faisca" />
               <span className="text-white/70">Grátis. Não pede nome nem e-mail.</span>
             </div>
@@ -105,26 +109,28 @@ export default async function Inicio() {
             Dados oficiais, conferidos todos os dias
           </h2>
           <dl className="mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="border-t-4 border-tinta pt-4">
+            <Revelar className="border-t-4 border-tinta pt-4">
               <dt className="sr-only">Distribuidoras</dt>
-              <dd className="titulo-largo numeros text-[3.4rem]">{numeros?.distribuidoras ?? "100+"}</dd>
+              <dd className="titulo-largo numeros text-[3.4rem]">{numeros ? <Contagem valor={numeros.distribuidoras} /> : "100+"}</dd>
               <dd className="mt-2 text-tinta-suave">distribuidoras de energia com a tarifa residencial vigente</dd>
-            </div>
-            <div className="border-t-4 border-tinta pt-4">
+            </Revelar>
+            <Revelar className="border-t-4 border-tinta pt-4" atraso={100}>
               <dt className="sr-only">Cidades</dt>
-              <dd className="titulo-largo numeros text-[3.4rem]">{numeros ? numeros.cidades.toLocaleString("pt-BR") : "5.500+"}</dd>
+              <dd className="titulo-largo numeros text-[3.4rem]">{numeros ? <Contagem valor={numeros.cidades} /> : "5.500+"}</dd>
               <dd className="mt-2 text-tinta-suave">cidades do Brasil já sabem qual empresa as atende</dd>
-            </div>
-            <div className="border-t-4 pt-4" style={{ borderColor: infoBandeira?.cor ?? "var(--color-tinta)" }}>
+            </Revelar>
+            <RevelarBandeira cor={infoBandeira?.cor}>
               <dt className="sr-only">Bandeira do mês</dt>
               <dd className="titulo-largo text-[3.4rem]">{infoBandeira ? infoBandeira.nome.split(" ")[0] : "Bandeira"}</dd>
               <dd className="mt-2 text-tinta-suave">{numeros?.bandeira ? `é a bandeira tarifária de ${formatarCompetencia(numeros.bandeira.competencia)}` : "do mês, direto da ANEEL"}</dd>
-            </div>
-            <div className="border-t-4 border-energia pt-4">
+            </RevelarBandeira>
+            <Revelar className="border-t-4 border-energia pt-4" atraso={300}>
               <dt className="sr-only">Tarifa Social</dt>
-              <dd className="titulo-largo numeros text-[3.4rem]">80 kWh</dd>
+              <dd className="titulo-largo numeros text-[3.4rem]">
+                <Contagem valor={80} sufixo=" kWh" />
+              </dd>
               <dd className="mt-2 text-tinta-suave">por mês sem pagar nada para famílias com Tarifa Social</dd>
-            </div>
+            </Revelar>
           </dl>
         </div>
       </section>
@@ -132,24 +138,28 @@ export default async function Inicio() {
       {/* Simulador */}
       <section aria-labelledby="experimente" className="bg-fundo">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
-          <div>
+          <Revelar>
             <h2 id="experimente" className="titulo-largo text-[clamp(2.2rem,5.5vw,3.6rem)]">
               Quanto custa um banho de 10 minutos?
             </h2>
             <p className="mt-6 max-w-[46ch] text-lg text-tinta-suave">
               O chuveiro elétrico costuma ser o que mais pesa na conta. Mude o tempo e veja o valor mudar. Depois do cadastro, a conta usa a tarifa da sua cidade e o que você tem em casa.
             </p>
-          </div>
-          <Simulador />
+          </Revelar>
+          <Revelar atraso={150}>
+            <Simulador />
+          </Revelar>
         </div>
       </section>
 
       {/* Como funciona */}
       <section id="como-funciona" aria-labelledby="titulo-como" className="scroll-mt-4">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8">
-          <h2 id="titulo-como" className="titulo-largo max-w-[18ch] text-[clamp(2.2rem,5.5vw,3.6rem)]">
-            Três passos e você sabe onde está o gasto
-          </h2>
+          <Revelar>
+            <h2 id="titulo-como" className="titulo-largo max-w-[18ch] text-[clamp(2.2rem,5.5vw,3.6rem)]">
+              Três passos e você sabe onde está o gasto
+            </h2>
+          </Revelar>
           <div className="mt-14 grid gap-14 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
             <ol className="space-y-10">
               {[
@@ -157,30 +167,30 @@ export default async function Inicio() {
                 ["Conte os cômodos e o que tem em cada um", "Quartos, banheiro, cozinha… Cada cômodo já vem com os aparelhos comuns. É só dizer quantos tem: 2 TVs, 3 lâmpadas, 1 chuveiro."],
                 ["Acompanhe e economize", "Veja quanto cada cômodo e cada aparelho custa, anote suas contas de luz mês a mês e monte um plano com as dicas que mais economizam."],
               ].map(([titulo, texto], i) => (
-                <li key={titulo} className="grid grid-cols-[auto_1fr] gap-5">
+                <Revelar como="li" key={titulo} atraso={i * 120} className="grid grid-cols-[auto_1fr] gap-5">
                   <span className="titulo-largo numeros text-[3.2rem] text-energia">{i + 1}</span>
                   <div className="pt-1">
                     <h3 className="text-2xl font-extrabold tracking-tight">{titulo}</h3>
                     <p className="mt-2 max-w-[50ch] text-lg text-tinta-suave">{texto}</p>
                   </div>
-                </li>
+                </Revelar>
               ))}
             </ol>
 
-            <figure className="self-start rounded-[1.75rem] border-2 border-linha p-6 sm:p-8">
+            <Revelar como="figure" atraso={150} className="self-start rounded-[1.75rem] border-2 border-linha p-6 sm:p-8">
               <figcaption className="text-xl font-extrabold">Quem mais gasta na casa do exemplo</figcaption>
               <ul className="mt-6 space-y-4">
-                {RANKING.map((a) => (
+                {RANKING.map((a, i) => (
                   <li key={a.nome}>
                     <div className="mb-1.5 font-bold">{a.nome}</div>
-                    <BarraEtiqueta relativo={a.relativo} participacao={a.participacao}>
+                    <BarraEtiqueta relativo={a.relativo} participacao={a.participacao} atraso={300 + i * 120}>
                       {a.valor}
                     </BarraEtiqueta>
                   </li>
                 ))}
               </ul>
               <p className="mt-6 text-tinta-suave">As cores são as da etiqueta amarela dos eletrodomésticos: verde pesa pouco, vermelho pesa muito.</p>
-            </figure>
+            </Revelar>
           </div>
         </div>
       </section>
@@ -188,7 +198,7 @@ export default async function Inicio() {
       {/* Tarifa Social: faixa de largura total */}
       <section id="tarifa-social" aria-labelledby="titulo-social" className="scroll-mt-4 bg-energia text-white">
         <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:gap-20">
-          <div>
+          <Revelar>
             <h2 id="titulo-social" className="titulo-largo text-[clamp(2.2rem,5.5vw,3.6rem)]">
               Sua família pode pagar menos na conta de luz
             </h2>
@@ -198,18 +208,18 @@ export default async function Inicio() {
             <div className="mt-9">
               <BotaoComecar estilo="faisca" texto="Calcular a minha conta" />
             </div>
-          </div>
+          </Revelar>
           <dl className="grid gap-6 self-center">
-            <div className="rounded-[1.5rem] bg-white/10 p-6">
+            <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={100}>
               <dt className="text-lg font-bold">Tarifa Social</dt>
               <dd className="titulo-largo mt-2 text-[2.6rem]">80 kWh grátis</dd>
               <dd className="mt-2 text-white/85">Para famílias com renda de até meio salário mínimo por pessoa, ou que recebem o BPC.</dd>
-            </div>
-            <div className="rounded-[1.5rem] bg-white/10 p-6">
+            </Revelar>
+            <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={220}>
               <dt className="text-lg font-bold">Desconto Social</dt>
               <dd className="titulo-largo mt-2 text-[2.6rem]">até 120 kWh</dd>
               <dd className="mt-2 text-white/85">Com desconto para famílias com renda entre meio e um salário mínimo por pessoa.</dd>
-            </div>
+            </Revelar>
             <p className="flex gap-3 text-white/85">
               <Icone nome="hand-heart" className="mt-0.5 size-6 shrink-0" /> Para se inscrever no CadÚnico, procure o CRAS da sua cidade com os documentos da família.
             </p>
@@ -225,12 +235,12 @@ export default async function Inicio() {
             ["plug-zap", "Seus dados ficam com você", "Nada sai do seu aparelho. Não pedimos nome, CPF, e-mail nem endereço."],
             ["smartphone", "Pensado para o celular", "Letras grandes, botões fáceis de tocar e leve para celulares simples."],
             ["lightbulb", "Dicas com valor em reais", "Cada dica mostra quanto economiza na sua casa, por mês e por ano."],
-          ].map(([icone, titulo, texto]) => (
-            <div key={titulo}>
+          ].map(([icone, titulo, texto], i) => (
+            <Revelar key={titulo} atraso={i * 90}>
               <Icone nome={icone} className="size-8 text-energia" />
               <h3 className="mt-4 text-xl font-extrabold">{titulo}</h3>
               <p className="mt-2 text-tinta-suave">{texto}</p>
-            </div>
+            </Revelar>
           ))}
         </div>
       </section>
@@ -241,7 +251,7 @@ export default async function Inicio() {
           <h2 id="titulo-perguntas" className="titulo-largo text-[clamp(2.2rem,5.5vw,3.6rem)]">
             Perguntas comuns
           </h2>
-          <div className="divide-y divide-linha border-y border-linha">
+          <Revelar className="divide-y divide-linha border-y border-linha">
             {PERGUNTAS.map(({ p, r }) => (
               <details key={p} className="group py-2">
                 <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 text-xl font-extrabold [&::-webkit-details-marker]:hidden">
@@ -253,17 +263,17 @@ export default async function Inicio() {
                 <p className="max-w-[62ch] pb-4 text-lg text-tinta-suave">{r}</p>
               </details>
             ))}
-          </div>
+          </Revelar>
         </div>
       </section>
 
       {/* Chamada final e rodapé */}
       <footer className="bg-noite text-white">
         <div className="mx-auto max-w-7xl px-4 pt-20 pb-10 sm:px-8">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <Revelar className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <h2 className="titulo-largo max-w-[14ch] text-[clamp(2.6rem,7vw,4.8rem)]">Comece pela sua casa.</h2>
             <BotaoComecar estilo="faisca" />
-          </div>
+          </Revelar>
           <div className="mt-16 flex flex-col gap-6 border-t border-white/15 pt-8 text-white/70 md:flex-row md:items-start md:justify-between">
             <div className="space-y-3">
               <Marca />
@@ -285,5 +295,15 @@ export default async function Inicio() {
         </div>
       </footer>
     </div>
+    </TransicaoTela>
+  );
+}
+
+/** Bloco da bandeira, com a borda na cor da bandeira do mês. */
+function RevelarBandeira({ cor, children }: { cor?: string; children: React.ReactNode }) {
+  return (
+    <Revelar className="border-t-4 pt-4" atraso={200} estilo={{ borderColor: cor ?? "var(--color-tinta)" }}>
+      {children}
+    </Revelar>
   );
 }

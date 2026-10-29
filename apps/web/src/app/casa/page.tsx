@@ -9,6 +9,7 @@ import { descreverUso } from "@/components/Comodo";
 import { EditorAparelho } from "@/components/EditorAparelho";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/components/Etiqueta";
 import { Icone } from "@/components/Icone";
+import { ValorAnimado } from "@/components/Movimento";
 import { Aviso, BotaoLink } from "@/components/ui";
 import { nomeDistribuidora, useResumo } from "@/lib/resumo";
 
@@ -39,20 +40,24 @@ export default function PainelAcompanhamento() {
   return (
     <div className="space-y-12">
       {/* Valor da conta */}
-      <section aria-labelledby="titulo-conta" className="rounded-[1.75rem] bg-tinta px-5 py-6 text-white sm:px-8 sm:py-8">
+      <section aria-labelledby="titulo-conta" className="surgir rounded-[1.75rem] bg-tinta px-5 py-6 text-white sm:px-8 sm:py-8">
         <h1 id="titulo-conta" className="text-lg font-bold text-white/80">
           Sua conta estimada por mês
         </h1>
-        <p className="numeros mt-1 text-[clamp(3rem,13vw,5.25rem)] leading-none font-extrabold tracking-tight text-faisca">{formatarReais(conta.valor)}</p>
+        <p className="numeros mt-1 text-[clamp(3rem,13vw,5.25rem)] leading-none font-extrabold tracking-tight text-faisca">
+          <ValorAnimado valor={conta.valor} formatar={(v) => formatarReais(v)} duracao={1100} />
+        </p>
         <p className="numeros mt-3 text-lg text-white/85">
           {formatarKwh(conta.consumoKwh)} por mês, cerca de {formatarReais(conta.valor / 30)} por dia
         </p>
 
         {resumoPlano && (
-          <Link href="/casa/dicas" className="mt-5 flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 hover:bg-white/15">
+          <Link href="/casa/dicas" transitionTypes={["nav-forward"]} className="mt-5 flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 hover:bg-white/15">
             <span className="flex-1">
               Com o seu plano de economia ({plano.length} {plano.length === 1 ? "dica" : "dicas"}), a conta cai para{" "}
-              <strong className="numeros text-faisca">{formatarReais(resumoPlano.conta.valor)}</strong>: {formatarReais(conta.valor - resumoPlano.conta.valor)} a menos por mês.
+              <strong className="numeros text-faisca">
+                <ValorAnimado valor={resumoPlano.conta.valor} formatar={(v) => formatarReais(v)} />
+              </strong>: {formatarReais(conta.valor - resumoPlano.conta.valor)} a menos por mês.
             </span>
             <ChevronRight className="size-5 shrink-0" aria-hidden />
           </Link>
@@ -91,20 +96,20 @@ export default function PainelAcompanhamento() {
           <h2 id="titulo-comodos" className="text-2xl font-extrabold tracking-tight">
             Seus cômodos
           </h2>
-          <Link href="/casa/comodos" className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
+          <Link href="/casa/comodos" transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
             Editar <ChevronRight className="size-5" aria-hidden />
           </Link>
         </div>
         <ul className="mt-4 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3">
-          {comodos.map((c) => {
+          {comodos.map((c, indice) => {
             const dados = resumo.comodos.find((x) => x.comodoId === c.id);
             const doComodo = aparelhos.filter((a) => a.comodoId === c.id);
             const lampadas = doComodo.filter(ehLampada).reduce((s, a) => s + a.quantidade, 0);
             const outros = doComodo.filter((a) => !ehLampada(a)).reduce((s, a) => s + a.quantidade, 0);
             const participacao = dados?.participacao ?? 0;
             return (
-              <li key={c.id}>
-                <Link href={`/casa/comodos#comodo-${c.id}`} className="flex h-full flex-col gap-3 rounded-[var(--radius-cartao)] bg-papel p-4 hover:ring-2 hover:ring-energia">
+              <li key={c.id} className="surgir" style={{ animationDelay: `${150 + indice * 70}ms` }}>
+                <Link href={`/casa/comodos#comodo-${c.id}`} transitionTypes={["nav-forward"]} className="flex h-full flex-col gap-3 rounded-[var(--radius-cartao)] bg-papel p-4 hover:ring-2 hover:ring-energia">
                   <span className="flex items-center gap-3">
                     <span className="grid size-11 place-items-center rounded-xl bg-energia-claro text-energia">
                       <Icone nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} className="size-6" />
@@ -119,7 +124,10 @@ export default function PainelAcompanhamento() {
                   </span>
                   <span className="flex items-center gap-2">
                     <span className="h-2 flex-1 overflow-hidden rounded-full bg-fundo">
-                      <span className={`block h-full rounded-full ${COR_FAIXA[faixaDoPeso(participacao)]}`} style={{ width: `${Math.max(2, participacao * 100)}%` }} />
+                      <span
+                        className={`cresce-x block h-full rounded-full transition-[width] duration-500 ${COR_FAIXA[faixaDoPeso(participacao)]}`}
+                        style={{ width: `${Math.max(2, participacao * 100)}%`, animationDelay: `${400 + indice * 70}ms` }}
+                      />
                     </span>
                     <span className="numeros w-12 text-right text-[0.9rem] text-tinta-suave">{formatarPorcentagem(participacao)}</span>
                   </span>
@@ -136,7 +144,7 @@ export default function PainelAcompanhamento() {
           <h2 id="titulo-ranking" className="text-2xl font-extrabold tracking-tight">
             Quem mais gasta
           </h2>
-          <Link href="/casa/comodos?visao=geral" className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
+          <Link href="/casa/comodos?visao=geral" transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
             Painel geral <ChevronRight className="size-5" aria-hidden />
           </Link>
         </div>
@@ -144,8 +152,8 @@ export default function PainelAcompanhamento() {
           <LegendaEtiqueta />
         </div>
         <ul className="mt-5 space-y-5">
-          {resumo.aparelhos.slice(0, 6).map(({ aparelho, kwhMes, valorMes, participacao }) => (
-            <li key={aparelho.id}>
+          {resumo.aparelhos.slice(0, 6).map(({ aparelho, kwhMes, valorMes, participacao }, indice) => (
+            <li key={aparelho.id} className="surgir" style={{ animationDelay: `${300 + indice * 80}ms` }}>
               <button type="button" onClick={() => setEditando(aparelho)} className="block w-full rounded-xl text-left" aria-label={`${aparelho.nome}: ${formatarReais(valorMes)} por mês, ${formatarPorcentagem(participacao)} da conta. Toque para ajustar.`}>
                 <span className="flex items-center gap-2">
                   <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-5 text-tinta-suave" />
@@ -157,7 +165,7 @@ export default function PainelAcompanhamento() {
                   <span className="numeros text-[0.95rem] text-tinta-suave">{formatarPorcentagem(participacao)}</span>
                 </span>
                 <span className="mb-1.5 block pl-7 text-[0.92rem] text-tinta-suave">{descreverUso(aparelho)}</span>
-                <BarraEtiqueta relativo={maior > 0 ? kwhMes / maior : 0} participacao={participacao}>
+                <BarraEtiqueta relativo={maior > 0 ? kwhMes / maior : 0} participacao={participacao} atraso={450 + indice * 80}>
                   {formatarReais(valorMes)}
                 </BarraEtiqueta>
               </button>
@@ -167,7 +175,7 @@ export default function PainelAcompanhamento() {
       </section>
 
       {melhor && (
-        <section aria-labelledby="titulo-economia" className="rounded-[var(--radius-cartao)] border-2 border-energia bg-energia-claro p-5 sm:p-6">
+        <section aria-labelledby="titulo-economia" className="surgir rounded-[var(--radius-cartao)] border-2 border-energia bg-energia-claro p-5 sm:p-6" style={{ animationDelay: "700ms" }}>
           <h2 id="titulo-economia" className="text-lg font-bold text-energia-forte">
             {plano.length > 0 ? "Próxima dica para o seu plano" : "A dica que mais economiza na sua casa"}
           </h2>
@@ -182,7 +190,7 @@ export default function PainelAcompanhamento() {
               </p>
             </div>
           </div>
-          <BotaoLink href="/casa/dicas" variante="secundario" className="mt-5">
+          <BotaoLink href="/casa/dicas" transitionTypes={["nav-forward"]} variante="secundario" className="mt-5">
             Montar meu plano de economia
           </BotaoLink>
         </section>
