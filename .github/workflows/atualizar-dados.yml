@@ -24,15 +24,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Atualizar dados
-        run: pnpm dados:atualizar ${{ inputs.forcar && '--forcar' || '' }}
+        run: |
+          set -o pipefail
+          pnpm dados:atualizar ${{ inputs.forcar && '--forcar' || '' }} 2>&1 | tee atualizacao.log
+      - name: Publicar resumo da atualização
+        if: always()
+        run: |
+          # Mostra o resumo como anotação (aparece na página da execução e pode ser lido pela API).
+          if [ -f atualizacao.log ]; then
+            resumo=$(tail -n 120 atualizacao.log | cut -c1-400 | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+            echo "::notice title=Resumo da atualização::${resumo}"
+          fi
       - name: Salvar no repositório
         run: |
           if git diff --quiet -- apps/web/public/dados; then
