@@ -21,7 +21,7 @@ import { Entrada } from "@/ui/Entrada";
 import { Opcao } from "@/ui/Opcao";
 import { Pilulas } from "@/ui/Pilulas";
 import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
-import { ajustarComodos, itemDoCatalogoParaComodo, rascunhoParaCasa, type ComodoRascunho } from "@/lib/rascunho";
+import { ajustarComodos, itemDoCatalogoParaComodo, rascunhoParaCasa, type ComodoRascunho } from "./rascunho";
 import { nomeDistribuidora } from "@/aplicacao/resumo";
 import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
 
