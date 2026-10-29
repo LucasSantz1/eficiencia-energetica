@@ -101,6 +101,8 @@ export interface Residencia {
   ligacao: Ligacao;
   /** Última conta de luz, usada para calibrar o preço real do kWh (com impostos). */
   contaReferencia?: ContaReferencia;
+  /** Quantas pessoas moram na casa (usado para sugerir banhos e carregadores). */
+  pessoas?: number;
 }
 
 export type TipoComodo =
@@ -140,4 +142,24 @@ export interface Aparelho {
    * que ligam e desligam o motor sozinhos.
    */
   kwhMesInformado?: number;
+}
+
+/** Conta de luz de um mês, registrada no acompanhamento. */
+export interface ContaMensal {
+  id: string;
+  /** Mês de referência (AAAA-MM). */
+  competencia: string;
+  /** Consumo faturado, em kWh. */
+  kwh: number;
+  /** Valor total pago, em R$. */
+  valor: number;
+}
+
+/** Leitura do relógio de luz (medidor), anotada pela pessoa num dia qualquer. */
+export interface LeituraRelogio {
+  id: string;
+  /** Data da leitura (AAAA-MM-DD). */
+  data: string;
+  /** Número que aparece no relógio, em kWh. */
+  valorKwh: number;
 }

@@ -6,11 +6,14 @@ Projeto de pesquisa da Fatec Presidente Prudente (Análise e Desenvolvimento de 
 
 ## O que o sistema faz
 
-- **Cadastro da casa em poucos toques:** estado, cidade, distribuidora (escolhida sozinha quando só uma atende a cidade), benefício (Tarifa Social) e aparelhos.
+- **Cadastro da casa em poucos toques:** estado, cidade, distribuidora (escolhida sozinha quando só uma atende a cidade), benefício (Tarifa Social) e pessoas na casa.
+- **Cômodo por cômodo:** quantos cômodos de cada tipo, com nome próprio ("Quarto do casal"); cada um já vem com os aparelhos comuns, a quantidade de cada (2 TVs, 3 lâmpadas), o tempo de uso estimado e a iluminação.
+- **Painel geral:** junta os aparelhos iguais de todos os cômodos, com quantidade total, onde estão, uso médio por dia, kWh e R$.
+- **Acompanhamento editável:** conta estimada, cômodos, quem mais gasta, histórico das contas de luz mês a mês e leituras do relógio de luz, com gráfico comparando o real com a estimativa.
 - **Tarifa real:** TE + TUSD residencial (B1, convencional) vigente da distribuidora, mais o adicional da bandeira do mês, direto dos dados abertos da ANEEL.
 - **Conta de luz opcional:** com o consumo e o valor de uma conta, o cálculo passa a usar o preço real do kWh, já com impostos.
 - **Quem mais gasta:** ranking dos aparelhos nas cores da etiqueta do INMETRO, com valor por aparelho e por cômodo.
-- **Dicas com economia em R$:** cada dica recalcula a conta da casa para mostrar quanto economiza.
+- **Dicas e plano de economia:** cada dica recalcula a conta da casa para mostrar quanto economiza; a pessoa marca as que vai seguir e vê a nova conta e a economia no mês e no ano.
 - **Regras consideradas:** consumo mínimo (30/50/100 kWh), Tarifa Social (80 kWh isentos, Lei 15.235/2025) e aviso do Desconto Social.
 
 ## Como rodar

@@ -1,6 +1,6 @@
 "use client";
 
-import { bandeiraDoMes, competenciaAtual, gerarDicas, nomeDaDistribuidora, precoKwh, resumirCasa, type ArquivoTarifas, type Distribuidora } from "@ee/core";
+import { bandeiraDoMes, competenciaAtual, gerarDicas, nomeDaDistribuidora, precoKwh, resumirCasa, simularPlano, type ArquivoTarifas, type Distribuidora } from "@ee/core";
 import { useMemo } from "react";
 import { useTarifas } from "./dados";
 import { useCasa } from "./store";
@@ -11,6 +11,7 @@ export function useResumo() {
   const residencia = useCasa((s) => s.residencia);
   const aparelhos = useCasa((s) => s.aparelhos);
   const comodos = useCasa((s) => s.comodos);
+  const plano = useCasa((s) => s.plano);
 
   return useMemo(() => {
     const arquivo = tarifas.dados;
@@ -20,8 +21,11 @@ export function useResumo() {
     const r = residencia ?? { beneficio: "nao-sei" as const, ligacao: "nao-sei" as const };
     const resumo = resumirCasa(aparelhos, r, preco);
     const dicas = gerarDicas({ aparelhos, residencia: r, preco, bandeira: bandeira?.bandeira });
-    return { arquivo, carregando: tarifas.carregando, erro: tarifas.erro, residencia, aparelhos, comodos, distribuidora, bandeira, preco, resumo, dicas };
-  }, [tarifas.dados, tarifas.carregando, tarifas.erro, residencia, aparelhos, comodos]);
+    // Plano de economia: só conta as dicas marcadas que ainda existem (o aparelho pode ter mudado).
+    const planoValido = plano.filter((id) => dicas.some((d) => d.id === id && d.simulavel));
+    const resumoPlano = planoValido.length > 0 ? resumirCasa(simularPlano(aparelhos, planoValido), r, preco) : undefined;
+    return { arquivo, carregando: tarifas.carregando, erro: tarifas.erro, residencia, aparelhos, comodos, distribuidora, bandeira, preco, resumo, dicas, plano: planoValido, resumoPlano };
+  }, [tarifas.dados, tarifas.carregando, tarifas.erro, residencia, aparelhos, comodos, plano]);
 }
 
 /** Tarifa média nacional (sem impostos), usada no simulador da página inicial antes de saber onde a pessoa mora. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { COMODOS_PADRAO, itemDoCatalogo, type Aparelho, type Comodo, type Residencia, type TipoComodo } from "@ee/core";
+import { COMODOS_PADRAO, itemDoCatalogo, type Aparelho, type Comodo, type ContaMensal, type LeituraRelogio, type Residencia, type TipoComodo } from "@ee/core";
 import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -13,6 +13,12 @@ export interface DadosCasa {
   residencia?: Residencia;
   comodos: Comodo[];
   aparelhos: Aparelho[];
+  /** Contas de luz registradas mês a mês no acompanhamento. */
+  contas: ContaMensal[];
+  /** Leituras do relógio de luz anotadas pela pessoa. */
+  leituras: LeituraRelogio[];
+  /** Dicas que a pessoa marcou no plano de economia. */
+  plano: string[];
 }
 
 interface Acoes {
@@ -26,6 +32,13 @@ interface Acoes {
   adicionarAparelho: (a: Omit<Aparelho, "id">) => Aparelho;
   atualizarAparelho: (id: string, parcial: Partial<Aparelho>) => void;
   removerAparelho: (id: string) => void;
+  /** Substitui a casa inteira (usado ao terminar o cadastro). */
+  criarCasa: (dados: { residencia: Residencia; comodos: Comodo[]; aparelhos: Aparelho[] }) => void;
+  salvarConta: (c: Omit<ContaMensal, "id"> & { id?: string }) => void;
+  removerConta: (id: string) => void;
+  salvarLeitura: (l: Omit<LeituraRelogio, "id"> & { id?: string }) => void;
+  removerLeitura: (id: string) => void;
+  alternarNoPlano: (dicaId: string) => void;
   apagarTudo: () => void;
 }
 
@@ -43,6 +56,28 @@ export const useCasa = create<DadosCasa & Acoes>()(
     (set, get) => ({
       comodos: [],
       aparelhos: [],
+      contas: [],
+      leituras: [],
+      plano: [],
+
+      criarCasa: ({ residencia, comodos, aparelhos }) => set({ residencia, comodos, aparelhos, plano: [] }),
+      salvarConta: (c) => {
+        const id = c.id ?? novoId();
+        // Um registro por mês: salvar o mesmo mês de novo substitui o anterior.
+        const outras = get().contas.filter((x) => x.id !== id && x.competencia !== c.competencia);
+        set({ contas: [...outras, { ...c, id }] });
+      },
+      removerConta: (id) => set({ contas: get().contas.filter((c) => c.id !== id) }),
+      salvarLeitura: (l) => {
+        const id = l.id ?? novoId();
+        const outras = get().leituras.filter((x) => x.id !== id && x.data !== l.data);
+        set({ leituras: [...outras, { ...l, id }] });
+      },
+      removerLeitura: (id) => set({ leituras: get().leituras.filter((l) => l.id !== id) }),
+      alternarNoPlano: (dicaId) => {
+        const plano = get().plano;
+        set({ plano: plano.includes(dicaId) ? plano.filter((d) => d !== dicaId) : [...plano, dicaId] });
+      },
 
       definirResidencia: (residencia) => set({ residencia }),
       atualizarResidencia: (parcial) => {
@@ -89,14 +124,16 @@ export const useCasa = create<DadosCasa & Acoes>()(
         return aparelho;
       },
       atualizarAparelho: (id, parcial) => set({ aparelhos: get().aparelhos.map((a) => (a.id === id ? { ...a, ...parcial } : a)) }),
-      removerAparelho: (id) => set({ aparelhos: get().aparelhos.filter((a) => a.id !== id) }),
-      apagarTudo: () => set({ residencia: undefined, comodos: [], aparelhos: [] }),
+      removerAparelho: (id) => set({ aparelhos: get().aparelhos.filter((a) => a.id !== id), plano: get().plano.filter((d) => !d.startsWith(`${id}:`)) }),
+      apagarTudo: () => set({ residencia: undefined, comodos: [], aparelhos: [], contas: [], leituras: [], plano: [] }),
     }),
     {
       name: "eficiencia-energetica:casa",
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
-      partialize: ({ residencia, comodos, aparelhos }) => ({ residencia, comodos, aparelhos }),
+      partialize: ({ residencia, comodos, aparelhos, contas, leituras, plano }) => ({ residencia, comodos, aparelhos, contas, leituras, plano }),
+      // Versão 1 não tinha acompanhamento nem plano de economia.
+      migrate: (salvo) => ({ contas: [], leituras: [], plano: [], ...(salvo as Partial<DadosCasa>) }) as DadosCasa & Acoes,
     },
   ),
 );

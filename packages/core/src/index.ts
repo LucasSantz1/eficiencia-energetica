@@ -5,3 +5,5 @@ export * from "./dicas";
 export * from "./formatacao";
 export * from "./bandeiras";
 export * from "./distribuidoras";
+export * from "./comodos";
+export * from "./acompanhamento";

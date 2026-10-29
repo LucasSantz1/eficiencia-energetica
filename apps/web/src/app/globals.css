@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@fontsource-variable/atkinson-hyperlegible-next";
+@import "@fontsource-variable/archivo/wdth.css";
 
 /*
  * Identidade visual
@@ -10,6 +11,10 @@
  */
 @theme {
   --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Títulos grandes da página inicial: Archivo largo e pesado. */
+  --font-titulo: "Archivo Variable", "Atkinson Hyperlegible Next Variable", ui-sans-serif, sans-serif;
+  --color-noite: #0d1a31;
+  --color-noite-2: #172744;
 
   --color-tinta: #13233f;
   --color-tinta-suave: #4a5a72;
@@ -102,4 +107,24 @@ dialog[open].folha {
     transform: translateY(24px);
     opacity: 0.4;
   }
+}
+
+/* Títulos da página inicial: largos e pesados, com a fonte Archivo esticada. */
+@utility titulo-largo {
+  font-family: var(--font-titulo);
+  font-stretch: 118%;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.98;
+}
+
+/* Cômodos da ilustração acendendo um por um, uma vez, ao abrir a página. */
+@keyframes acender {
+  from {
+    background-color: var(--color-noite-2);
+    color: rgb(255 255 255 / 0.35);
+  }
+}
+@utility acende {
+  animation: acender 700ms cubic-bezier(0.3, 0.7, 0.2, 1) both;
 }

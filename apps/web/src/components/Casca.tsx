@@ -1,6 +1,6 @@
 "use client";
 
-import { House, Lightbulb, ListChecks, Settings2 } from "lucide-react";
+import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -9,9 +9,9 @@ import { useCasa, useCasaCarregada } from "@/lib/store";
 import { Marca } from "./Marca";
 import { Aviso, BotaoLink } from "./ui";
 
-const ITENS = [
-  { href: "/casa", rotulo: "Resumo", Icone: House },
-  { href: "/casa/aparelhos", rotulo: "Aparelhos", Icone: ListChecks },
+const ITENS: { href: string; rotulo: string; curto?: string; Icone: typeof Lightbulb }[] = [
+  { href: "/casa", rotulo: "Acompanhamento", curto: "Acompanhar", Icone: ChartNoAxesColumn },
+  { href: "/casa/comodos", rotulo: "Cômodos", Icone: DoorOpen },
   { href: "/casa/dicas", rotulo: "Dicas", Icone: Lightbulb },
   { href: "/casa/ajustes", rotulo: "Minha casa", Icone: Settings2 },
 ];
@@ -78,15 +78,15 @@ export function Casca({ children }: { children: ReactNode }) {
 
       <nav aria-label="Seções" className="fixed inset-x-0 bottom-0 z-20 border-t border-linha bg-papel pb-[env(safe-area-inset-bottom)] sm:hidden">
         <ul className="grid grid-cols-4">
-          {ITENS.map(({ href, rotulo, Icone }) => {
+          {ITENS.map(({ href, rotulo, curto, Icone }) => {
             const ativo = caminho === href;
             return (
               <li key={href}>
-                <Link href={href} aria-current={ativo ? "page" : undefined} className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[0.82rem] font-bold ${ativo ? "text-energia" : "text-tinta-suave"}`}>
+                <Link href={href} aria-current={ativo ? "page" : undefined} className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[0.78rem] font-bold ${ativo ? "text-energia" : "text-tinta-suave"}`}>
                   <span className={`grid h-8 w-14 place-items-center rounded-full ${ativo ? "bg-energia-claro" : ""}`}>
                     <Icone className="size-6" aria-hidden strokeWidth={ativo ? 2.4 : 1.9} />
                   </span>
-                  {rotulo}
+                  {curto ?? rotulo}
                 </Link>
               </li>
             );

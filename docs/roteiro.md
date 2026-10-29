@@ -2,7 +2,9 @@
 
 ## Fase 1: site (feito)
 
-- Cadastro da casa sem conta: estado, cidade, distribuidora, benefício, aparelhos e conta de luz opcional.
+- Cadastro da casa sem conta: estado, cidade, distribuidora, benefício, pessoas, cômodos (quantidade e nome), aparelhos e lâmpadas por cômodo com quantidade e tempo de uso, e conta de luz opcional.
+- Acompanhamento editável, painel geral dos aparelhos, histórico de contas e leituras do relógio de luz.
+- Plano de economia com simulação das dicas escolhidas.
 - Tarifa e bandeira atualizadas todo dia a partir da ANEEL.
 - Resumo, aparelhos por cômodo, dicas com economia em R$ e ajustes.
 - Instalável no celular (manifest de PWA).
@@ -20,7 +22,6 @@
 - "Usa antes, cria conta depois": o formato salvo no navegador (`DadosCasa` em `apps/web/src/lib/store.ts`) é o mesmo que irá para o servidor.
 - Sugestão: Supabase (Postgres + login por e-mail, Google ou link mágico), com tabelas `residencias`, `comodos` e `aparelhos` e Row Level Security por usuário.
 - Ao criar a conta, os dados locais são enviados uma vez e passam a sincronizar.
-- Histórico mensal: a pessoa registra as contas de luz e acompanha a evolução (o gráfico de consumo diário do artigo original).
 
 ## Fase 4: aplicativo de celular
 

@@ -163,7 +163,7 @@ describe("dicas", () => {
     const tv: Aparelho = { ...base, id: "tv", catalogoId: "tv-pequena", potenciaW: 60, minutosPorDia: 300 };
     const preco = precoKwh({}, { tarifaKwh: 1 }, undefined);
     const dicas = gerarDicas({ aparelhos: [chuveiro, tv], residencia: semBeneficio, preco });
-    const banho = dicas.find((d) => d.id === "ch:0");
+    const banho = dicas.find((d) => d.id === "ch:banho-curto");
     // 4 banhos × 2 min × 30 dias × 5,5 kW = 22 kWh
     expect(banho?.economiaKwh).toBeCloseTo(22, 6);
     expect(banho?.economiaMes).toBeCloseTo(22, 6);

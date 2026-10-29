@@ -1,40 +1,43 @@
 "use client";
 
-import { COMODOS_PADRAO, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo } from "@ee/core";
+import { COMODOS_PADRAO, ehLampada, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
 import { ChevronRight, Info } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { Acompanhamento } from "@/components/Acompanhamento";
+import { descreverUso } from "@/components/Comodo";
 import { EditorAparelho } from "@/components/EditorAparelho";
-import { BarraEtiqueta, LegendaEtiqueta, SeloBandeira } from "@/components/Etiqueta";
+import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/components/Etiqueta";
 import { Icone } from "@/components/Icone";
 import { Aviso, BotaoLink } from "@/components/ui";
 import { nomeDistribuidora, useResumo } from "@/lib/resumo";
-import type { Aparelho } from "@ee/core";
 
-export default function Resumo() {
-  const { resumo, preco, bandeira, distribuidora, residencia, comodos, dicas, carregando, erro } = useResumo();
+const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
+
+export default function PainelAcompanhamento() {
+  const { resumo, resumoPlano, plano, preco, bandeira, distribuidora, residencia, comodos, aparelhos, dicas, carregando, erro } = useResumo();
   const [editando, setEditando] = useState<Aparelho>();
   const { conta } = resumo;
   const maior = resumo.aparelhos[0]?.kwhMes ?? 0;
-  const melhores = dicas.filter((d) => (d.economiaMes ?? 0) >= 0.5).slice(0, 2);
+  const melhor = dicas.find((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id));
 
   if (erro) return <Aviso tom="alerta">Não conseguimos carregar as tarifas. Confira sua internet e recarregue a página.</Aviso>;
   if (carregando && !distribuidora) return <div className="h-48 animate-pulse rounded-[var(--radius-cartao)] bg-papel" aria-busy aria-label="Carregando" />;
 
-  if (resumo.aparelhos.length === 0) {
+  if (aparelhos.length === 0) {
     return (
       <div className="py-6">
         <h1 className="text-[2rem] leading-tight font-extrabold">Nenhum aparelho ainda</h1>
-        <p className="mt-3 max-w-[48ch] text-lg text-tinta-suave">Adicione os aparelhos da sua casa para ver quanto cada um custa por mês.</p>
-        <BotaoLink href="/casa/aparelhos" className="mt-8">
-          Adicionar aparelhos
+        <p className="mt-3 max-w-[48ch] text-lg text-tinta-suave">Adicione os aparelhos de cada cômodo para ver quanto cada um custa por mês.</p>
+        <BotaoLink href="/casa/comodos" className="mt-8">
+          Ir para os cômodos
         </BotaoLink>
       </div>
     );
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       {/* Valor da conta */}
       <section aria-labelledby="titulo-conta" className="rounded-[1.75rem] bg-tinta px-5 py-6 text-white sm:px-8 sm:py-8">
         <h1 id="titulo-conta" className="text-lg font-bold text-white/80">
@@ -44,6 +47,16 @@ export default function Resumo() {
         <p className="numeros mt-3 text-lg text-white/85">
           {formatarKwh(conta.consumoKwh)} por mês, cerca de {formatarReais(conta.valor / 30)} por dia
         </p>
+
+        {resumoPlano && (
+          <Link href="/casa/dicas" className="mt-5 flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 hover:bg-white/15">
+            <span className="flex-1">
+              Com o seu plano de economia ({plano.length} {plano.length === 1 ? "dica" : "dicas"}), a conta cai para{" "}
+              <strong className="numeros text-faisca">{formatarReais(resumoPlano.conta.valor)}</strong>: {formatarReais(conta.valor - resumoPlano.conta.valor)} a menos por mês.
+            </span>
+            <ChevronRight className="size-5 shrink-0" aria-hidden />
+          </Link>
+        )}
 
         <div className="mt-6 space-y-2 border-t border-white/15 pt-5 text-[0.98rem] text-white/80">
           {bandeira && preco.origem === "aneel" && (
@@ -72,31 +85,78 @@ export default function Resumo() {
         </div>
       </section>
 
+      {/* Cômodos */}
+      <section aria-labelledby="titulo-comodos">
+        <div className="flex items-end justify-between gap-4">
+          <h2 id="titulo-comodos" className="text-2xl font-extrabold tracking-tight">
+            Seus cômodos
+          </h2>
+          <Link href="/casa/comodos" className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
+            Editar <ChevronRight className="size-5" aria-hidden />
+          </Link>
+        </div>
+        <ul className="mt-4 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3">
+          {comodos.map((c) => {
+            const dados = resumo.comodos.find((x) => x.comodoId === c.id);
+            const doComodo = aparelhos.filter((a) => a.comodoId === c.id);
+            const lampadas = doComodo.filter(ehLampada).reduce((s, a) => s + a.quantidade, 0);
+            const outros = doComodo.filter((a) => !ehLampada(a)).reduce((s, a) => s + a.quantidade, 0);
+            const participacao = dados?.participacao ?? 0;
+            return (
+              <li key={c.id}>
+                <Link href={`/casa/comodos#comodo-${c.id}`} className="flex h-full flex-col gap-3 rounded-[var(--radius-cartao)] bg-papel p-4 hover:ring-2 hover:ring-energia">
+                  <span className="flex items-center gap-3">
+                    <span className="grid size-11 place-items-center rounded-xl bg-energia-claro text-energia">
+                      <Icone nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} className="size-6" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-lg font-extrabold">{c.nome}</span>
+                      <span className="block text-[0.92rem] text-tinta-suave">
+                        {outros} {outros === 1 ? "aparelho" : "aparelhos"}, {lampadas} {lampadas === 1 ? "lâmpada" : "lâmpadas"}
+                      </span>
+                    </span>
+                    <span className="numeros text-right text-lg font-extrabold">{formatarReais(dados?.valorMes ?? 0)}</span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="h-2 flex-1 overflow-hidden rounded-full bg-fundo">
+                      <span className={`block h-full rounded-full ${COR_FAIXA[faixaDoPeso(participacao)]}`} style={{ width: `${Math.max(2, participacao * 100)}%` }} />
+                    </span>
+                    <span className="numeros w-12 text-right text-[0.9rem] text-tinta-suave">{formatarPorcentagem(participacao)}</span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
       {/* Quem mais gasta */}
       <section aria-labelledby="titulo-ranking">
         <div className="flex items-end justify-between gap-4">
           <h2 id="titulo-ranking" className="text-2xl font-extrabold tracking-tight">
             Quem mais gasta
           </h2>
-          <Link href="/casa/aparelhos" className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
-            Todos <ChevronRight className="size-5" aria-hidden />
+          <Link href="/casa/comodos?visao=geral" className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
+            Painel geral <ChevronRight className="size-5" aria-hidden />
           </Link>
         </div>
         <div className="mt-3">
           <LegendaEtiqueta />
         </div>
         <ul className="mt-5 space-y-5">
-          {resumo.aparelhos.slice(0, 7).map(({ aparelho, kwhMes, valorMes, participacao }) => (
+          {resumo.aparelhos.slice(0, 6).map(({ aparelho, kwhMes, valorMes, participacao }) => (
             <li key={aparelho.id}>
               <button type="button" onClick={() => setEditando(aparelho)} className="block w-full rounded-xl text-left" aria-label={`${aparelho.nome}: ${formatarReais(valorMes)} por mês, ${formatarPorcentagem(participacao)} da conta. Toque para ajustar.`}>
-                <span className="mb-1.5 flex items-center gap-2">
+                <span className="flex items-center gap-2">
                   <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-5 text-tinta-suave" />
                   <span className="flex-1 truncate font-bold">
                     {aparelho.quantidade > 1 && <span className="numeros">{aparelho.quantidade} × </span>}
                     {aparelho.nome}
+                    <span className="font-normal text-tinta-suave"> em {comodos.find((c) => c.id === aparelho.comodoId)?.nome}</span>
                   </span>
-                  <span className="numeros text-[0.95rem] text-tinta-suave">{formatarPorcentagem(participacao)} da conta</span>
+                  <span className="numeros text-[0.95rem] text-tinta-suave">{formatarPorcentagem(participacao)}</span>
                 </span>
+                <span className="mb-1.5 block pl-7 text-[0.92rem] text-tinta-suave">{descreverUso(aparelho)}</span>
                 <BarraEtiqueta relativo={maior > 0 ? kwhMes / maior : 0} participacao={participacao}>
                   {formatarReais(valorMes)}
                 </BarraEtiqueta>
@@ -104,61 +164,31 @@ export default function Resumo() {
             </li>
           ))}
         </ul>
-        {resumo.aparelhos.length > 7 && (
-          <p className="mt-4 text-tinta-suave">
-            E mais {resumo.aparelhos.length - 7} {resumo.aparelhos.length - 7 === 1 ? "aparelho" : "aparelhos"} que gastam menos.
-          </p>
-        )}
       </section>
 
-      {/* Onde economizar */}
-      {melhores.length > 0 && (
+      {melhor && (
         <section aria-labelledby="titulo-economia" className="rounded-[var(--radius-cartao)] border-2 border-energia bg-energia-claro p-5 sm:p-6">
-          <h2 id="titulo-economia" className="text-2xl font-extrabold tracking-tight text-energia-forte">
-            Onde dá para economizar
+          <h2 id="titulo-economia" className="text-lg font-bold text-energia-forte">
+            {plano.length > 0 ? "Próxima dica para o seu plano" : "A dica que mais economiza na sua casa"}
           </h2>
-          <ul className="mt-4 space-y-4">
-            {melhores.map((d) => (
-              <li key={d.id} className="flex items-start gap-3">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-papel text-energia">
-                  <Icone nome={d.icone} className="size-5" />
-                </span>
-                <div className="flex-1">
-                  <p className="font-bold">{d.titulo}</p>
-                  <p className="numeros text-energia-forte">
-                    Economia de <strong>{formatarReais(d.economiaMes ?? 0)}</strong> por mês
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-3 flex items-start gap-3">
+            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-papel text-energia">
+              <Icone nome={melhor.icone} className="size-6" />
+            </span>
+            <div className="flex-1">
+              <p className="text-xl leading-snug font-extrabold">{melhor.titulo}</p>
+              <p className="numeros mt-1 text-energia-forte">
+                <strong>{formatarReais(melhor.economiaMes ?? 0)} por mês</strong>, ou {formatarReais((melhor.economiaMes ?? 0) * 12)} em um ano
+              </p>
+            </div>
+          </div>
           <BotaoLink href="/casa/dicas" variante="secundario" className="mt-5">
-            Ver todas as dicas
+            Montar meu plano de economia
           </BotaoLink>
         </section>
       )}
 
-      {/* Por cômodo */}
-      {resumo.comodos.length > 1 && (
-        <section aria-labelledby="titulo-comodos">
-          <h2 id="titulo-comodos" className="text-2xl font-extrabold tracking-tight">
-            Por cômodo
-          </h2>
-          <ul className="mt-4 divide-y divide-linha border-y border-linha">
-            {resumo.comodos.map((c) => {
-              const comodo = comodos.find((x) => x.id === c.comodoId);
-              return (
-                <li key={c.comodoId} className="flex items-center gap-3 py-3">
-                  <Icone nome={COMODOS_PADRAO.find((p) => p.tipo === comodo?.tipo)?.icone} className="size-5 text-tinta-suave" />
-                  <span className="flex-1 font-bold">{comodo?.nome ?? "Cômodo"}</span>
-                  <span className="numeros text-tinta-suave">{formatarPorcentagem(c.participacao)}</span>
-                  <span className="numeros w-28 text-right font-extrabold">{formatarReais(c.valorMes)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
+      <Acompanhamento estimativaKwhMes={conta.consumoKwh} />
 
       <p className="text-[0.95rem] text-tinta-suave">
         Os valores são estimativas feitas com os tempos de uso que você informou. A conta real pode variar com impostos, taxa de iluminação pública e dias de leitura.
