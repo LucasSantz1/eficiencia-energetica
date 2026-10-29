@@ -7,8 +7,8 @@ import { EspacoReservado } from "@/ui/EspacoReservado";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
-import { useResumo } from "@/lib/resumo";
-import { useCasa } from "@/lib/store";
+import { useResumo } from "@/aplicacao/resumo";
+import { useCasa } from "@/aplicacao/casa";
 
 type Filtro = "todas" | "habito" | "troca";
 

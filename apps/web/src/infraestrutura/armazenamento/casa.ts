@@ -4,6 +4,7 @@ import { aparelhoInicial, COMODOS_PADRAO, itemDoCatalogo, type Aparelho, type Co
 import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { novoId } from "@/infraestrutura/identificador";
 
 /**
  * Os dados da casa ficam guardados no próprio aparelho da pessoa (localStorage), sem precisar de conta.
@@ -41,9 +42,6 @@ interface Acoes {
   alternarNoPlano: (dicaId: string) => void;
   apagarTudo: () => void;
 }
-
-export const novoId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 function nomeDoComodo(tipo: TipoComodo, existentes: Comodo[]): string {
   const base = COMODOS_PADRAO.find((c) => c.tipo === tipo)?.nome ?? "Cômodo";

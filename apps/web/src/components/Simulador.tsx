@@ -2,8 +2,8 @@
 
 import { aparelhoInicial, bandeiraDoMes, competenciaAtual, consumoMensalKwh, formatarKwh, formatarReais, formatarTempo, itemDoCatalogo, precoKwh } from "@ee/core";
 import { useMemo, useState } from "react";
-import { useTarifas } from "@/lib/dados";
-import { tarifaMedia } from "@/lib/resumo";
+import { useTarifas } from "@/aplicacao/dados-publicos";
+import { tarifaMedia } from "@/aplicacao/resumo";
 import { Icone } from "@/ui/Icone";
 import { Contador } from "@/ui/Contador";
 

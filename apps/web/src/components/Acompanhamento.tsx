@@ -3,7 +3,7 @@
 import { competenciaAtual, formatarCompetencia, formatarKwh, formatarReais, historicoContas, periodosDeLeitura, type ContaMensal, type LeituraRelogio } from "@ee/core";
 import { Gauge, Pencil, Plus, Receipt } from "lucide-react";
 import { useState } from "react";
-import { useCasa } from "@/lib/store";
+import { useCasa } from "@/aplicacao/casa";
 import { Barras } from "@/ui/Barras";
 import { Aviso } from "@/ui/Aviso";
 import { Botao } from "@/ui/Botao";

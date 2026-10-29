@@ -17,10 +17,10 @@ import { Contador } from "@/ui/Contador";
 import { Entrada } from "@/ui/Entrada";
 import { Opcao } from "@/ui/Opcao";
 import { Pilulas } from "@/ui/Pilulas";
-import { useMunicipios, useTarifas } from "@/lib/dados";
+import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
 import { ajustarComodos, itemDoCatalogoParaComodo, rascunhoParaCasa, type ComodoRascunho } from "@/lib/rascunho";
-import { nomeDistribuidora } from "@/lib/resumo";
-import { useCasa, useCasaCarregada } from "@/lib/store";
+import { nomeDistribuidora } from "@/aplicacao/resumo";
+import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
 
 type Passo = "estado" | "cidade" | "distribuidora" | "beneficio" | "pessoas" | "comodos" | `comodo:${number}` | "revisao" | "conta";
 

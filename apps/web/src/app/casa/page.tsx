@@ -13,7 +13,7 @@ import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Aviso } from "@/ui/Aviso";
 import { BotaoLink } from "@/ui/Botao";
-import { nomeDistribuidora, useResumo } from "@/lib/resumo";
+import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
 

@@ -2,8 +2,8 @@
 
 import { bandeiraDoMes, competenciaAtual, gerarDicas, nomeDaDistribuidora, precoKwh, resumirCasa, simularPlano, type ArquivoTarifas, type Distribuidora } from "@ee/core";
 import { useMemo } from "react";
-import { useTarifas } from "./dados";
-import { useCasa } from "./store";
+import { useCasa } from "@/infraestrutura/armazenamento/casa";
+import { useTarifas } from "@/infraestrutura/dados-publicos/navegador";
 
 /** Junta os dados da casa com a tarifa da distribuidora e a bandeira do mês. */
 export function useResumo() {

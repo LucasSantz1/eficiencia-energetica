@@ -4,8 +4,8 @@ import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2 } from "lucide-react"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
-import { useResumo } from "@/lib/resumo";
-import { useCasa, useCasaCarregada } from "@/lib/store";
+import { useResumo } from "@/aplicacao/resumo";
+import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
 import { Marca } from "@/ui/Marca";
 import { IR_ADIANTE, TransicaoTela, VOLTAR } from "@/ui/Movimento";
 import { Aviso } from "@/ui/Aviso";

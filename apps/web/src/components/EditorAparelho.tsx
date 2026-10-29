@@ -3,7 +3,7 @@
 import { consumoMensalKwh, formatarKwh, formatarReais, itemDoCatalogo, type Aparelho, type PrecoKwh } from "@ee/core";
 import { CircleHelp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useCasa } from "@/lib/store";
+import { useCasa } from "@/aplicacao/casa";
 import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";

@@ -1,6 +1,6 @@
 import { aparelhoInicial, COMODOS_PADRAO, ILUMINACAO_PADRAO, itemDoCatalogo, nomesPadrao, SUGESTOES_COMODO, type Aparelho, type Comodo, type TipoComodo } from "@ee/core";
 import type { ItemComodo } from "@/components/Comodo";
-import { novoId } from "./store";
+import { novoId } from "@/aplicacao/casa";
 
 /** Cômodo sendo montado no cadastro: nome, aparelhos sugeridos (alguns com quantidade 0) e lâmpadas. */
 export interface ComodoRascunho {

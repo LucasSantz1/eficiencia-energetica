@@ -11,9 +11,9 @@ import { Campo } from "@/ui/Campo";
 import { Entrada } from "@/ui/Entrada";
 import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
-import { useMunicipios } from "@/lib/dados";
-import { nomeDistribuidora, useResumo } from "@/lib/resumo";
-import { useCasa } from "@/lib/store";
+import { useMunicipios } from "@/aplicacao/dados-publicos";
+import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
+import { useCasa } from "@/aplicacao/casa";
 
 const BENEFICIOS: { id: Beneficio; titulo: string; descricao: string }[] = [
   { id: "tarifa-social", titulo: "Tarifa Social", descricao: "CadÚnico com renda de até meio salário mínimo por pessoa, ou BPC. Os primeiros 80 kWh são de graça." },

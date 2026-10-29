@@ -25,8 +25,8 @@ import { Campo } from "@/ui/Campo";
 import { Entrada } from "@/ui/Entrada";
 import { Folha } from "@/ui/Folha";
 import { Pilulas } from "@/ui/Pilulas";
-import { useResumo } from "@/lib/resumo";
-import { useCasa } from "@/lib/store";
+import { useResumo } from "@/aplicacao/resumo";
+import { useCasa } from "@/aplicacao/casa";
 
 export default function Comodos() {
   const { resumo, preco, comodos, aparelhos } = useResumo();
