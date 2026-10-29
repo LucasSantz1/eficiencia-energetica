@@ -31,6 +31,9 @@ const PASTA_FIXTURES = path.join(PASTA_SCRIPT, "fixtures");
 const PASTA_WEB = path.resolve(PASTA_SCRIPT, "..");
 const ROTAS = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/casa/aparelhos", "/sobre"];
 const LIMITE_CRESCIMENTO_JS = 1024; // bytes (desenho técnico, seção 10, item 6)
+// Diferença por canal (0–255) abaixo da qual o pixel conta como ruído de rasterização, não mudança.
+// Medido em 2026-10-29: duas execuções do mesmo build diferem até 10/255 na borda de pílulas dentro do <dialog>.
+const TOLERANCIA_CANAL = 16;
 
 // Roda antes de qualquer script da página, em toda navegação.
 const SCRIPT_INICIAL = ({ chave, semente }) => {
@@ -116,8 +119,8 @@ function tentar(cmd) {
 // ---------------------------------------------------------------- captura
 
 class Sessao {
-  constructor({ navegador, base, saida, vp, problemas, opcoesContexto = {}, semente, rotulo }) {
-    Object.assign(this, { navegador, base, saida, vp, problemas, opcoesContexto, semente });
+  constructor({ navegador, base, saida, vp, problemas, opcoesContexto = {}, semente, rotulo, relogioFixo = true }) {
+    Object.assign(this, { navegador, base, saida, vp, problemas, opcoesContexto, semente, relogioFixo });
     this.rotulo = rotulo ?? String(vp);
     this.passo = 0;
     this.erros = [];
@@ -127,7 +130,8 @@ class Sessao {
 
   async abrir() {
     this.contexto = await this.navegador.newContext({ viewport: VIEWPORTS[this.vp], locale: "pt-BR", timezoneId: "America/Sao_Paulo", ...this.opcoesContexto });
-    await this.contexto.clock.setFixedTime(AGORA);
+    // O relógio falso do Playwright também troca o `performance`: a medição de bytes roda sem ele.
+    if (this.relogioFixo) await this.contexto.clock.setFixedTime(AGORA);
     await this.contexto.addInitScript(SCRIPT_INICIAL, { chave: CHAVE_CASA, semente: this.semente ? JSON.stringify(this.semente) : null });
     this.pagina = await this.contexto.newPage();
     this.pagina.on("pageerror", (e) => this.erros.push(`pageerror: ${e.message}`));
@@ -201,6 +205,10 @@ class Sessao {
   verificar(condicao, mensagem) {
     if (!condicao) this.problemas.push(`[${this.rotulo}] ${mensagem}`);
   }
+}
+
+async function idsDosAparelhos(s) {
+  return ((await s.casaSalva())?.state.aparelhos ?? []).map((a) => a.id).join(",");
 }
 
 async function esperarDialogo(p, aberto) {
@@ -282,12 +290,14 @@ async function fluxoCompleto(s) {
   // Acompanhamento
   await p.getByText("Sua conta estimada por mês").waitFor();
   await s.registrar("acompanhamento");
-  // Editor pelo "Quem mais gasta": abre, salva sem mudar e fecha.
+  // Editor pelo "Quem mais gasta": abre, salva sem mudar e fecha (mesmos ids, mesma quantidade — ameaça A4).
+  const idsAntes = await idsDosAparelhos(s);
   await p.getByRole("button", { name: /Toque para ajustar\.$/ }).first().click();
   await esperarDialogo(p, true);
   await s.registrar("acompanhamento-editor-aparelho");
   await p.locator("dialog[open]").getByRole("button", { name: "Salvar mudanças" }).click();
   await esperarDialogo(p, false);
+  s.verificar((await idsDosAparelhos(s)) === idsAntes, "salvar pelo \"Quem mais gasta\" mudou os ids ou a quantidade de aparelhos");
   // Duas contas de luz
   for (const [botao, mes, kwh, valor] of [
     ["Anotar conta", "2026-09", "182", "151,37"],
@@ -325,8 +335,16 @@ async function fluxoCompleto(s) {
   await s.registrar("comodos");
   await p.locator('section[id^="comodo-"]').nth(1).locator("button[aria-expanded]").first().click();
   await s.registrar("comodos-segundo-aberto");
-  // Editor pelos cômodos: abre o primeiro aparelho do primeiro cômodo e remove.
+  // Editor pelos cômodos: salvar o primeiro aparelho da cozinha não muda ids nem quantidade (ameaça A4).
+  const idsCozinha = await idsDosAparelhos(s);
   await p.locator('section[id^="comodo-"]').first().locator(".sanfona ul > li button").first().click();
+  await esperarDialogo(p, true);
+  await p.locator("dialog[open]").getByRole("button", { name: "Salvar mudanças" }).click();
+  await esperarDialogo(p, false);
+  s.verificar((await idsDosAparelhos(s)) === idsCozinha, "salvar pelos cômodos mudou os ids ou a quantidade de aparelhos");
+  // Depois abre o primeiro aparelho do segundo cômodo (a TV da sala) e remove.
+  // Não é o da cozinha: a geladeira precisa ficar na casa salva que vira fixture.
+  await p.locator('section[id^="comodo-"]').nth(1).locator(".sanfona ul > li button").first().click();
   await esperarDialogo(p, true);
   await s.registrar("comodos-editor-aparelho");
   await p.locator("dialog[open]").getByRole("button", { name: "Remover este aparelho" }).click();
@@ -392,16 +410,22 @@ async function migracao(navegador, base, saida, problemas, versao) {
   await s.registrar("casa-recarregada");
   const salvo = await s.casaSalva();
   escrever(path.join(saida, `migracao-v${versao}-guardado.json`), json(salvo));
+  // A v2 tem que voltar idêntica; a v1 é migrada (o zustand regrava como versão 2 com as três listas vazias).
   const esperado = versao === 2 ? fixture : { state: { ...fixture.state, contas: [], leituras: [], plano: [] }, version: 2 };
-  // Na v1 o zustand só regrava depois de alguma mudança; o que importa é o estado em memória não perder nada.
-  const emMemoria = salvo?.version === 2 ? salvo : { state: { ...salvo.state, contas: salvo.state.contas ?? [], leituras: salvo.state.leituras ?? [], plano: salvo.state.plano ?? [] }, version: 2 };
-  s.verificar(iguais(emMemoria.state, esperado.state), `casa salva na versão ${versao}: o que ficou guardado não bate com o esperado`);
+  const igual = iguais(salvo, esperado);
+  s.verificar(igual, `casa salva na versão ${versao}: o que ficou guardado não bate com o esperado`);
   if (versao === 2) {
     const texto = await s.pagina.locator("main").innerText();
     for (const c of fixture.state.comodos) s.verificar(texto.includes(c.nome), `versão 2: cômodo "${c.nome}" não aparece no acompanhamento`);
+    // Portão de hidratação (ameaça A3): quem já tem casa não pode cair no assistente, que substitui tudo.
+    await s.ir("/comecar");
+    await s.registrar("comecar-com-casa");
+    const titulo = await s.pagina.locator("main h1").first().innerText();
+    s.verificar(titulo === "Você já cadastrou a sua casa", `com casa salva, /comecar mostrou "${titulo}" em vez de "Você já cadastrou a sua casa"`);
+    s.verificar(iguais(await s.casaSalva(), fixture), "abrir /comecar com casa salva mudou a casa guardada");
   }
   await s.fechar();
-  return { versaoGuardada: salvo?.version ?? null, igualAoEsperado: iguais(emMemoria.state, esperado.state), erros: s.erros.length, transicoes: s.transicoes };
+  return { versaoGuardada: salvo?.version ?? null, igualAoEsperado: igual, erros: s.erros.length, transicoes: s.transicoes };
 }
 
 /** Movimento reduzido: "foto" do DOM de cada rota, com a mesma casa salva, e a troca de abas. */
@@ -441,6 +465,40 @@ async function movimentoReduzido(navegador, base, saida, problemas) {
   return { duracaoSurgir, transicoesNasAbas, tamanhoDom: fotos };
 }
 
+/** Remover pelo "Quem mais gasta" um aparelho que está no plano tira as dicas dele do plano (ameaça A4). */
+async function removerDoPlano(navegador, base, saida, problemas) {
+  const fixture = JSON.parse(fs.readFileSync(path.join(PASTA_FIXTURES, "casa-v2.json"), "utf8"));
+  const [aparelhoId] = fixture.state.plano[0]?.split(":") ?? [];
+  const aparelho = fixture.state.aparelhos.find((a) => a.id === aparelhoId);
+  const s = await new Sessao({ navegador, base, saida, vp: 390, problemas, semente: fixture, rotulo: "remover-do-plano" }).abrir();
+  const p = s.pagina;
+  if (!aparelho) {
+    s.verificar(false, "fixture v2 sem dica de aparelho no plano: gere de novo com --gerar-fixtures");
+    await s.fechar();
+    return {};
+  }
+  await s.ir("/casa");
+  await p.getByRole("button", { name: new RegExp(`^${aparelho.nome}: .*Toque para ajustar\\.$`) }).first().click();
+  await esperarDialogo(p, true);
+  await p.locator("dialog[open]").getByRole("button", { name: "Remover este aparelho" }).click();
+  await p.locator("dialog[open]").getByRole("button", { name: "Sim, remover" }).click();
+  await esperarDialogo(p, false);
+  await s.registrar("depois-de-remover");
+  const salvo = (await s.casaSalva()).state;
+  const resultado = {
+    aparelho: aparelho.nome,
+    aparelhosAntes: fixture.state.aparelhos.length,
+    aparelhosDepois: salvo.aparelhos.length,
+    planoAntes: fixture.state.plano,
+    planoDepois: salvo.plano,
+  };
+  s.verificar(resultado.aparelhosDepois === resultado.aparelhosAntes - 1 && !salvo.aparelhos.some((a) => a.id === aparelhoId), `remover ${aparelho.nome} não tirou exatamente esse aparelho`);
+  s.verificar(!salvo.plano.some((d) => d.startsWith(`${aparelhoId}:`)), `remover ${aparelho.nome} deixou as dicas dele no plano`);
+  escrever(path.join(saida, "remover-do-plano-guardado.json"), json(await s.casaSalva()));
+  await s.fechar();
+  return resultado;
+}
+
 /** Apagar todos os meus dados, a partir da casa salva. */
 async function apagarTudo(navegador, base, saida, problemas) {
   const fixture = JSON.parse(fs.readFileSync(path.join(PASTA_FIXTURES, "casa-v2.json"), "utf8"));
@@ -470,7 +528,7 @@ async function bytesDeJs(navegador, base, problemas) {
     ["/casa (sem casa)", "/casa", null],
     ["/casa (com casa)", "/casa", fixture],
   ]) {
-    const s = await new Sessao({ navegador, base, saida: null, vp: 390, problemas, semente, rotulo: `bytes ${nome}` }).abrir();
+    const s = await new Sessao({ navegador, base, saida: null, vp: 390, problemas, semente, rotulo: `bytes ${nome}`, relogioFixo: false }).abrir();
     await s.pagina.goto(s.url(rota), { waitUntil: "networkidle" });
     await s.pagina.waitForTimeout(1000);
     medidas[nome] = await s.pagina.evaluate(() => {
@@ -567,6 +625,7 @@ async function capturar(saida, opcoes) {
     if (fs.existsSync(path.join(PASTA_FIXTURES, "casa-v2.json"))) {
       resumo.migracao = { v2: await migracao(navegador, base, saida, problemas, 2), v1: await migracao(navegador, base, saida, problemas, 1) };
       resumo.movimentoReduzido = await movimentoReduzido(navegador, base, saida, problemas);
+      resumo.removerDoPlano = await removerDoPlano(navegador, base, saida, problemas);
       resumo.apagarTudo = await apagarTudo(navegador, base, saida, problemas);
       resumo.bytesJs = await bytesDeJs(navegador, base, problemas);
     } else problemas.push("sem fixtures: o fluxo não terminou, então não deu para testar migração, movimento reduzido e bytes");
@@ -607,7 +666,7 @@ function listar(pasta) {
 async function compararImagens(pagina, a, b) {
   const paraDados = (f) => `data:image/png;base64,${fs.readFileSync(f).toString("base64")}`;
   return pagina.evaluate(
-    async ([da, db]) => {
+    async ([da, db, tolerancia]) => {
       const carregar = (src) => new Promise((ok, erro) => Object.assign(new Image(), { onload() { ok(this); }, onerror: erro, src }));
       const [ia, ib] = await Promise.all([carregar(da), carregar(db)]);
       if (ia.width !== ib.width || ia.height !== ib.height) return { pixels: -1, tamanho: `${ia.width}×${ia.height} → ${ib.width}×${ib.height}` };
@@ -620,16 +679,19 @@ async function compararImagens(pagina, a, b) {
       const pb = x.getImageData(0, 0, c.width, c.height).data;
       const marcada = x.createImageData(c.width, c.height);
       let pixels = 0;
+      let ruido = 0;
       for (let i = 0; i < pa.length; i += 4) {
-        const difere = pa[i] !== pb[i] || pa[i + 1] !== pb[i + 1] || pa[i + 2] !== pb[i + 2] || pa[i + 3] !== pb[i + 3];
+        const delta = Math.max(Math.abs(pa[i] - pb[i]), Math.abs(pa[i + 1] - pb[i + 1]), Math.abs(pa[i + 2] - pb[i + 2]), Math.abs(pa[i + 3] - pb[i + 3]));
+        const difere = delta > tolerancia;
         if (difere) pixels++;
+        else if (delta > 0) ruido++;
         const cinza = (pa[i] + pa[i + 1] + pa[i + 2]) / 3;
         marcada.data.set(difere ? [230, 0, 60, 255] : [cinza, cinza, cinza, 70], i);
       }
       x.putImageData(marcada, 0, 0);
-      return { pixels, total: pa.length / 4, diferenca: pixels ? c.toDataURL("image/png") : null };
+      return { pixels, ruido, total: pa.length / 4, diferenca: pixels ? c.toDataURL("image/png") : null };
     },
-    [paraDados(a), paraDados(b)],
+    [paraDados(a), paraDados(b), TOLERANCIA_CANAL],
   );
 }
 
@@ -660,7 +722,10 @@ async function comparar(antes, depois) {
         continue;
       }
       const r = await compararImagens(pagina, a, b);
-      if (r.pixels === 0) imagensIguais++;
+      if (r.pixels === 0) {
+        imagensIguais++;
+        if (r.ruido) avisos.push(`ruído de rasterização (≤ ${TOLERANCIA_CANAL}/255) em ${r.ruido} pixels: ${f}`);
+      }
       else {
         falhas.push(`captura diferente: ${f} (${r.pixels < 0 ? `tamanho ${r.tamanho}` : `${r.pixels} de ${r.total} pixels`})`);
         if (r.diferenca) escrever(path.join(pastaDif, f), Buffer.from(r.diferenca.split(",")[1], "base64"));

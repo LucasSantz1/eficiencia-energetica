@@ -496,7 +496,69 @@ script antes do passo 1 (pergunta aberta abaixo); se não entrarem, a revisão d
 
 ## Plano de testes
 
-_(qa — a preencher)_ Teste de ponta a ponta antes e depois com as mesmas capturas; teste com localStorage da versão atual.
+_(qa, 2026-10-29 — linha de base **feita** (passo 0) antes de qualquer mudança de código. O "depois" roda o mesmo
+script contra o site novo e compara.)_
+
+**Ferramenta.** `apps/web/e2e-base/linha-de-base.cjs` (Node + Playwright do ambiente, sem dependência nova) e as fixtures
+`apps/web/e2e-base/fixtures/casa-v1.json` e `casa-v2.json`. A pasta inteira é provisória: a HIS-002 a troca por
+`apps/web/e2e/` no CI. As evidências ficam **fora do git**, no scratchpad do QA:
+`/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his001/antes/` (`resumo.json` tem todos os números).
+
+**Como rodar o "depois"** (frontend ao fim do passo 8, ou qa na etapa 5):
+
+```bash
+pnpm build && pnpm --filter @ee/web start -p 3100        # em segundo plano
+node apps/web/e2e-base/linha-de-base.cjs capturar <scratchpad>/his001/depois   # sem --gerar-fixtures
+fuser -k 3100/tcp                                          # nunca pkill -f "next start"
+node apps/web/e2e-base/linha-de-base.cjs comparar <scratchpad>/his001/antes <scratchpad>/his001/depois
+```
+
+`capturar` leva ~5 min e sai com 1 se houver erro no console, erro de página ou verificação falha. `comparar` lista
+cada diferença (com o `diff -u` a rodar), marca em vermelho os pixels diferentes em `depois/diferencas/` e sai com 1 se
+algo não bate. **Não** regerar as fixtures no "depois": o mesmo JSON entra nos dois lados.
+
+**Por que dá para comparar byte a byte.** O script fixa o relógio (29/10/2026 12:00, Brasília), o fuso, o idioma
+(`pt-BR`) e troca `crypto.randomUUID` por um contador, então ids, meses e textos saem iguais em qualquer dia. Provas:
+(1) **controle** — duas execuções do mesmo build: `comparar antes controle` → "nada mudou" (84 capturas, 98
+textos/DOM/casas iguais; só ruído de rasterização ≤ 10/255 em 2 capturas com diálogo);
+(2) **teste negativo** — numa cópia do controle mudei 1 texto, 1 retângulo de 40×10 px, 1 item do `plano` e +2048 bytes
+de JS: as 4 mudanças foram acusadas e a saída foi 1.
+
+**Ambiente da linha de base:** `apps/web/src` idêntico ao `main` `57700ab` (`git diff main --stat -- apps/web/src` vazio;
+HEAD `d743c1f` só tem docs e esta pasta); build `iv_ootDWVtQo_q10gOA-t`; sha256 de `public/dados`: `tarifas.json`
+`d07eaad4…`, `relatorio.json` `5c8d732b…`, `municipios/SP.json` `d75b57cd…`. O comparador **avisa** se esses
+arquivos mudarem (a rotina diária commita neles): aí a diferença pode ser de dado, e o "antes" é refeito num
+`git worktree` do `57700ab` com o mesmo `public/dados`. A `/` é estática: se o mês virar entre os dois builds, a bandeira
+pré-renderizada muda — rodar antes e depois no mesmo mês.
+
+**O que é comparado e quando passa**
+
+| # | O quê | Como | Linha de base (antes) | Aprova quando |
+| --- | --- | --- | --- | --- |
+| 1 | **Capturas** (390×844 e 1280×900, página inteira, animações no estado final) | Fluxo: `/` → cadastro (estado SP pelo `select#estado` + Continuar, Presidente Prudente, Tarifa Social, 4 pessoas, 6 cômodos, cada cômodo, revisão por cômodo e "Tudo junto", conta pulada) → acompanhamento (editor pelo "Quem mais gasta", 2 contas, 2 leituras) → cômodos (2º cômodo aberto, editor, remover, painel geral) → dicas (1 dica marcada) → acompanhamento → minha casa → sobre → `/`; e entradas diretas `?visao=geral`, `/comecar`, `/casa/aparelhos` | **84 PNG**: 34 por largura + migração v1 (2) e v2 (3) + movimento reduzido (8 rotas) + remover do plano (1) + apagar (2) | 0 pixels com diferença > 16/255 em algum canal. Ruído abaixo disso só vira aviso |
+| 2 | **Texto visível** | `innerText` do `<main>` (do `<body>` na `/`, que não tem `<main>`) de cada captura | 84 `.txt` | iguais byte a byte |
+| 3 | **"Foto" do DOM** | `reducedMotion: "reduce"`, casa v2, 8 rotas (`/`, `/comecar`, `/casa`, `/casa/comodos`, `?visao=geral`, `/casa/dicas`, `/casa/ajustes`, `/sobre`); `body.innerHTML` sem `<script>`/`<template>`, com `useId` e `/_next/static/…` normalizados (mudam de build para build sem mudar a tela) | 8 `.html` em `dom/` | iguais byte a byte |
+| 4 | **Casa salva** | `localStorage["eficiencia-energetica:casa"]` no fim do fluxo, comparado como JSON canônico | `casa-final-390.json` = `casa-final-1280.json`: SP, 4 pessoas, Tarifa Social, 6 cômodos, 14 aparelhos (chuveiro com banho 4×8 min, geladeira por etiqueta 35 kWh), 2 contas, 2 leituras, 1 dica no plano | igual |
+| 5 | **Migração v2 e v1** | Fixture gravada antes de abrir `/casa`; abre, recarrega e lê o que ficou | v2: guardado = fixture; v1 (sem `contas`/`leituras`/`plano`): vira `version: 2` com as três listas vazias e o resto igual; os 6 cômodos aparecem | idem, e capturas/textos iguais |
+| 6 | **Portão de hidratação (A3)** | Com casa v2, abrir `/comecar` direto | "Você já cadastrou a sua casa"; casa guardada intacta | idem |
+| 7 | **Editor de aparelho (A4)** | Salvar sem mudar pelo "Quem mais gasta" e pelos cômodos; remover pelo "Quem mais gasta" o chuveiro, que está no plano | ids e quantidade iguais depois de salvar; remover: 14 → 13 aparelhos, `plano` `["…85:banho-curto"]` → `[]` | idem |
+| 8 | **Apagar todos os meus dados (A5)** | Casa v2 → `/casa/ajustes` → "Apagar todos os meus dados" → "Sim, apagar" | volta para `/`; `state` sem `residencia` e as 5 listas vazias | idem |
+| 9 | **Transições** | `document.startViewTransition` contado por `addInitScript`, acumulado por passo; `view-transition-name` do topo e da navegação | **21** por largura, mesma sequência nas duas (1 por passo do cadastro, exceto a troca "Por cômodo/Tudo junto"; 1 por troca de aba e por link; 0 nos diálogos e nas entradas por endereço, exceto `/casa/aparelhos`, cujo redirecionamento no navegador conta 1); topo `topo`, navegação de baixo `navegacao` | mesma contagem **em cada passo**, mesmos nomes |
+| 10 | **Movimento reduzido** | `reducedMotion: "reduce"`; duração de `.surgir`; 4 trocas de aba | `.surgir` dura `1e-05s` (0,01 ms do `globals.css`); 4 transições em 4 trocas (o React continua chamando a API, o CSS zera a animação) | igual |
+| 11 | **Bytes de JavaScript** | Chromium sem cache, 390 px, depois de `networkidle` + 1 s; soma de `encodedBodySize` de todo recurso `.js` (o Next pré-carrega parte dos chunks por `<link rel="preload">`, que não aparece como `initiatorType: "script"`; esse número também fica no `resumo.json`) | `/` **185 227 B** (10 arquivos; 602 122 B sem compressão) · `/comecar` **185 227 B** (10) · `/casa` sem casa **231 010 B** (15) · `/casa` com casa **211 700 B** (13). Só `initiatorType: "script"`: 183 254 / 183 254 / 229 037 / 209 727 | cada rota cresce no máximo 1 024 B |
+| 12 | **Rotas e cache** | `fetch` de cada rota; manifesto de prerender copiado para as evidências | as 8 rotas respondem 200; `/casa/aparelhos` é estática: responde **200** com `NEXT_REDIRECT;replace;/casa/comodos;307` no conteúdo e o navegador termina em `/casa/comodos`; prerender com 12 entradas, `/` com `initialRevalidateSeconds` **86400** e `htmlSize` **66 350** | mesmas rotas e status, mesmo redirecionamento, 86400; `htmlSize` com variação > 2 % vira aviso para olhar |
+| 13 | **Console** | `pageerror` e `console.error` em todas as sessões (fluxo, migração, reduzido, remover, apagar, bytes) | **0** | 0 |
+
+**Também na etapa 5 (manual, no "depois"):** navegar o cadastro e as abas só com teclado (foco no título de cada passo,
+`Esc` fecha o diálogo); zoom de 200% em 390 px; nomes acessíveis dos botões do "Quem mais gasta" e dos contadores
+(vêm nos textos e no DOM do item 3); conferir as capturas lado a lado onde o comparador apontar algo.
+E as barreiras da história: `pnpm camadas`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
+
+**Diferença aceitável:** nenhuma. Qualquer item vermelho volta para o frontend com o arquivo e o `diff`.
+
+**Limites conhecidos do script:** em 390 px a captura de página inteira mostra a navegação fixa de baixo por cima de uma
+faixa do conteúdo (na altura de 844 px), igual nos dois lados; o que fica coberto é conferido pelo texto (item 2).
+O `#comodo-<id>` (rolar até o cômodo) não é capturado: o fluxo chega aos cômodos pela aba.
 
 ## Perguntas abertas
 
@@ -585,3 +647,32 @@ _(qa — a preencher)_ Teste de ponta a ponta antes e depois com as mesmas captu
 - Arquivos alterados: esta história (seções 4.4, 6, 8, 9, 10 e "Perguntas abertas"); meu `diario.md`. Não mexi em "Plano de testes".
 - Como verifiquei: li a seção do Next 16 sobre `server-only` e conferi `next/dist/compiled/server-only` no `node_modules`.
 - Para o próximo (frontend, depois do passo 0 do qa): o passo 1 já inclui as regras novas do script e os casos negativos.
+
+### [qa] 2026-10-29 — passo 0 feito: linha de base sem erros e plano de testes escrito; frontend liberado
+- O que fiz: build de produção do código atual (`apps/web/src` = `main` `57700ab`) na porta 3100; escrevi
+  `apps/web/e2e-base/linha-de-base.cjs` (modos `capturar` e `comparar`) e gerei as fixtures `casa-v1.json`/`casa-v2.json`
+  a partir da casa salva pelo próprio fluxo; rodei a linha de base, uma segunda execução de controle e um teste negativo
+  do comparador; preenchi "Plano de testes" (13 itens com números e critérios).
+- Decisões e porquê: relógio, fuso e `crypto.randomUUID` fixos no navegador, para textos, DOM e casa salva serem
+  comparáveis byte a byte em dias diferentes; tolerância de 16/255 por canal nas capturas, porque duas execuções do mesmo
+  build diferem até 10/255 na borda de pílulas dentro do `<dialog>` (medido); bytes de JS somados por arquivo `.js`, não só
+  `initiatorType: "script"`, porque o Next pré-carrega chunks por `<link rel="preload">` (os dois números ficam no
+  `resumo.json`); as quatro verificações pedidas pela segurança (portão de hidratação, ids no editor, plano ao remover,
+  apagar tudo) entraram no script, não só no plano.
+- Arquivos alterados: `apps/web/e2e-base/linha-de-base.cjs`, `apps/web/e2e-base/fixtures/casa-v1.json` e `casa-v2.json`
+  (novos; o commit `d743c1f` levou uma versão intermediária deles, a árvore de trabalho tem a final); esta história
+  (só "Plano de testes" e esta nota); `docs/equipe/agentes/qa/contexto.md` e `diario.md`. Nenhum código de `apps/web/src`.
+- Como verifiquei: `capturar` → 0 erros de console/página, 84 capturas, 84 textos, 8 fotos do DOM, 21 transições em
+  cada largura, migração v1/v2 ok, `/comecar` com casa mostra "Você já cadastrou", editar mantém ids, remover o chuveiro
+  limpa o `plano`, apagar esvazia a casa; JS `/` 185 227 B, `/comecar` 185 227 B, `/casa` 231 010 B (sem casa) e
+  211 700 B (com casa); prerender da `/` com 86400 e `htmlSize` 66 350. `comparar antes controle` → "nada mudou".
+  Teste negativo (1 texto, 1 retângulo, 1 item do plano, +2 KB de JS) → as 4 acusadas, saída 1.
+  Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his001/antes/` (capturas, textos,
+  `dom/`, casas salvas, `resumo.json`, `prerender-manifest.json`, `build.log`) e `…/his001/controle/`.
+  Defeitos encontrados: nenhum.
+- Para o próximo: **frontend** — pode começar o passo 1. Ao fim do passo 5 (página inicial) e do passo 8, rodar
+  `capturar …/his001/depois` e `comparar …/his001/antes …/his001/depois` (comandos no "Plano de testes"); não usar
+  `--gerar-fixtures`. **seguranca** — no R9, `curl -sI localhost:3100/casa/aparelhos` dá **200**, não 307, já no `main`:
+  a página é estática e o redirecionamento vai dentro do conteúdo (`NEXT_REDIRECT;replace;/casa/comodos;307`) e acontece no
+  navegador. O script confere as duas coisas; sugiro trocar a expectativa do R9. **qa (eu, etapa 5)** — comparação
+  completa + teclado, zoom 200% e nomes acessíveis no "depois".

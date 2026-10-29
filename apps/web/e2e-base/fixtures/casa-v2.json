@@ -43,6 +43,21 @@
     ],
     "aparelhos": [
       {
+        "catalogoId": "geladeira",
+        "nome": "Geladeira de 1 porta",
+        "quantidade": 1,
+        "potenciaW": 90,
+        "minutosPorDia": 1440,
+        "diasPorSemana": 7,
+        "kwhMesInformado": 35,
+        "variantes": {
+          "modelo": "1-porta",
+          "idade": "media"
+        },
+        "id": "00000000-0000-4000-8000-000000000074",
+        "comodoId": "00000000-0000-4000-8000-000000000013"
+      },
+      {
         "catalogoId": "lampada-led",
         "nome": "Lâmpada de LED",
         "quantidade": 2,
@@ -51,20 +66,6 @@
         "diasPorSemana": 7,
         "id": "00000000-0000-4000-8000-000000000075",
         "comodoId": "00000000-0000-4000-8000-000000000013"
-      },
-      {
-        "catalogoId": "tv",
-        "nome": "TV LED até 32 polegadas",
-        "quantidade": 1,
-        "potenciaW": 45,
-        "minutosPorDia": 300,
-        "diasPorSemana": 7,
-        "variantes": {
-          "tecnologia": "led",
-          "tamanho": "ate-32"
-        },
-        "id": "00000000-0000-4000-8000-000000000076",
-        "comodoId": "00000000-0000-4000-8000-000000000023"
       },
       {
         "catalogoId": "roteador",
