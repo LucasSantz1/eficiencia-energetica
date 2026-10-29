@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { adicionalParaKwh, lerBandeiras } from "../src/aneel/bandeiras";
-import { lerVinculos, mapearColunasMunicipios } from "../src/aneel/municipios";
+import { divisorDaUnidade, lerBandeiras } from "../src/aneel/bandeiras";
+import { criarLeitorConjuntos, lerVinculos, mapearColunasConjuntos, mapearColunasMunicipios } from "../src/aneel/municipios";
 import { ehTarifaResidencialB1, mapearColunasTarifas, selecionarTarifasVigentes, type ColunasTarifas } from "../src/aneel/tarifas";
 import { lerCSV } from "../src/csv";
 import { montarArquivos, validar } from "../src/montar";
@@ -77,15 +77,16 @@ describe("bandeiras da ANEEL", () => {
   it("converte o adicional para R$/kWh", async () => {
     const lido = await lerCSV(fixture("bandeiras.csv"));
     const { bandeiras } = lerBandeiras(lido.cabecalho, lido.linhas);
-    expect(bandeiras.map((b) => b.competencia)).toEqual(["2026-07", "2026-08", "2026-09", "2026-10"]);
-    expect(bandeiras[1]).toMatchObject({ bandeira: "amarela", adicionalKwh: 0.01885 });
-    expect(bandeiras[3]).toMatchObject({ bandeira: "vermelha-2", adicionalKwh: 0.07877 });
+    expect(bandeiras.map((b) => b.competencia)).toEqual(["2021-03", "2026-07", "2026-08", "2026-09", "2026-10"]);
+    expect(bandeiras[0]).toMatchObject({ bandeira: "amarela", adicionalKwh: 0.01343 });
+    expect(bandeiras[2]).toMatchObject({ bandeira: "amarela", adicionalKwh: 0.01885 });
+    expect(bandeiras[4]).toMatchObject({ bandeira: "vermelha-2", adicionalKwh: 0.07877 });
   });
 
-  it("entende o valor em qualquer unidade", () => {
-    expect(adicionalParaKwh(0.04463)).toBeCloseTo(0.04463);
-    expect(adicionalParaKwh(4.463)).toBeCloseTo(0.04463);
-    expect(adicionalParaKwh(44.63)).toBeCloseTo(0.04463);
+  it("descobre a unidade pelo maior valor do arquivo", () => {
+    expect(divisorDaUnidade([0, 0.01885, 0.07877])).toBe(1);
+    expect(divisorDaUnidade([0, 1.885, 7.877])).toBe(100);
+    expect(divisorDaUnidade([0, 13.43, 18.85, 78.77])).toBe(1000);
   });
 
   it("lê arquivos em Latin-1", async () => {
@@ -97,13 +98,21 @@ describe("bandeiras da ANEEL", () => {
 });
 
 describe("montagem dos arquivos", () => {
-  it("liga municípios às distribuidoras pelo CNPJ e pela sigla, usando o ano mais recente", async () => {
+  it("liga municípios às distribuidoras pelos conjuntos elétricos, usando o dono mais recente", async () => {
     let colunas: ColunasTarifas | undefined;
     const t = await lerCSV(fixture("tarifas.csv"), { aoLerCabecalho: (c) => (colunas = mapearColunasTarifas(c)), filtro: (l) => ehTarifaResidencialB1(l, colunas!) });
     const { tarifas } = selecionarTarifasVigentes(t.linhas, colunas!, "2026-10-29");
-    const m = await lerCSV(fixture("municipios.csv"));
-    const vinculos = lerVinculos(m.linhas, mapearColunasMunicipios(m.cabecalho));
-    expect(vinculos.get(3304557)).toHaveLength(1); // AMPLA (2010) sai, fica LIGHT (2025)
+    let leitor: ReturnType<typeof criarLeitorConjuntos> | undefined;
+    await lerCSV(fixture("conjuntos-atributos.csv"), {
+      aoLerCabecalho: (c) => (leitor = criarLeitorConjuntos(mapearColunasConjuntos(c))),
+      filtro: (l) => (leitor!.ler(l), false),
+    });
+    expect(leitor!.donos.get("301")?.agente).toBe("LIGHT SESA"); // AMPLA (2010) sai, fica LIGHT (2025)
+    const m = await lerCSV(fixture("conjuntos-municipios.csv"));
+    const { vinculos, conjuntosSemDono } = lerVinculos(m.linhas, mapearColunasMunicipios(m.cabecalho), leitor!.donos);
+    expect(conjuntosSemDono).toBe(1);
+    expect(vinculos.get(3304557)).toHaveLength(1);
+    expect(vinculos.get(3541406)).toHaveLength(1);
 
     const b = await lerCSV(fixture("bandeiras.csv"));
     const montagem = montarArquivos({

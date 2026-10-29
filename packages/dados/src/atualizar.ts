@@ -9,7 +9,7 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { lerBandeiras, URL_BANDEIRAS } from "./aneel/bandeiras";
-import { lerVinculos, mapearColunasMunicipios, URL_MUNICIPIOS_DISTRIBUIDORAS } from "./aneel/municipios";
+import { criarLeitorConjuntos, lerVinculos, mapearColunasConjuntos, mapearColunasMunicipios, URL_CONJUNTOS_DISTRIBUIDORAS, URL_CONJUNTOS_MUNICIPIOS } from "./aneel/municipios";
 import { ehTarifaResidencialB1, mapearColunasTarifas, selecionarTarifasVigentes, URL_TARIFAS, type ColunasTarifas } from "./aneel/tarifas";
 import { baixar, lerCSV } from "./csv";
 import { escreverArquivos } from "./escrever";
@@ -33,11 +33,17 @@ async function main() {
   const hoje = hojeISO();
   console.log(`Atualizando dados para ${hoje}\n`);
 
-  const arquivos = { tarifas: join(CACHE, "tarifas.csv"), bandeiras: join(CACHE, "bandeiras.csv"), municipios: join(CACHE, "municipios.csv") };
+  const arquivos = {
+    tarifas: join(CACHE, "tarifas.csv"),
+    bandeiras: join(CACHE, "bandeiras.csv"),
+    conjuntosMunicipios: join(CACHE, "conjuntos-municipios.csv"),
+    conjuntosDistribuidoras: join(CACHE, "conjuntos-distribuidoras.csv"),
+  };
   if (!semBaixar) {
     await etapa("Baixando tarifas das distribuidoras (ANEEL)", () => baixar(URL_TARIFAS, arquivos.tarifas));
     await etapa("Baixando bandeiras tarifárias (ANEEL)", () => baixar(URL_BANDEIRAS, arquivos.bandeiras));
-    await etapa("Baixando municípios atendidos (ANEEL)", () => baixar(URL_MUNICIPIOS_DISTRIBUIDORAS, arquivos.municipios));
+    await etapa("Baixando municípios de cada conjunto elétrico (ANEEL)", () => baixar(URL_CONJUNTOS_MUNICIPIOS, arquivos.conjuntosMunicipios));
+    await etapa("Baixando distribuidora de cada conjunto elétrico (ANEEL)", () => baixar(URL_CONJUNTOS_DISTRIBUIDORAS, arquivos.conjuntosDistribuidoras));
   }
 
   const tarifas = await etapa("Lendo tarifas residenciais B1", async () => {
@@ -67,14 +73,23 @@ async function main() {
     return r.bandeiras;
   });
 
-  const vinculos = await etapa("Lendo municípios atendidos", async () => {
-    const lido = await lerCSV(arquivos.municipios);
-    console.log(`  colunas: ${lido.cabecalho.join(" | ")}`);
-    console.log(`  primeira linha: ${JSON.stringify(lido.linhas[0])}`);
-    const colunas = mapearColunasMunicipios(lido.cabecalho);
-    console.log(`  usando: ${JSON.stringify(colunas)}`);
-    const v = lerVinculos(lido.linhas, colunas);
-    console.log(`  ${v.size} municípios com distribuidora`);
+  const vinculos = await etapa("Ligando municípios às distribuidoras", async () => {
+    let leitor: ReturnType<typeof criarLeitorConjuntos> | undefined;
+    const atributos = await lerCSV(arquivos.conjuntosDistribuidoras, {
+      aoLerCabecalho: (cab) => {
+        console.log(`  colunas (conjuntos): ${cab.join(" | ")}`);
+        leitor = criarLeitorConjuntos(mapearColunasConjuntos(cab));
+      },
+      filtro: (linha) => {
+        leitor!.ler(linha);
+        return false; // não guarda as linhas: só o dono de cada conjunto
+      },
+    });
+    console.log(`  ${atributos.total} linhas, ${leitor!.donos.size} conjuntos elétricos com distribuidora`);
+    const lido = await lerCSV(arquivos.conjuntosMunicipios);
+    console.log(`  colunas (municípios): ${lido.cabecalho.join(" | ")}`);
+    const { vinculos: v, conjuntosSemDono } = lerVinculos(lido.linhas, mapearColunasMunicipios(lido.cabecalho), leitor!.donos);
+    console.log(`  ${v.size} municípios com distribuidora; ${conjuntosSemDono} conjuntos sem distribuidora conhecida`);
     return v;
   });
 
@@ -90,7 +105,7 @@ async function main() {
     fontes: [
       "ANEEL — Tarifas de aplicação das distribuidoras de energia elétrica",
       "ANEEL — Bandeiras Tarifárias (acionamento)",
-      "ANEEL — IndQual Município",
+      "ANEEL — IndQual Município e Indicadores Coletivos de Continuidade (conjuntos elétricos)",
       fonteIbge,
     ],
   });

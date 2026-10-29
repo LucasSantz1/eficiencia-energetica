@@ -9,13 +9,15 @@ export const URL_BANDEIRAS =
   "https://dadosabertos.aneel.gov.br/dataset/7f43a020-6dc5-44b8-80b4-d97eaa94436c/resource/0591b8f6-fe54-437b-b72b-1aa2efd46e42/download/bandeira-tarifaria-acionamento.csv";
 
 /**
- * A ANEEL já publicou o adicional em R$/kWh, R$/100 kWh e R$/MWh em versões diferentes.
- * Os adicionais reais ficam entre R$ 0 e R$ 0,15 por kWh, então dá para descobrir a unidade pela ordem de grandeza.
+ * O adicional da bandeira já foi divulgado em R$/kWh, R$/100 kWh e R$/MWh (o arquivo atual da ANEEL usa R$/MWh:
+ * amarela = 18,85). A unidade é a mesma no arquivo inteiro, então ela é descoberta pelo MAIOR valor do arquivo —
+ * a bandeira mais cara já cobrada ficou abaixo de R$ 0,15 por kWh.
  */
-export function adicionalParaKwh(valor: number): number {
-  if (valor <= 0.3) return valor; // R$/kWh
-  if (valor <= 30) return valor / 100; // R$/100 kWh
-  return valor / 1000; // R$/MWh
+export function divisorDaUnidade(valores: number[]): number {
+  const maior = Math.max(0, ...valores);
+  if (maior <= 0.3) return 1; // R$/kWh
+  if (maior <= 20) return 100; // R$/100 kWh
+  return 1000; // R$/MWh
 }
 
 export function lerBandeiras(cabecalho: string[], linhas: Linha[]): { bandeiras: BandeiraMes[]; avisos: string[] } {
@@ -27,6 +29,7 @@ export function lerBandeiras(cabecalho: string[], linhas: Linha[]): { bandeiras:
   }
 
   const avisos: string[] = [];
+  const divisor = divisorDaUnidade(linhas.map((l) => numeroBR(l[colValor]) ?? 0));
   const porMes = new Map<string, BandeiraMes>();
   for (const linha of linhas) {
     const data = dataISO(linha[colCompetencia]);
@@ -38,7 +41,7 @@ export function lerBandeiras(cabecalho: string[], linhas: Linha[]): { bandeiras:
       continue;
     }
     const competencia = data.slice(0, 7);
-    const adicionalKwh = bandeira === "verde" ? 0 : adicionalParaKwh(bruto ?? 0);
+    const adicionalKwh = bandeira === "verde" ? 0 : (bruto ?? 0) / divisor;
     porMes.set(competencia, { competencia, bandeira, nome: BANDEIRAS[bandeira].nome, adicionalKwh: Number(adicionalKwh.toFixed(6)) });
   }
 
