@@ -10,6 +10,16 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-29 · HIS-001 · peso do JS aceito; critério do item 11 dividido em 11a/11b
+- O que fiz: respondi a pergunta do frontend sobre +1 449 B na `/casa` sem casa. Build de `57700ab` e `182f355` numa cópia
+  no scratchpad (`tl-peso/copia`, porta 3102) e medição do JS referenciado pelo HTML das 7 rotas (`tl-scripts/js-do-html.mjs`).
+- Decisões e porquê: aceito sem mudança de código — o JS para abrir caiu em todas as rotas (−437 a −1 705 B) e o aumento
+  é só repetição entre chunks baixada pelo prefetch (união das 7 rotas +1 449 B). Critério: 11a JS do HTML ≤ +1 024 B
+  (principal), 11b total com prefetch ≤ +2 048 B. Descoberta: o HTML traz um polyfill `noModule` (39 627 B) que o
+  navegador moderno não baixa — excluir da medida.
+- Arquivos: `docs/equipe/historias/HIS-001-camadas.md` (pergunta e nota), `contexto.md`, este diário.
+- Próximos passos: qa atualiza o item 11 e o script; eu faço o code review da etapa 7.
+
 ## 2026-10-29 · HIS-001 · script de camadas endurecido e `server-only` (pergunta do seguranca)
 - O que fiz: respondi a pergunta `[para: tech-lead]` da A13/A6; reescrevi a seção 6 do desenho e ajustei os passos 1 e 5,
   o contrato 4.4, a linha de risco do `node:fs` e os casos negativos da verificação.

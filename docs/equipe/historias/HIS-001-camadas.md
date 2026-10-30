@@ -587,13 +587,27 @@ O `#comodo-<id>` (rolar até o cômodo) não é capturado: o fluxo chega aos cô
   ESLint da HIS-002. **Atenção futura:** se um `*.servidor.ts` ganhar teste no Vitest (fora do Next), o import não
   resolve; aí instalamos `server-only` como devDependency com versão exata ou criamos um alias no `vitest.config`.
 
-- [ ] `[para: tech-lead]` (frontend, 2026-10-29 — não bloqueia o QA; bloqueia fechar o item 11 do plano de testes)
+- [x] `[para: tech-lead]` (frontend, 2026-10-29 — não bloqueia o QA; bloqueia fechar o item 11 do plano de testes)
   O JS baixado em `/casa` **sem casa** cresceu 1 449 B (limite 1 024) por causa da divisão do `ui.tsx` (decisão 2): os
   componentes que só as páginas usam (`Pilulas`, `Folha`, `Contador`, `Opcao`) agora se repetem nos chunks das abas que
   o Next pré-carrega. O JS que cada página precisa para abrir ficou menor em todas as rotas, e o código único baixado
   também (números na minha nota). Aceita a diferença como esperada (e o QA passa a medir o JS do HTML de cada rota além do
   total com prefetch), ou prefere outra saída? As que vejo vão contra o desenho: juntar os componentes de novo num módulo
   (decisões 2 e 7) ou mudar o agrupamento de chunks no `next.config.ts` (R14).
+  — **resposta (tech-lead, 2026-10-29): aceito a diferença; nenhuma mudança de código.** Medi eu mesmo, com builds de
+  `57700ab` e `182f355` numa cópia do repositório, o JS que o HTML de cada rota referencia (`<script src>` sem `noModule`
+  + `<link rel="preload" as="script">`, corpo como o servidor manda com gzip): `/` 165 917 → 164 212 (−1 705),
+  `/comecar` 173 594 → 172 561 (−1 033), `/casa` 176 681 → 175 053 (−1 628), `/casa/comodos` 173 387 → 172 950 (−437),
+  `/casa/dicas` 167 401 → 166 026 (−1 375), `/casa/ajustes` 164 464 → 163 965 (−499), `/sobre` igual. A união dos
+  arquivos das 7 rotas cresce +1 449 B (235 128 → 236 577) — o mesmo número da `/casa` sem casa: é a repetição de
+  `Pilulas`/`Folha`/`Contador` entre chunks, baixada **depois** que a página abriu (prefetch dos `<Link>`, em segundo
+  plano, uma vez, e fica em cache). Em 3G (~50 kB/s úteis) são ~30 ms fora do caminho de abertura, contra até 1,7 kB a
+  menos antes da página ficar pronta. As saídas que contrariam o desenho custam mais do que esse ganho. (Os números do
+  frontend incluem o polyfill `noModule` de 39 627 B, igual nos dois lados; as diferenças são as mesmas.)
+  **Critério novo do item 11 (o qa atualiza a tabela e o script):** (11a, principal) JS do HTML de cada uma das 7 rotas,
+  medido como acima: cresce no máximo 1 024 B; (11b) total baixado depois de `networkidle` + 1 s, com prefetch: cresce
+  no máximo 2 048 B por rota. Os dois bloqueiam; 11b continua pegando dependência nova (que vem em dezenas de kB).
+  Com isso o item 11 da HIS-001 passa. Script da medida: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/tl-scripts/js-do-html.mjs`.
 
 ## Conversa da equipe
 
@@ -749,3 +763,17 @@ O `#comodo-<id>` (rolar até o cômodo) não é capturado: o fluxo chega aos cô
   HEAD:apps/web/src/infraestrutura/armazenamento/casa.ts`: só o import e a saída do `novoId`), R4 no `EditorAparelho`
   (`aoSalvar(limpo, id)` → `aoFechar()`; `aoRemover(r.id!)` → `aoFechar()`; o hook usa as três ações do store) e R12/R13
   no script (a regex do item 1 acima é diferente da escrita no desenho). **tech-lead** — a pergunta aberta sobre o peso.
+
+### [tech-lead] 2026-10-29 — peso do JS: diferença aceita, item 11 passa a medir o JS que abre a página
+- O que fiz: respondi a pergunta do frontend em "Perguntas abertas". Medi por conta própria o JS referenciado pelo HTML
+  das 7 rotas em builds de `57700ab` e `182f355`, numa cópia no meu scratchpad (o `.next` do repositório não foi tocado).
+- Decisões e porquê: **aceito, sem mudança de código.** O JS para abrir caiu em todas as rotas (−437 a −1 705 B; `/sobre`
+  igual); só cresce a repetição baixada em segundo plano pelo prefetch (+1 449 B na sessão inteira). Juntar os componentes
+  de novo ou mexer no `next.config.ts` desfaria as decisões 2 e 7 e o R14 por ~30 ms em 3G fora do caminho de abertura.
+  Item 11 vira 11a (JS do HTML, ≤ +1 024 B, principal) e 11b (total com prefetch, ≤ +2 048 B).
+- Arquivos alterados: esta história ("Perguntas abertas" e esta nota); meu `contexto.md` e `diario.md`. Não mexi em
+  "Plano de testes", "Ameaças" nem em código.
+- Como verifiquei: `pnpm build` + `next start` (porta 3102) dos dois commits; `js-do-html.mjs` (no meu scratchpad, citado na
+  resposta) — os números do `main` batem com os do frontend, descontado o polyfill `noModule` que o navegador moderno não baixa.
+- Para o próximo: **qa** — atualizar o item 11 do "Plano de testes" e o `linha-de-base.cjs` com 11a/11b (pode reaproveitar
+  a extração do meu script) e marcar o item como aprovado. Depois sigo para o code review da etapa 7.
