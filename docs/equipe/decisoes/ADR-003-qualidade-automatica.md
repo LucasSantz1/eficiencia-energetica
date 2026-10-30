@@ -9,7 +9,9 @@
 Até a HIS-001 o CI fazia typecheck (com o `scripts/verificar-camadas.mjs`), testes de unidade e build. Os testes no
 navegador eram roteiros soltos do qa (`apps/web/e2e-base/`), e o peso de JS era medido à mão. O Next 16 tirou o
 `next lint`, e o `next build` não roda mais lint. Toda história daqui para a frente precisa das mesmas barreiras.
-Detalhes e medições: HIS-002, "Desenho técnico definitivo" (D1–D15).
+Detalhes e medições: HIS-002, "Desenho técnico definitivo" (D1–D15). Desde 2026-10-29 a HIS-002 está dividida:
+[HIS-002a](../historias/HIS-002-qualidade-automatica.md) (navegador; D1–D3, D8–D15) e
+[HIS-002b](../historias/HIS-002b-lint-e-camadas.md) (lint e camadas; D4–D7 e passos B1–B8).
 
 ## Decisão
 

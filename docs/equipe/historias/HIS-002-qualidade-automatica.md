@@ -1,24 +1,32 @@
-# HIS-002 · Qualidade automática no CI
+# HIS-002a · Testes no navegador no CI (e2e, axe, artefatos e peso de JS)
 
 | Campo | Valor |
 | --- | --- |
 | Épico | E0 · Fundação |
 | Sprint | 0 |
-| Tamanho | M |
-| Papéis principais | qa, tech-lead |
+| Tamanho | M (≈ 2–2,5 dias, D12) |
+| Papéis principais | qa, tech-lead (frontend nas correções do A5) |
 | Status | Preparada |
-| Branch | `his-002-qualidade` |
+| Branch | `his-002-qualidade` (a branch já existe; continua com o nome antigo) |
+
+> **Dividida em 2026-10-29 (scrum-master, a partir do D12).** Esta é a **HIS-002a**; o arquivo manteve o nome
+> `HIS-002-qualidade-automatica.md` para não quebrar links. Os critérios **1, 5, 7 e 8**, o T1, as "Notas do tech-lead
+> vindas da HIS-001", as seções **D4, D5, D6, D7**, a parte "HIS-002b" do D13 e a pergunta à seguranca sobre os 21
+> casos foram **movidos** para a [HIS-002b · Lint e camadas automáticos no CI](HIS-002b-lint-e-camadas.md). D1, D2, D3,
+> D11, D12, D14 e D15 valem para as duas e ficam aqui. **A HIS-002b depende desta** (ver "Dependências").
 
 ## Problema e valor
 
-Como **equipe**, queremos **que o CI teste sozinho o fluxo principal, a acessibilidade e o padrão de código** para
-**nenhuma mudança quebrar o site ou piorar a acessibilidade sem que a gente perceba antes de ir para o ar**.
+Como **equipe**, queremos **que o CI teste sozinho o fluxo principal, a acessibilidade e o peso das páginas** para
+**nenhuma mudança quebrar o site, piorar a acessibilidade ou deixar a página mais pesada para o celular simples sem que
+a gente perceba antes de ir para o ar**.
 
 Hoje o CI faz typecheck, testes de unidade e build. Os testes no navegador são feitos à mão, com scripts soltos.
 
 ## Critérios de aceite
 
-1. **Dado** um push ou pull request, **quando** o CI roda, **então** ele executa ESLint (configuração do Next 16) sem erros.
+_(numeração da HIS-002 mantida; 1, 5, 7 e 8 estão na [HIS-002b](HIS-002b-lint-e-camadas.md))_
+
 2. **Dado** o site de produção construído no CI, **quando** os testes Playwright rodam, **então** eles percorrem o fluxo
    cadastro → acompanhamento → cômodos → dicas → minha casa em 390 px e 1280 px, falhando em qualquer erro de console.
 3. **Dado** as páginas `/`, `/comecar`, `/casa`, `/casa/comodos`, `/casa/dicas`, `/casa/ajustes` e `/sobre`, **quando** o axe roda,
@@ -28,18 +36,12 @@ Hoje o CI faz typecheck, testes de unidade e build. Os testes no navegador são 
    corrigida aqui (a E0 não muda nada para quem usa): vira história na E1 e entra numa lista de exceções no próprio
    teste, cada uma com a regra do axe, a página e o ID da história — nunca desligando a regra inteira. A lista é
    revisada pela `ux-acessibilidade` e aparece no relatório do CI.)_
+   _(scrum-master, 2026-10-29 — destino decidido: a violação `color-contrast` da `/` (D10) e qualquer outra
+   `color-contrast` que o qa achar no passo A5 vão para a **HIS-110** (E1, primeira da Sprint 1), com `historia:
+   "HIS-110"` na lista de exceções. **Não** vão para a HIS-102: ela é um modo que a pessoa liga em Ajustes, e o defeito
+   está nas cores padrão, que todo mundo vê.)_
 4. **Dado** um teste que falha, **quando** o CI termina, **então** as capturas e o relatório ficam disponíveis como artefato do job.
-5. Regras de lint incluem: sem `any` explícito, sem `dangerouslySetInnerHTML`, e as restrições de import entre camadas (ADR-001).
 6. `pnpm test:e2e` roda localmente com o mesmo resultado.
-7. **Dado** cada caso negativo de camadas da HIS-001 (item 7 da seção 10, R13 e os 21 extras da seguranca) **e** cada
-   lacuna da S1 (lista abaixo), **quando** ele é escrito num arquivo de exemplo, **então** `pnpm lint` ou `pnpm camadas`
-   falha com a mensagem da regra — conferido por um teste automático no CI (fixtures numa pasta de teste, fora de
-   `apps/web/src`), não só à mão. _(tech-lead, vindo da HIS-001)_
-8. **Dado** um arquivo sem `"use client"` (componente de servidor ou módulo comum), **quando** ele importa um **valor que
-   não é componente** de um módulo `"use client"`, **então** a verificação falha (S2 da HIS-001). As constantes de
-   transição (`IR_ADIANTE`, `VOLTAR`, `ENTRAR_NO_PAINEL`) saem de `ui/Movimento.tsx` para `ui/tiposDeTransicao.ts` (sem
-   diretiva) e o `novoId` usado por `funcionalidades/cadastro/rascunho.ts` passa a vir de um arquivo sem diretiva
-   (ex.: `aplicacao/identificador.ts` reexportando `infraestrutura/identificador.ts`). _(tech-lead, vindo da HIS-001)_
 9. **Dado** a medida de peso de JS da HIS-001 (11a: JS que o HTML de cada rota referencia, sem `noModule`, com gzip,
    no máximo +1 024 B; 11b: total com prefetch, no máximo +2 048 B), **quando** o e2e roda num PR, **então** ele compara
    com a referência guardada no repositório (ex.: `apps/web/e2e/peso-js.json`, atualizada de propósito no PR que muda o
@@ -58,7 +60,28 @@ Hoje o CI faz typecheck, testes de unidade e build. Os testes no navegador são 
 - Testes no app de celular.
 - Corrigir o zoom de 200% com rolagem para o lado (HIS-107) e os achados de foco e rolagem (HIS-108): o axe não acusa
   esses problemas e eles mudam a tela. Esta história pode, no máximo, deixar um teste marcado como pendente citando a história.
-- Qualquer mudança visível para quem usa (critério geral da E0); ver a regra de exceções do critério 3.
+- Qualquer mudança visível para quem usa (critério geral da E0); ver a regra de exceções do critério 3. Corrigir o
+  contraste da `/`: HIS-110.
+- ESLint, matriz de camadas no lint, casos negativos automáticos, correção S2/T3 e ordem dos imports (T1): HIS-002b.
+
+## Dependências
+
+- HIS-001 em "Pronto" e integrada ao `main` (a `his-002-qualidade` parte das pastas novas).
+- Etapa 4 (implementação) começa quando a **seguranca** registrar as ameaças desta parte (seção "Ameaças") e o **qa**
+  revisar D9 e D10 (seção "Plano de testes"). O texto dos 5 nomes acessíveis da `/` (**ux-acessibilidade**) bloqueia só
+  o passo A5.
+- Desta história são, no D2, `@playwright/test` e `@axe-core/playwright` (em `apps/web`); no D3, `test:e2e` (raiz e
+  `apps/web`), o `typecheck` do `apps/web` com o `e2e/` e o `.gitignore`; no D11, o job `e2e` e a saída do `pnpm build`
+  do `verificar` (o `pnpm lint` do `verificar` entra na HIS-002b, passo B3).
+- **Ao fechar** (fora do código, para quem orquestra levar ao **dono do projeto**): marcar como obrigatórios na
+  proteção do `main`, nas configurações do GitHub, os checks "Lint, tipos e testes" e "Navegador (e2e, axe e peso)"
+  (D11). Os dois nomes já existem depois do passo A6; a HIS-002b não muda os nomes, e no fechamento dela o
+  scrum-master confere que continuam obrigatórios. Sem isso, o critério "o PR não é integrado sem e2e verde" não vale.
+
+## Fluxo e textos
+
+_(ux-acessibilidade)_ Não há tela nova. Dois pedidos (ver "Perguntas abertas"): o texto dos 5 nomes acessíveis da casa
+ilustrada da `/` (antes do passo A5) e a revisão da lista de exceções do axe (`excecoes-axe.ts`) quando o qa a montar.
 
 ## Desenho técnico (proposta inicial)
 
@@ -71,32 +94,10 @@ Mudou: `@playwright/test` 1.63.0 em vez de 1.64 e `import-x/order` em vez de `im
   no ambiente de nuvem da equipe o Chromium já existe).
 - Dados de tarifa vêm de `public/dados` (sem rede externa no teste).
 
-### Notas do tech-lead vindas da HIS-001 (2026-10-29 — valem para o desenho técnico definitivo)
+### Notas do tech-lead vindas da HIS-001
 
-**Decisão: ESLint e `scripts/verificar-camadas.mjs` convivem, cada regra num lugar só.** O ESLint lê a árvore de
-sintaxe (não regex), então fecha de graça a maior parte das lacunas da S1; mas ele olha um arquivo por vez e não sabe a
-diretiva do arquivo **importado** nem a estrutura das pastas. Divisão:
-
-| Fica no ESLint (regra do próprio arquivo) | Fica no script (outro arquivo ou estrutura) |
-| --- | --- |
-| Matriz de camadas do ADR-001 por pasta (`no-restricted-imports` com `files` por camada no `eslint.config.mjs`); proibir `../` em `apps/web/src` (decisão 8 da HIS-001: `./` só na mesma pasta, o resto com `@/`; hoje nenhum arquivo usa `../`) | "use client" não importa `.servidor` (precisa resolver o destino) |
-| `zustand` só em `infraestrutura`; módulos do Node só em `infraestrutura/**/*.servidor.ts`; `server-only` só em `*.servidor.ts` | Todo `*.servidor.ts` com `import "server-only";` como primeiro import |
-| `require(`, `import()` com argumento não literal, `process.getBuiltinModule` (`no-restricted-syntax` / `no-restricted-properties`) | Critério 8 (S2): arquivo sem diretiva só importa componentes de módulo `"use client"` (precisa ler a diretiva do destino) |
-| Diretiva `"use server"` proibida até existir regra própria para Server Actions (cada uma é um endpoint POST público; entra no E4 com a seguranca) | Pastas antigas (`components/`, `lib/`), arquivo fora das camadas, 0 arquivos lidos, **link simbólico = erro** (não pular) |
-| Domínio (`packages/core/src`) só com import relativo | Ler **toda** extensão de código nas duas pastas (`.js .jsx .cjs .mjs .ts .tsx .cts .mts`) |
-
-Quando a matriz estiver no ESLint e passar nos mesmos casos negativos (critério 7), ela **sai** do script (sem regra
-repetida em dois lugares). O script continua Node puro, sem dependência, dentro do `pnpm typecheck`.
-
-**Lacunas da S1 (seguranca, HIS-001) e onde cada uma fecha:** (a) `from"x"` e `import"x"` sem espaço — ESLint (sintaxe)
-e, no script, `\bfrom\s*["']` e `^\s*import\s*["']`; (b) `import /* c */ ("…")` — ESLint (sintaxe); (c) `.js/.jsx/.cjs/.cts`
-em `apps/web/src` e `.tsx` em `packages/core/src` não lidos — script lê toda extensão, ESLint com `files` cobrindo todas;
-(d) link simbólico pulado em silêncio — script: erro; (e) especificador absoluto (`/…`) ou com `?sufixo` — ESLint
-(`no-restricted-imports` por padrão); (f) `process.getBuiltinModule("node:fs")` — ESLint; (g) `"use server"` — ESLint.
-Nenhum desses casos existe hoje no código.
-
-**Outras da revisão da HIS-001:** T1 — ligar `import/order` (do `eslint-plugin-import`, que o `eslint-config-next` traz — conferir ao instalar) com correção automática, num
-commit só de formatação, separado dos outros; T3 — `rascunho.ts` → `novoId` entra no critério 8.
+_(movidas para a [HIS-002b](HIS-002b-lint-e-camadas.md), "Desenho técnico", em 2026-10-29: divisão ESLint × script,
+lacunas S1-a a S1-g, T1 e T3.)_
 
 ## Desenho técnico definitivo (tech-lead, 2026-10-29)
 
@@ -155,258 +156,11 @@ as regras do `jsx-a11y` (aviso no Next) barrarem também. O e2e **não** entra n
 `.gitignore`: trocar `/test-results/` e `/playwright-report/` (presos à raiz; o Playwright grava em `apps/web/`) por
 `test-results/` e `playwright-report/`.
 
-### D4. `eslint.config.mjs` (raiz)
+### D4 a D7 — movidas para a HIS-002b
 
-**Medido:** lê 82 arquivos em ~9 s (2 núcleos). 42 casos de ensaio com `ESLint.lintText(codigo, { filePath })`
-acusam a regra certa — matriz por camada, `../` e `@/../`, S1-a (`import{x}from"…"`, `import"zustand"`), S1-b
-(`import /* c */ ("…")`), S1-c (`.cjs`/`.jsx` no site, `.tsx`/`.cts` no domínio), S1-e (`/abs`, `?raw`), S1-f
-(`process.getBuiltinModule` e `process["getBuiltinModule"]`), S1-g (`"use server"` no arquivo e dentro de função),
-`export … from`, `import type`, `typeof import()`, `import x = require()`, `@ee/core/src/…`, `any`, `@ts-ignore`,
-`dangerouslySetInnerHTML`, `innerHTML`, `eval`, `new Function` — e o controle limpo passa.
-
-Pontos do arquivo que valem explicar:
-
-- Matriz como **lista do que pode** (`^@/(?!(ui|config)/)` para `ui`): pasta nova ou antiga (`@/components`) já nasce
-  proibida. Cobre `import`, `import type`, `export … from` e `export *`.
-- Um bloco por funcionalidade, gerado da lista de pastas de `funcionalidades/`: cada uma só importa a si mesma.
-- `app` não importa `@ee/core` (ADR-001, regra 1, ao pé da letra; hoje 0 casos). `config` só importa `config`.
-- Um parser só (typescript-eslint) para as 8 extensões, e a versão do React lida de `apps/web/package.json`.
-  **Medido:** o Babel do `eslint-config-next` dá erro de parse em `.cjs` a partir da raiz (`Cannot find module
-  'next/babel'`) e a detecção do React não acha o pacote na raiz.
-- `reportUnusedDisableDirectives: "error"`: um `eslint-disable` que deixou de ser preciso vira erro.
-
-<details><summary>Arquivo completo (contrato da implementação; validado na cópia)</summary>
-
-```js
-// Regras de código do monorepo (HIS-002, ADR-001 e ADR-003). Divisão com scripts/verificar-camadas.mjs: aqui ficam
-// as regras que se decidem olhando só o próprio arquivo; o script cuida do que depende de outro arquivo ou da
-// estrutura das pastas. Os casos negativos de cada regra estão em scripts/testes/casos-de-camadas.mjs.
-import { readdirSync, readFileSync } from "node:fs";
-import { builtinModules } from "node:module";
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-import importX from "eslint-plugin-import-x";
-
-const SITE = "apps/web/src";
-const EXTENSOES = "{js,jsx,cjs,mjs,ts,tsx,cts,mts}";
-const SERVIDOR = `**/*.servidor.${EXTENSOES}`;
-
-// O bloco "next" traz os plugins react, react-hooks, import, jsx-a11y e @next/next, mas só para js/jsx/mjs/ts/tsx/mts/cts.
-const blocoNext = nextVitals.find((bloco) => bloco.name === "next");
-// O parser do typescript-eslint já vem com o eslint-config-next/typescript (sem dependência nova).
-const parserTs = nextTs.find((bloco) => bloco.languageOptions?.parser)?.languageOptions.parser;
-// A detecção automática procura o react a partir da raiz, onde ele não está instalado: lê a versão do site.
-const versaoDoReact = JSON.parse(readFileSync("apps/web/package.json", "utf8")).dependencies.react;
-
-const FUNCIONALIDADES = readdirSync(`${SITE}/funcionalidades`, { withFileTypes: true })
-  .filter((entrada) => entrada.isDirectory())
-  .map((entrada) => entrada.name);
-
-const nomesDoNode = [...new Set(builtinModules.map((nome) => nome.replace(/^node:/, "").split("/")[0]))].join("|");
-
-/** Valem para todo arquivo do site, em qualquer camada. */
-const RESTRICOES_COMUNS = [
-  { regex: "(^|/)\\.\\.(/|$)", message: "Sem '..' no caminho: use @/ entre pastas e ./ só na mesma pasta (HIS-001, decisão 8)." },
-  { regex: "^/", message: "Sem caminho absoluto no import: use @/ (HIS-002, S1-e)." },
-  { regex: "[?#]", message: "Sem sufixo ? ou # no import (HIS-002, S1-e)." },
-  { regex: "^@ee/(?!core$)", message: "Do monorepo, só o pacote @ee/core inteiro, sem caminho interno (ADR-001)." },
-];
-
-/**
- * Restrições de import de uma camada. `permitidos` é uma lista de quem pode ser importado com @/ (o resto de @/ é erro):
- * assim, uma pasta nova ou antiga (@/components, @/lib) já nasce proibida.
- */
-function restricoesDaCamada({ camada, regra, permitidos, podeCore, podeZustand, podeNode, podeServerOnly }) {
-  const padroes = [
-    ...RESTRICOES_COMUNS,
-    {
-      regex: `^@/(?!(${permitidos.join("|")})/)`,
-      message: `${camada} só importa ${permitidos.map((pasta) => `@/${pasta}`).join(", ")}${podeCore ? " e @ee/core" : ""} (ADR-001, ${regra}).`,
-    },
-  ];
-  if (!podeCore) padroes.push({ regex: "^@ee/core$", message: `${camada} não importa @ee/core (ADR-001, ${regra}).` });
-  if (!podeZustand) padroes.push({ regex: "^zustand(/|$)", message: "zustand só em infraestrutura (ADR-001)." });
-  if (!podeNode) padroes.push({ regex: `^(node:|(${nomesDoNode})(/|$))`, message: "Módulo do Node só em infraestrutura/**/*.servidor.ts (ADR-001)." });
-  if (!podeServerOnly) padroes.push({ regex: "^server-only$", message: 'import "server-only" só em arquivos *.servidor.ts (ADR-001).' });
-  return { "no-restricted-imports": ["error", { patterns: padroes }] };
-}
-
-/** Dois blocos por camada: arquivos comuns e *.servidor.* (que podem usar server-only e, em infraestrutura, o Node). */
-function camada(pasta, opcoes) {
-  const comuns = `${SITE}/${pasta}/**/*.${EXTENSOES}`;
-  const servidor = `${SITE}/${pasta}/**/*.servidor.${EXTENSOES}`;
-  return [
-    { name: `camadas/${pasta}`, files: [comuns], ignores: [SERVIDOR], rules: restricoesDaCamada({ ...opcoes, podeNode: false, podeServerOnly: false }) },
-    { name: `camadas/${pasta}/servidor`, files: [servidor], rules: restricoesDaCamada({ ...opcoes, podeNode: opcoes.podeNodeNoServidor === true, podeServerOnly: true }) },
-  ];
-}
-
-/** Sintaxe proibida no site e no domínio (CLAUDE.md, Segurança; HIS-002, S1). */
-const SINTAXE_PROIBIDA = [
-  { selector: "CallExpression[callee.name='require']", message: "O projeto é ESM: use import (HIS-002)." },
-  { selector: "ImportExpression", message: "import() dinâmico ainda não é permitido: a regra de camadas não o confere. Quando precisar (ex.: OCR), o tech-lead amplia a regra (HIS-002)." },
-  { selector: "TSImportEqualsDeclaration", message: "Use import ... from (HIS-002)." },
-  { selector: "TSImportType", message: "Use import type ... from, que a regra de camadas confere (HIS-002)." },
-  { selector: "Identifier[name='getBuiltinModule'], Literal[value='getBuiltinModule']", message: "process.getBuiltinModule fura a regra dos módulos do Node (HIS-002, S1-f)." },
-  { selector: "ExpressionStatement[directive='use server']", message: '"use server" cria um endpoint POST público: proibido até existir regra própria de Server Actions (E4, com a seguranca).' },
-  { selector: "AssignmentExpression > MemberExpression.left[property.name=/^(inner|outer)HTML$/]", message: "Proibido innerHTML/outerHTML (CLAUDE.md, Segurança)." },
-  { selector: "CallExpression[callee.property.name=/^(insertAdjacentHTML|write|writeln)$/]", message: "Proibido inserir HTML a partir de texto (CLAUDE.md, Segurança)." },
-];
-
-export default defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  globalIgnores([
-    "**/.next/**", "**/out/**", "**/build/**", "**/next-env.d.ts", "**/node_modules/**",
-    "**/playwright-report/**", "**/test-results/**",
-  ]),
-  { name: "projeto/diretivas", linterOptions: { reportUnusedDisableDirectives: "error" } },
-  {
-    // Um parser só, o do TypeScript, para toda extensão: o Babel do eslint-config-next não cobre .cjs e procura
-    // "next/babel" a partir da raiz, onde o Next não está instalado (S1-c: nenhuma extensão fica sem regra).
-    name: "projeto/parser",
-    files: [`**/*.${EXTENSOES}`],
-    plugins: { ...blocoNext.plugins, "import-x": importX },
-    languageOptions: { parser: parserTs, parserOptions: { ecmaFeatures: { jsx: true } } },
-    settings: { react: { version: versaoDoReact }, next: { rootDir: "apps/web/" } },
-  },
-  {
-    name: "projeto/qualidade",
-    files: [`**/*.${EXTENSOES}`],
-    rules: {
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/ban-ts-comment": "error",
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" }],
-      "react/no-danger": "error",
-      "no-eval": "error",
-      "no-implied-eval": "error",
-      "no-new-func": "error",
-      // T1 da HIS-001. O import/order do eslint-plugin-import 2.32 quebra no ESLint 10; o import-x é o fork mantido.
-      "import-x/order": ["error", {
-        groups: ["builtin", "external", "internal", ["parent", "sibling", "index"]],
-        pathGroups: [{ pattern: "@ee/**", group: "internal", position: "before" }, { pattern: "@/**", group: "internal" }],
-        pathGroupsExcludedImportTypes: ["builtin"],
-        "newlines-between": "never",
-        alphabetize: { order: "asc", caseInsensitive: true },
-      }],
-    },
-  },
-  { name: "projeto/site", files: [`${SITE}/**/*.${EXTENSOES}`], rules: { "no-restricted-syntax": ["error", ...SINTAXE_PROIBIDA] } },
-  ...camada("app", { camada: "app", regra: "regra 1", permitidos: ["app", "funcionalidades/[^/]+", "ui", "aplicacao", "config"], podeCore: false }),
-  ...FUNCIONALIDADES.flatMap((nome) =>
-    camada(`funcionalidades/${nome}`, { camada: `funcionalidades/${nome}`, regra: "regra 2", permitidos: [`funcionalidades/${nome}`, "ui", "aplicacao", "config"], podeCore: true }),
-  ),
-  ...camada("ui", { camada: "ui", regra: "regra 4", permitidos: ["ui", "config"], podeCore: true }),
-  ...camada("aplicacao", { camada: "aplicacao", regra: "regra 3", permitidos: ["aplicacao", "infraestrutura", "config"], podeCore: true }),
-  ...camada("infraestrutura", { camada: "infraestrutura", regra: "regra 5", permitidos: ["infraestrutura", "config"], podeCore: true, podeZustand: true, podeNodeNoServidor: true }),
-  ...camada("config", { camada: "config", regra: "ADR-001", permitidos: ["config"], podeCore: false }),
-  {
-    name: "camadas/dominio",
-    files: [`packages/core/src/**/*.${EXTENSOES}`],
-    rules: {
-      "no-restricted-imports": ["error", { patterns: [
-        { regex: "^(?!\\./)", message: "O domínio (@ee/core) só importa arquivos dele mesmo, com ./ (ADR-001, regra 6)." },
-        { regex: "(^|/)\\.\\.(/|$)", message: "O domínio (@ee/core) só importa arquivos dele mesmo, com ./ (ADR-001, regra 6)." },
-      ] }],
-      "no-restricted-syntax": ["error", ...SINTAXE_PROIBIDA],
-    },
-  },
-]);
-```
-
-</details>
-
-**O que o lint acusa hoje (medido) e o que fazer — tudo sem mudança visível:**
-
-| Achado | Onde | O que fazer |
-| --- | --- | --- |
-| `import-x/order` | 20 arquivos | `pnpm lint --fix` **duas vezes** (o ESLint limita as passadas; na segunda sobra 0), num commit **só de formatação** (T1) |
-| `react-hooks/set-state-in-effect` (regra do React Compiler, nova no `react-hooks` 7) | `funcionalidades/comodos/TelaComodos.tsx` 47, 143, 360; `infraestrutura/armazenamento/casa.ts` 132; `infraestrutura/dados-publicos/navegador.ts` 32; `ui/Movimento.tsx` 39, 77; `ui/aparelho/EditorAparelho.tsx` 45 | **Não** reescrever agora (muda o momento dos renders; a E0 não muda nada para quem usa). Em cada linha: `// eslint-disable-next-line react-hooks/set-state-in-effect -- <porquê> (HIS-109)`, com o motivo real (ex.: "lê ?visao da URL só depois da hidratação"). Nunca desligar a regra inteira nem por arquivo. HIS-109 = dívida "efeitos que copiam estado" (pergunta ao scrum-master) |
-| `react/no-children-prop` | `ui/aparelho/EditorAparelho.tsx` 50 (`children={null}`) | `<Folha …>{null}</Folha>` (mesmas props) |
-| `import/no-anonymous-default-export` (aviso) | `apps/web/postcss.config.mjs` | `const configuracao = {…}; export default configuracao;` |
-| `@typescript-eslint/no-unused-vars` (aviso) | `packages/dados` (`_ignorar`, `_a`, `_b`) | resolvido pela opção `^_` da configuração |
-
-### D5. `scripts/verificar-camadas.mjs` depois da HIS-002
-
-**Sai** (fica só no ESLint, e só depois que os casos do D6 provarem a cobertura): matriz `PERMITIDOS`/`podeImportar`,
-zustand, módulos do Node, `server-only` fora de `.servidor`, `require(`/`import(` por regex, domínio só com `./`.
-
-**Fica ou entra** (depende de outro arquivo ou da estrutura):
-
-| Regra | Mensagem (começo) |
-| --- | --- |
-| C1 · pastas antigas `components/`, `lib/` | "pasta antiga ainda existe" (já existe) |
-| C2 · arquivo fora das camadas (inclui arquivo solto em `funcionalidades/`) | "arquivo fora das camadas" (já existe) |
-| C3 · 0 arquivos lidos em `apps/web/src` ou `packages/core/src` | "nenhum arquivo lido" (já existe) |
-| C4 · **link simbólico = erro** (hoje é pulado em silêncio — S1-d) | "link simbólico não é permitido" |
-| C5 · lê as 8 extensões nas duas pastas (`.js .jsx .cjs .mjs .ts .tsx .cts .mts` — S1-c) | — |
-| C6 · todo `*.servidor.*` tem `import "server-only";` como primeiro import | (já existe) |
-| C7 · `"use client"` não importa `*.servidor` (nem com `import type`) | (já existe) |
-| C8 · **S2:** arquivo **sem** `"use client"` que importa ou reexporta de um módulo `"use client"` do site só leva **componente** (nome em PascalCase com ao menos uma minúscula: `TransicaoTela` sim; `VOLTAR`, `novoId`, `useCasa` não) ou **tipo** (`import type`, `{ type X }`). `import * as` e `export *` de módulo `"use client"` = erro. Em `import X from`, vale o nome local | `arquivo sem "use client" só importa componentes de um módulo "use client" (S2): VOLTAR de @/ui/Movimento` |
-| C9 · destino interno (`@/` ou `./`) que não existe = erro (sem isso a C8 passaria em silêncio) | "destino não encontrado" |
-
-Contrato: `node scripts/verificar-camadas.mjs [--raiz=<pasta>]` (padrão: a raiz do repositório por
-`import.meta.dirname`; `--raiz` só para os testes). Continua só lendo: não executa nem importa os arquivos lidos, sem
-rede, sem escrita, sem try/catch, código 1 em qualquer problema. Usa `ts.createSourceFile` (só análise de sintaxe, sem
-checar tipos); a diretiva sai dos primeiros `ExpressionStatement` de texto do AST, não mais do texto cru. Resolução:
-`@/x` → `apps/web/src/x`, `./x` → pasta do arquivo, tentando sem extensão e com as 8.
-
-**Prototipado** (`scratchpad/tl-his002/prototipo-s2.mjs`, parser do TypeScript) no código atual: 13 imports de módulo
-`"use client"` por arquivo sem diretiva; **exatamente 2** violam a C8 — `app/sobre/page.tsx` (`VOLTAR` de
-`@/ui/Movimento`) e `funcionalidades/cadastro/rascunho.ts` (`novoId` de `@/aplicacao/casa`), os do critério 8.
-
-### D6. Testes negativos automáticos (critério 7) — para o qa revisar
-
-```
-scripts/testes/
-  casos-de-camadas.mjs     a tabela de casos (só dados)
-  camadas.test.mjs         node:test: roda cada caso no ESLint ou no script
-```
-
-Fora de `apps/web/src`, sem pacote novo, dentro do `pnpm test` (`test:camadas`) → roda no job `verificar` do CI.
-
-Formato de um caso:
-
-```js
-{
-  id: "S1-a-from-sem-espaco",
-  origem: "S1 (seguranca, HIS-001)",  // ou "HIS-001 §10 item 7", "R13", "seguranca-07", "C8", "controle"
-  verificador: "eslint",               // ou "script"
-  arquivos: { "apps/web/src/ui/Exemplo.tsx": 'import{useCasa}from"@/aplicacao/casa";\nexport const usar = useCasa;\n' },
-  links: [],                           // só no "script": [["destino", "caminho do link"]]
-  espera: { regra: "no-restricted-imports", mensagem: "ui só importa" },  // null num controle
-}
-```
-
-- **ESLint:** `new ESLint({ cwd: raiz })` com a configuração real e `lintText(conteudo, { filePath })`: o arquivo não
-  precisa existir, o caminho escolhe a camada. Passa se houver erro da `regra` com a `mensagem`. O código do caso
-  **usa** o que importa (senão `no-unused-vars` sujaria os controles — visto no ensaio).
-- **Script:** cria uma árvore mínima num `mkdtemp` (`apps/web/src/app/page.tsx`,
-  `apps/web/src/funcionalidades/exemplo/Tela.tsx`, `packages/core/src/index.ts`), grava `arquivos` e `links`, roda
-  `node scripts/verificar-camadas.mjs --raiz=<tmp>` com `execFileSync` e exige código 1 e a mensagem no `stderr`.
-  Apaga só o próprio `mkdtemp`.
-- **Controles** (retro: "tudo certo" lendo 0 arquivos é pior que nada): (1) o repositório de verdade → código 0 e o
-  mesmo número de arquivos que `git ls-files` dá para as 8 extensões nas duas pastas; (2) a árvore mínima limpa →
-  código 0; (3) um arquivo limpo por camada no ESLint → 0 erros; (4) o script chamado de outra pasta (`cwd` =
-  `os.tmpdir()`) → mesmo resultado.
-- **Casos obrigatórios:** os do item 7 da §10 da HIS-001; os do R13; S1-a a S1-g (pelo menos um cada); os 21 da
-  seguranca (pergunta aberta; entram com `origem: "seguranca-NN"`); C1–C9. O teste imprime "N casos: X no ESLint, Y no
-  script" e falha se faltar alguma origem obrigatória (assim ninguém apaga um caso sem perceber).
-
-### D7. Correção S2/T3 (critério 8) — sem mudança visível
-
-| Arquivo | Mudança |
-| --- | --- |
-| `apps/web/src/ui/tiposDeTransicao.ts` (novo, **sem diretiva**) | `IR_ADIANTE`, `VOLTAR`, `ENTRAR_NO_PAINEL`, mesmos valores, com o comentário que hoje está no `Movimento` |
-| `ui/Movimento.tsx` | tira as 3 constantes (sem reexportar: sem barril); o `MAPA` fica igual |
-| `app/sobre/page.tsx`, `funcionalidades/inicio/BotaoComecar.tsx`, `funcionalidades/cadastro/Cadastro.tsx`, `funcionalidades/casca/Casca.tsx` | importam as constantes de `@/ui/tiposDeTransicao` |
-| `apps/web/src/aplicacao/identificador.ts` (novo, sem diretiva) | `export { novoId } from "@/infraestrutura/identificador";` |
-| `aplicacao/casa.ts` | tira o `export { novoId }` (o único uso era o `rascunho`) |
-| `funcionalidades/cadastro/rascunho.ts` | `import { novoId } from "@/aplicacao/identificador";` |
-
-Efeito: em `/sobre`, `VOLTAR` deixa de ir como referência a módulo cliente e vai como `["nav-back"]` no conteúdo da
-página. Confere-se com o e2e (transição de `/sobre` para `/`) e com o peso de JS do D8, que já precisa existir.
+_(scrum-master, 2026-10-29: **D4** `eslint.config.mjs` e achados do lint, **D5** script de camadas depois da HIS-002,
+**D6** testes negativos automáticos e **D7** correção S2/T3 estão na [HIS-002b](HIS-002b-lint-e-camadas.md), seção
+"Desenho técnico", com a mesma numeração e sem mudança.)_
 
 ### D8. Peso de JS (critério 9)
 
@@ -557,7 +311,7 @@ Escolhas para o qa confirmar ou mudar:
   páginas, 0.
   - `color-contrast`: pílula de porcentagem branca em `bg-faixa-d` (#ec7a1a), 2,85:1 — real e **muda cor** → exceção +
     história na E1 (candidata: HIS-102 "Letra maior e alto contraste"; scrum-master e ux decidem). Os outros nós eram
-    efeito da animação.
+    efeito da animação. _(scrum-master, 2026-10-29: decidido — **HIS-110**, não HIS-102; ver o critério 3.)_
   - `definition-list`: `<dl class="grid gap-6 self-center">` com `<p>` filho direto → mudar a estrutura sem mudar a
     tela → **corrige aqui** (frontend).
   - `label-content-name-mismatch`: 5 botões da casa ilustrada com `aria-label="Quarto: R$ 21,74 por mês"` sem o
@@ -669,6 +423,10 @@ Passa de 3 dias → **proposta de quebra** (o scrum-master decide):
 A ordem (a antes da b) inverte a sugestão do scrum-master só no rótulo: a sugestão "7–8 numa HIS-002b" fica; o 1 e o 5
 vão junto com eles porque o ESLint, a matriz e os casos negativos são uma coisa só.
 
+**Decisão (scrum-master, 2026-10-29): quebra aceita como proposta.** Esta história é a HIS-002a; a
+[HIS-002b](HIS-002b-lint-e-camadas.md) foi criada. Ordem: 002a → 002b, em sequência (a 002b sai do `main` depois da
+002a integrada). A preparação da 002b (21 casos, ameaças, revisão do D6) roda **em paralelo** com a 002a.
+
 ### D13. Ordem dos passos (cada um verde: `pnpm typecheck`, `pnpm test`, `pnpm build` e o que o passo acrescenta)
 
 **HIS-002a**
@@ -683,18 +441,7 @@ vão junto com eles porque o ESLint, a matriz e os casos negativos são uma cois
 | A6 | `ci.yml` (job `e2e`, artefato, resumo; build sai do `verificar`) | CI verde no PR; peso do runner igual ao local (se não, referência = medida do CI); um commit descartável com teste falhando mostra capturas e trace no artefato (critério 4) e é revertido |
 | A7 | `git rm -r apps/web/e2e-base` | `grep -rn "e2e-base" apps scripts .github` vazio |
 
-**HIS-002b**
-
-| Passo | O que | Verde quando |
-| --- | --- | --- |
-| B1 | Dependências do ESLint; `eslint.config.mjs` **sem** `import-x/order`; `pnpm lint`; achados do D4 (8 `eslint-disable` com motivo, `children`, `postcss`) | `pnpm lint` com 0 erros e 0 avisos |
-| B2 | Liga `import-x/order` e aplica `pnpm lint --fix` duas vezes — commit **só** de formatação (T1) | `git diff -U0 HEAD~1` tem só linhas de `import`/`export … from` (e a linha da configuração); `pnpm lint` 0 |
-| B3 | `pnpm lint` no job `verificar` | CI verde |
-| B4 | `scripts/testes/` com os casos do ESLint e os do script que já existem (C1–C3, C6, C7) | todos os casos e controles passam |
-| B5 | Script com parser TS: tira a matriz e o resto do "Sai" (D5); C4, C5, C9; `--raiz`; casos novos | os casos da matriz continuam passando — agora só pelo ESLint |
-| B6 | Correção S2/T3 (D7) | e2e e peso verdes |
-| B7 | C8 no script + casos (`VOLTAR`, `novoId`, `import * as`, `export *`, default em minúscula; controles: `import type` e componente) | `pnpm camadas` verde no repositório; casos da C8 acusam |
-| B8 | ADR-001 (frase da HIS-002) e ADR-003 para "aceito" (tech-lead); docs (documentacao) | — |
+**HIS-002b** — passos B1–B8 movidos para a [HIS-002b](HIS-002b-lint-e-camadas.md) ("D13 (parte HIS-002b)").
 
 ### D14. Riscos
 
@@ -727,6 +474,22 @@ pnpm audit --audit-level high
 - Critério 6: o mesmo `pnpm test:e2e` no ambiente de nuvem e no CI → mesma lista de testes, mesmo resultado.
 - Critério 9: plantar 2 KB num componente de `/sobre` numa cópia → o teste de peso falha com a tabela; tirar → passa.
 
+## Ameaças
+
+_(seguranca)_ Análise desta parte: `@playwright/test` 1.63.0 e `@axe-core/playwright` 4.14.0 (D2), `ci.yml` com dois
+jobs e `permissions: contents: read` (D11), `playwright install --with-deps` só no runner, artefato `relatorio-e2e`
+(14 dias, só dados inventados), servidor do teste em `127.0.0.1` sem reaproveitar servidor alheio. As ameaças das
+dependências do ESLint e os 21 casos ficam na [HIS-002b](HIS-002b-lint-e-camadas.md).
+
+| Ameaça | Gravidade | Mitigação |
+| --- | --- | --- |
+| … | … | … |
+
+## Plano de testes
+
+_(qa)_ Revisão do D9 (estrutura de `apps/web/e2e/`, relógio real, o que sai do `e2e-base`, comparador) e do D10 (axe,
+estados, lista de exceções). O D6 (casos negativos) é revisado na HIS-002b.
+
 ## Perguntas abertas
 
 - [x] `[para: tech-lead]` O e2e roda em todo push ou só em pull request e no `main`? (custo de tempo do CI)
@@ -742,19 +505,26 @@ pnpm audit --audit-level high
   privado, ~5 min por execução caberia nos 2 000 min/mês gratuitos com folga). Sem filtro por caminho (`paths`): com o
   check obrigatório, um PR só de documentos ficaria preso em "esperando". Para o PR não ser integrado sem e2e verde, o
   dono do projeto marca os dois checks como obrigatórios na proteção do `main` (D11).
-- [ ] `[para: scrum-master]` (tech-lead, 2026-10-29 — **bloqueia o início**) (1) Quebrar em HIS-002a (critérios 2, 3, 4,
+- [x] `[para: scrum-master]` (tech-lead, 2026-10-29 — **bloqueia o início**) (1) Quebrar em HIS-002a (critérios 2, 3, 4,
   6, 9) e HIS-002b (1, 5, 7, 8 + T1), como no D12? (2) Número da dívida nova "efeitos que copiam estado" (8
   `eslint-disable` do D4 citam o ID; propus HIS-109). (3) Para onde vai a exceção de contraste da `/` (D10): HIS-102 ou
   história nova da E1, com a ux.
+  — **Resposta (scrum-master, 2026-10-29):** (1) **Sim**, como no D12: esta é a HIS-002a; a
+  [HIS-002b](HIS-002b-lint-e-camadas.md) foi criada, depende desta e entra depois dela. (2) **HIS-109** confirmada:
+  "Efeitos que copiam estado", E1, Sprint 3, **antes da HIS-301** (o PWA mexe em `armazenamento/casa.ts` e
+  `dados-publicos/navegador.ts`, dois dos 8 lugares), com critério verificável em `docs/planejamento.md`. (3) **História
+  nova, HIS-110** "Contraste das cores padrão" (E1, tamanho P, **primeira da Sprint 1**, antes da HIS-107). Não vai
+  para a HIS-102 porque ela é um modo opcional em Ajustes e o defeito está no padrão, que todo mundo vê; nem para a
+  HIS-107, que é outro problema (rolagem para o lado) e já é M. Porquê da prioridade: texto branco em laranja a 2,85:1
+  na página inicial, onde a família vê pela primeira vez quanto cada cômodo pesa na conta — quem enxerga pouco ou usa o
+  celular no sol não lê. A HIS-110 pode entrar assim que a HIS-002a estiver no `main`, mesmo com a Sprint 0 aberta, se
+  houver frontend e ux livres: é correção de defeito, não função nova.
 - [ ] `[para: ux-acessibilidade]` (tech-lead, 2026-10-29 — bloqueia o passo A5, não o início) Texto do nome acessível
   dos 5 botões da casa ilustrada da `/`, para incluir a porcentagem que aparece (hoje `aria-label="Quarto: R$ 21,74 por
   mês"` e a tela mostra também "19%"; axe `label-content-name-mismatch`). E revisar a lista de exceções do axe quando o
   qa a montar.
-- [ ] `[para: seguranca]` (scrum-master, 2026-10-29 — **bloqueia a implementação (etapa 4)**, não o desenho) O critério 7
-  cita "os 21 extras da seguranca" da HIS-001, mas eles só estão descritos em parte (linha R13 da revisão) e o roteiro
-  `testar-seg.mjs` está no scratchpad, que não é guardado. Liste aqui, na sua análise de ameaças da etapa 3, cada um
-  dos 21 casos (texto do import de exemplo + regra esperada), para o critério 7 ser verificável pelo qa sem depender de
-  arquivo fora do repositório.
+- `[para: seguranca]` lista dos 21 casos (critério 7) — **movida para a [HIS-002b](HIS-002b-lint-e-camadas.md)**
+  (scrum-master, 2026-10-29); bloqueia a implementação da 002b, não a desta.
 
 ## Conversa da equipe
 
@@ -814,3 +584,31 @@ pnpm audit --audit-level high
   a lista dos 21 casos no formato do D6. **qa** — revisar D6, D9 e D10 (estrutura dos testes, relógio real, o que sai do
   `e2e-base`, lista de exceções) e dizer se concorda com a saída do comparador. **ux-acessibilidade** — texto dos 5
   nomes acessíveis da `/` (antes do passo A5).
+
+### [scrum-master] 2026-10-29 — quebra aceita (002a/002b), HIS-109 e HIS-110 criadas; continua "Preparada"
+- O que fiz: respondi a pergunta `[para: scrum-master]`; retitulei este arquivo como **HIS-002a** (nome do arquivo e
+  branch mantidos, para não quebrar links) e criei a [HIS-002b](HIS-002b-lint-e-camadas.md), movendo para lá os
+  critérios 1, 5, 7 e 8, as notas do tech-lead vindas da HIS-001, D4–D7, os passos B1–B8 e a pergunta dos 21 casos,
+  com remissão em cada lugar. Acrescentei aqui "Dependências", "Fluxo e textos", "Ameaças" e "Plano de testes" (seções
+  vazias para cada papel escrever sem pisar no outro). Criei HIS-109 e HIS-110 no planejamento.
+- Decisões e porquê:
+  - **Quebra:** 4 dias não cabem numa história M; as duas partes entregam valor sozinhas e a 002a não depende da 002b.
+    Ordem 002a → 002b porque a correção S2 (B6) se prova com o e2e e o peso, e as duas mexem em `package.json`,
+    lockfile e `ci.yml`.
+  - **HIS-109** (efeitos que copiam estado): E1, Sprint 3, antes da HIS-301. **HIS-110** (contraste das cores padrão):
+    E1, P, primeira da Sprint 1 — defeito de acessibilidade pré-existente na tela mais vista; não é HIS-102 (modo
+    opcional) nem HIS-107 (outro problema).
+  - **Check obrigatório no `main`:** depende do dono do projeto; registrado em "Dependências" (ao fechar) e no quadro.
+- Arquivos alterados: este arquivo; `HIS-002b-lint-e-camadas.md` (novo); `docs/planejamento.md`;
+  `docs/equipe/quadro.md`; `docs/equipe/decisoes/ADR-003-qualidade-automatica.md` (linha "Detalhes"); minha pasta.
+- Como verifiquei: Definição de Preparado das duas — critérios verificáveis (Dado/Quando/Então ou comando com
+  resultado), fora do escopo, dependências registradas, sem números de energia. Conferi com `grep` que D4–D7 e B1–B8 só
+  aparecem na HIS-002b e que os links para `HIS-002-qualidade-automatica.md` continuam válidos.
+- Para o próximo (podem rodar **em paralelo**, cada um só na sua seção, sempre com edição pontual — nunca reescrevendo
+  o arquivo inteiro — e relendo o arquivo antes de pôr a nota na "Conversa da equipe"):
+  - **seguranca** — "Ameaças" desta história (Playwright, axe, `ci.yml`, artefato) **e**, na HIS-002b, "Ameaças" +
+    lista dos 21 casos no formato do D6.
+  - **qa** — "Plano de testes" desta (D9, D10, saída do `e2e-base`) **e** o D6 na HIS-002b.
+  - **ux-acessibilidade** — texto dos 5 nomes acessíveis da `/` (resposta na pergunta aberta) e, depois, a lista de
+    exceções.
+  - Quando seguranca e qa terminarem nesta: **etapa 4 da HIS-002a** (qa nos testes; frontend nas correções do A5).

@@ -65,7 +65,8 @@ Os papéis listados são os principais; QA, segurança, tech lead e documentaç�
 | ID | História | Papéis | Tam. |
 | --- | --- | --- | --- |
 | HIS-001 | ✅ Reorganizar o site em camadas (`funcionalidades/`, `ui/`, `aplicacao/`, `infraestrutura/`) sem mudar nada para quem usa | tech-lead, frontend | M |
-| HIS-002 | Qualidade automática: ESLint (config do Next 16), testes de ponta a ponta com Playwright e verificação de acessibilidade com axe no CI | qa, tech-lead | M |
+| HIS-002a | Testes no navegador no CI: fluxo principal com Playwright em 390 e 1280 px, axe nas páginas principais, artefatos do job e peso de JS com referência (critérios 2, 3, 4, 6, 9 da HIS-002; arquivo `HIS-002-qualidade-automatica.md`) | qa, tech-lead | M |
+| HIS-002b | Lint e camadas no CI: ESLint (config do Next 16), matriz de camadas no lint, casos negativos automáticos, regra S2 e ordem dos imports (critérios 1, 5, 7, 8 + T1 da HIS-002). Depende da HIS-002a | tech-lead, frontend, seguranca | M |
 | HIS-003 | Base de segurança: cabeçalhos HTTP (CSP, HSTS...), validação com zod do localStorage e dos JSON públicos, tela de erro amigável, `pnpm audit` e Dependabot no CI, `.env.example` | seguranca, frontend | M |
 | HIS-004 | ✅ Retirar menção a instituição de ensino e reservar espaços para parceiros (desligados) | — | P |
 
@@ -83,6 +84,8 @@ Critérios gerais da E0: nenhuma mudança visível para quem usa (exceto a tela 
 | HIS-106 | Teste com pessoas reais (5 famílias): roteiro, observação, ajustes de texto | ux, scrum-master | M |
 | HIS-107 | Zoom de 200% sem rolagem para o lado (WCAG 1.4.10): em 390 px, `/` (254 px de conteúdo em 195), `/casa` e `/casa/dicas` (211 px) rolam na horizontal e, no `/casa`, números e nomes quebram palavra a palavra (achado P2 do qa na HIS-001, médio, igual antes da HIS-001) | ux, frontend | M |
 | HIS-108 | Foco e rolagem: (P1) no passo "cidade" do cadastro o foco começa na busca e pula para o título entre 300 e 600 ms — quem digita logo perde o foco e o leitor de tela anuncia duas coisas; (P3) pelo link do acompanhamento o cômodo abre, mas não fica alinhado ao topo como na entrada direta (`#comodo-<id>`); (P4, conferir) com o diálogo aberto, 1 em 25 Tabs leva o foco para fora do `<dialog>` (achados do qa na HIS-001, baixos, iguais antes da HIS-001) | ux, frontend | P |
+| HIS-109 | Efeitos que copiam estado (dívida técnica vinda da HIS-002b): 8 lugares fazem `setState` dentro de `useEffect` (`funcionalidades/comodos/TelaComodos.tsx` ×3, `infraestrutura/armazenamento/casa.ts`, `infraestrutura/dados-publicos/navegador.ts`, `ui/Movimento.tsx` ×2, `ui/aparelho/EditorAparelho.tsx`) e a tela renderiza de novo logo depois de abrir — trabalho a mais no celular simples. **Pronto quando:** `grep -rn "HIS-109" apps/web/src` não acha nada; `pnpm lint` passa com `react-hooks/set-state-in-effect` ligada e sem `eslint-disable` dela; o e2e e o peso de JS da HIS-002a passam sem mudar nenhum teste; capturas em 390 e 1280 px de cada tela tocada iguais às de antes (feitas pelo qa) | frontend, tech-lead | M |
+| HIS-110 | Contraste das cores padrão: na casa ilustrada da `/`, a pílula de porcentagem tem texto branco em laranja (`bg-faixa-d`, #ec7a1a) a 2,85:1, abaixo do mínimo de 4,5:1 (WCAG 1.4.3, AA) — quem enxerga pouco ou usa o celular no sol não lê quanto cada cômodo pesa (achado do axe no desenho da HIS-002, D10; igual antes). Inclui toda outra `color-contrast` que o qa achar no passo A5 da HIS-002a. **Pronto quando:** o axe da HIS-002a, nas 7 páginas, sem e com casa, em 390 e 1280 px, não acusa `color-contrast`; `excecoes-axe.ts` não tem entrada com `HIS-110`; a ux aprova a cor nova, conferindo também as outras cores de faixa que levam texto branco; capturas 390 e 1280 px. Depende da HIS-002a | ux, frontend | P |
 
 ### E2 · Precisão da conta — chegar mais perto do valor real
 
@@ -167,10 +170,10 @@ atualizada, consentimento para qualquer rastreamento e revisão de `seguranca` e
 
 | Sprint | Foco | Histórias |
 | --- | --- | --- |
-| 0 | Fundação | HIS-001, HIS-002, HIS-003 |
-| 1 | Inclusão I | HIS-107, HIS-102, HIS-103 |
+| 0 | Fundação | HIS-001, HIS-002a, HIS-002b, HIS-003 |
+| 1 | Inclusão I | HIS-110, HIS-107, HIS-102, HIS-103 |
 | 2 | Precisão I | HIS-201, HIS-205, HIS-104 |
-| 3 | Offline | HIS-301, HIS-302, HIS-303 |
+| 3 | Offline | HIS-109, HIS-301, HIS-302, HIS-303 |
 | 4 | Inclusão II | HIS-108, HIS-101, HIS-105, HIS-106 |
 | 5 | Precisão II | HIS-202, HIS-203 |
 | 6–7 | Plataforma | HIS-401 a HIS-406 |
@@ -186,6 +189,15 @@ da HIS-102, porque letra maior agrava o mesmo problema de conteúdo que não cab
 baixo) vai para a Sprint 4, **antes** do teste com famílias (HIS-106), para o foco que pula não atrapalhar quem usa
 leitor de tela. A HIS-105 (compartilhar) sai da Sprint 1 para a Sprint 4; se a Sprint 4 não couber, ela é a primeira a
 passar para a seguinte (menor impacto na conta que as outras).
+
+_Revisão de 2026-10-29 (desenho da HIS-002):_ a HIS-002 (≈ 4 dias no desenho) foi **dividida** em HIS-002a (navegador)
+e HIS-002b (lint e camadas), nessa ordem. A Sprint 0 só fecha com as duas e a HIS-003 (fundação antes de função nova);
+se passar de uma semana, a Sprint 1 começa depois, sem cortar a HIS-003. A **HIS-110** (contraste das cores padrão,
+defeito de acessibilidade na página inicial) é a **primeira da Sprint 1** e pode até entrar antes, assim que a
+HIS-002a estiver no `main`, se houver frontend e ux livres — é correção de defeito, não função nova. Se a Sprint 1 não
+couber, quem passa para a seguinte é a **HIS-102** (modo opcional), não a HIS-103 (Tarifa Social, a de maior impacto
+na conta). A **HIS-109** (efeitos que copiam estado) vai para a Sprint 3, **antes** da HIS-301, porque o PWA mexe em
+dois dos oito lugares (`armazenamento/casa.ts` e `dados-publicos/navegador.ts`).
 
 ## 6. Riscos
 
