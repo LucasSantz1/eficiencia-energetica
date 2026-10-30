@@ -58,6 +58,10 @@ export function anotacoesDoRelatorio(r: Relatorio, avisosDasSucessoes: readonly 
   if (r.tarifasVencidasEmUso.length > 0) {
     linhas.push(anotacao("warning", "Tarifas vencidas ainda em uso (até 6 meses)", ou(r.tarifasVencidasEmUso.map((t) => `${t.sigla} (vigência até ${t.fimVigencia})`), "")));
   }
+  if (r.ligacoesPelaSiglaRecusadas.length > 0) {
+    const itens = r.ligacoesPelaSiglaRecusadas.map((l) => `${l.sigla} (${l.cnpj}) ≠ ${l.siglaDaTarifa} (${l.cnpjDaTarifa}): ${l.municipios} municípios`);
+    linhas.push(anotacao("warning", "Mesma sigla, outro CNPJ: falta linha no sucessoes.json?", ou(itens, "")));
+  }
   if (r.vinculosExtintosMantidos.length > 0) {
     linhas.push(anotacao("warning", "Vínculos extintos mantidos (único da cidade)", ou(r.vinculosExtintosMantidos.map((c) => `${c.sigla}: ${c.municipios} municípios`), "")));
   }

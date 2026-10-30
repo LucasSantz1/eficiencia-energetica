@@ -44,6 +44,11 @@ export interface Relatorio {
   sucessorasCandidatas: { de: string; fimVigencia: string; candidatas: string[] }[];
   /** Mesmo id antigo levando a dois ids diferentes (quebra o V8). */
   substituicoesEmConflito: string[];
+  /**
+   * ADR-005: vínculo cuja sigla bate com uma tarifa de outro CNPJ, e que por isso ficou sem tarifa (o V5 acusa).
+   * Quase sempre é uma sucessão que falta no sucessoes.json; quem confirma é o dominio-energia.
+   */
+  ligacoesPelaSiglaRecusadas: { sigla: string; cnpj: string; siglaDaTarifa: string; cnpjDaTarifa: string; municipios: number }[];
 }
 
 export interface Montagem {
@@ -148,7 +153,17 @@ export function montarArquivos(entrada: EntradaDaMontagem): Montagem {
     const linha = a.cnpj ? sucessaoPorCnpj.get(a.cnpj) : undefined;
     if (linha && !sucessaoPorSigla.has(compacto(a.sigla))) sucessaoPorSigla.set(compacto(a.sigla), linha);
   }
-  const tarifaFinal = (cnpj: string | undefined, sigla: string | undefined) => (cnpj ? porCnpj.get(cnpj) : undefined) ?? (sigla ? porSigla.get(compacto(sigla)) : undefined);
+  // ADR-005, item 2: CNPJ diferente só troca por linha do sucessoes.json. A sigla só liga quando um dos lados não tem
+  // CNPJ ou os dois têm a mesma raiz (8 primeiros dígitos = mesma pessoa jurídica). No passo 0, a antiga CPFL SANTA
+  // CRUZ (61116265000144) caía na CPFL Santa Cruz de hoje (53859112000169) só porque o nome é igual.
+  const mesmaEmpresa = (a: string | undefined, b: string | undefined) => !a || !b || a.slice(0, 8) === b.slice(0, 8);
+  const pelaSigla = (sigla: string | undefined) => (sigla ? porSigla.get(compacto(sigla)) : undefined);
+  const tarifaFinal = (cnpj: string | undefined, sigla: string | undefined): TarifaVigente | undefined => {
+    const direta = cnpj ? porCnpj.get(cnpj) : undefined;
+    if (direta) return direta;
+    const candidata = pelaSigla(sigla);
+    return candidata && mesmaEmpresa(cnpj, candidata.cnpj) ? candidata : undefined;
+  };
 
   const resolver = (v: VinculoMunicipio): Resolucao | undefined => {
     const primeira = v.cnpj ? sucessaoPorCnpj.get(v.cnpj) : v.agente ? sucessaoPorSigla.get(compacto(v.agente)) : undefined;
@@ -174,6 +189,7 @@ export function montarArquivos(entrada: EntradaDaMontagem): Montagem {
   const usoDasRenomeacoes = new Map<string, Set<number>>();
   const extintosDescartados = new Map<string, Set<number>>();
   const extintosMantidos = new Map<string, Set<number>>();
+  const siglaDeOutroCnpj = new Map<string, Set<number>>();
   const linhaDaSucessao = new Map<string, Sucessao>();
 
   const ufsPorSigla = new Map<string, Set<string>>();
@@ -199,6 +215,8 @@ export function montarArquivos(entrada: EntradaDaMontagem): Montagem {
       }
       if (!r) {
         agentesSemTarifa.add(sigla);
+        const recusada = pelaSigla(v.agente);
+        if (recusada && !mesmaEmpresa(v.cnpj, recusada.cnpj)) contar(siglaDeOutroCnpj, `${sigla}\u0000${v.cnpj ?? ""}\u0000${recusada.sigla}\u0000${recusada.cnpj ?? ""}`, m.ibge);
         continue;
       }
       const id = slug(r.tarifa.sigla);
@@ -278,6 +296,12 @@ export function montarArquivos(entrada: EntradaDaMontagem): Montagem {
       tarifasComMaisDeUmValor: entrada.analiseDasTarifas?.comMaisDeUmValor ?? [],
       sucessorasCandidatas: acharCandidatas(vencidasDescartadas, entrada.agentesDaTarifa ?? [], sucessaoPorCnpj, renomeadas),
       substituicoesEmConflito: conflitos,
+      ligacoesPelaSiglaRecusadas: [...siglaDeOutroCnpj]
+        .map(([chave, ibges]) => {
+          const [sigla = "", cnpj = "", siglaDaTarifa = "", cnpjDaTarifa = ""] = chave.split("\u0000");
+          return { sigla, cnpj, siglaDaTarifa, cnpjDaTarifa, municipios: ibges.size };
+        })
+        .sort((a, b) => b.municipios - a.municipios || a.sigla.localeCompare(b.sigla)),
     },
   };
 }

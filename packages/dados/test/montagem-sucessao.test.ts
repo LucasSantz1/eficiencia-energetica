@@ -131,6 +131,48 @@ describe("D2: regras da troca", () => {
     expect(m.municipiosPorUF[0]?.municipios[0]?.distribuidoras).toEqual(["epb"]);
   });
 
+  // Passo 0: a antiga CPFL SANTA CRUZ (61116265000144) caía na CPFL Santa Cruz de hoje (53859112000169) só pelo nome.
+  describe("ADR-005: a sigla não liga CNPJs diferentes", () => {
+    const santaCruz: TarifaVigente = { sigla: "CPFL Santa Cruz", cnpj: "53859112000169", teKwh: 0.3, tusdKwh: 0.5, inicioVigencia: "2026-04-22", fimVigencia: "2027-04-21" };
+    const vinculo = (cnpj: string) => new Map<number, VinculoMunicipio[]>([[2504009, [{ ibge: 2504009, agente: "CPFL SANTA CRUZ", cnpj, ano: 2014 }]]]);
+    const linhaSantaCruz = lerSucessoes({
+      sucessoes: [
+        {
+          cnpjAntigo: "61116265000144",
+          siglaAntiga: "CPFL SANTA CRUZ",
+          cnpjSucessor: "53859112000169",
+          siglaSucessora: "CPFL Santa Cruz",
+          desde: "2018-01-01",
+          ato: "Ato de teste",
+          fonte: "https://exemplo.gov.br/ato",
+          consultadoEm: "2026-10-30",
+        },
+      ],
+    });
+
+    it("sem linha de sucessão, o vínculo fica sem tarifa (o V5 acusa) e aparece no relatório", () => {
+      const m = montarArquivos({ ...vazia(), tarifas: [santaCruz], vinculos: vinculo("61116265000144") });
+      expect(m.municipiosPorUF[0]?.municipios[0]?.distribuidoras).toEqual([]);
+      expect(m.relatorio.agentesSemTarifa).toEqual(["CPFL SANTA CRUZ"]);
+      expect(m.relatorio.ligacoesPelaSiglaRecusadas).toEqual([
+        { sigla: "CPFL SANTA CRUZ", cnpj: "61116265000144", siglaDaTarifa: "CPFL Santa Cruz", cnpjDaTarifa: "53859112000169", municipios: 1 },
+      ]);
+    });
+
+    it("com a linha de sucessão, a cidade fica com a sucessora, sem entrar em substituidas (o id é o mesmo)", () => {
+      const m = montarArquivos({ ...vazia(), tarifas: [santaCruz], vinculos: vinculo("61116265000144"), sucessoes: linhaSantaCruz });
+      expect(m.municipiosPorUF[0]?.municipios[0]?.distribuidoras).toEqual(["cpfl-santa-cruz"]);
+      expect(m.relatorio.sucessoesAplicadas).toEqual([{ de: "CPFL SANTA CRUZ", para: "CPFL Santa Cruz", municipios: 1 }]);
+      expect(m.tarifas.substituidas).toEqual({});
+      expect(m.relatorio.ligacoesPelaSiglaRecusadas).toEqual([]);
+    });
+
+    it("mesma raiz de CNPJ (outra filial) é a mesma empresa: a sigla liga", () => {
+      const m = montarArquivos({ ...vazia(), tarifas: [santaCruz], vinculos: vinculo("53859112000250") });
+      expect(m.municipiosPorUF[0]?.municipios[0]?.distribuidoras).toEqual(["cpfl-santa-cruz"]);
+    });
+  });
+
   it("sucessora sem tarifa não entra em substituidas (o V4 acusa)", () => {
     const m = montarArquivos({ ...vazia(), tarifas: [], sucessoes: linhaEbo });
     expect(m.tarifas.substituidas).toEqual({});

@@ -113,6 +113,7 @@ describe("anotações com texto de fora (R2)", () => {
       tarifasComMaisDeUmValor: [],
       sucessorasCandidatas: [],
       substituicoesEmConflito: [],
+      ligacoesPelaSiglaRecusadas: [],
     };
     const linhas = anotacoesDoRelatorio(relatorio, ["aviso 100%"]);
     expect(linhas.every((l) => !/[\r\n]/.test(l) && l.startsWith("::"))).toBe(true);
