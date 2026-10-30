@@ -10,6 +10,20 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-003 · análise de ameaças: aprovado para implementar
+- O que fiz: li o guia de CSP do Next 16, o HTML do build (`__next_f` inline em toda página, `style=` do React), o
+  `persist` do zustand 5.0.16 e `infraestrutura/`. Provei P1 (JSON quebrado: `hasHydrated` nunca fica true, telas
+  presas) e P2 (mesma versão: `migrate` não roda, potência -5 entra). Tabela A1–A16, CSP e cabeçalhos com valor exato,
+  regras de validação (localStorage e `/dados`), CI/Dependabot/`atualizar-dados.yml`, R1–R13 + R4b. Pedido do ux
+  atendido: retorno do validador com contagem por tipo, `residenciaDescartada` e `ilegivel`. `pnpm audit` limpo.
+- Decisões e porquê: CSP sem nonce (nonce força tudo dinâmico; hash não cobre inline) com `'unsafe-inline'`, risco
+  aceito baixo até o E4/E11; validação no `merge`/storage, não só no `migrate` (P2); só o rígido do domínio descarta,
+  alerta não; aceitos os 2 consertos do domínio; `atualizar-dados.yml` em dois jobs para o token de escrita não ficar
+  no `pnpm install`.
+- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md` ("Ameaças" e nota), `contexto.md`, `diario.md`.
+  Roteiro: `scratchpad/seg-his003/prova-hidratacao.mjs`.
+- Próximos passos: etapa 6 da HIS-003 (R1–R13, R4b); respostas do tech-lead sobre `zod/mini` e o critério da rotina.
+
 ## 2026-10-29 · HIS-002a/HIS-002b · análise de ameaças (etapa 3): as duas aprovadas para implementar
 - O que fiz: HIS-002a — `npm view` dos 5 pacotes do navegador (sem script de instalação; Microsoft/Deque), fontes
   locais, `ci.yml` atual sem `permissions`; tabela Aa1–Aa18 e conferência Ra1–Ra13; resposta na P-qa-8. HIS-002b — rodei

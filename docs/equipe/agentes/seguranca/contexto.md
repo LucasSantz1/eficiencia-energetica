@@ -9,11 +9,11 @@
 
 | Risco | Situação | História |
 | --- | --- | --- |
-| localStorage lido sem validação (`lib/store.ts`, `migrate` com `as`) — dado corrompido pode quebrar a tela | aberto | HIS-003 |
-| JSON de `/dados` lido sem validação (`lib/dados.ts`; `app/page.tsx` com `as`) | aberto | HIS-003 |
+| localStorage: JSON quebrado prende o site no carregamento (P1, provado); mesma versão não passa pelo `migrate` (P2, provado) | alta, aberto; desenho na história (storage próprio + `merge`, descarte por item, retorno com contagem) | HIS-003 |
+| JSON de `/dados` lido sem validação (`navegador.ts`, `arquivos.servidor.ts` com `as`); `uf` do localStorage monta o caminho do `fetch` | médio/baixo, aberto | HIS-003 |
 | Sem `app/error.tsx`: exceção de render vira tela branca | aberto | HIS-003 |
-| Sem cabeçalhos de segurança (CSP, HSTS, etc.) em `next.config.ts` | aberto | HIS-003 |
-| Sem `pnpm audit` nem Dependabot no CI | aberto | HIS-003 |
+| Sem cabeçalhos de segurança (CSP, HSTS, etc.) em `next.config.ts` | aberto; valores exatos na HIS-003 | HIS-003 |
+| Sem `pnpm audit` nem Dependabot no CI; `atualizar-dados.yml` com token de escrita durante o `pnpm install` e actions por etiqueta | médio, aberto; dois jobs + SHA | HIS-003 |
 | Links externos sem `rel="noopener noreferrer"` (`funcionalidades/inicio/PaginaInicial.tsx` l. 275, `app/sobre/page.tsx` l. 44–56); sem `target="_blank"`, então baixo | aberto (baixo) | HIS-003 |
 | Refatoração em camadas: perda da casa salva, código de servidor no cliente, script de camadas com falso negativo | etapa 6 **aprovada com ressalvas (baixo)** em `182f355`: R1–R15 ok | HIS-001 |
 | `verificar-camadas.mjs` com lacunas que pedem escrita deliberada (S1: `from"x"` sem espaço, `.js/.jsx` não lidos, link simbólico pulado em silêncio, caminho absoluto/`?sufixo`, `getBuiltinModule`, `"use server"` livre) | etapa 3 aprovada: os 21 casos estão escritos na HIS-002b (20 ESLint, 1 script, medidos contra o D4) | HIS-002b |
@@ -53,6 +53,11 @@
   em `run:`, `persist-credentials: false`; artefato só com dado inventado e só das pastas do relatório.
 - e2e: nenhum pedido fora de `127.0.0.1` (fixture automática); limites de peso no spec, nunca no JSON; axe sem
   `disableRules`/`withTags`/`exclude()`, exceção por nó (1 só) com história.
+- CSP sem nonce enquanto não houver Auth nem script de terceiro: `script-src`/`style-src 'self' 'unsafe-inline'`, sem
+  `unsafe-eval`, tudo `'self'`, `connect-src 'self'`. Nonce em `proxy.ts` volta à mesa no E4/E11 (doc do Next 16: nonce
+  = tudo dinâmico; hash não cobre o `__next_f` inline).
+- Validação de dado de fora: só o rígido do domínio descarta; nunca corrigir número (exceto os 2 consertos do
+  domínio na HIS-003); retorno do validador só com contagens/`boolean`, em memória.
 - Lint: o único `eslint-disable` aceito no site e no domínio é o da HIS-109; ignores do ESLint só com caminho ancorado;
   arquivos lidos pelo ESLint = `git ls-files`.
 
@@ -71,7 +76,9 @@
 - **HIS-002b (etapa 6):** Rb1–Rb9; rodar de novo os 21 + 9 casos numa cópia própria (roteiros em
   `scratchpad/seg-his002/casos-eslint.mjs` e `propostas.mjs`; se sumirem, as tabelas estão na história) esperando 0
   diferente; conferir C10 (Ab3) e ignores ancorados (Ab4).
-- **HIS-003:** completar a tabela de ameaças.
+- **HIS-003 (etapa 6):** R1–R13 + R4b da história; rodar `scratchpad/seg-his003/prova-hidratacao.mjs` contra o storage
+  novo (se sumir: P1/P2 na história explicam o caso). Resposta do tech-lead: `zod` × `zod/mini` e critério de formato
+  da rotina de dados.
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável
