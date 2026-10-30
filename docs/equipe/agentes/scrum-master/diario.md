@@ -10,6 +10,16 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002a · Pronto com a ressalva Ra9; HIS-110 com os `<dd>`; HIS-206 criada
+- O que fiz: conferi a Definição de Pronto (qa, seguranca, tech-lead e ux aprovaram; documentação no `35f5e61`,
+  conferido no reflog) e marquei Pronto. Pus a correção dos 2 `<dd>` na HIS-110. Criei a HIS-206 a partir do modelo.
+- Decisões e porquê: a Ra9 é baixa e depende do GitHub, então não bloqueia: vira pendência do dono. A tabela de peso
+  do runner (D14) também não bloqueia (o tech-lead já aprovou). A HIS-206 vai para o backlog, primeira da Sprint 2 e
+  depois da HIS-111: é uma cidade (~18% a menos) e mexe na mesma rotina. Achei o mesmo padrão em Triunfo e Soledade (PB).
+- Arquivos: `HIS-002-qualidade-automatica.md`, `HIS-206-distribuidora-de-outro-estado.md` (nova),
+  `docs/planejamento.md`, `docs/equipe/quadro.md`, `contexto.md`, este diário.
+- Próximos passos: quem orquestra integra a 002a; o dono cuida da Ra9 e dos checks; dominio-energia ‖ backend na HIS-206.
+
 ## 2026-10-30 · HIS-111 · Sprint 0, prioridade 1, um corte só; T5 aceito
 - O que fiz: respondi a pergunta de prioridade e sprint; apliquei o T5 do tech-lead nos critérios 1, 3, 5, 6 e 8; criei
   os critérios 12 (V7 e `--forcar`) e 13 (Pronto depois do h8); pus o caso (h) no `casa-salva.spec.ts` da a7 da 003a;

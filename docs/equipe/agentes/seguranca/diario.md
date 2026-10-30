@@ -10,6 +10,16 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002a · etapa 6: aprovado com ressalvas (baixo), Ra9 fica com o dono do projeto
+- O que fiz: Ra1–Ra13 sobre o `efab326` numa cópia própria (`scratchpad/seg-h2a/copia`, portas 3171–3173): typecheck,
+  test, build e e2e verdes (107/6/0). Integridade dos 5 pacotes novos igual à do `npm view`. Ra10 plantada na `/sobre`
+  → 3 vermelhos com a URL; desfeita → verdes. Ra9 com o equivalente local (traces e zips do relatório extraídos).
+- Decisões e porquê: Ra9 vira ressalva baixa, não bloqueio: o job não tem segredo nem token no `env`, `persist-credentials`
+  é `false` e o equivalente local está limpo; mas só quem vê o artefato real fecha a conferência. Roteiro para o dono na
+  nota. Execução do `child_process` no `peso-js.spec.ts` aceita: comando fixo, só fora do CI.
+- Arquivos: `docs/equipe/historias/HIS-002-qualidade-automatica.md` ("Resultado da etapa 6" e nota), `contexto.md`, `diario.md`.
+- Próximos passos: etapa 6 da HIS-002b, HIS-003a e HIS-111.
+
 ## 2026-10-30 · HIS-111 · análise de ameaças: aprovado para o h0; ADR-005 pode virar aceito
 - O que fiz: li o T1–T7 e o ADR-005; conferi o `diagnosticar-dados.yml` proposto (permissões, credencial, gatilho,
   SHA contra a HIS-002/003), o `.gitignore` (o `.cache` fica fora do "Nada mudou"), o `onlyBuiltDependencies` e os

@@ -41,6 +41,11 @@ e de apagar todos os dados, e banco com segurança por linha (cada pessoa só ac
 
 - Um agente de segurança faz a análise de ameaças antes de cada história e revisa o código depois. Ele tem poder de veto.
 - Toda mudança passa por verificação de tipos, testes e build no CI antes de entrar no site.
+- **"Nada sai do aparelho" é conferido sozinho.** Os testes no navegador usam o site como uma pessoa usaria (cadastro,
+  cômodos, dicas, apagar os dados) e reprovam se a página pedir qualquer coisa a outro endereço que não o próprio site.
+  Um teste a mais prova que essa barreira funciona: ele tenta um pedido para fora e confere que é pego.
+- O CI só tem permissão de leitura do repositório, não usa nenhum segredo e usa versões fixas das ferramentas
+  (pelo código do commit, não por um nome que pode ser trocado).
 - As regras completas estão em [`CLAUDE.md`](../../CLAUDE.md#segurança-obrigatório).
 
 ## Contato para relatar um problema de segurança

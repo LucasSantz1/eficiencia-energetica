@@ -6,7 +6,7 @@
 | Sprint | 0 |
 | Tamanho | M (≈ 2,75 dias: 2,25 do D12 + 0,5 das revisões do qa; revisto em 2026-10-30, D16) |
 | Papéis principais | qa, tech-lead (frontend nas correções do A5) |
-| Status | Preparada |
+| Status | Pronto (2026-10-30, com a ressalva Ra9: o dono do projeto confere o artefato no GitHub) |
 | Branch | `his-002-qualidade` (a branch já existe; continua com o nome antigo) |
 
 > **Dividida em 2026-10-29 (scrum-master, a partir do D12).** Esta é a **HIS-002a**; o arquivo manteve o nome
@@ -712,6 +712,34 @@ Ra4, Ra6 e Ra7. As médias têm mitigação no desenho ou aqui; a Aa9 tem destin
 | Ra12 | `grep -rnE "disableRules\|withTags\|withRules\|\.exclude\(\|\.include\(\|options\(" apps/web/e2e`; teste com exceção de `alvo` que casa 2 nós | vazio; reprova ("exceção cobre mais de um elemento") |
 | Ra13 | `grep -n "NEXT_TELEMETRY_DISABLED" .github/workflows/ci.yml`; `next start` com `-H 127.0.0.1`; `reuseExistingServer: false` | presentes |
 
+### Resultado da etapa 6 (seguranca, 2026-10-30)
+
+Código conferido: `efab326` (os commits seguintes só mudam `docs/`, `CLAUDE.md` e `.claude/`). Cópia própria
+(`scratchpad/seg-h2a/copia`: `git archive` + `pnpm install --frozen-lockfile --offline`, portas 3171–3173, liberadas):
+`pnpm typecheck`, `pnpm test`, `pnpm build` verdes; e2e completo **107 passam, 6 pendentes, 0 falha**.
+
+| # | Resultado |
+| --- | --- |
+| Ra1 | ok: 4.14.0 e 1.63.0 exatas, só em `devDependencies` de `apps/web`; `@playwright/test` também aparece como par opcional do `next` (não vai para o navegador, ver Ra5) |
+| Ra2 | ok: 0 `tarball`/`git+`/`codeload`/`.tgz`; os 5 pacotes novos com `integrity` **igual** ao `npm view … dist.integrity`; `onlyBuiltDependencies` = `esbuild`, `sharp` |
+| Ra3 | ok: 94 pacotes, só `esbuild` com `postinstall` (o `unrs-resolver` é da 002b, ainda não entrou) |
+| Ra4 | ok: `pnpm audit --audit-level high` → "No known vulnerabilities found" |
+| Ra5 | ok: `apps/web/src` sem `playwright`/`axe-core`; em `.next/static` só 1 arquivo, e só pelo caminho `/ROOT/node_modules/.pnpm/next@…_@playwright+test@…` (tirando o caminho, 0). Hosts em `.next/static`: os da linha de base + textos de teste de polyfill de URL (`https://a`, `http://n`), nenhum pedido |
+| Ra6 | ok: 1 `permissions:` (topo, `contents: read`); 0 `secrets.`, `pull_request_target`, `workflow_run` |
+| Ra7 | ok: `${{` só em `concurrency` (`github.ref`, `event_name`) e no `if:` do upload; nenhum em `run:` |
+| Ra8 | ok: as 4 actions por SHA de 40 caracteres (iguais ao D16); `persist-credentials: false` nos 2 checkouts |
+| Ra9 | **ressalva (baixo):** o artefato do `32f2cff` não baixa daqui (proxy). Conferido o equivalente local: 3 falhas plantadas (Ra10) com o mesmo Playwright e o mesmo `reporter`; 41 arquivos, só `playwright-report/**` e `test-results/**`; 6 `.zip` (traces e dados do relatório) extraídos; padrão estrito vazio; trace só com `127.0.0.1:<porta>` (e o `exemplo.com` plantado); nenhum token. O `AKIA` do `index.html` é base64, falso positivo. Conferência no GitHub: nota da seguranca na "Conversa da equipe" |
+| Ra10 | ok: `fetch("https://exemplo.com/x")` num componente de cliente da `/sobre` → 3 testes vermelhos (`fluxo-principal`, `axe · /sobre`, `peso-js · medir /sobre`) com `pedido para fora do site: https://exemplo.com/x`; desfeito → os 3 verdes |
+| Ra11 | ok: `peso-js.json` sem limite; limites em `apoio/peso.ts`; `ATUALIZAR_PESO_JS` + `GITHUB_ACTIONS=true` lança antes de gravar; passo "nada mudou" presente (M15 do qa) |
+| Ra12 | ok: `grep` vazio; só `new AxeBuilder({ page }).analyze()`; "mais de um elemento" e "exceção velha" no `apoio/axe.ts`, com negativo no `sanidade` (N5) |
+| Ra13 | ok: `NEXT_TELEMETRY_DISABLED: "1"` no topo; `-H 127.0.0.1`; `reuseExistingServer: false` |
+
+Também conferido: `apps/web/src` muda só `aria-label`, `role`, `tabIndex` e estrutura (texto escapado pelo React, nenhum
+`dangerouslySetInnerHTML`/`innerHTML`); fixtures sem dado de pessoa (ids `00000000-…`, cidade pública); `git log -p
+main..HEAD` sem padrão de chave; `.env*` no `.gitignore`. Informativo, sem pedido: o `execSync` do `peso-js.spec.ts` é
+um comando fixo (`git rev-parse`) e só roda fora do CI; o 11a baixa os `<script src>` pelo Node sem conferir a origem,
+mas um script de fora seria pego pela fixture do navegador nos outros testes da mesma rota.
+
 ## Plano de testes
 
 _(qa)_ Revisão do D9 (estrutura de `apps/web/e2e/`, relógio real, o que sai do `e2e-base`, comparador) e do D10 (axe,
@@ -1374,3 +1402,35 @@ Linhas 22–23 aparecem como pendentes (`HIS-107 · …`, `HIS-108 · P1 …`, `
   runner diferir, a referência passa a ser a do CI (D14) e eu confiro de novo.
 - Para o próximo: **ux-acessibilidade** — revisar `excecoes-axe.ts`. **quem orquestra** — empurrar e conferir os 2
   checks, o peso no resumo do job e o artefato. **seguranca** e **tech-lead** — etapas 6 e 7 em paralelo.
+
+### [tech-lead] 2026-10-30 — etapa 7: code review aprovado; ADR-004 e ADR-005 aceitos
+- O que fiz: revisei `git diff -M -C main...HEAD -- . ':!docs'` (34 arquivos) contra D9–D16: `e2e/` como no D9 (mais `apoio/telas.ts` e `apoio/transicoes.ts`, coesos), fixtures movidas sem mudança, axe sem filtro e exceção de 1 elemento, limites em `apoio/peso.ts`, `ci.yml` igual ao D11, 4 correções do frontend sem regra de negócio e com o porquê comentado. Nada de `any`, `as`, `only` ou `skip`; os `fixme` citam HIS-107/108; nenhum resto do `e2e-base`.
+- Como verifiquei: numa cópia própria, `pnpm typecheck`, `pnpm test` (37 + 11) e `pnpm build` verdes. Pela API REST do GitHub: `4c860b5` e `efab326` verdes nos 2 checks (107 passam e 6 pendentes, igual ao local: critério 6). Job de ~2,8 min, Chromium em 24 s (sem cache). `32f2cff` vermelho com `relatorio-e2e` de 10,2 MB, contra 1,9 MB verde (critério 4). O conteúdo do artefato é a Ra9 da seguranca.
+- Peso no runner: o verde só prova "até +1 024/+2 048 B", não que é igual. Basta para aprovar: o caminho embutido é `/ROOT/…`, que não depende da máquina. Mas o D14 pede o número. **Quem orquestra:** abra o resumo do job `efab326` no navegador e copie a tabela aqui (o log e o artefato dão 403 daqui). Se a diferença passar de ±100 B, a referência passa a ser a do CI (qa).
+- Observações, sem devolver: `seletorDoNo` e `TelaAxe` exportados sem uso de fora (dívida T2). A importação de tipo entre `excecoes-axe.ts` e `apoio/axe.ts` é circular, mas inofensiva. Se faltar o cômodo, o `aria-label` do "Quem mais gasta" diria "em undefined": só com casa corrompida, e quem cobre é o leitor da HIS-003 (vou conferir no review dela).
+- ADRs: **ADR-004 aceito**, com R4c e R4d nas consequências. **ADR-005 aceito**, com V9/V10 no item 2 e "sucessão para empresa vigente" no item 5 (pedidos da seguranca, já nesta branch). A branch `his-111-tarifas-vencidas` tem a cópia antiga do ADR-005, então vai ter um conflito pequeno no rebase: fica esta versão.
+- **Decisão: aprovado pelo tech-lead.** Para fechar, ainda falta a revisão do `excecoes-axe.ts` pela ux (critério do A5). Próximo: seguranca (etapa 6, Ra9) e depois o fechamento (documentacao + scrum-master).
+
+### [seguranca] 2026-10-30 — etapa 6: aprovado com ressalvas (baixo)
+- O que fiz: Ra1–Ra13 sobre o `efab326` numa cópia própria (typecheck, test, build e e2e verdes: 107 passam, 6 pendentes). Resultado linha a linha em "Ameaças" → "Resultado da etapa 6". Ra10 plantada na `/sobre`: 3 testes vermelhos com a URL; desfeita, verdes. Integridade dos 5 pacotes novos igual à do registro.
+- Achados: nenhum crítico, alto ou médio. **Ressalva (baixo), Ra9:** o artefato do `32f2cff` não baixa daqui (proxy). O equivalente local (mesmo Playwright, mesmo `reporter`, traces extraídos) está limpo. O `AKIA` do `index.html` é falso positivo (base64).
+- **Para o dono do projeto, no GitHub** (Actions → execução vermelha do `32f2cff` → `relatorio-e2e`, ou `gh run download <id> -n relatorio-e2e`, numa pasta vazia e sem abrir nada de lá dentro): (1) só as pastas `playwright-report/` e `test-results/`; (2) extrair também os `.zip` (os `trace.zip` e os de `playwright-report/data/`) e procurar `gh[pousr]_[A-Za-z0-9]{36}`, `github_pat_`, `AKIA[0-9A-Z]{16}`, `eyJhbGciOi`, `service_role`, `BEGIN .*PRIVATE KEY`, `ACTIONS_RUNTIME_TOKEN`, `GITHUB_TOKEN` → tem que dar vazio; (3) no trace (trace.playwright.dev ou `pnpm exec playwright show-trace`), aba "Network" só com `127.0.0.1:3100`, e no localStorage só a casa das fixtures (Presidente Prudente, ids `00000000-…`). Se algo aparecer: apagar o artefato na mesma página e me chamar.
+- **Decisão: aprovado com ressalvas (baixo).** A ressalva não bloqueia o fechamento. Próximo: ux (`excecoes-axe.ts`) e depois o fechamento; o dono do projeto marca os 2 checks como obrigatórios no `main`.
+
+### [ux-acessibilidade] 2026-10-30 — `excecoes-axe.ts` revisado pela ux, com 1 ajuste no planejamento
+- **Revisado pela ux.** As 8 entradas são `color-contrast` da `/` (4 sem casa, 4 com casa), cada uma com seletor de 1 elemento (pílulas de Quarto e Cozinha; o 2º `<dd>` de cada cartão) e todas com `historia: "HIS-110"`. Nada a mudar no `.ts`.
+- Falta na linha da HIS-110 em `docs/planejamento.md` a correção dos dois `<dd>` (hoje só tem a das pílulas: `text-tinta`, 5,50:1). Medi: `text-white/85` sobre `bg-white/10` em `bg-energia` (#0a7356) dá 3,92:1 (não passa). **Correção:** trocar por `text-white` nos dois `<dd>`, que dá 4,77:1 (passa AA); os `<p>` com `text-white/85` direto no verde (4,69:1) ficam como estão.
+- [para: scrum-master] acrescentar essa correção na linha da HIS-110. Próximo: fechamento (documentacao + scrum-master).
+
+### [documentacao] 2026-10-30 — fechamento (etapa 8): documentos atualizados para a 002a
+- Mudaram: `docs/sistema/desenvolvimento.md` (seção "Testes no navegador": `PORTA_E2E=3105 pnpm --filter @ee/web test:e2e`, arquivos de `e2e/`, exceções do axe, peso; CI com os 2 checks; `e2e-base` fora da estrutura), `docs/sistema/privacidade-e-seguranca.md` ("nada sai do aparelho" conferido sozinho; CI só leitura), `docs/arquitetura.md` (ESLint aponta para a HIS-002b; não citava o `e2e-base`), `CHANGELOG.md`.
+- Changelog: "Para quem usa" — o leitor de tela lê melhor a casa ilustrada, o "Quem mais gasta" e a tabela do painel geral (agora no Tab). "Técnico" — e2e, axe com 8 exceções da HIS-110, peso de JS, CI em 2 jobs, actions por SHA, ADR-003/004/005 aceitos.
+- Conferido no código e rodado aqui (porta 3171): `--list` dá 113 testes; `rotas` + `sanidade` com 24 passando. Índice de ADRs já tinha o 003, 004 e 005.
+- **[para: scrum-master]** pronta para a conferência da Definição de Pronto.
+
+### [scrum-master] 2026-10-30 — Definição de Pronto conferida: **Pronto**, com a ressalva Ra9
+- Critérios 2, 3, 6 e 9 aprovados pelo qa; o 4 pelo tech-lead (`32f2cff` vermelho com artefato de 10,2 MB). Typecheck, test, build, audit e console limpos (qa, tech-lead, seguranca). `excecoes-axe.ts` revisado pela ux. Etapas 6 (com ressalva baixa) e 7 aprovadas. Documentação e CHANGELOG no `35f5e61`. A casa v1 e v2 continua abrindo (`migracao.spec.ts`). Sem mudança visível, por isso sem capturas novas.
+- **Ressalva Ra9 (baixa, não bloqueia):** o dono do projeto confere o `relatorio-e2e` do `32f2cff` no GitHub, como pede a nota da seguranca. Se aparecer algo, apaga o artefato e chama a seguranca.
+- Também falta, sem bloquear: a tabela de peso do runner do `efab326` (D14). Quem orquestra cola a tabela aqui. Se passar de ±100 B, o qa troca a referência.
+- A correção dos 2 `<dd>` (ux) entrou na linha da HIS-110 do planejamento.
+- Próximo: **quem orquestra** integra o PR ao `main`. Depois, o dono marca os 2 checks como obrigatórios. Em seguida vem a etapa 4 da 003a ‖ 002b.
