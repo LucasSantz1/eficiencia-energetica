@@ -193,21 +193,25 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
               <BotaoComecar estilo="faisca" texto="Calcular a minha conta" />
             </div>
           </Revelar>
-          <dl className="grid gap-6 self-center">
-            <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={100}>
-              <dt className="text-lg font-bold">Tarifa Social</dt>
-              <dd className="titulo-largo mt-2 text-[2.6rem]">80 kWh grátis</dd>
-              <dd className="mt-2 text-white/85">Para famílias com renda de até meio salário mínimo por pessoa, ou que recebem o BPC.</dd>
-            </Revelar>
-            <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={220}>
-              <dt className="text-lg font-bold">Desconto Social</dt>
-              <dd className="titulo-largo mt-2 text-[2.6rem]">até 120 kWh</dd>
-              <dd className="mt-2 text-white/85">Com desconto para famílias com renda entre meio e um salário mínimo por pessoa.</dd>
-            </Revelar>
+          {/* O aviso do CRAS fica fora do <dl>: lista de definição só aceita dt/dd (axe definition-list). As duas
+              grades com gap-6 deixam o mesmo espaço de antes entre os três blocos. */}
+          <div className="grid gap-6 self-center">
+            <dl className="grid gap-6">
+              <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={100}>
+                <dt className="text-lg font-bold">Tarifa Social</dt>
+                <dd className="titulo-largo mt-2 text-[2.6rem]">80 kWh grátis</dd>
+                <dd className="mt-2 text-white/85">Para famílias com renda de até meio salário mínimo por pessoa, ou que recebem o BPC.</dd>
+              </Revelar>
+              <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={220}>
+                <dt className="text-lg font-bold">Desconto Social</dt>
+                <dd className="titulo-largo mt-2 text-[2.6rem]">até 120 kWh</dd>
+                <dd className="mt-2 text-white/85">Com desconto para famílias com renda entre meio e um salário mínimo por pessoa.</dd>
+              </Revelar>
+            </dl>
             <p className="flex gap-3 text-white/85">
               <Icone nome="hand-heart" className="mt-0.5 size-6 shrink-0" /> Para se inscrever no CadÚnico, procure o CRAS da sua cidade com os documentos da família.
             </p>
-          </dl>
+          </div>
         </div>
       </section>
 
