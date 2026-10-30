@@ -8,7 +8,7 @@ A única mudança visível de propósito é a correção da HIS-111 (conta errad
 | História | Status | Etapa atual | Próximo papel |
 | --- | --- | --- | --- |
 | [HIS-001 · Camadas](historias/HIS-001-camadas.md) | Pronto | Definição de Pronto conferida (etapa 9) | — (quem orquestra integra ao `main`) |
-| [HIS-002a · Testes no navegador no CI](historias/HIS-002-qualidade-automatica.md) | Preparada | etapa 3 concluída: seguranca, qa e ux revisaram; decisões do tech-lead no D16 (2026-10-30); **liberada para a etapa 4** | **qa** (A1–A5, testes) + **frontend** (commit das correções do A5) → A6 (`ci.yml`) → A7 |
+| [HIS-002a · Testes no navegador no CI](historias/HIS-002-qualidade-automatica.md) | **Pronto** (ressalva Ra9) | Definição de Pronto conferida (etapa 9, 2026-10-30) | quem orquestra integra ao `main`; o dono confere o artefato (Ra9) e marca os 2 checks como obrigatórios; tabela de peso do runner (D14) |
 | [HIS-002b · Lint e camadas no CI](historias/HIS-002b-lint-e-camadas.md) | Preparada | etapa 3 concluída: ameaças, 21 casos e D6 revisados; decisões do tech-lead no D16 (2026-10-30) | etapa 4 (frontend com o tech-lead) **só depois** da HIS-002a no `main` |
 | [HIS-003a · Dados quebrados não travam o site](historias/HIS-003-base-de-seguranca.md) | Preparada | desenho técnico pronto (D1–D9): sem zod, leitores no `@ee/core` (ADR-004 proposto); quebra aceita (P-tl-3, 2026-10-30); ≈ 3 dias | seguranca (P-tl-1, bloqueia a2) ‖ dominio-energia (P-tl-2, bloqueia a3); etapa 4 (backend a1–a3, a6; frontend a4–a5; qa a7) depois da 002a no `main`, **em paralelo com a 002b** |
 | [HIS-003b · Campos com limite e "Confere?"](historias/HIS-003b-campos-com-limite.md) | Preparada | textos (T5, T6) e desenho prontos; critério 8 (T6) novo; ≈ 1,5 dia | qa ("Plano de testes"); etapa 4 (frontend b1–b2, qa b3) **só depois** da 003a no `main` |
@@ -40,6 +40,8 @@ scratchpad e porta própria (retro da HIS-001). A implementação (etapa 4) **n�
 
 ### Pendência do dono do projeto (quem orquestra leva)
 
+- HIS-002a (ressalva Ra9 da seguranca): baixar o `relatorio-e2e` da execução vermelha do `32f2cff` numa pasta vazia e
+  seguir o roteiro da nota da seguranca de 2026-10-30. Se aparecer algo, apagar o artefato e chamar a seguranca.
 - Ao fechar a HIS-002a: marcar como **obrigatórios** na proteção do `main` (configurações do GitHub) os checks
   "Lint, tipos e testes" e "Navegador (e2e, axe e peso)". No fechamento da HIS-002b o scrum-master confere que
   continuam obrigatórios. Sem isso, um PR pode ser integrado com o e2e vermelho.
@@ -60,6 +62,7 @@ scratchpad e porta própria (retro da HIS-001). A implementação (etapa 4) **n�
 - 2026-10-30 — HIS-003: **quebra aceita** (scrum-master, P-tl-3): HIS-003a (arquivo antigo, retitulado; critérios 1–4, 6, 7 e o 5 no domínio, passos a1–a7) e HIS-003b (novo; critério 5 nas telas e critério 8 novo do T6, passos b1–b3). Ordem 002a → 003a ‖ 002b → 003b. Próximo: seguranca (P-tl-1) ‖ dominio-energia (P-tl-2) ‖ qa (plano da 003b).
 - 2026-10-30 — HIS-111: desenho técnico (tech-lead, T1–T7) e ADR-005 proposto. D7 aprovado: `substituidas` opcional no `tarifas.json`; a troca fica no core, na leitura, e no `aplicacao/`, na regravação, não no leitor da casa; formato salvo igual. Passo 0 em `diagnosticar-dados.yml`, só leitura, roda no `push` da branch. Barreiras V1–V4, V7 e V8 sem `--forcar`. Recomendação: **HIS-111 antes do a3** (cerca de 30 min de rebase na 003a, contra dias de conta errada). Próximo: scrum-master.
 - 2026-10-30 — HIS-111: **Sprint 0, prioridade 1, um corte só** (scrum-master). Começa já, em branch própria saindo do `main`, em paralelo com o fim da 002a; o a3 da 003a vem depois, mas não espera se ela travar. T5 aplicado (6 meses; V5 no critério 6; critério 5 com três casos; e2e do 8 no caso (h) do `casa-salva.spec.ts` da a7; teste dos publicados no h8). Critérios novos: 12 (V7, `--forcar`) e 13 (Pronto só depois do h8). Próximo: seguranca (bloqueia o h0) ‖ ux (D7).
+- 2026-10-30 — HIS-002a: **Pronto** (etapa 9). qa, seguranca (ressalva baixa Ra9), tech-lead e ux aprovaram; documentação no `35f5e61`. Pendências que não bloqueiam: o dono confere o artefato (Ra9); a tabela de peso do runner (D14). A correção dos 2 `<dd>` (3,92:1 → `text-white`, 4,77:1) entrou na HIS-110. **HIS-206** criada (Nova Santa Rita, PI, × CERTAJA; suspeita no IndQual; Triunfo e Soledade, PB, parecidos) para o backlog, primeira da Sprint 2. Próximo: quem orquestra integra ao `main`; depois, etapa 4 da 003a ‖ 002b.
 
 ## Próximas (backlog priorizado)
 
@@ -67,11 +70,12 @@ scratchpad e porta própria (retro da HIS-001). A implementação (etapa 4) **n�
 2. HIS-107 Zoom de 200% sem rolagem para o lado (antes da HIS-102: letra maior agrava o mesmo problema)
 3. HIS-102 Letra maior e alto contraste (se a Sprint 1 não couber, é ela que passa, não a HIS-103)
 4. HIS-103 Guia da Tarifa Social
-5. HIS-201 Conta detalhada
-6. HIS-205 Nomes de distribuidoras
-7. HIS-104 Meta de gasto
-8. HIS-109 Efeitos que copiam estado (Sprint 3, antes da HIS-301)
-9. HIS-108 Foco e rolagem (Sprint 4, antes do teste com famílias)
-10. HIS-105 Compartilhar e imprimir (Sprint 4)
+5. HIS-206 Distribuidora de outro estado na cidade (Nova Santa Rita, PI, × CERTAJA; Sprint 2, depois da HIS-111 no `main`; dominio-energia + backend)
+6. HIS-201 Conta detalhada
+7. HIS-205 Nomes de distribuidoras
+8. HIS-104 Meta de gasto
+9. HIS-109 Efeitos que copiam estado (Sprint 3, antes da HIS-301)
+10. HIS-108 Foco e rolagem (Sprint 4, antes do teste com famílias)
+11. HIS-105 Compartilhar e imprimir (Sprint 4)
 
 O backlog completo está em [`../planejamento.md`](../planejamento.md).

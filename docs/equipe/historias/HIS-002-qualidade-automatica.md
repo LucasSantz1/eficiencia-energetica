@@ -6,7 +6,7 @@
 | Sprint | 0 |
 | Tamanho | M (≈ 2,75 dias: 2,25 do D12 + 0,5 das revisões do qa; revisto em 2026-10-30, D16) |
 | Papéis principais | qa, tech-lead (frontend nas correções do A5) |
-| Status | Preparada |
+| Status | Pronto (2026-10-30, com a ressalva Ra9: o dono do projeto confere o artefato no GitHub) |
 | Branch | `his-002-qualidade` (a branch já existe; continua com o nome antigo) |
 
 > **Dividida em 2026-10-29 (scrum-master, a partir do D12).** Esta é a **HIS-002a**; o arquivo manteve o nome
@@ -1427,3 +1427,10 @@ Linhas 22–23 aparecem como pendentes (`HIS-107 · …`, `HIS-108 · P1 …`, `
 - Changelog: "Para quem usa" — o leitor de tela lê melhor a casa ilustrada, o "Quem mais gasta" e a tabela do painel geral (agora no Tab). "Técnico" — e2e, axe com 8 exceções da HIS-110, peso de JS, CI em 2 jobs, actions por SHA, ADR-003/004/005 aceitos.
 - Conferido no código e rodado aqui (porta 3171): `--list` dá 113 testes; `rotas` + `sanidade` com 24 passando. Índice de ADRs já tinha o 003, 004 e 005.
 - **[para: scrum-master]** pronta para a conferência da Definição de Pronto.
+
+### [scrum-master] 2026-10-30 — Definição de Pronto conferida: **Pronto**, com a ressalva Ra9
+- Critérios 2, 3, 6 e 9 aprovados pelo qa; o 4 pelo tech-lead (`32f2cff` vermelho com artefato de 10,2 MB). Typecheck, test, build, audit e console limpos (qa, tech-lead, seguranca). `excecoes-axe.ts` revisado pela ux. Etapas 6 (com ressalva baixa) e 7 aprovadas. Documentação e CHANGELOG no `35f5e61`. A casa v1 e v2 continua abrindo (`migracao.spec.ts`). Sem mudança visível, por isso sem capturas novas.
+- **Ressalva Ra9 (baixa, não bloqueia):** o dono do projeto confere o `relatorio-e2e` do `32f2cff` no GitHub, como pede a nota da seguranca. Se aparecer algo, apaga o artefato e chama a seguranca.
+- Também falta, sem bloquear: a tabela de peso do runner do `efab326` (D14). Quem orquestra cola a tabela aqui. Se passar de ±100 B, o qa troca a referência.
+- A correção dos 2 `<dd>` (ux) entrou na linha da HIS-110 do planejamento.
+- Próximo: **quem orquestra** integra o PR ao `main`. Depois, o dono marca os 2 checks como obrigatórios. Em seguida vem a etapa 4 da 003a ‖ 002b.
