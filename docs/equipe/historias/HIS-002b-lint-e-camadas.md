@@ -397,6 +397,68 @@ formato do D6.
 
 _(qa)_ Revisão do D6 (formato dos casos, controles, origens obrigatórias, resumo "N casos").
 
+### Revisão do D6 (qa, 2026-10-29): revisado pelo qa, com observações e 3 pontos para o tech-lead
+
+**De acordo:** tabela só de dados + `node:test`, fora de `apps/web/src`, sem pacote novo, dentro do `pnpm test`;
+ESLint por `lintText` com a configuração real; script num `mkdtemp` com `--raiz`, código 1 e mensagem no `stderr`; os 4
+controles; o resumo "N casos: X no ESLint, Y no script".
+
+**Observações (seguir na implementação; não mudam o contrato):**
+
+- **Gêmeo permitido para cada permissão da matriz.** Como a matriz é "lista do que pode", um regex que proíba tudo
+  passaria em todos os negativos. Para cada camada, um controle por item de `permitidos` e por `podeCore`,
+  `podeZustand`, `podeNodeNoServidor` e `server-only` em `*.servidor.*` (ex.: `ui` → `@/config/x` passa;
+  `infraestrutura/x.servidor.ts` → `node:fs` passa; `ui/x.servidor.ts` → `node:fs` falha). O "um arquivo limpo por
+  camada" do D6 não prova as permissões.
+- **Funcionalidades com nomes reais.** O `eslint.config.mjs` gera um bloco por pasta que **existe** em
+  `funcionalidades/`; um caso `funcionalidades/a` → `funcionalidades/b` não casaria com bloco nenhum. Usar
+  `cadastro` → `@/funcionalidades/comodos/…` e `../comodos/…` (o caso falharia, não passaria em silêncio — mas
+  pela razão errada).
+- **Erro, não aviso:** nos casos do ESLint, exigir `severity: 2` da regra esperada.
+- **Controle 1 local:** contar com `git ls-files --cached --others --exclude-standard` (arquivo novo ainda não
+  adicionado também é lido pelo script; só `git ls-files` daria diferença falsa no computador de quem desenvolve).
+- **Origem "critério 5" e "T1" também obrigatórias:** `any`, `@ts-ignore`, `dangerouslySetInnerHTML`, `innerHTML`,
+  `eval`, `new Function` (critério 5, que o D4 já ensaiou mas o D6 não lista como obrigatório) e dois imports fora de
+  ordem (`import-x/order`, critério 10). E `reportUnusedDisableDirectives`: um `eslint-disable-next-line` sem nada para
+  desligar = erro (critério 11).
+
+### Casos obrigatórios (ids fixos; a lista mora em `casos-de-camadas.mjs`)
+
+| Origem | ids | Verificador |
+| --- | --- | --- |
+| HIS-001 §10 item 7 + R13 | `I7-01` ui → `@/aplicacao/casa` · `I7-02` funcionalidade → outra por `@/` · `I7-03` … por `../` · `I7-04` funcionalidade → `@/infraestrutura/…` · `I7-05` `require("x")` · `I7-06` ``import(`@/${x}`)`` · `I7-07` `'use client'` depois de comentário importando `.servidor` · `I7-08` `fs` · `I7-09` `node:fs` · `I7-10` `child_process` fora de `.servidor` · `I7-11` `.servidor.ts` sem `server-only` · `I7-12` `zustand` fora de `infraestrutura` · `I7-13` `../../public/dados/tarifas.json` · `I7-14` `src/lib/` recriada · `I7-15` `react` em `packages/core/src` · `R13-01` `import type` em várias linhas · `R13-02` `export { x } from` · `R13-03` `import("@/infraestrutura/…")` literal | ESLint, menos I7-07, I7-11, I7-14 (script) |
+| S1 | `S1-a` … `S1-g`, pelo menos um cada (D4 tem a lista ensaiada) | ESLint; `S1-c` e `S1-d` também no script |
+| seguranca | `seguranca-01` … `seguranca-21` (quando a lista estiver escrita) | conforme a lista |
+| critério 5 | `C5-any`, `C5-ts-ignore`, `C5-dangerously`, `C5-innerHTML`, `C5-eval`, `C5-new-function` | ESLint |
+| critério 8 / D5 | `C1` … `C9`; C8 com `VOLTAR`, `novoId`, `import * as`, `export *`, default em minúscula (B7) | script |
+| critérios 10 e 11 | `T1-ordem`, `D-sem-uso` (diretiva sem uso) | ESLint |
+| controles | `controle-repositorio`, `controle-arvore-minima`, `controle-camada-<nome>`, `controle-outra-pasta`, gêmeos `permite-<camada>-<item>`, C8 `import type` e componente | ambos |
+
+### Testes negativos do próprio verificador (etapa 5, uma vez, numa cópia própria; resultado escrito aqui)
+
+| # | Mutação | Tem que acontecer |
+| --- | --- | --- |
+| V1 | tirar o bloco `camadas/ui` do `eslint.config.mjs` | `pnpm test:camadas` falha nos casos da `ui`, com o id |
+| V2 | trocar o regex de `permitidos` da `ui` por "proíbe tudo" | os gêmeos `permite-ui-*` falham |
+| V3 | apagar o caso `I7-13` da tabela | falha "faltando caso obrigatório: I7-13" (P-qa-b1) |
+| V4 | tirar a C4 do script (link simbólico volta a ser pulado) | caso C4 falha |
+| V5 | o script lê 0 arquivos (pasta errada) | `controle-repositorio` falha |
+| V6 | tirar `--max-warnings 0` do `lint` | caso pela linha de comando falha (P-qa-b2) |
+| V7 | `typescript` ausente (renomear a pasta na cópia) | `pnpm camadas` sai com erro alto, nunca "tudo certo" |
+| V8 | um 9º `eslint-disable-next-line react-hooks/set-state-in-effect` sem motivo | falha (P-qa-b3) |
+
+### Critérios de aprovação (etapa 5)
+
+1. `pnpm lint`, `pnpm typecheck`, `pnpm test` (com `test:camadas`), `pnpm build` verdes; `pnpm audit --audit-level high` limpo.
+2. Resumo "N casos: X no ESLint, Y no script" com todos os ids obrigatórios presentes; os 21 da seguranca conferidos
+   um a um contra a lista dela.
+3. V1–V8 cada uma vermelha com a mensagem certa.
+4. Critério 8: `pnpm camadas` verde no repositório depois do B6/B7 e os casos `VOLTAR`/`novoId` acusam no `mkdtemp`.
+5. Critério 10: `git diff -U0 HEAD~1` do commit do B2 só com linhas de `import`/`export … from` (e a da configuração).
+6. Critério 11: `grep -rn "HIS-109" apps/web/src` com exatamente 8 linhas, cada uma com motivo.
+7. B6 sem mudança para quem usa: e2e da HIS-002a verde (inclusive a transição `/sobre` → `/`, P-qa-1 da HIS-002a) e
+   peso de JS dentro do limite.
+
 ## Perguntas abertas
 
 - [ ] `[para: seguranca]` (scrum-master, 2026-10-29 — **bloqueia a implementação (etapa 4)**, não o desenho; movida da
@@ -404,6 +466,19 @@ _(qa)_ Revisão do D6 (formato dos casos, controles, origens obrigatórias, resu
   revisão) e o roteiro `testar-seg.mjs` está no scratchpad, que não é guardado. Liste aqui, na sua análise de ameaças
   da etapa 3, cada um dos 21 casos (texto do import de exemplo + regra esperada), para o critério 7 ser verificável
   pelo qa sem depender de arquivo fora do repositório.
+- [ ] `[para: tech-lead]` (qa, 2026-10-29 — entra no B4; não bloqueia o desenho) Três ajustes no contrato do D6:
+  1. **P-qa-b1 · Ids obrigatórios, não só origens.** O D6 falha "se faltar alguma origem obrigatória"; apagar um dos
+     três casos S1-a passaria. Proposta: `casos-de-camadas.mjs` exporta `OBRIGATORIOS` (lista de ids do "Plano de
+     testes") e o teste falha com "faltando caso obrigatório: <id>".
+  2. **P-qa-b2 · Um caso pela linha de comando.** O `lintText` não passa pelo `--max-warnings 0`, e as regras do
+     `jsx-a11y` são **aviso** no `eslint-config-next`. **Medido** na cópia do tech-lead: `<img src>` sem `alt` por
+     `eslint --max-warnings 0 --stdin --stdin-filename apps/web/src/ui/Exemplo.tsx` → 2 avisos e código 1; sem o
+     `<img>`, código 0. Proposta: o teste lê os argumentos do script `lint` do `package.json` e roda o ESLint com eles +
+     `--stdin` (sem `--cache`) — se alguém tirar o `--max-warnings 0`, o caso falha (V6).
+  3. **P-qa-b3 · Critério 11 automático.** Hoje é um `grep` uma vez. Proposta: um teste em `scripts/testes/` lê
+     `apps/web/src` e `packages/*/src` e exige que todo `eslint-disable` seja `eslint-disable-next-line <regra> --
+     <motivo>` (nada de arquivo inteiro, sem regra ou sem motivo), com caso negativo. Se preferir deixar o `grep`,
+     registrar aqui que a forma dos `eslint-disable` só é conferida na revisão.
 
 ## Conversa da equipe
 
@@ -425,3 +500,15 @@ ficam na [HIS-002a](HIS-002-qualidade-automatica.md), "Conversa da equipe", e va
 - Para o próximo: **seguranca** — "Ameaças" desta história e a lista dos 21 casos no formato do D6 (bloqueia a etapa 4).
   **qa** — revisar o D6 em "Plano de testes". Os dois podem rodar já, em paralelo com o trabalho na HIS-002a (ver
   quadro). **Implementação (etapa 4, frontend com o tech-lead)** só depois da HIS-002a no `main` e da lista dos 21.
+
+### [qa] 2026-10-29 — D6 revisado pelo qa, com observações; 3 pontos para o tech-lead; plano de testes escrito
+- O que fiz: li a história inteira, a HIS-002a (D1–D15), o ADR-003 e o §10/R13 da HIS-001; transformei o item 7 e o
+  R13 em ids fixos (`I7-01`…`I7-15`, `R13-01`…`R13-03`) para o critério 7 não depender do scratchpad (retro). Na cópia
+  do tech-lead (só leitura, sem `--cache`) conferi que `jsx-a11y/alt-text` é **aviso** e só o `--max-warnings 0` barra.
+- Decisões e porquê: **revisado pelo qa, com observações** — formato, `lintText`, `mkdtemp` e controles de acordo.
+  Acrescentei: gêmeo permitido para cada permissão da matriz (senão "proíbe tudo" passaria), nomes reais de
+  funcionalidade, `severity: 2`, contagem local com arquivos ainda não adicionados, critério 5/T1/diretiva sem uso como
+  obrigatórios, e 8 mutações do próprio verificador (V1–V8). Três ajustes de contrato na pergunta `[para: tech-lead]`
+  (ids obrigatórios, caso pela linha de comando, critério 11 automático).
+- Arquivos alterados: esta história ("Plano de testes", uma pergunta, esta nota). Nenhum código.
+- Para o próximo: **tech-lead** — P-qa-b1 a b3. **seguranca** — a lista dos 21 entra como `seguranca-01`…`21`.

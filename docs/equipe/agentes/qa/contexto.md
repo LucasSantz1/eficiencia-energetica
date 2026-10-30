@@ -18,6 +18,11 @@
   todas as rotas, 11b +1 449 B em `/casa` sem casa (limite 2 048). Manual (teclado, folhas, abas, nomes acessíveis,
   reduzido, zoom 200%, `/casa/aparelhos`, `#comodo-<id>`) idêntico ao `main`. Achados pré-existentes P1–P4 na história.
   Evidências: `…/scratchpad/his001/depois-qa/`, `manual-qa-depois/`, `manual-qa-main/`; roteiro `…/his001/manual-qa.cjs`.
+- **HIS-002a/002b, revisão do desenho feita (2026-10-29):** D9, D10 e D6 "revisados pelo qa, com observações". Plano de
+  testes nas duas histórias: tabela "Cobertura" (26 linhas: cada verificação do `e2e-base` e do manual da HIS-001 →
+  arquivo do `apps/web/e2e/`), negativos permanentes N1–N7 (`sanidade.spec.ts`, `test.fail()`), mutações M1–M16 (002a)
+  e V1–V8 (002b), ids obrigatórios `I7-01…15`, `R13-01…03`. Perguntas `[para: tech-lead]` abertas: P-qa-1…8 (002a,
+  bloqueiam o A7) e P-qa-b1…b3 (002b, entram no B4). Protótipo em `…/scratchpad/qa-his002/prova/`.
 - Como subir o site para testar: `pnpm build && pnpm --filter @ee/web start -p 3100` (em segundo plano);
   liberar a porta com `fuser -k 3100/tcp` (não usar `pkill -f "next start"`).
 - O Chromium já está instalado no ambiente de nuvem: `require('playwright')` (1.63, via NODE_PATH global), sem `playwright install`.
@@ -36,6 +41,13 @@
 - `comparar` ignora logs (`*.log`, `saida-*.txt`, `controle-comparacao.txt`); deixar resultados extras (ex.: manual) fora
   da pasta comparada.
 - Fixtures geradas uma vez, a partir da casa salva pelo próprio fluxo; o "depois" usa as mesmas (sem `--gerar-fixtures`).
+  No `apps/web/e2e/` (HIS-002a): copiadas byte a byte e **nunca regeradas**; versão nova do `persist` = fixture nova.
+- e2e (HIS-002a): relógio real com datas **relativas** a hoje; nenhum valor em R$ afirmado; `celular` sem
+  `isMobile`/`hasTouch` (referência do 11b); axe só depois de conferir a tela certa e com `passes > 0`.
+- Toda barreira tem negativo permanente com `test.fail()` (medido no Playwright 1.63: barreira quebrada → "Expected to
+  fail, but passed", código 1). Mutações plantadas da etapa 5 têm o resultado escrito na história, não no scratchpad.
+- Movimento reduzido nas view transitions: ler as durações no `transition.ready` (0 com `reduce`, 250 ms sem), sem espera fixa.
+- `eslint-config-next`: `jsx-a11y` é **aviso**; só o `--max-warnings 0` barra (medido com `--stdin`).
 
 ## Seletores e comportamentos (cuidado nos scripts)
 
@@ -52,8 +64,11 @@
 
 ## Pendências
 
-- HIS-002: transformar o fluxo em testes Playwright no CI, com axe; aposentar `apps/web/e2e-base/`.
-- HIS-002: levar o `manual-qa.cjs` (teclado, folhas, nomes acessíveis, zoom, âncora) para `apps/web/e2e/`, com axe.
+- HIS-002a, etapa 4: escrever os testes (A1–A5) pelo plano, depois das respostas do tech-lead (P-qa-1…8); o A7 (tirar
+  o `e2e-base`) só com as linhas 1–21 da "Cobertura" verdes. Registrar no ADR-003 e aqui o commit do A7 (o comparador
+  fica no histórico: `git show <commit>^:apps/web/e2e-base/linha-de-base.cjs`).
+- HIS-002a: o `manual-qa.cjs` (scratchpad) vira `teclado.spec.ts` e `comodos.spec.ts` (P-qa-2/3); zoom 200% = `fixme` HIS-107.
+- HIS-002b, etapa 5: V1–V8 e os ids obrigatórios (inclusive `seguranca-01…21` quando a lista existir).
 - Backlog (pré-existentes, HIS-001 P1–P4): foco no passo "cidade" pula da busca para o título (ux/frontend); zoom 200%
   com rolagem horizontal em `/`, `/casa`, `/casa/dicas` (ux); âncora pelo link não alinha ao topo (frontend).
 

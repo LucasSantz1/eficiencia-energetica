@@ -534,6 +534,137 @@ dependências do ESLint e os 21 casos ficam na [HIS-002b](HIS-002b-lint-e-camada
 _(qa)_ Revisão do D9 (estrutura de `apps/web/e2e/`, relógio real, o que sai do `e2e-base`, comparador) e do D10 (axe,
 estados, lista de exceções). O D6 (casos negativos) é revisado na HIS-002b.
 
+### Revisão do D9 e do D10 (qa, 2026-10-29): revisado pelo qa, com observações e 8 pontos para o tech-lead decidir
+
+**De acordo:** estrutura de `apps/web/e2e/`, projetos `celular`/`computador`, `retries: 0`, `forbidOnly` no CI,
+`reuseExistingServer: false` com `PORTA_E2E`, relógio real, nenhum valor em R$ afirmado, seletores por papel e nome,
+fixture com parâmetro `usar`, `CHAVE_CASA` repetida (caixa-preta), axe com `reducedMotion: "reduce"` e conjunto padrão de
+regras sem filtro, exceção por elemento com história, exceção velha = erro, e a **saída do `e2e-base` inteiro com o
+comparador** (D1-8). O comparador fica no histórico do git; o commit do A7 fica registrado no ADR-003 e no meu
+`contexto.md`, para a próxima reorganização "sem mudar nada" o recuperar.
+
+**Mas a tabela "o que do `e2e-base` vira teste" (D9) perde coisas** que o `linha-de-base.cjs` e o roteiro manual da
+etapa 5 da HIS-001 (`manual-qa.cjs`, que só existe no scratchpad) cobriam: transição **por passo** (inclusive
+`/sobre` → `/`, que a HIS-002b usa para provar o B6), teclado e foco das folhas, `#comodo-<id>`, `?visao=geral`, axe
+nos passos do cadastro e nas folhas, 11b com casa. Proposta em "Perguntas abertas" `[para: tech-lead]`, P-qa-1 a
+P-qa-8. Bloqueiam o **A7** (tirar o `e2e-base`), não o A1.
+
+**Observações que não mudam o desenho (só precisam ser seguidas na implementação):**
+
+- **Relógio real, mas datas relativas:** as contas do fluxo são "mês passado" e "mês retrasado", e as leituras são
+  "hoje − 9 dias" e "hoje" (calculadas no teste, fuso `America/Sao_Paulo`). Com `2026-09`/`2026-10-29` fixos, daqui a
+  um ano as contas ficariam fora da janela que o acompanhamento mostra e o teste quebraria sem defeito nenhum.
+- **`celular` = só a janela 390×844**, sem `isMobile`/`hasTouch`: a referência do 11b foi medida assim, e `isMobile`
+  muda a janela de layout e, com ela, os `<Link>` visíveis que o Next pré-carrega. Toque entra quando houver teste de toque.
+- **Fixtures:** copiadas byte a byte (`sha256sum` igual ao das do `e2e-base`) e **nunca regeradas** — são o que a versão
+  antiga gravou. Quando o `persist` for para a v3, entra `casa-v3.json` e as antigas ficam.
+- **Nomes da casa ilustrada (texto da ux):** seletor por regex, ex.: `/^Quarto, \d+% da conta, R\$\s.+ por mês$/` — o
+  valor depende da tarifa do dia e há espaço sem quebra depois de "R$".
+- **Movimento reduzido:** afirmar `.surgir` com duração ≤ 0,01 ms (hoje `1e-05s`), não "≠ 0,52 s" (aceitaria 0,3 s).
+- **Fixture de console:** `pageerror` e `console.error` falham; `console.warn` vai como anexo (hoje 0, como na HIS-001).
+- **Axe:** antes de cada análise, conferir que a tela certa abriu (título ou texto esperado da página **e** do estado com
+  ou sem casa) e exigir `passes.length > 0` — "0 violações" numa página em branco ou antes da hidratação é pior que
+  nenhum teste. Resultados `incomplete` (o axe pede revisão humana, ex.: contraste sobre gradiente) vão como anexo, com
+  a contagem no resumo do job; não falham.
+- **Saem com decisão registrada (qa):** o aviso de `htmlSize` da `/` (> 2 %) — o peso de JS (critério 9) cobre o que
+  importa para o celular; e o aviso de `sha256` de `public/dados` — servia ao byte a byte, que saiu.
+
+### Cobertura: cada verificação do `e2e-base` e do manual da HIS-001 → onde fica
+
+| # | Verificação (HIS-001) | Onde fica no `apps/web/e2e/` | Situação |
+| --- | --- | --- | --- |
+| 1 | Fluxo completo em 390 e 1280 (cadastro → acompanhamento → cômodos → dicas → acompanhamento → minha casa → sobre → `/`) | `fluxo-principal` (2 projetos) | D9 |
+| 2 | Editor salva sem mudar ids nem quantidade (pelo "Quem mais gasta" e pelos cômodos) | `fluxo-principal` + `aparelhos` | D9 |
+| 3 | Remover o aparelho que está no plano: −1 aparelho, aquele id some, nenhuma dica dele no `plano` | `aparelhos` (fixture v2: o chuveiro está no plano) | D9 |
+| 4 | Migração: v2 volta idêntica depois de recarregar e mostra os 6 cômodos; v1 vira `version: 2` com `contas`, `leituras`, `plano` vazios e o resto igual | `migracao` | D9 |
+| 5 | Portão de hidratação: `/comecar` com casa → "Você já cadastrou a sua casa", casa intacta | `migracao` | D9 |
+| 6 | Apagar todos os meus dados → volta para `/`, sem `residencia` e 5 listas vazias | `ajustes` (+ recarregar continua vazio; `/comecar` volta a mostrar o assistente) | D9 + obs. |
+| 7 | `/casa/aparelhos` → 200 com `NEXT_REDIRECT` e o navegador termina em `/casa/comodos` | `rotas` (só celular: não depende da largura) | D9 |
+| 8 | 8 rotas 200; `/` com revalidação de 86400 s | `rotas` | D9 |
+| 9 | As 8 rotas continuam pré-renderizadas (estão em `routes` do `prerender-manifest.json`) | `rotas` | **P-qa-5** |
+| 10 | Transições: 1 por passo do cadastro, 0 na troca "Por cômodo/Tudo junto", 0 nos diálogos, 1 por aba e por link (21 por largura) | `fluxo-principal` (contagem antes × depois de cada ação) | **P-qa-1** |
+| 11 | Nomes `topo` e `navegacao` de `view-transition-name` | `transicoes` (valores exatos) | D9 |
+| 12 | Movimento reduzido: `.surgir` ≤ 0,01 ms; 4 transições em 4 trocas de aba; nenhuma animação de view transition de verdade | `transicoes` (durações lidas no `transition.ready`) | **P-qa-1** |
+| 13 | Console e página sem erro, em toda sessão | `apoio/teste.ts` (automática) | D9 + negativo **P-qa-6** |
+| 14 | 11a (JS do HTML, 7 rotas) e 11b (total com prefetch) | `peso-js` | D8 |
+| 15 | 11b de `/casa` **com casa** (13 arquivos × 15 sem casa; 212 267 B na HIS-001) | `peso-js` | **P-qa-5** |
+| 16 | Cadastro só com teclado; ao entrar em cada passo o foco vai para o `h1`; contorno de foco visível | `teclado` (2 projetos) | **P-qa-2** |
+| 17 | Folhas com teclado (editor pelo "Quem mais gasta" e pelos cômodos, "Anotar conta"): Enter abre, foco dentro do diálogo, `Esc` fecha, foco volta para quem abriu | `teclado` | **P-qa-2** |
+| 18 | Abas só com teclado: Enter navega, contorno visível | `teclado` | **P-qa-2** |
+| 19 | Nenhum controle sem nome acessível (8 rotas + diálogo do editor) | `acessibilidade` (axe `button-name`, `link-name`, `label`… são sérias/críticas) + estados novos | D10 + **P-qa-4** |
+| 20 | `#comodo-<id>` pelo link do acompanhamento e direto pelo endereço: cômodo existe, expandido e visível | `comodos` (2 projetos) | **P-qa-3** |
+| 21 | `/casa/comodos?visao=geral` abre no "Painel geral" | `comodos` | **P-qa-3** |
+| 22 | Zoom 200% em 390 px (P2) | `acessibilidade`, `test.fixme("HIS-107 …")` | fora do escopo, pendente marcado |
+| 23 | P1 (foco da cidade pula da busca para o título) e P3 (âncora pelo link não alinha ao topo) | `teclado` e `comodos`, `test.fixme("HIS-108 …")` | fora do escopo, pendente marcado |
+| 24 | P4 (1 de 25 Tabs sai do `<dialog>` nativo) | — | informativo, sem teste |
+| 25 | Capturas, texto e DOM byte a byte; relógio fixo; ids por contador; `comparar` | — | fora do escopo (critério 9 e D9) |
+| 26 | Avisos de `htmlSize` e de `sha256` de `public/dados` | — | saem (decisão acima) |
+
+O A7 só acontece com as linhas 1–21 verdes e cada uma apontando para o nome do teste no relatório do e2e.
+
+### Testes negativos de cada barreira
+
+**Permanentes, no próprio e2e (`sanidade.spec.ts`, só celular, sem servidor: `page.setContent`).** Cada barreira tem um
+teste com `test.fail()` — se a barreira deixar de reprovar, o `test.fail()` vira "Expected to fail, but passed" e a
+execução fica vermelha. **Medido** com `@playwright/test` 1.63.0 e `@axe-core/playwright` 4.14.0 (pacotes da cópia do
+tech-lead, protótipo em `scratchpad/qa-his002/prova/`): com a barreira inteira, código 0; com a fixture e o axe
+desligados de propósito, os 4 negativos viraram "Expected to fail, but passed" e o código foi 1.
+
+```ts
+test("negativo: console.error reprova o teste", async ({ page }) => {
+  test.fail(true, "a fixture de console precisa reprovar");
+  await page.setContent(PAGINA_LIMPA);
+  await page.evaluate(() => console.error("plantado"));
+});
+```
+
+| # | Barreira | Caso que precisa reprovar | Controle que precisa passar |
+| --- | --- | --- | --- |
+| N1 | fixture de console | `console.error` plantado | página limpa |
+| N2 | fixture de página | `throw` num `setTimeout` (`pageerror`) | página limpa |
+| N3 | axe (crítica) | `<button></button>` sem nome (`button-name`) | mesma página com "Salvar conta" |
+| N4 | axe (séria) | `<p style="color:#fff;background:#ec7a1a">19%</p>` (`color-contrast`, o caso real da `/`) | — |
+| N5 | exceções do axe (função pura `aplicarExcecoes`) | exceção sem violação = "exceção velha"; violação da mesma regra em **outro** elemento continua falhando | violação coberta pela exceção sai da lista |
+| N6 | peso (função pura `compararPeso`) | `jsDoHtml` +1 025; `totalComPrefetch` +2 049; rota sem referência | +1 024 e +2 048 passam; −1 025 vira anotação, não erro |
+| N7 | movimento reduzido | — (controle invertido) | sem `reduce` as animações de view transition duram > 1 ms; com `reduce`, 0 (**medido**: 250 ms × 5 → 0 × 5) |
+
+**Uma vez, na etapa 5 (mutação plantada numa cópia própria, um caso por vez; resultado escrito nesta história, não no
+scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem que diga o que quebrou; depois reverte.
+
+| # | Mutação no site | Tem que falhar |
+| --- | --- | --- |
+| M1 | `migrate` deixa de criar `plano: []` | `migracao` (v1) |
+| M2 | tirar o portão de hidratação do `/comecar` | `migracao` (portão) |
+| M3 | salvar o editor com `novoId()` no lugar do id | `fluxo-principal` e `aparelhos` |
+| M4 | remover aparelho sem limpar o `plano` | `aparelhos` |
+| M5 | "Apagar tudo" deixa as `leituras` | `ajustes` |
+| M6 | trocar de aba sem `startViewTransition` (tirar o `<ViewTransition>` da casca) | `fluxo-principal` (P-qa-1) e `transicoes` |
+| M7 | tirar o bloco `prefers-reduced-motion` das view transitions no `globals.css` | `transicoes` |
+| M8 | `console.error` num componente da `/casa/dicas` | `fluxo-principal` |
+| M9 | `/casa/aparelhos` redireciona para `/casa` | `rotas` |
+| M10 | `revalidate` da `/` para 3600 | `rotas` |
+| M11 | `aria-label` da casa ilustrada volta ao texto antigo | `acessibilidade` (`label-content-name-mismatch`) |
+| M12 | o editor não devolve o foco a quem abriu | `teclado` (P-qa-2) |
+| M13 | `#comodo-<id>` não expande o cômodo | `comodos` (P-qa-3) |
+| M14 | +2 KB num componente de `/sobre` (D15) | `peso-js`, com a tabela no relatório |
+| M15 | `GITHUB_ACTIONS=true ATUALIZAR_PESO_JS=1` | `peso-js` falha e `git diff --exit-code apps/web/e2e/peso-js.json` fica limpo |
+| M16 | `test.only` esquecido, com `GITHUB_ACTIONS=true` | a execução para com "focused item" (`forbidOnly`) |
+
+### Critérios de aprovação (etapa 5)
+
+1. Barreiras do projeto verdes: `pnpm typecheck` (cobre o `e2e/`), `pnpm test`, `pnpm build`, `pnpm audit --audit-level high`.
+2. Numa cópia própria (porta própria): `pnpm test:e2e` verde nos 2 projetos, **0 erro de console**, e
+   `pnpm test:e2e --repeat-each=3` também verde — com `retries: 0`, teste instável se descobre aqui, não no PR de alguém.
+3. Tabela de cobertura acima: linhas 1–21 com o nome do teste e verdes; 22–23 aparecem como pendentes (`fixme`) no relatório.
+4. N1–N7 no relatório como falha esperada; M1–M16 cada uma vermelha com a mensagem certa (resultado nesta história).
+5. Axe: 0 sério/crítico fora de `excecoes-axe.ts`; a lista revisada pela ux; resumo do job com exceções e `incomplete`.
+6. Peso: primeiro registro bate com a HIS-001 (11a do D8; 11b `/` 184 404, `/comecar` 184 404, `/casa` sem casa
+   232 459, com casa 212 267 B, ±0 no mesmo código) e o do runner é comparado no A6.
+7. Critério 4: o commit descartável do A6 deixa `playwright-report/index.html`, captura e `trace.zip` no artefato.
+8. Critério 6: `pnpm test:e2e --list` dá a mesma lista no ambiente de nuvem e no CI.
+9. Olhei as capturas de falha e o trace de pelo menos um teste de cada arquivo (o relatório precisa servir para quem
+   investiga, não só para dizer "vermelho").
+
 ## Perguntas abertas
 
 - [x] `[para: tech-lead]` O e2e roda em todo push ou só em pull request e no `main`? (custo de tempo do CI)
@@ -569,6 +700,40 @@ estados, lista de exceções). O D6 (casos negativos) é revisado na HIS-002b.
   qa a montar.
 - `[para: seguranca]` lista dos 21 casos (critério 7) — **movida para a [HIS-002b](HIS-002b-lint-e-camadas.md)**
   (scrum-master, 2026-10-29); bloqueia a implementação da 002b, não a desta.
+- [ ] `[para: tech-lead]` (qa, 2026-10-29 — **bloqueia o A7** (tirar o `e2e-base`), não o A1; cada item diz em que passo
+  entra) Lacunas do D9/D10 em relação ao `linha-de-base.cjs` e ao manual da HIS-001 (tabela "Cobertura" no "Plano de
+  testes"). Proposta:
+  1. **P-qa-1 · Transição por passo (A2/A3).** No `fluxo-principal`, ler o contador de `startViewTransition` antes e
+     depois de cada ação e afirmar a variação: +1 por passo do cadastro, 0 na troca "Por cômodo/Tudo junto", 0 ao abrir
+     e fechar folhas, +1 por aba e por link — **inclusive `/sobre` → `/`**, que o D7 diz que prova o B6 da HIS-002b e
+     que o D9 não cobre. No `transicoes`, com `reduce`: +1 por troca de aba **e** as animações de view transition com
+     duração 0, lidas no `transition.ready` (**medido**: 250 ms × 5 sem `reduce`, 0 × 5 com; sem espera fixa).
+  2. **P-qa-2 · `teclado.spec.ts` (A3, 2 projetos).** Cadastro só com teclado até `/casa` (foco no `h1` de cada passo,
+     contorno visível em campo, botão e opção); folhas do editor (pelo "Quem mais gasta" e pelos cômodos) e "Anotar
+     conta": Enter abre, foco dentro do `<dialog>`, `Esc` fecha, foco volta para quem abriu; abas por Enter.
+     `test.fixme` para P1 (HIS-108). Sem isso, o que o `manual-qa.cjs` cobria some com o scratchpad.
+  3. **P-qa-3 · `comodos.spec.ts` (A3, 2 projetos).** `#comodo-<id>` pelo link do acompanhamento e direto pelo
+     endereço: a seção existe, `aria-expanded="true"`, está na tela; `?visao=geral` abre no "Painel geral".
+     `test.fixme` para P3 (alinhar ao topo, HIS-108).
+  4. **P-qa-4 · Mais estados no axe (A5).** Além dos 13 do D10: os 7 passos do cadastro depois do estado (cidade,
+     benefício, pessoas, cômodos, um cômodo, revisão, conta), `/casa/comodos?visao=geral` e 3 folhas abertas (editor de
+     aparelho, "Anotar conta", "Anotar leitura") — 24 × 2 projetos. Hoje, de 8 passos do cadastro só o primeiro passa
+     pelo axe, e nenhum diálogo; o cadastro é a primeira coisa que a família faz.
+  5. **P-qa-5 · Peso e rotas (A1/A4).** 11b também de `/casa` **com casa** (a HIS-001 media: 13 arquivos × 15 sem casa;
+     entra como `"/casa (com casa)"` no `peso-js.json`, só `totalComPrefetch`, porque o HTML é o mesmo). No `rotas`,
+     afirmar que as 8 rotas estão em `routes` do `prerender-manifest.json` (a HIS-001 comparava a lista).
+  6. **P-qa-6 · `sanidade.spec.ts` (A1, só celular).** N1–N7 do "Plano de testes" com `test.fail()` (medido: funciona
+     como negativo permanente). Pede que `aplicarExcecoes` (axe) e `compararPeso` (peso) sejam funções puras exportadas
+     do `apoio/`. `SO_NO_CELULAR` ganha `sanidade`; `teclado` e `comodos` rodam nos dois projetos.
+  7. **P-qa-7 · Exceção do axe mais estreita (A5).** `alvo` como seletor CSS, conferido com `elemento.matches(alvo)` no
+     navegador, mais `nos: N` exato. Hoje "trecho do seletor" casa por texto o seletor que o axe gera (muda com o DOM
+     e pode cobrir elementos novos com o mesmo defeito em silêncio); com `nos`, um 6º elemento com contraste ruim falha
+     e um a menos vira "exceção velha".
+  8. **P-qa-8 · (opcional; seguranca opina) Nada sai do aparelho (A1).** A fixture automática também reprova pedido para
+     host diferente de `127.0.0.1` (`page.on("request")`): é o princípio 5 do produto virando barreira — um script de
+     análise ou uma fonte de CDN que entrasse por engano seria pego no PR. Negativo N8: `fetch("https://exemplo.com")`.
+
+  Custo estimado: +0,5 dia na HIS-002a (teclado, cômodos, estados do axe, sanidade); +~40 s no job `e2e`.
 
 ## Conversa da equipe
 
@@ -675,3 +840,27 @@ estados, lista de exceções). O D6 (casos negativos) é revisado na HIS-002b.
   "R$") e me chamar para revisar `excecoes-axe.ts`. **quem orquestra** — a pergunta `[para: ux-acessibilidade]` está
   respondida em "Fluxo e textos" (não marquei a caixa para não editar fora da minha seção). **scrum-master** — a
   HIS-110 já tem a cor; decidir se a pílula passa a usar `faixaDoPeso` (muda a Lavanderia de A para B).
+
+### [qa] 2026-10-29 — D9 e D10 revisados pelo qa, com observações; 8 pontos para o tech-lead; plano de testes escrito
+- O que fiz: li a história inteira (com a nota da ux), a HIS-002b, o ADR-003, a retro e a HIS-001 (§10, R13, plano e
+  resultado da etapa 5). Comparei linha a linha o D9/D10 com o meu `linha-de-base.cjs` e com o roteiro manual da etapa 5
+  (`manual-qa.cjs`, que só existe no scratchpad). Conferi no código: movimento reduzido zera as view transitions
+  (`globals.css`) e o `useValorAnimado` pula para o valor final; as 8 rotas estão no `prerender-manifest.json`.
+  Protótipo em `scratchpad/qa-his002/prova/` (pacotes 1.63.0/4.14.0 da cópia do tech-lead, sem tocar nela nem na branch).
+- Decisões e porquê:
+  - **Revisado pelo qa, com observações**: estrutura, relógio real, nada de R$ afirmado, saída do `e2e-base` com o
+    comparador — de acordo. Observações no "Plano de testes" (datas relativas, fixtures nunca regeradas, `celular` sem
+    `isMobile`, regex nos nomes da ux, axe só depois de conferir a tela certa e com `passes > 0`).
+  - **Lacunas** (tabela "Cobertura", 26 linhas): transição por passo (com `/sobre` → `/`, que o B6 da 002b usa), teclado
+    e foco das folhas, `#comodo-<id>`, `?visao=geral`, axe no cadastro e nas folhas, 11b com casa → pergunta
+    `[para: tech-lead]` com P-qa-1 a P-qa-8. Bloqueiam o A7, não o A1.
+  - **Negativo permanente com `test.fail()`** (N1–N7, `sanidade.spec.ts`): **medido** — barreira inteira → código 0;
+    fixture e axe desligados → "Expected to fail, but passed" e código 1. Mais 16 mutações plantadas (M1–M16) uma vez,
+    na etapa 5, com resultado escrito aqui.
+  - **Saem com decisão:** avisos de `htmlSize` e `sha256` de `public/dados` (serviam ao byte a byte). Zoom 200% e P1/P3
+    ficam como `test.fixme` com HIS-107/HIS-108; P4 sem teste.
+- Arquivos alterados: esta história ("Plano de testes", uma pergunta em "Perguntas abertas", esta nota); a HIS-002b
+  (D6); minha pasta. Nenhum código.
+- Para o próximo: **tech-lead** — responder P-qa-1 a P-qa-8 (P-qa-8 com a **seguranca**). **ux-acessibilidade** — os
+  nomes da tabela entram no `fluxo-principal`/`acessibilidade` por regex; chamo para revisar `excecoes-axe.ts` no A5.
+  **Etapa 4:** eu escrevo os testes (A1–A5) seguindo o plano; o A7 só depois da tabela de cobertura toda verde.

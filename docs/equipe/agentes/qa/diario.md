@@ -10,6 +10,20 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-29 · HIS-002 · revisão do D9/D10 (002a) e do D6 (002b) e plano de testes das duas
+- O que fiz: li as duas histórias, o ADR-003, a retro e o §10/R13 e a etapa 5 da HIS-001; comparei o D9/D10 com o
+  `linha-de-base.cjs` e o `manual-qa.cjs`; conferi no código o movimento reduzido e o manifesto de prerender. Protótipo
+  (pacotes da cópia do tech-lead, só leitura): `test.fail()` como negativo permanente da fixture de console e do axe
+  (inteira → 0; quebrada → código 1), durações de view transition com `reduce` (250 → 0), ESLint `--stdin` com
+  `--max-warnings 0` (aviso → código 1). Escrevi "Plano de testes", perguntas e nota nas duas histórias.
+- Decisões e porquê: **revisado pelo qa, com observações** nas duas. 002a: a tabela do D9 perdia transição por passo
+  (com `/sobre` → `/`), teclado/folhas, `#comodo-<id>`, `?visao=geral`, axe no cadastro e nas folhas, 11b com casa →
+  P-qa-1…8 ao tech-lead, bloqueando só o A7. Saem com decisão: avisos de `htmlSize` e `sha256`. 002b: ids fixos em vez
+  de origens, gêmeos permitidos, caso pela linha de comando, critério 11 automático → P-qa-b1…b3.
+- Arquivos: `docs/equipe/historias/HIS-002-qualidade-automatica.md`, `docs/equipe/historias/HIS-002b-lint-e-camadas.md`,
+  `contexto.md`, este diário. Protótipo em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his002/prova/`.
+- Próximos passos: respostas do tech-lead; etapa 4 da HIS-002a (A1–A5 pelo plano).
+
 ## 2026-10-29 · HIS-001 · etapa 5: comparação, 11a/11b e testes manuais — aprovado
 - O que fiz: build próprio de `182f355` numa cópia isolada (o `.next` do repositório foi reconstruído por outro agente no
   meio do teste) e de `57700ab` em outra; barreiras verdes; `capturar` + `comparar` → "nada mudou"; 11a/11b no
