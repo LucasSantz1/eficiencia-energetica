@@ -628,10 +628,101 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
 
 ## Resultado do passo 0
 
-_(quem orquestra cola aqui o resumo do job "Diagnosticar dados (sem gravar)", que roda no push da branch.)_
+_(quem orquestra, 30/10: execução **41095055344**, verde, no commit `f88cfcd`. O log e o `$GITHUB_STEP_SUMMARY` dão 403
+daqui; o resumo abaixo foi lido pelas anotações do job, que entraram nos commits `402367a` e `f88cfcd`. Colado como
+veio, só com os títulos um nível abaixo.)_
 
-**O que conferir no resumo do job** (página da execução, `$GITHUB_STEP_SUMMARY`; o mesmo texto está no log do passo
-"Diagnosticar"):
+### Diagnóstico dos dados (HIS-111), 2026-10-30
+
+Nada foi gravado: este job só lê.
+
+#### Portão do passo 0
+
+- (a) C2: 12 empresas vencidas (CNPJ só delas) ainda são donas de conjunto; reportaram em 2013 ou depois: CERR (2013), CFLO (2014), CNEE (2014), CPFL LESTE PAULI (2014), CPFL MOCOCA (2014), CPFL SANTA CRUZ (2014), CPFL SUL PAULIST (2014), EBO (2014), EDEVP (2014), EEB (2014), ENF (2014), RGE SUL (2014). **C2 não confirmada para essas: o backend revê o D3.**
+- (b) V7: 5 sucessoras no sucessoes.json; todas com um só valor B1 na vigência. **As linhas ENF e EBO entram.**
+- (c) CNPJs com mais de uma sigla: 53859112000169 (CPFL JAGUARI, CPFL Santa Cruz).
+- (d) D3: 228 cidades em que o vínculo extinto é o único (fica, com aviso): EQUATORIAL PI (222), ELETROCAR (3), RGE (2), Neoenergia PE (1); 63 vínculos extintos saem porque a cidade tem outro recente.
+
+#### Empresas com tarifa vencida
+
+| Sigla | CNPJ | Fim da vigência | Mesmo CNPJ de vigente | Conjuntos (dona) | Último ano (máx. 2014) | Municípios | Com conjunto recente de outra |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| CERR | 05938444000196 | 2016-12-31 | não | 14 | 2013 | 14 | 0 |
+| CFLO | 77882504000107 | 2017-07-11 | não | 4 | 2014 | 1 | 1 |
+| CNEE | 61416244000144 | 2017-07-11 | não | 19 | 2014 | 16 | 11 |
+| CPFL JAGUARI | 53859112000169 | 2018-03-21 | sim | 2 | 2014 | 2 | 0 |
+| CPFL LESTE PAULI | 61015582000174 | 2018-03-21 | não | 5 | 2014 | 7 | 0 |
+| CPFL MOCOCA | 52503802000118 | 2018-03-21 | não | 2 | 2014 | 4 | 0 |
+| CPFL SANTA CRUZ | 61116265000144 | 2018-03-21 | não | 49 | 2014 | 27 | 6 |
+| CPFL SUL PAULIST | 60855608000120 | 2018-03-21 | não | 8 | 2014 | 5 | 0 |
+| EBO | 08826596000195 | 2023-08-27 | não | 14 | 2014 | 9 | 9 |
+| EDEVP | 07297359000111 | 2017-07-11 | não | 25 | 2014 | 27 | 0 |
+| EEB | 60942281000123 | 2017-07-11 | não | 22 | 2014 | 16 | 1 |
+| ENF | 33249046000106 | 2023-06-21 | não | 11 | 2014 | 1 | 1 |
+| RGE SUL | 02016440000162 | 2019-06-18 | não | 189 | 2014 | 127 | 53 |
+
+#### CNPJ com mais de uma sigla
+
+| CNPJ | Sigla | Última vigência | Vigente hoje |
+| --- | --- | --- | --- |
+| 53859112000169 | CPFL JAGUARI | 2017-03-22 a 2018-03-21 | não |
+| 53859112000169 | CPFL Santa Cruz | 2026-04-22 a 2027-04-21 | sim |
+
+#### Mais de um valor B1 na vigência (V7)
+
+| Sigla | CNPJ | Valores | Sucessora no sucessoes.json |
+| --- | --- | --- | --- |
+| nenhuma |  |  |  |
+
+#### Montagem da branch
+
+- Distribuidoras: 102; municípios sem distribuidora: 10; agentes sem tarifa: nenhum.
+- Renomeações por CNPJ (D1): cpfl-jaguari → cpfl-santa-cruz (2), rge-sul → rge (127).
+- Sucessões aplicadas (D2): EDEVP → ESS (27), CNEE → ESS (16), EEB → ESS (16), CERR → Âmbar Roraima (14), EBO → EPB (9), CPFL LESTE PAULI → CPFL Santa Cruz (7), CPFL SUL PAULIST → CPFL Santa Cruz (5), CPFL MOCOCA → CPFL Santa Cruz (4), CFLO → ESS (1), ENF → EMR (1).
+- Vínculos extintos descartados (D3): RGE (20), ELETROCAR (16), CERRP (13), CEMIG-D (3), CEPRAG (3), Neoenergia PE (2), CERTEL ENERGIA (1), COELBA (1), EMR (1), ENEL RJ (1), EQUATORIAL PI (1), PACTO ENERGIA PR (1).
+- Tarifas descartadas por vencimento (D4): CERR (2016-12-31), CFLO (2017-07-11), CNEE (2017-07-11), CPFL JAGUARI (2018-03-21), CPFL LESTE PAULI (2018-03-21), CPFL MOCOCA (2018-03-21), CPFL SANTA CRUZ (2018-03-21), CPFL SUL PAULIST (2018-03-21), EBO (2023-08-27), EDEVP (2017-07-11), EEB (2017-07-11), ENF (2023-06-21), RGE SUL (2019-06-18).
+- Tarifas vencidas em uso, até 6 meses (aviso): nenhuma.
+- Sucessoras candidatas (só informação): CPFL SANTA CRUZ → CPFL Santa Cruz.
+- substituidas: cerr → ambar-roraima, cflo → ess, cnee → ess, cpfl-jaguari → cpfl-santa-cruz, cpfl-leste-pauli → cpfl-santa-cruz, cpfl-mococa → cpfl-santa-cruz, cpfl-sul-paulist → cpfl-santa-cruz, ebo → epb, edevp → ess, eeb → ess, enf → emr, rge-sul → rge.
+- **Coerência (não passa com --forcar; critério 3):** ok
+- Validação (passa com --forcar): ok
+
+#### Comparação com os arquivos publicados
+
+- Municípios lidos: 5571; mudam: **285** (BA 2, GO 1, MG 15, PB 11, PI 1, PR 4, RJ 1, RR 14, RS 161, SC 3, SP 72).
+- Critério 2: 256 municípios tinham empresa vencida; ainda com uma: **45**; ficam sem distribuidora: **0**.
+
+| Cidade | Esperada em 1º | Antes | Depois | Confere |
+| --- | --- | --- | --- | --- |
+| Alegrete (RS) | rge | rge-sul | rge | sim |
+| Assis (SP) | ess | edevp | ess | sim |
+| Bragança Paulista (SP) | ess | eeb | ess | sim |
+| Mococa (SP) | cpfl-santa-cruz | cpfl-mococa | cpfl-santa-cruz | sim |
+| Itapetininga (SP) | cpfl-santa-cruz | cpfl-sul-paulist | cpfl-santa-cruz | sim |
+| Caracaraí (RR) | ambar-roraima | cerr | ambar-roraima | sim |
+| Guarapuava (PR) | — | copel-dis, cflo | copel-dis, ess | ver ordem |
+| Nova Friburgo (RJ) | — | enel-rj, enf | emr, enel-rj | ver ordem |
+| Campina Grande (PB) | — | epb, ebo | epb | ver ordem |
+
+### Análise do backend (30/10), com o código e as fixtures
+
+| Ponto | O que é | O que fiz |
+| --- | --- | --- |
+| Portão (a), "C2 não confirmada" | O ano máximo do arquivo de conjuntos é **2014**: o arquivo de atributos para ali, e a ANEEL escreve a sigla de hoje até nas linhas antigas (dominio-energia). O dono de cada conjunto é o de 2014. A C2 existe, mas não como "conjunto que parou de reportar": todo conjunto parou em 2014. Quem troca a empresa que acabou é o D1/D2; se faltar uma linha, o D4 + V5 param a rotina | O resumo passa a mostrar a coluna do ano, as linhas por ano e os conjuntos pelo último ano, e avisa quando o arquivo é velho (`cc51fcb`) |
+| Portão (d), EQUATORIAL PI (222) e mais 63 vínculos tirados | **Defeito de regra.** O D3 olhava só o ano do conjunto e marcava como extinta uma empresa **vigente** (Equatorial PI = antiga Cepisa, mesmo CNPJ 06840748000189). Na mesma conta, tirava 63 vínculos de ELETROCAR, RGE, CERRP, CEMIG-D, COELBA, ENEL RJ e outras, mudando cidades certas (daí 285 em vez de ~227) | D3 só vale para vínculo que **não chega a nenhuma tarifa publicada** (`8e0d990`). Teste: conjunto antigo da CEMIG-D em Uberaba e Uberlândia; ela fica e não entra no aviso |
+| Critério 2, "ainda com uma: 45" | **Falso positivo do diagnóstico.** A sigla vencida "CPFL SANTA CRUZ" (61116265000144) dá o id `cpfl-santa-cruz`, o mesmo da CPFL Santa Cruz de hoje (53859112000169). As cidades da sucessora contavam como "com vencida": 27 + 7 + 5 + 4 + 2 = 45. O total de 256 = 227 + 29 pelo mesmo motivo | A conta ignora o id vencido que a montagem publica e lista o caso à parte (`cc51fcb`) |
+| A antiga CPFL SANTA CRUZ | **Defeito de regra.** Ela chegava à CPFL Santa Cruz de hoje só pelo nome: o `acharTarifa` caía na sigla sem conferir o CNPJ. A troca estava certa, mas sem ato, contra o ADR-005 (item 2) | A sigla só liga com a mesma raiz de CNPJ ou sem CNPJ; o recusado fica sem tarifa (V5) e entra em `ligacoesPelaSiglaRecusadas` (`2804a5c`). A linha 11 do `sucessoes.json`, confirmada pelo dominio-energia (REA 6.723/2017), põe as 27 cidades de volta pela sucessão (`3d916ce`). Sem CNPJ, a sigla de uma empresa publicada não segue sucessão (`0e8167b`) |
+| CERR | Ato melhor (dominio-energia) | `ato` = Despacho MME s/n, de 23/09/2016, com a fonte da ANEEL na Câmara (`3d916ce`) |
+| "Ver ordem" | Campina Grande: `epb` uma vez só, certo. Nova Friburgo: `emr` antes de `enel-rj`, certo (a cidade era da ENF). **Guarapuava: `copel-dis` antes de `ess`**, mas a cidade era da CFLO (hoje ESS). A ordem vem de "quem atende mais cidades", e a Copel ganha | Não mexi: é risco aceito pelo dominio-energia, não veto. O qa anota no h7; pergunta abaixo |
+| Nova Santa Rita (PI) com `certaja` | Parece código IBGE trocado no IndQual (a Certaja é do RS) | Fora desta história; pergunta ao scrum-master abaixo |
+
+**O diagnóstico precisa rodar de novo** (o push da branch roda). Esperado com o código de agora: portão (d) com 0
+cidades e 0 vínculos tirados (no resumo de 30/10, toda ligação chegou a uma tarifa: "agentes sem tarifa: nenhum");
+sucessões aplicadas com a linha nova "CPFL SANTA CRUZ → CPFL Santa Cruz (27)"; "mesma sigla, outro CNPJ: nenhuma";
+critério 2 com 227 e "ainda com uma: **0**"; "mudam" perto de 227, sem a mudança do PI; coerência e validação "ok".
+Se aparecer uma ligação recusada ou um agente sem tarifa, é uma sucessão que falta: a sigla vai para o dominio-energia.
+
+**O que conferir no resumo do job** (vale para cada nova execução):
 
 1. O job termina verde, e o passo "Nada mudou no repositório" passa (nada foi gravado).
 2. **Portão (a):** a linha diz "**C2 confirmada.**". Se disser "não confirmada para essas", a lista mostra quais
@@ -699,6 +790,19 @@ _(quem orquestra cola aqui o resumo do job "Diagnosticar dados (sem gravar)", qu
   roda na Action pelo `push` da branch, que quem orquestra faz. Ver a nota do scrum-master)_ Prioridade e sprint. O pedido do dominio-energia é prioridade alta. Fazer um corte só ou
   dois (ver "Corte possível")? E lembrar que a rede do ambiente de nuvem não alcança a ANEEL: o passo 0 precisa da
   Action ou de uma máquina com acesso.
+
+- [ ] `[para: scrum-master]` (não bloqueia; do passo 0) Criar uma história futura: **cidade com distribuidora de
+  outra UF**. Nova Santa Rita (PI, 2207959) aparece com `certaja`, cooperativa do RS; parece código IBGE trocado no
+  IndQual com Nova Santa Rita (RS). Proposta: a rotina tira (e conta no relatório) a distribuidora que não atende a UF
+  da cidade. Fica fora da HIS-111.
+- [ ] `[para: dominio-energia]` (não bloqueia; risco já aceito) **Guarapuava (PR):** a lista fica `copel-dis, ess`. A
+  ordem é "quem atende mais cidades", e a cidade era da CFLO (hoje ESS). A família vê a Copel marcada primeiro no
+  cadastro. Basta o qa anotar no h7, ou vale uma regra (por exemplo, a sucessora da empresa que tinha a sede na cidade)
+  numa história própria?
+- [ ] `[para: tech-lead]` (para ciência) O D3 do T2 mudou depois do passo 0: o vínculo "extinto" só conta quando **não
+  chega a nenhuma tarifa publicada**. Motivo: o arquivo de conjuntos para em 2014, e o ano sozinho marcava empresas
+  vigentes (Equatorial PI). A regra segura continua. A sigla também não liga mais CNPJs de raiz diferente (ADR-005,
+  item 2). Se concordar, o T2 e o ADR-005 ganham uma linha cada.
 
 ## Conversa da equipe
 
@@ -952,3 +1056,32 @@ _(quem orquestra cola aqui o resumo do job "Diagnosticar dados (sem gravar)", qu
 
   Não pus "Energisa" na frente: não achei fonte oficial da marca usada na conta entre 2014 e 2017.
 - **Próximo:** backend (teste de 11 linhas e o diagnóstico do critério 2), depois o qa.
+
+### [backend] 2026-10-30 — passo 0 analisado: duas regras corrigidas, o diagnóstico conta certo, precisa rodar de novo
+- **O que fiz:** colei o resumo da execução 41095055344 em "Resultado do passo 0" e analisei cada ponto com o código
+  e as fixtures (tabela lá). Conferi os commits `402367a` e `f88cfcd` das anotações: o texto sai em linhas inteiras,
+  escapado (R2), até 9 anotações de 3.500 caracteres; o resumo de hoje coube.
+- **Correções, um commit cada (branch `his-111-tarifas-vencidas`, sem push):**
+  - `8e0d990` D3: empresa com tarifa publicada nunca é extinta. Era o "EQUATORIAL PI (222)" e os 63 vínculos tirados.
+  - `2804a5c` D2: a sigla não liga um vínculo a uma tarifa de outro CNPJ (raiz diferente). Campo novo
+    `ligacoesPelaSiglaRecusadas` no relatório e aviso no log.
+  - `cc51fcb` diagnóstico: o critério 2 ignora o id vencido que a montagem publica (era o "45"). O portão (a) mostra
+    a coluna e os anos do arquivo de conjuntos.
+  - `3d916ce` linha 11 do `sucessoes.json` (antiga CPFL SANTA CRUZ) e o ato novo da CERR, do dominio-energia; o
+    teste espera 11 linhas. Os arquivos do dominio-energia foram no mesmo commit.
+  - `0e8167b` D2: sem CNPJ, a sigla de uma empresa publicada não segue linha de sucessão (aviso do dominio-energia).
+- **Decisões e porquê:**
+  - O D3 não pode usar só o ano: o arquivo para em 2014. Ele fica para o vínculo sem tarifa, com a regra segura.
+  - "Mesma empresa" pela sigla exige a mesma raiz de CNPJ (8 dígitos = mesma pessoa jurídica). Na dúvida, a rotina
+    para (V5), como diz o ADR-005.
+  - Guarapuava e Nova Santa Rita ficam fora: perguntas abertas.
+- **Como verifiquei:** `pnpm typecheck`, `pnpm test` (dados: 74 → 81; core: 48) e `pnpm build` verdes. Os testes novos
+  são CEMIG-D vigente com conjunto antigo, a CPFL SANTA CRUZ com e sem linha, a filial com a mesma raiz e o critério 2
+  com id repetido. Sem os CSVs reais: a ANEEL dá 403 daqui.
+- **Variáveis de ambiente:** nenhuma nova.
+- **Para o próximo:**
+  - **Quem orquestra:** push da branch. O diagnóstico **precisa rodar de novo**; o esperado está em "Resultado do
+    passo 0".
+  - **qa (h7):** Guarapuava na ordem `copel-dis, ess`; o critério 2 com 0.
+  - **seguranca:** o R3 ficou mais forte. A sigla igual com CNPJ de outra raiz não troca mais de empresa.
+  - **tech-lead:** a mudança do D3 no T2 e no ADR-005.

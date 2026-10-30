@@ -10,6 +10,25 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · passo 0: D3 e sigla corrigidos, critério 2 do diagnóstico, linha da CPFL SANTA CRUZ
+- O que fiz:
+  - Colei o resumo da execução 41095055344 na história e analisei cada ponto.
+  - Fiz cinco commits: `8e0d990` (D3), `2804a5c` (sigla × CNPJ), `cc51fcb` (diagnóstico), `3d916ce` (linha 11 e
+    ato da CERR, com os arquivos do dominio-energia) e `0e8167b` (sigla sem CNPJ).
+  - `pnpm typecheck`, `pnpm test` (dados 81, core 48) e `pnpm build` verdes.
+- Decisões e porquê:
+  - O arquivo de conjuntos para em 2014. Por isso o ano sozinho marcava empresa vigente como extinta. Agora o D3 só
+    olha o vínculo sem tarifa publicada.
+  - Nome igual não é mesma empresa: a sigla exige a mesma raiz de CNPJ (ADR-005, item 2).
+  - O "45" era o id `cpfl-santa-cruz`, que é o mesmo da sigla vencida e da vigente (27 + 7 + 5 + 4 + 2).
+- Lição: um `git add -A packages/dados` levou para o meu commit uma edição do dominio-energia feita ao mesmo tempo
+  no `sucessoes.json`. Desfiz o commit local (nada tinha subido) e refiz sem ela. Com outro agente na mesma
+  worktree, adicionar arquivo por arquivo.
+- Arquivos: `packages/dados/src/montar.ts`, `rotina.ts`, `diagnostico.ts`, `aneel/municipios.ts`,
+  `base/sucessoes.json`, as fixtures `fixtures/sucessao/conjuntos-*.csv`, os testes `montagem-sucessao`, `rotina`,
+  `diagnostico` e `sucessoes`, e a história.
+- Próximos passos: rodar o diagnóstico de novo, depois o h7 (qa) e o h8.
+
 ## 2026-10-30 · HIS-111 · h0–h5: diagnóstico, sucessões, D1–D4, barreiras V1–V10 e core
 - O que fiz:
   - Seis commits na branch `his-111-tarifas-vencidas`, todos com `pnpm typecheck` e `pnpm test` verdes; `pnpm build`

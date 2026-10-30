@@ -24,6 +24,10 @@
   - `pnpm dados:diagnosticar` e `diagnosticar-dados.yml`: o passo 0, só leitura.
   - Core: `acharDistribuidora`, `distribuidorasDaCidade` e `trocaDeDistribuidora`.
   - `anotacoes.ts`: todo texto da ANEEL que vai para o log ou para o resumo passa por escape (R2).
+  - **Passo 0 (execução 41095055344, 30/10) analisado.** O arquivo de conjuntos da ANEEL para em **2014**. Depois
+    dele: D3 só para vínculo sem tarifa publicada; a sigla não liga CNPJs de raiz diferente
+    (`ligacoesPelaSiglaRecusadas`); linha 11 do `sucessoes.json` (antiga CPFL SANTA CRUZ); critério 2 do diagnóstico
+    sem o falso positivo do id `cpfl-santa-cruz`. Commits `8e0d990`, `2804a5c`, `cc51fcb`, `3d916ce`, `0e8167b`.
 - A rede do ambiente de nuvem **não alcança** `dadosabertos.aneel.gov.br` (o proxy devolve 403). Para usar os CSVs
   brutos, só pela Action ou numa máquina com acesso.
 
@@ -38,8 +42,11 @@
   candidata no relatório.
 - (HIS-111) Barreiras de número errado ou de contrato (V1–V4, V7–V10) não passam com `--forcar`. As de cobertura
   (V5, V6 e as de antes) passam.
-- (HIS-111) D3 com a regra segura: o vínculo extinto que leva a uma sucessora vale; os outros só saem quando a
-  cidade tem outro vínculo recente.
+- (HIS-111, depois do passo 0) D3: um vínculo só é "extinto" quando o conjunto parou antes de `ano máximo − 1`
+  **e** ele não chega a nenhuma tarifa publicada. Com a regra segura, ele só sai quando a cidade tem outro vínculo que
+  fica. O ano sozinho não serve: o arquivo de conjuntos para em 2014.
+- (HIS-111, ADR-005 item 2) A sigla só liga um vínculo a uma tarifa quando um dos lados não tem CNPJ ou os dois têm a
+  mesma raiz (8 dígitos). Nome igual com outra raiz fica sem tarifa (V5) e entra em `ligacoesPelaSiglaRecusadas`.
 - (HIS-111) V4 = sucessora publicada (vigente ou dentro dos 6 meses do D4). Pergunta aberta ao tech-lead.
 - (HIS-111) Texto de fora no log do Actions: `anotacao()` para `::notice`/`::warning` e `umaLinha()` para o resto.
   O resumo do job usa `celulaMarkdown()` e `limitarResumo()`.
@@ -47,8 +54,10 @@
 ## Pendências
 
 - **HIS-111:**
-  - esperar o resultado do passo 0 (push da branch por quem orquestra). Se o portão reprovar: ajustar a folga do D3
-    (`ANOS_DE_FOLGA_DO_CONJUNTO`) ou tirar as linhas ENF e EBO (V7) do `sucessoes.json`;
+  - o diagnóstico precisa rodar de novo (push da branch). Esperado: portão (d) com 0, "ainda com uma" = 0, "mudam"
+    perto de 227, "mesma sigla, outro CNPJ: nenhuma", coerência e validação "ok";
+  - perguntas abertas na história: Guarapuava (ordem, dominio-energia), Nova Santa Rita PI com `certaja` (história
+    futura, scrum-master), D3 novo no T2/ADR-005 (tech-lead);
   - no h8: rodar o `atualizar-dados.yml` sem `--forcar`; trocar o gatilho `push` do `diagnosticar-dados.yml` por
     `pull_request` com `paths: [packages/dados/**]` (R4); ligar o teste dos publicados (V1, V2, V3, V8).
 - Para a a6 da HIS-003 (fora da HIS-111): o passo "Publicar resumo" do `atualizar-dados.yml` põe as últimas 120
