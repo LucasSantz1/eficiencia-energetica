@@ -148,6 +148,36 @@ describe("V9 e V10: a linha bate com a ANEEL (R3 da seguranca)", () => {
     expect(erros).toEqual(['V10: sucessoes[0] (EEB): a sigla da antiga "EEB" não é a que a ANEEL usa para 07297359000111 (EDEVP).']);
   });
 
+  // 3ª execução do passo 0: a sigla "RGE" tem dois CNPJs na ANEEL (a RGE antiga até 2019 e a RGE de hoje, ex-RGE Sul).
+  describe("mesma sigla com dois CNPJs (RGE)", () => {
+    const linhaRge = (mudancas: Record<string, unknown> = {}) =>
+      linha({ cnpjAntigo: "02016439000138", siglaAntiga: "RGE", cnpjSucessor: "02016440000162", siglaSucessora: "RGE", desde: "2019-01-01", ...mudancas });
+
+    it("o resumo dos agentes separa a RGE antiga da de hoje, cada uma com a sua vigência", async () => {
+      const rge = (await dadosDaAneel()).agentesDaTarifa.filter((a) => a.sigla === "RGE");
+      expect(rge.map((a) => [a.cnpj, a.ultimoFim, a.vigente])).toEqual([
+        ["02016439000138", "2019-04-18", false],
+        ["02016440000162", "2027-06-18", true],
+      ]);
+    });
+
+    it("a linha certa passa no V9 e no V10, sem aviso do desde", async () => {
+      expect(conferirSucessoesNaAneel(ler(linhaRge()), await dadosDaAneel())).toEqual({ erros: [], avisos: [] });
+    });
+
+    it("V9 continua reprovando se o CNPJ antigo tiver tarifa vigente", async () => {
+      const aneel = await dadosDaAneel();
+      const comAntigaVigente = { ...aneel, agentesDaTarifa: aneel.agentesDaTarifa.map((a) => (a.cnpj === "02016439000138" ? { ...a, vigente: true, ultimoInicio: "2026-06-19" } : a)) };
+      const { erros } = conferirSucessoesNaAneel(ler(linhaRge()), comAntigaVigente);
+      expect(erros).toEqual([expect.stringMatching(/^V9: sucessoes\[0\] \(RGE\): a empresa antiga ainda tem tarifa vigente na ANEEL \(RGE, desde 2026-06-19\)/)]);
+    });
+
+    it("V10 continua reprovando sigla que a ANEEL não usa para o CNPJ da sucessora", async () => {
+      const { erros } = conferirSucessoesNaAneel(ler(linhaRge({ siglaSucessora: "CEEE" })), await dadosDaAneel());
+      expect(erros).toEqual(['V10: sucessoes[0] (RGE): a sigla da sucessora "CEEE" não é a que a ANEEL usa para 02016440000162 (RGE, RGE SUL).']);
+    });
+  });
+
   it("avisa, sem parar, quando o desde está a mais de 12 meses do fim da antiga", async () => {
     const sucessoes = ler(linha({ desde: "2018-08-01" }));
     const { erros, avisos } = conferirSucessoesNaAneel(sucessoes, await dadosDaAneel());

@@ -206,20 +206,35 @@ export interface AgenteDaTarifa {
   vigente: boolean;
 }
 
-/** Resume as linhas B1 por sigla, sem escolher valor: serve para saber quem existe, com qual CNPJ e até quando. */
+/**
+ * Resume as linhas B1 por sigla **e CNPJ**, sem escolher valor: serve para saber quem existe, com qual CNPJ e até quando.
+ * A mesma sigla pode ter dois CNPJs: "RGE" é a RGE antiga (02016439000138) até 2019 e a RGE de hoje (02016440000162,
+ * ex-RGE Sul) depois. Juntar as duas dava à antiga a vigência de hoje, e o V9 e o V10 reprovavam a linha certa da
+ * sucessão (passo 0, 3ª execução). Linha sem CNPJ entra no grupo da sigla quando ela tem um CNPJ só.
+ */
 export function resumirAgentes(linhas: Linha[], c: ColunasTarifas, hoje: string): AgenteDaTarifa[] {
-  const porSigla = new Map<string, { cnpj?: string; vigencias: { inicio: string; fim?: string }[] }>();
+  type Grupo = { sigla: string; cnpj?: string; vigencias: { inicio: string; fim?: string }[] };
+  const grupos = new Map<string, Grupo>();
   for (const linha of linhas) {
     const sigla = (linha[c.agente] ?? "").trim();
     const inicio = dataISO(linha[c.inicio]);
     if (!sigla || semValor(sigla) || normalizar(sigla) === "nao informado" || !inicio) continue;
-    const atual = porSigla.get(sigla) ?? { vigencias: [] };
-    atual.cnpj ??= c.cnpj ? soDigitos(linha[c.cnpj]) || undefined : undefined;
+    const cnpj = c.cnpj ? soDigitos(linha[c.cnpj]) || undefined : undefined;
+    const chave = `${sigla}\u0000${cnpj ?? ""}`;
+    const atual = grupos.get(chave) ?? { sigla, cnpj, vigencias: [] };
     atual.vigencias.push({ inicio, fim: c.fim ? dataISO(linha[c.fim]) : undefined });
-    porSigla.set(sigla, atual);
+    grupos.set(chave, atual);
+  }
+  for (const [chave, grupo] of grupos) {
+    if (grupo.cnpj !== undefined) continue;
+    const comCnpj = [...grupos.values()].filter((g) => g.sigla === grupo.sigla && g.cnpj !== undefined);
+    const unico = comCnpj.length === 1 ? comCnpj[0] : undefined;
+    if (!unico) continue;
+    unico.vigencias.push(...grupo.vigencias);
+    grupos.delete(chave);
   }
   const agentes: AgenteDaTarifa[] = [];
-  for (const [sigla, { cnpj, vigencias }] of porSigla) {
+  for (const { sigla, cnpj, vigencias } of grupos.values()) {
     const iniciadas = vigencias.filter((v) => v.inicio <= hoje);
     const base = iniciadas.length > 0 ? iniciadas : vigencias;
     const ultimoInicio = base.reduce((maior, v) => (v.inicio > maior ? v.inicio : maior), base[0]?.inicio ?? "");
@@ -234,7 +249,7 @@ export function resumirAgentes(linhas: Linha[], c: ColunasTarifas, hoje: string)
       vigente: iniciadas.some((v) => !v.fim || v.fim >= hoje),
     });
   }
-  return agentes.sort((a, b) => a.sigla.localeCompare(b.sigla));
+  return agentes.sort((a, b) => a.sigla.localeCompare(b.sigla) || (a.cnpj ?? "").localeCompare(b.cnpj ?? ""));
 }
 
 export function soDigitos(texto: string | undefined): string {
