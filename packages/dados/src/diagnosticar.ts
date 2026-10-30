@@ -9,7 +9,7 @@
  * Sai com 1 só quando não consegue baixar ou ler os dados.
  */
 import { appendFile } from "node:fs/promises";
-import { limitarResumo, umaLinha } from "./anotacoes";
+import { anotacoesDoResumo, limitarResumo, umaLinha } from "./anotacoes";
 import { diagnosticar } from "./diagnostico";
 import { PASTA_SAIDA } from "./escrever";
 import { arquivosNaPasta, PASTA_CACHE } from "./fontes";
@@ -28,6 +28,8 @@ async function main() {
   for (const linha of markdown.split("\n")) console.log(umaLinha(linha));
   const resumo = process.env.GITHUB_STEP_SUMMARY;
   if (resumo) await appendFile(resumo, limitarResumo(markdown) + "\n", "utf8");
+  // Na Action, o resumo também vira anotações, que a equipe consegue ler pela API (o log dá 403 fora do GitHub).
+  if (process.env.GITHUB_ACTIONS === "true") for (const linha of anotacoesDoResumo(markdown)) console.log(linha);
 }
 
 main().catch((erro) => {

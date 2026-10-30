@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anotacao, celulaMarkdown, escaparDadoDeComando, LIMITE_RESUMO_BYTES, limitarResumo, umaLinha } from "../src/anotacoes";
+import { anotacao, anotacoesDoResumo, celulaMarkdown, escaparDadoDeComando, LIMITE_RESUMO_BYTES, limitarResumo, MAXIMO_ANOTACOES_DO_RESUMO, umaLinha } from "../src/anotacoes";
 
 // HIS-111, R2 da seguranca: texto da ANEEL não pode virar comando do runner nem quebrar o resumo do job.
 describe("saída para o GitHub Actions", () => {
@@ -34,5 +34,22 @@ describe("saída para o GitHub Actions", () => {
     expect(Buffer.byteLength(cortado, "utf8")).toBeLessThanOrEqual(LIMITE_RESUMO_BYTES);
     expect(cortado).not.toContain("\uFFFD");
     expect(cortado).toContain("resumo cortado");
+  });
+});
+
+describe("anotacoesDoResumo", () => {
+  it("corta o resumo em linhas inteiras, escapa e não passa de 9 anotações", () => {
+    const linhas = Array.from({ length: 4000 }, (_, i) => `| linha ${i} | 100% |`);
+    const anotacoes = anotacoesDoResumo(linhas.join("\n"));
+    expect(anotacoes.length).toBeLessThanOrEqual(MAXIMO_ANOTACOES_DO_RESUMO);
+    expect(anotacoes[0]).toMatch(/^::notice title=Diagnóstico 1\/\d+::\| linha 0 \| 100%25 \|%0A\| linha 1 /);
+    for (const a of anotacoes) expect(a.split("\n")).toHaveLength(1);
+  });
+
+  it("não deixa texto de fora abrir um comando novo no log", () => {
+    const [a] = anotacoesDoResumo("RGE\n::add-mask::segredo\r\nfim");
+    expect(a).toBeDefined();
+    expect(a?.split("\n")).toHaveLength(1);
+    expect(a).toContain("%0A::add-mask::segredo");
   });
 });

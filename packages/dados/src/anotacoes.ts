@@ -54,3 +54,31 @@ export function limitarResumo(texto: string): string {
   const cortado = new TextDecoder("utf-8").decode(bytes.subarray(0, espaco)).replace(/\uFFFD+$/, "");
   return cortado + aviso;
 }
+
+/** O GitHub mostra até 10 anotações de cada tipo por passo; 9 deixam uma livre para avisos da própria rotina. */
+export const MAXIMO_ANOTACOES_DO_RESUMO = 9;
+/** Tamanho de cada pedaço do resumo numa anotação (caracteres antes do escape). */
+export const TAMANHO_PEDACO_ANOTACAO = 6000;
+
+/**
+ * O resumo do diagnóstico também sai como anotações `::notice`. O log do job e o `$GITHUB_STEP_SUMMARY` não podem ser
+ * lidos pela API a partir do ambiente da equipe (o download do log dá 403), mas as anotações podem
+ * (`check-runs/{id}/annotations`), como já fazia a rotina diária. O texto é cortado em linhas inteiras e escapado (R2).
+ */
+export function anotacoesDoResumo(markdown: string): string[] {
+  const pedacos: string[] = [];
+  let atual = "";
+  for (const linha of markdown.split("\n")) {
+    const limpa = umaLinha(linha);
+    if (atual && atual.length + limpa.length + 1 > TAMANHO_PEDACO_ANOTACAO) {
+      pedacos.push(atual);
+      atual = "";
+    }
+    atual = atual ? `${atual}\n${limpa.slice(0, TAMANHO_PEDACO_ANOTACAO)}` : limpa.slice(0, TAMANHO_PEDACO_ANOTACAO);
+  }
+  if (atual) pedacos.push(atual);
+  const total = pedacos.length;
+  return pedacos
+    .slice(0, MAXIMO_ANOTACOES_DO_RESUMO)
+    .map((pedaco, i) => anotacao("notice", `Diagnóstico ${i + 1}/${total}`, pedaco));
+}
