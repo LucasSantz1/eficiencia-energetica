@@ -10,6 +10,7 @@
  */
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { Distribuidora } from "@ee/core";
 import { celulaMarkdown } from "./anotacoes";
 import type { AgenteDaTarifa, SelecaoDeTarifas } from "./aneel/tarifas";
 import { lerFontes, type ArquivosDasFontes, type Fontes } from "./fontes";
@@ -64,6 +65,10 @@ export interface ComparacaoComPublicados {
 export interface DadosDoDiagnostico {
   hoje: string;
   anoMaisRecenteDosConjuntos: number;
+  /** Coluna usada como ano no arquivo de conjuntos, linhas por ano e conjuntos pelo último ano do dono (portão a). */
+  anosDosConjuntos: { coluna?: string; linhasPorAno: { ano: number; linhas: number }[]; conjuntosPorUltimoAno: { ano: number; conjuntos: number }[] };
+  /** Empresa vencida com o mesmo id de uma publicada (CPFL SANTA CRUZ antiga e a de hoje): o critério 2 não a conta. */
+  vencidasComIdPublicado: { sigla: string; cnpj?: string; id: string; publicada: string; cnpjDaPublicada?: string }[];
   vencidas: VencidaNoDiagnostico[];
   cnpjsComVariasSiglas: { cnpj: string; agentes: AgenteDaTarifa[] }[];
   /** V7: todas as siglas com mais de um valor na vigência, e se cada uma é sucessora em `sucessoes.json`. */
@@ -109,10 +114,13 @@ export async function diagnosticar(opcoes: OpcoesDoDiagnostico): Promise<{ dados
   const { agentes, selecao } = fontes.tarifas;
   const vencidas = agentes.filter((a) => !a.vigente);
   const publicados = await lerMunicipiosPublicados(opcoes.pastaPublicada);
+  const { idsVencidos, vencidasComIdPublicado } = separarIdsVencidos(vencidas, montagem.tarifas.distribuidoras);
 
   const dados: DadosDoDiagnostico = {
     hoje: opcoes.hoje,
     anoMaisRecenteDosConjuntos: fontes.conjuntos.anoMaisRecente,
+    anosDosConjuntos: contarAnos(fontes),
+    vencidasComIdPublicado,
     vencidas: analisarVencidas(vencidas, agentes, fontes),
     cnpjsComVariasSiglas: agruparPorCnpj(agentes),
     ...conferirValores(selecao, sucessoes),
@@ -121,9 +129,38 @@ export async function diagnosticar(opcoes: OpcoesDoDiagnostico): Promise<{ dados
     avisosDasSucessoes: conferencia.avisosDasSucessoes,
     relatorio: montagem.relatorio,
     substituidas: montagem.tarifas.substituidas,
-    comparacao: comparar(publicados, montagem, new Set(vencidas.map((v) => slug(v.sigla)))),
+    comparacao: comparar(publicados, montagem, idsVencidos),
   };
   return { dados, markdown: escreverMarkdown(dados) };
+}
+
+/**
+ * Critério 2: um id vencido que a montagem também publica não é "empresa vencida" na lista da cidade. No passo 0, a
+ * antiga CPFL SANTA CRUZ (61116265000144) dava o id `cpfl-santa-cruz`, o mesmo da CPFL Santa Cruz de hoje, e as 45
+ * cidades da sucessora contavam como "ainda com uma vencida".
+ */
+export function separarIdsVencidos(
+  vencidas: readonly Pick<AgenteDaTarifa, "sigla" | "cnpj">[],
+  publicadas: readonly Pick<Distribuidora, "id" | "sigla" | "cnpj">[],
+): { idsVencidos: Set<string>; vencidasComIdPublicado: DadosDoDiagnostico["vencidasComIdPublicado"] } {
+  const publicadasPorId = new Map(publicadas.map((d) => [d.id, d]));
+  const vencidasComIdPublicado = vencidas.flatMap((v) => {
+    const publicada = publicadasPorId.get(slug(v.sigla));
+    return publicada ? [{ sigla: v.sigla, cnpj: v.cnpj, id: publicada.id, publicada: publicada.sigla, cnpjDaPublicada: publicada.cnpj }] : [];
+  });
+  const idsVencidos = new Set(vencidas.map((v) => slug(v.sigla)).filter((id) => !publicadasPorId.has(id)));
+  return { idsVencidos, vencidasComIdPublicado };
+}
+
+/** Portão (a): até que ano o arquivo de conjuntos vai, e em que ano cada conjunto viu o dono pela última vez. */
+function contarAnos(fontes: Fontes): DadosDoDiagnostico["anosDosConjuntos"] {
+  const porUltimoAno = new Map<number, number>();
+  for (const dono of fontes.conjuntos.donos.values()) porUltimoAno.set(dono.ano, (porUltimoAno.get(dono.ano) ?? 0) + 1);
+  return {
+    coluna: fontes.conjuntos.colunaDoAno,
+    linhasPorAno: [...fontes.conjuntos.linhasPorAno].map(([ano, linhas]) => ({ ano, linhas })).sort((a, b) => a.ano - b.ano),
+    conjuntosPorUltimoAno: [...porUltimoAno].map(([ano, conjuntos]) => ({ ano, conjuntos })).sort((a, b) => a.ano - b.ano),
+  };
 }
 
 /** Para cada empresa vencida: em quais conjuntos ela ainda é a dona mais recente, e até que ano eles reportaram. */
@@ -250,6 +287,18 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
   saida.push(`## Diagnóstico dos dados (HIS-111), ${d.hoje}`, "", "Nada foi gravado: este job só lê.", "");
 
   saida.push("### Portão do passo 0", "");
+  const anos = d.anosDosConjuntos;
+  const anoDeHoje = Number(d.hoje.slice(0, 4));
+  saida.push(
+    `- Arquivo de conjuntos: coluna do ano = ${celulaMarkdown(anos.coluna ?? "(nenhuma)")}; linhas por ano: ${anos.linhasPorAno.map((a) => `${a.ano} (${a.linhas})`).join(", ") || "nenhuma"}; ` +
+      `conjuntos pelo último ano do dono: ${anos.conjuntosPorUltimoAno.map((a) => `${a.ano} (${a.conjuntos})`).join(", ") || "nenhum"}.`,
+  );
+  if (anoMaximo > 0 && anoMaximo < anoDeHoje - 2) {
+    saida.push(
+      `- **O arquivo de conjuntos para em ${anoMaximo}:** o dono de cada conjunto é o daquele ano. O ano do conjunto não separa empresa extinta de ` +
+        "empresa vigente; quem troca a empresa que acabou é o D1/D2 (e o D4 + V5 param a rotina se faltar uma linha).",
+    );
+  }
   // Renomeação de mesmo CNPJ (RGE SUL) não entra: os conjuntos dela são da mesma empresa, e o D1 resolve.
   const comConjunto = d.vencidas.filter((v) => !v.mesmoCnpjDeVigente && v.ultimoAnoDosConjuntos !== undefined);
   const recentes = comConjunto.filter((v) => (v.ultimoAnoDosConjuntos ?? 0) >= anoMaximo - 1);
@@ -304,6 +353,11 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
   saida.push(`- Vínculos extintos descartados (D3): ${celulaMarkdown(contagens(r.vinculosExtintosDescartados), LIMITE_LISTA) || "nenhum"}.`);
   saida.push(`- Tarifas descartadas por vencimento (D4): ${celulaMarkdown(r.tarifasDescartadasPorVencimento.map((t) => `${t.sigla} (${t.fimVigencia})`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
   saida.push(`- Tarifas vencidas em uso, até 6 meses (aviso): ${celulaMarkdown(r.tarifasVencidasEmUso.map((t) => `${t.sigla} (${t.fimVigencia})`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
+  saida.push(
+    `- Mesma sigla, outro CNPJ (ligação recusada; falta linha no sucessoes.json?): ${
+      celulaMarkdown(r.ligacoesPelaSiglaRecusadas.map((l) => `${l.sigla} (${l.cnpj}) ≠ ${l.siglaDaTarifa} (${l.cnpjDaTarifa}): ${l.municipios}`).join(", "), LIMITE_LISTA) || "nenhuma"
+    }.`,
+  );
   saida.push(`- Sucessoras candidatas (só informação): ${celulaMarkdown(r.sucessorasCandidatas.map((c) => `${c.de} → ${c.candidatas.join("/")}`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
   saida.push(`- substituidas: ${celulaMarkdown(Object.entries(d.substituidas).map(([de, para]) => `${de} → ${para}`).join(", "), LIMITE_LISTA) || "vazio"}.`);
   saida.push(
@@ -317,6 +371,10 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
   saida.push("### Comparação com os arquivos publicados", "");
   saida.push(`- Municípios lidos: ${c.publicadosLidos}; mudam: **${c.municipiosQueMudam}** (${c.porUF.map((u) => `${u.uf} ${u.municipios}`).join(", ") || "nenhum"}).`);
   saida.push(`- Critério 2: ${c.comEmpresaVencida} municípios tinham empresa vencida; ainda com uma: **${c.aindaComEmpresaVencida}**; ficam sem distribuidora: **${c.ficamSemDistribuidora}**.`);
+  if (d.vencidasComIdPublicado.length > 0) {
+    const itens = d.vencidasComIdPublicado.map((v) => `${v.sigla} (${v.cnpj ?? "?"}) e ${v.publicada} (${v.cnpjDaPublicada ?? "?"}) = ${v.id}`);
+    saida.push(`- Fora do critério 2 (vencida com o mesmo id de uma publicada): ${celulaMarkdown(itens.join(", "), LIMITE_LISTA)}.`);
+  }
   saida.push("", linhaDeTabela(["Cidade", "Esperada em 1º", "Antes", "Depois", "Confere"]), "| --- | --- | --- | --- | --- |");
   for (const cidade of c.cidades) {
     const confere = cidade.esperada === undefined ? "ver ordem" : cidade.depois?.[0] === cidade.esperada ? "sim" : "**não**";

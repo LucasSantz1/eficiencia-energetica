@@ -48,10 +48,15 @@ export function criarLeitorConjuntos(c: ReturnType<typeof mapearColunasConjuntos
   const donos = new Map<string, DonoConjunto>();
   /** CNPJ → todas as siglas com que ele aparece, em qualquer ano (V10 da HIS-111). */
   const siglasPorCnpj = new Map<string, Set<string>>();
+  /** Linhas por `AnoIndice`: mostra no diagnóstico até que ano o arquivo vai de verdade (passo 0: parou em 2014). */
+  const linhasPorAno = new Map<number, number>();
   let anoMaisRecente = 0;
   return {
     donos,
     siglasPorCnpj,
+    linhasPorAno,
+    /** Nome da coluna usada como ano (o diagnóstico mostra, para conferir que é mesmo o `AnoIndice`). */
+    colunaDoAno: c.ano,
     /** Maior `AnoIndice` do arquivo (0 sem a coluna). Um conjunto que parou antes disso deixou de reportar (HIS-111, D3). */
     get anoMaisRecente() {
       return anoMaisRecente;
@@ -62,6 +67,7 @@ export function criarLeitorConjuntos(c: ReturnType<typeof mapearColunasConjuntos
       if (!conjunto || !agente) return;
       const ano = c.ano ? Number(soDigitos(linha[c.ano]).slice(0, 4)) || 0 : 0;
       if (ano > anoMaisRecente) anoMaisRecente = ano;
+      linhasPorAno.set(ano, (linhasPorAno.get(ano) ?? 0) + 1);
       const cnpj = c.cnpj ? soDigitos(linha[c.cnpj]) || undefined : undefined;
       if (cnpj) siglasPorCnpj.set(cnpj, (siglasPorCnpj.get(cnpj) ?? new Set<string>()).add(agente));
       const atual = donos.get(conjunto);

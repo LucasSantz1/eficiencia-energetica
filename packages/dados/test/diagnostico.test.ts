@@ -1,7 +1,7 @@
 import { readdir, stat } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { diagnosticar } from "../src/diagnostico";
+import { diagnosticar, escreverMarkdown, separarIdsVencidos } from "../src/diagnostico";
 import { arquivosNaPasta } from "../src/fontes";
 
 const pasta = (nome: string) => fileURLToPath(new URL(`../fixtures/sucessao/${nome}`, import.meta.url));
@@ -64,6 +64,33 @@ describe("diagnóstico da HIS-111 (passo 0)", () => {
     expect(markdown).toContain("### Portão do passo 0");
     expect(markdown).toContain("- (a) C2:");
     expect(markdown).toContain("Nada foi gravado");
+  });
+
+  it("portão (a): mostra a coluna do ano e até que ano o arquivo de conjuntos vai", async () => {
+    const { dados, markdown } = await rodar();
+    expect(dados.anosDosConjuntos.coluna).toBe("AnoIndice");
+    expect(dados.anosDosConjuntos.linhasPorAno.map((a) => a.ano)).toEqual([2021, 2022, 2025]);
+    expect(dados.anosDosConjuntos.conjuntosPorUltimoAno).toEqual([
+      { ano: 2022, conjuntos: 4 },
+      { ano: 2025, conjuntos: 5 },
+    ]);
+    expect(markdown).toContain("- Arquivo de conjuntos: coluna do ano = AnoIndice; linhas por ano: 2021 (1), 2022 (4), 2025 (5)");
+    expect(markdown).not.toContain("O arquivo de conjuntos para em");
+    // Passo 0 real: o arquivo parou em 2014. O resumo diz que o ano do conjunto não separa empresa extinta.
+    expect(escreverMarkdown({ ...dados, anoMaisRecenteDosConjuntos: 2014 })).toContain("**O arquivo de conjuntos para em 2014:**");
+  });
+
+  it("critério 2: a vencida com o mesmo id de uma publicada (CPFL SANTA CRUZ antiga) não conta como vencida", () => {
+    const vencidas = [
+      { sigla: "CPFL SANTA CRUZ", cnpj: "61116265000144" },
+      { sigla: "CPFL MOCOCA", cnpj: "52503802000118" },
+    ];
+    const publicadas = [{ id: "cpfl-santa-cruz", sigla: "CPFL Santa Cruz", cnpj: "53859112000169" }];
+    const { idsVencidos, vencidasComIdPublicado } = separarIdsVencidos(vencidas, publicadas);
+    expect([...idsVencidos]).toEqual(["cpfl-mococa"]);
+    expect(vencidasComIdPublicado).toEqual([
+      { sigla: "CPFL SANTA CRUZ", cnpj: "61116265000144", id: "cpfl-santa-cruz", publicada: "CPFL Santa Cruz", cnpjDaPublicada: "53859112000169" },
+    ]);
   });
 
   it("não grava nada: nem nos publicados nem nas fixtures", async () => {
