@@ -104,6 +104,8 @@ O processo completo está em [`docs/equipe/processo.md`](docs/equipe/processo.md
 - Perguntas para outro papel vão em "Perguntas abertas", marcadas com o papel (ex.: `[para: seguranca]`). Quem orquestra
   leva a pergunta ao agente certo antes de seguir.
 - Decisões que afetam mais de uma história viram um ADR em `docs/equipe/decisoes/`.
+- **Economia de uso:** leia a história de forma enxuta e escreva notas curtas, como manda "Economia de uso" em
+  `docs/equipe/processo.md`.
 
 ## Git
 

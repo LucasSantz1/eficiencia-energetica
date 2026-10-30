@@ -50,6 +50,19 @@ leva perguntas de um para o outro e não deixa a história avançar com pergunta
 
 Se qualquer etapa encontra problema, a história **volta** para quem precisa corrigir, com a nota explicando o quê.
 
+**Economia de uso (decidida pelo dono do projeto em 2026-10-30):**
+
+- **Leitura enxuta:** o agente lê o topo da história (problema, critérios, decisões em vigor), a seção do seu papel, as
+  perguntas abertas para ele e as **3 últimas notas** da "Conversa da equipe". Só abre o resto quando a tarefa pede.
+  Na pasta dele, lê o `contexto.md` inteiro e só as 2 últimas entradas do `diario.md`.
+- **Notas e respostas curtas:** nota na história com até 8 linhas; resposta a quem orquestra com até 6 linhas.
+  Detalhe longo (tabelas, saídas de teste) fica num arquivo e a nota só aponta para ele.
+- **Modelo por papel:** `documentacao`, `scrum-master` e `ux-acessibilidade` usam o modelo mais leve (Sonnet);
+  `tech-lead`, `seguranca`, `dominio-energia`, `backend`, `frontend`, `qa` e `mobile` continuam no modelo principal,
+  porque decidem código, segurança e números da família.
+- **No máximo 2 agentes ao mesmo tempo**, e quem orquestra retoma o mesmo agente (que já tem o contexto) em vez de
+  abrir um novo quando a tarefa continua.
+
 **Ritmo acelerado (decidido pelo dono do projeto em 2026-10-30):**
 
 - As etapas 6 (`seguranca`) e 7 (`tech-lead`) rodam **em paralelo**, depois da aprovação do `qa`. Cada um escreve na sua
