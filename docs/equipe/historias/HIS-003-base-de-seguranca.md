@@ -1223,3 +1223,16 @@ critério de formato (`packages/dados` não importa de `apps/web`).
 
 Também troquei A3, R11 e o parágrafo do zod em "Regras de validação". **Para o tech-lead:** passar o ADR-004 para
 aceito, com R4c e R4d nas consequências.
+
+### [backend] 2026-10-30 — P-de-1 investigada; virou a HIS-111
+- **O que fiz:** medi o achado nos arquivos de 29/10.
+  - São 227 municípios em 7 UFs, ligados a 11 empresas vencidas.
+  - Em 147 deles, a vencida é a única opção.
+- **Causa:** são três falhas.
+  - (C1) O índice por CNPJ de `montar.ts` fica com a sigla de nome "maior", não com a tarifa mais nova. Isso dá
+    `rge-sul` em vez de `rge` em 127 municípios. Está provado.
+  - (C2) Conjunto elétrico extinto continua ligando a cidade à empresa antiga. É provável e falta conferir nos CSVs.
+  - (C3) Tarifa vencida é aceita sem limite de idade, e o `validar` não olha `fimVigencia`.
+- **Proposta:** D1 a D7, com a barreira V1 a V6, em `HIS-111-tarifas-vencidas.md`.
+- **Não muda a HIS-003a.** A HIS-111 começa depois do a3, porque mexe nos mesmos `tarifas.ts` e `validar`.
+- **Para o próximo:** dominio-energia confirma as sucessões. Ver as perguntas na HIS-111.
