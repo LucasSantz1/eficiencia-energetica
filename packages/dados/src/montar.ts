@@ -1,8 +1,9 @@
 import type { ArquivoMunicipios, ArquivoTarifas, BandeiraMes, Distribuidora, Estado, Municipio } from "@ee/core";
 import type { VinculoMunicipio } from "./aneel/municipios";
 import type { AgenteDaTarifa, SelecaoDeTarifas, TarifaVencida, TarifaVigente } from "./aneel/tarifas";
-import { indexarSucessoes, seguirCadeia, type Sucessao } from "./sucessoes";
-import { diaSeguinte, normalizar, slug } from "./util";
+import { MESES_DE_TOLERANCIA_DA_TARIFA_VENCIDA } from "./aneel/tarifas";
+import { conferirSucessoesNaAneel, indexarSucessoes, seguirCadeia, type DadosDaAneelParaSucessoes, type Sucessao } from "./sucessoes";
+import { diaSeguinte, normalizar, slug, subtrairMeses } from "./util";
 
 export interface Localidades {
   estados: { uf: string; nome: string }[];
@@ -328,7 +329,100 @@ function acharCandidatas(
     .filter((c) => c.candidatas.length > 0);
 }
 
-/** Confere se os dados fazem sentido antes de publicar — evita trocar dados bons por dados quebrados. */
+/** V8 (T1): formato do id nas chaves e valores de `substituidas`, o mesmo do `slug`. */
+const FORMATO_DO_ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const TAMANHO_MAXIMO_DO_ID = 64;
+/** V8 e R7: o leitor do site (HIS-003a) recusa mais que isso; a rotina não pode publicar um arquivo que ele recusa. */
+export const MAXIMO_DE_SUBSTITUIDAS = 500;
+
+export interface ContextoDaCoerencia extends DadosDaAneelParaSucessoes {
+  hoje: string;
+  /** Só as linhas em vigor, as mesmas que entraram na montagem. */
+  sucessoes: readonly Sucessao[];
+}
+
+/**
+ * Barreira de número errado e de contrato (HIS-111, D5 e R3; ADR-005, item 5). **Não passa com `--forcar`**, como o
+ * `conferirFormato` do ADR-004: quebrar qualquer regra quer dizer conta errada na tela ou arquivo que o site recusa.
+ * - V1: nenhuma distribuidora publicada vencida há mais de 6 meses;
+ * - V2: nenhum CNPJ em duas distribuidoras publicadas (a ANEEL tarifa áreas diferentes: não adivinhamos);
+ * - V3: nenhum município lista um id que é chave de `substituidas`;
+ * - V4: a sucessora final de cada linha do `sucessoes.json` está publicada (e, pelo V1, dentro dos 6 meses);
+ * - V7: a sucessora tem um só valor B1 na vigência;
+ * - V8: `substituidas` com ids válidos, valores publicados, chaves não publicadas, sem cadeia, até 500 entradas;
+ * - V9 e V10: a linha de sucessão bate com a ANEEL (empresa antiga sem tarifa vigente; siglas do CNPJ).
+ */
+export function conferirCoerencia(m: Montagem, contexto: ContextoDaCoerencia): string[] {
+  const erros: string[] = [];
+  const publicadas = m.tarifas.distribuidoras;
+  const ids = new Set(publicadas.map((d) => d.id));
+
+  const limite = subtrairMeses(contexto.hoje, MESES_DE_TOLERANCIA_DA_TARIFA_VENCIDA);
+  for (const d of publicadas) {
+    if (d.fimVigencia !== undefined && d.fimVigencia < limite) erros.push(`V1: ${d.sigla} está publicada com tarifa vencida em ${d.fimVigencia} (limite ${limite}).`);
+  }
+
+  const siglasDoCnpj = new Map<string, string[]>();
+  for (const d of publicadas) if (d.cnpj) siglasDoCnpj.set(d.cnpj, [...(siglasDoCnpj.get(d.cnpj) ?? []), d.sigla]);
+  for (const [cnpj, siglas] of siglasDoCnpj) {
+    if (siglas.length > 1) erros.push(`V2: o CNPJ ${cnpj} aparece em ${siglas.length} distribuidoras publicadas (${siglas.join(", ")}). Áreas com preços diferentes: separar antes de publicar.`);
+  }
+
+  const substituidas = m.tarifas.substituidas;
+  const ehSubstituida = (id: string) => Object.hasOwn(substituidas, id);
+  const municipiosComAntigo = m.municipiosPorUF.flatMap((a) => a.municipios).filter((x) => x.distribuidoras.some(ehSubstituida));
+  if (municipiosComAntigo.length > 0) {
+    const exemplos = municipiosComAntigo.slice(0, 5).map((x) => `${x.nome} (${x.uf})`);
+    erros.push(`V3: ${municipiosComAntigo.length} municípios listam um id substituído (ex.: ${exemplos.join(", ")}).`);
+  }
+
+  const indice = indexarSucessoes(contexto.sucessoes);
+  const porCnpj = new Map(publicadas.filter((d) => d.cnpj).map((d) => [d.cnpj, d]));
+  for (const s of contexto.sucessoes) {
+    const cadeia = seguirCadeia(indice, s.cnpjAntigo);
+    const final = porCnpj.get(cadeia.cnpj);
+    if (!final) {
+      erros.push(`V4: sucessoes[${s.indice}] (${s.siglaAntiga}): a sucessora final (${cadeia.sigla ?? "?"}, ${cadeia.cnpj}) não está no tarifas.json.`);
+      continue;
+    }
+    const varios = m.relatorio.tarifasComMaisDeUmValor.find((v) => (v.cnpj !== undefined && v.cnpj === final.cnpj) || slug(v.sigla) === final.id);
+    if (varios) {
+      erros.push(
+        `V7: ${final.sigla} (sucessora de ${s.siglaAntiga}, sucessoes[${s.indice}]) tem ${varios.valores} valores B1 diferentes na vigência. ` +
+          "As cidades da área antiga não recebem tarifa até separarmos as áreas: tirar a linha e falar com o dominio-energia.",
+      );
+    }
+  }
+
+  erros.push(...conferirSubstituidas(substituidas, ids, m.relatorio.substituicoesEmConflito));
+  erros.push(...conferirSucessoesNaAneel(contexto.sucessoes, contexto).erros);
+  return erros;
+}
+
+/** V8: as regras olham o objeto inteiro, não o que sobra depois de cada descarte (R7). */
+export function conferirSubstituidas(substituidas: Readonly<Record<string, string>>, idsPublicados: ReadonlySet<string>, conflitos: readonly string[] = []): string[] {
+  const erros: string[] = [];
+  const entradas = Object.entries(substituidas);
+  if (entradas.length > MAXIMO_DE_SUBSTITUIDAS) erros.push(`V8: substituidas tem ${entradas.length} entradas (o máximo é ${MAXIMO_DE_SUBSTITUIDAS}).`);
+  const idValido = (id: string) => id.length <= TAMANHO_MAXIMO_DO_ID && FORMATO_DO_ID.test(id);
+  for (const [de, para] of entradas) {
+    if (!idValido(de) || !idValido(para)) erros.push(`V8: "${de}" → "${para}" não tem o formato de id.`);
+    else if (!idsPublicados.has(para)) erros.push(`V8: "${de}" → "${para}", mas "${para}" não está publicada.`);
+    else if (idsPublicados.has(de)) erros.push(`V8: "${de}" é chave de substituidas e também está publicada.`);
+    else if (Object.hasOwn(substituidas, para)) erros.push(`V8: "${de}" → "${para}", e "${para}" também é substituída (o valor precisa ser o id final).`);
+  }
+  for (const c of conflitos) erros.push(`V8: o mesmo id antigo leva a duas distribuidoras: ${c}.`);
+  return erros;
+}
+
+/** Na HIS-111 (V6): hoje são 10 cidades sem distribuidora; 30 pega uma perda grande antes do limite de 5% (278). */
+const MAXIMO_DE_MUNICIPIOS_SEM_DISTRIBUIDORA = 30;
+
+/**
+ * Confere se os dados fazem sentido antes de publicar — evita trocar dados bons por dados quebrados.
+ * Estas regras são de cobertura e passam com `--forcar`: uma pessoa pode decidir publicar sabendo que algumas cidades
+ * vão pedir a conta de luz. As de número errado ficam em `conferirCoerencia`.
+ */
 export function validar(m: Montagem, hoje: string): string[] {
   const erros: string[] = [];
   const r = m.relatorio;
@@ -342,6 +436,13 @@ export function validar(m: Montagem, hoje: string): string[] {
   const ultima = m.tarifas.bandeiras.at(-1)?.competencia;
   const limite = mesesAntes(hoje.slice(0, 7), 3);
   if (!ultima || ultima < limite) erros.push(`Bandeira mais recente (${ultima ?? "nenhuma"}) é anterior a ${limite}.`);
+  // HIS-111, V5: empresa nova sem tarifa quer dizer uma sucessão que ainda não está no sucessoes.json.
+  if (r.agentesSemTarifa.length > 0) {
+    erros.push(`V5: ${r.agentesSemTarifa.length} agentes dos conjuntos sem tarifa publicada (${r.agentesSemTarifa.slice(0, 10).join(", ")}). Sucessão nova sem linha no sucessoes.json?`);
+  }
+  if (r.municipiosSemDistribuidora > MAXIMO_DE_MUNICIPIOS_SEM_DISTRIBUIDORA) {
+    erros.push(`V6: ${r.municipiosSemDistribuidora} municípios sem distribuidora (o máximo é ${MAXIMO_DE_MUNICIPIOS_SEM_DISTRIBUIDORA}).`);
+  }
   return erros;
 }
 

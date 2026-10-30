@@ -13,8 +13,8 @@ import { join } from "node:path";
 import { celulaMarkdown } from "./anotacoes";
 import type { AgenteDaTarifa, SelecaoDeTarifas } from "./aneel/tarifas";
 import { lerFontes, type ArquivosDasFontes, type Fontes } from "./fontes";
-import { validar, type Montagem, type Relatorio } from "./montar";
-import { montarComAsFontes } from "./rotina";
+import type { Montagem, Relatorio } from "./montar";
+import { conferirMontagem, montarComAsFontes } from "./rotina";
 import { CAMINHO_SUCESSOES, carregarSucessoes, type Sucessao } from "./sucessoes";
 import { normalizar, slug } from "./util";
 
@@ -70,7 +70,10 @@ export interface DadosDoDiagnostico {
   comMaisDeUmValor: (SelecaoDeTarifas["comMaisDeUmValor"][number] & { ehSucessora: boolean })[];
   /** Portão (b): cada sucessora do `sucessoes.json` e quantos valores ela tem na vigência (0 = sem tarifa). */
   sucessoras: { sigla: string; cnpj: string; valores: number }[];
+  /** Critério 3: V1–V4 e V7–V10 sobre a montagem real (o que a rotina vai publicar). */
+  errosDaCoerencia: string[];
   errosDaValidacao: string[];
+  avisosDasSucessoes: string[];
   relatorio: Relatorio;
   substituidas: Readonly<Record<string, string>>;
   comparacao: ComparacaoComPublicados;
@@ -102,6 +105,7 @@ export async function diagnosticar(opcoes: OpcoesDoDiagnostico): Promise<{ dados
     registrar: opcoes.registrar,
   });
   const montagem = montarComAsFontes(fontes, { hoje: opcoes.hoje, geradoEm: `${opcoes.hoje}T12:00:00.000Z`, sucessoes });
+  const conferencia = conferirMontagem(fontes, montagem, { hoje: opcoes.hoje, sucessoes });
   const { agentes, selecao } = fontes.tarifas;
   const vencidas = agentes.filter((a) => !a.vigente);
   const publicados = await lerMunicipiosPublicados(opcoes.pastaPublicada);
@@ -112,7 +116,9 @@ export async function diagnosticar(opcoes: OpcoesDoDiagnostico): Promise<{ dados
     vencidas: analisarVencidas(vencidas, agentes, fontes),
     cnpjsComVariasSiglas: agruparPorCnpj(agentes),
     ...conferirValores(selecao, sucessoes),
-    errosDaValidacao: validar(montagem, opcoes.hoje),
+    errosDaCoerencia: conferencia.coerencia,
+    errosDaValidacao: conferencia.validacao,
+    avisosDasSucessoes: conferencia.avisosDasSucessoes,
     relatorio: montagem.relatorio,
     substituidas: montagem.tarifas.substituidas,
     comparacao: comparar(publicados, montagem, new Set(vencidas.map((v) => slug(v.sigla)))),
@@ -300,6 +306,10 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
   saida.push(`- Tarifas vencidas em uso, até 6 meses (aviso): ${celulaMarkdown(r.tarifasVencidasEmUso.map((t) => `${t.sigla} (${t.fimVigencia})`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
   saida.push(`- Sucessoras candidatas (só informação): ${celulaMarkdown(r.sucessorasCandidatas.map((c) => `${c.de} → ${c.candidatas.join("/")}`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
   saida.push(`- substituidas: ${celulaMarkdown(Object.entries(d.substituidas).map(([de, para]) => `${de} → ${para}`).join(", "), LIMITE_LISTA) || "vazio"}.`);
+  saida.push(
+    `- **Coerência (não passa com --forcar; critério 3):** ${d.errosDaCoerencia.length === 0 ? "ok" : d.errosDaCoerencia.map((e) => celulaMarkdown(e, LIMITE_LISTA)).join(" / ")}`,
+  );
+  if (d.avisosDasSucessoes.length > 0) saida.push(`- Avisos do sucessoes.json: ${d.avisosDasSucessoes.map((e) => celulaMarkdown(e, LIMITE_LISTA)).join(" / ")}`);
   saida.push(`- Validação (passa com --forcar): ${d.errosDaValidacao.length === 0 ? "ok" : d.errosDaValidacao.map((e) => celulaMarkdown(e, LIMITE_LISTA)).join(" / ")}`);
   saida.push("");
 
