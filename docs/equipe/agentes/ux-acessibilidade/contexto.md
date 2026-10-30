@@ -29,6 +29,10 @@
   - Quando o elemento com foco some, o foco vai para o `h1` da tela.
   - Tela de erro foca o `h1` ao abrir.
   - Nada técnico na tela.
+  - Valor raro (alerta do dominio): "Confere?" junto do campo (amarelo, sem `aria-invalid`, sem `dialog`).
+    - Mostra o valor entendido e uma pista do erro.
+    - Botões "Sim, está certo" e "Corrigir"; nenhum recebe o foco sozinho.
+    - Salva só depois de confirmar.
   - Para o celular ou computador da pessoa, dizemos "aqui": "aparelho" é só eletrodoméstico.
 
 ## Pendências

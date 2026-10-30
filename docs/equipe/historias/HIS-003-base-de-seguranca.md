@@ -192,6 +192,10 @@ com o visual do botão, porque o layout raiz quebrou e a página precisa carrega
 | Consumo na etiqueta (`ap-etiqueta`) | fora da faixa | Digite um consumo entre {min} e {max} por mês, como está na etiqueta. |
 | Consumo da conta (`conta-kwh`, cadastro e acompanhamento) | fora da faixa | Digite um consumo entre {min} e {max}. Na conta, ele aparece como "Consumo (kWh)". |
 | Valor da conta (`conta-valor`, cadastro e acompanhamento) | fora da faixa | Digite um valor entre {min} e {max}. É o valor total a pagar, com impostos. |
+| Conta no cadastro ou nos ajustes (calibração) | consumo 0 ou valor R$ 0,00 | Com a conta zerada não dá para ajustar o cálculo. Se ela veio zerada, toque em "Pular, não tenho a conta agora". |
+
+`{min}` da conta muda conforme a tela (dominio-energia): no cadastro e nos ajustes é 1 kWh e R$ 0,01; no
+acompanhamento é 0 kWh e R$ 0,00. A mensagem é a mesma; muda só o número, que vem do uso certo no `limites.ts`.
 | Campos com vírgula (kWh, valor) | número mal escrito (ex.: "1,2,5") | Escreva só o número. Para centavos, use vírgula: 135,90. |
 | Nome do cômodo (`nome-comodo`) | vazio | Dê um nome ao cômodo, por exemplo: Quarto do casal. |
 | Nome do aparelho (`ap-nome`) | vazio | Dê um nome ao aparelho, por exemplo: Geladeira. |
@@ -201,7 +205,8 @@ com o visual do botão, porque o layout raiz quebrou e a página precisa carrega
   no limite.
 - Conferir: o `+` e o `−` ficam `disabled` no limite, e o leitor ouve o valor novo.
 - Se algum campo de minutos virar digitável:
-  - por dia: "O tempo de uso vai de {min} a {max} por dia." (ex.: "1 minuto" a "24 horas");
+  - por dia, texto fixo (sem `formatarTempo`, que escreve "1 min" e "o dia todo"): "O tempo de uso vai de 1 minuto a
+    24 horas por dia.";
   - por banho: "Cada banho vai de {min} a {max} minutos."
 
 **Nome com tamanho máximo:** o `maxLength` (40 e 60) já impede passar do limite. Mensagem não precisa.
@@ -225,6 +230,72 @@ com o visual do botão, porque o layout raiz quebrou e a página precisa carrega
 - O `<p>` do erro fica dentro de um recipiente com `aria-live="polite"`, sempre na página (vazio quando está tudo
   certo). Assim a mensagem é lida quando aparece ao sair do campo.
 - Contraste do `alerta` (#b42318): 6,6:1 sobre `papel`, 5,8:1 sobre `fundo` e 5,6:1 sobre `alerta-claro`. Passa AA nos três.
+
+### T6. Valor possível, mas raro: "Confere?" (alerta do dominio-energia)
+
+O T5 é para valor **impossível**: a tela não salva. O T6 é para valor **raro**: a tela pergunta e salva se a pessoa
+confirmar. O texto nunca diz que o número está errado. Ele pergunta, mostra o valor que foi entendido e dá uma pista
+do erro mais comum.
+
+| Campo | Quando (dominio-energia) | Texto |
+| --- | --- | --- |
+| Potência (`ap-potencia`) | > 10.000 W | **Confere?** {valor} é muito para um aparelho de casa. Um chuveiro forte tem até 7.800 W. Veja se não sobrou um zero. |
+| Consumo na etiqueta (`ap-etiqueta`) | > 150 kWh/mês | **Confere?** {valor} por mês é muito para um aparelho. As geladeiras que mais gastam ficam perto de 115 kWh por mês. Veja se você copiou o número que vem com "kWh/mês". |
+| Consumo da conta (`conta-kwh`) | > 2.000 kWh | **Confere?** {valor} é muito mais do que uma casa costuma gastar: a média no Brasil é perto de 180 kWh por mês. Veja se você copiou o consumo do mês, e não o número do relógio de luz. |
+| Valor da conta (`conta-valor`) | > R$ 3.000,00 | **Confere?** {valor} é uma conta muito alta para uma casa. Veja se a vírgula dos centavos está no lugar certo. |
+| Consumo e valor juntos (preço por kWh, **estimativa**) | fora de R$ 0,30 a R$ 3,00 por kWh, com kWh ≥ 30 e sem Tarifa Social | **Confere os dois números?** Com {kwh} e {valor}, cada kWh sairia por {preco}. Costuma ficar entre R$ 0,30 e R$ 3,00. Veja se a vírgula está no lugar certo. |
+| Leitura do relógio (acompanhamento) | > 100 kWh por dia entre duas leituras | **Confere?** Entre {data anterior} e {data nova}, isso dá {n} kWh por dia. Uma casa costuma gastar perto de 6 kWh por dia. Veja se você não pulou ou trocou um número do relógio. |
+
+Botões, em todos: **[Sim, está certo]** e **[Corrigir]**.
+- `{valor}`, `{kwh}` e `{preco}`: o número que a tela entendeu, formatado com `formatarWatts` / `formatarKwh` /
+  `formatarReais`.
+- Datas como "3 de outubro".
+- Os números de referência saem do `limites.ts` e do catálogo, com a fonte que o dominio-energia já citou: 7.800 W do
+  chuveiro no catálogo, 115 kWh da geladeira no catálogo, 178,2 kWh da EPE arredondado para "perto de 180", e
+  5,9 kWh/dia para "perto de 6".
+
+**Consumo estimado da casa > 2.000 kWh/mês** não é um campo, então não tem "Sim/Corrigir". Aparece como
+`Aviso tom="faisca"` (`role="status"`) no resumo do cadastro e no painel:
+
+> **Confere seus aparelhos?** A conta estimada da sua casa deu {kwh} por mês, muito acima do comum. Veja se algum
+> aparelho ficou com potência ou tempo a mais.
+> [Ver meus aparelhos]
+
+Se o T6 da potência já apareceu e a pessoa confirmou, esse aviso da casa também aparece. Não precisa esconder.
+
+**Comportamento**
+- **Quando:** igual ao T5. Aparece ao sair do campo ou ao tocar em continuar, nunca a cada tecla.
+  - O do preço aparece só quando os dois campos estão preenchidos, embaixo do campo "Valor total da conta".
+  - O da leitura aparece ao tocar em salvar a leitura.
+- **Salvar:** o valor em alerta só é salvo depois de "Sim, está certo". Até lá, a conta usa o último valor salvo.
+- **"Sim, está certo":** o alerta some, o valor é salvo e o foco volta para o campo. O alerta não volta para o mesmo
+  valor. Só volta se a pessoa mudar o número.
+- **"Corrigir":** o alerta some e o foco vai para o campo, com o texto todo selecionado, pronto para digitar por cima.
+  No alerta do preço, o foco vai para "Valor total da conta".
+- **Tocar em continuar, ou fechar a `Folha`, sem responder:** não segue. O foco vai para o campo com o alerta (o leitor
+  ouve o rótulo e a pergunta pelo `aria-describedby`). Nada se perde: o número digitado continua no campo.
+- Nunca usar janela (`dialog`) para o "Confere?": a pergunta fica junto do campo, na mesma tela.
+
+**Componentes e acessibilidade do T6**
+- Mesmo lugar do erro do T5, dentro do `Campo`, abaixo da entrada.
+  - A pergunta fica num `<p id="{id}-alerta">` dentro do recipiente `aria-live="polite"` que o T5 já criou.
+  - Os dois botões ficam **fora** desse recipiente, logo abaixo. Assim o leitor anuncia a pergunta, e não
+    "Sim, está certo, Corrigir".
+- Visual: caixa `bg-faisca-claro text-tinta` (como o `Aviso tom="faisca"`) com ícone `CircleHelp` (`aria-hidden`).
+  - Amarelo, não vermelho: o valor pode estar certo.
+  - Contraste passa de 14:1.
+- `Campo` ganha a prop `alerta?: { texto: string; aoConfirmar: () => void; aoCorrigir: () => void }`.
+  - `erro` e `alerta` nunca aparecem juntos: o erro ganha.
+- A `Entrada` em alerta **não** recebe `aria-invalid`, porque o valor é válido. Ela recebe
+  `aria-describedby="{id}-alerta {id}-ajuda"`.
+- O alerta do preço: as duas entradas apontam para o mesmo `id`.
+- Botões:
+  - "Sim, está certo": `Botao variante="secundario"`.
+  - "Corrigir": `Botao variante="fantasma"`.
+  - Os dois com `min-h-12`; em 360 px, um embaixo do outro.
+  - O nome acessível é o próprio texto do botão. A pergunta acima já dá o contexto.
+- Nenhum dos dois botões recebe o foco sozinho. Um Enter sem querer não pode confirmar um valor errado.
+- Sem animação além do `surgir`. Com movimento reduzido, aparece pronto.
 
 ## Desenho técnico (proposta inicial)
 
@@ -474,8 +545,11 @@ Riscos: (1) relógio que "dá a volta" (99.999 → 00.012) hoje cai em "leitura 
   saiu. `[para: seguranca]` incluir isso no retorno do `migrate`/`merge`.
 - [x] `[para: dominio-energia]` Faixas aceitáveis: potência (W), minutos por dia, kWh da conta e valor da conta.
   **Resposta (dominio-energia, 2026-10-30):** ver "Regras de negócio e fontes" (tabela com rígido e alerta, fontes e 23 casos de borda).
-- [ ] `[para: ux-acessibilidade]` Texto do **alerta** ("Confere?"), para valor possível mas raro (potência > 10.000 W, conta > 2.000 kWh,
+- [x] `[para: ux-acessibilidade]` Texto do **alerta** ("Confere?"), para valor possível mas raro (potência > 10.000 W, conta > 2.000 kWh,
   preço da conta fora de R$ 0,30 a R$ 3,00 por kWh etc.). Ele pergunta e deixa salvar, diferente da mensagem de "fora da faixa" do T5.
+  **Resposta (ux, 2026-10-30):** ver "Fluxo e textos", T6: o texto de cada campo, "Sim, está certo" / "Corrigir",
+  salvar só depois de confirmar, foco e leitor de tela. No T5 entraram o `{min}` da conta por tela e o texto fixo do
+  tempo por dia.
 
 ## Conversa da equipe
 
@@ -521,6 +595,17 @@ o T1).
 nos dois projetos. Eu reviso as capturas.
 
 **Próximo:** seguranca e dominio-energia terminam as partes deles; depois o tech-lead fecha o desenho técnico.
+
+**Acréscimo (2026-10-30, depois das faixas do dominio-energia)**
+- T6 "Confere?" escrito: textos por campo e mais o aviso da casa acima de 2.000 kWh.
+  - Botões "Sim, está certo" e "Corrigir".
+  - Salva só depois de confirmar.
+  - Nenhum botão recebe o foco sozinho.
+  - Sem `aria-invalid`.
+- T5 ajustado:
+  - `{min}` da conta por tela, mais a mensagem para conta zerada na calibração, com o caminho "Pular";
+  - tempo por dia com texto fixo.
+- `[para: tech-lead]` `Campo` ganha `alerta` além de `erro`. `validarFaixa` → `"alerta"` alimenta o T6.
 
 ### [dominio-energia] 2026-10-30 — faixas de entrada com fonte; pergunta respondida
 

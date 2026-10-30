@@ -10,6 +10,20 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-003 · alerta "Confere?" (T6) e ajustes do T5
+- O que fiz:
+  - Escrevi o T6 com o texto por campo: potência, etiqueta, kWh e valor da conta, preço por kWh, leitura do relógio, e
+    mais o aviso da casa acima de 2.000 kWh.
+  - Defini o comportamento, o foco e o leitor de tela.
+  - No T5: `{min}` da conta por tela, conta zerada na calibração e tempo por dia com texto fixo.
+  - Marquei a pergunta como respondida.
+- Decisões e porquê:
+  - Amarelo e sem `aria-invalid`, porque o valor pode estar certo.
+  - Botões fora da região `aria-live`, para não serem lidos junto com a pergunta.
+  - Nenhum botão recebe o foco sozinho, para um Enter sem querer não confirmar.
+  - Sem `dialog`.
+- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md`, esta pasta.
+
 ## 2026-10-30 · HIS-003 · textos de dados descartados, falha de carga, telas de erro e limites de campo
 - O que fiz:
   - Escrevi T1 a T5 em "Fluxo e textos" da HIS-003: dados descartados (3 casos), falha em tarifas e municípios
