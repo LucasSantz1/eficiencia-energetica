@@ -10,6 +10,23 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-29 · HIS-002a/HIS-002b · análise de ameaças (etapa 3): as duas aprovadas para implementar
+- O que fiz: HIS-002a — `npm view` dos 5 pacotes do navegador (sem script de instalação; Microsoft/Deque), fontes
+  locais, `ci.yml` atual sem `permissions`; tabela Aa1–Aa18 e conferência Ra1–Ra13; resposta na P-qa-8. HIS-002b — rodei
+  os 21 casos e 18 sondas contra o `eslint.config.mjs` do D4 na cópia do tech-lead (só leitura), o script atual nos
+  casos de estrutura, `pnpm audit` (limpo, 400 pacotes), lockfile (0 origem fora do registro) e scripts de instalação
+  (só `esbuild` e `unrs-resolver`); tabela Ab1–Ab14, os 21 casos escritos na história (20 ESLint, `seguranca-15` no
+  script), `seguranca-14b`, 9 casos novos (`22`–`30`), Rb1–Rb9; pergunta aberta respondida.
+- Decisões e porquê: nenhuma crítica/alta → aprovadas. Médias que entram na 002b: Ab3 (comentário `eslint-disable`
+  derruba a barreira; C10 no script) e Ab4 (ignores `**/build/**` etc. tiram pastas do site do lint; ancorar + controle
+  de contagem) — sem elas a barreira deixa de valer quando a matriz sai do script. Na 002a: fixture "nada sai do
+  aparelho" obrigatória (Aa11), `persist-credentials: false`, limites de peso no spec + `git diff --exit-code`, axe sem
+  atalhos; actions por SHA recomendadas no A6 (Aa9) ou HIS-003 antes do E4. `seguranca-01` deixa de ser controle.
+- Arquivos: `docs/equipe/historias/HIS-002-qualidade-automatica.md` ("Ameaças", P-qa-8, nota),
+  `docs/equipe/historias/HIS-002b-lint-e-camadas.md` ("Ameaças", 21 casos, pergunta, nota), `contexto.md`, `diario.md`.
+  Roteiros: `scratchpad/seg-his002/` (`casos-eslint.mjs`, `msgs.mjs`, `ignorados.mjs`, `propostas.mjs`, saídas).
+- Próximos passos: etapa 6 da 002a (Ra1–Ra13, artefato do A6) e da 002b (Rb1–Rb9, rodar de novo os 30 casos).
+
 ## 2026-10-29 · HIS-001 · revisão de código da etapa 6: aprovado com ressalvas (baixo)
 - O que fiz: R1–R15 com evidência contra `182f355` (tabela na história); comparação das linhas não-import de cada
   arquivo movido/dividido com o `main` (sem diferença fora do previsto); build próprio + servidor na porta 3107;
