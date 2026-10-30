@@ -10,6 +10,21 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · sucessões das 11 distribuidoras vencidas com ato oficial
+- O que fiz:
+  - Busquei os atos (REA ANEEL e DOU) das sucessões e preenchi "Regras de negócio e fontes" da HIS-111.
+  - Respondi o limite do D4 e a média da `/`.
+- Decisões e porquê:
+  - Descarte depois de 6 meses: manter uma tarifa velha mostra um número errado; descartar leva a "use a conta", que é honesto.
+  - Criei o V7: depois de um agrupamento, o preço pode ser diferente em cada área (a ENF teve tabela própria em 2023).
+  - CERR aprovada com o despacho do MME, porque não há REA localizada.
+- Arquivos: `docs/equipe/historias/HIS-111-tarifas-vencidas.md`, `contexto.md` e este diário.
+- Próximos passos:
+  - revisar o `sucessoes.json` no PR;
+  - completar o número do ato da CERR;
+  - conferir a data da REA 6.318;
+  - trocar as cópias pelo cedoc.
+
 ## 2026-10-30 · HIS-003 · P-tl-2 (faixas de tarifa e bandeira) e achado de tarifas vencidas
 - O que fiz:
   - Medi o menor e o maior valor de tarifa, TE, TUSD e bandeira no `tarifas.json` de 29/10/2026.

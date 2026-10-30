@@ -27,14 +27,29 @@
 
 - Limites em dois níveis: **rígido** (impossível → não salva / descarta) e **alerta** (raro → pergunta e salva). Alerta nunca descarta.
 - Alerta de preço da conta é estimativa; não se aplica à Tarifa Social nem a contas com menos de 30 kWh.
+- Tarifa vencida (HIS-111):
+  - aviso no relatório desde o 1º dia;
+  - descarte e V1 depois de 6 meses;
+  - troca de distribuidora só com um ato oficial no `sucessoes.json`, ou pelo mesmo CNPJ.
 - Tabela completa e 23 casos de borda em `docs/equipe/historias/HIS-003-base-de-seguranca.md`, seção "Regras de negócio e fontes".
 
 ## Pendências
 
 - HIS-003: revisar o `limites.ts`, o `arquivos-publicos.ts` (P1–P7) e os testes quando o backend escrever; trocar o
   link da EPE (hoje cópia da eixos) pelo oficial.
-- **P-de-1 (veto, alta):** 11 distribuidoras com tarifa vencida (2016–2023), usadas por cerca de 200 municípios em
-  RS, SP, MG, RR, PB, PR e RJ. Aguarda uma história nova. Confirmar as sucessoras no cadastro de agentes da ANEEL.
+- **P-de-1 → HIS-111.** As sucessões estão confirmadas na história, com os atos:
+  - REA 6.318/2017 (ESS);
+  - REA 6.723/2017 (CPFL Santa Cruz);
+  - REA 12.177/2022 (EMR) e REA 12.687/2022 (EPB);
+  - despacho do MME no DOU de 12/08/2016 para a CERR, sem número;
+  - RGE pelo CNPJ.
+
+  Falta:
+  - revisar o `sucessoes.json` no PR;
+  - completar o número do ato da CERR;
+  - conferir a data da REA 6.318 no DOU;
+  - trocar as cópias pelos links do cedoc ou do `in.gov.br`;
+  - acompanhar o V7, que trata o preço diferente em cada área depois de um agrupamento.
 - Pesquisar ICMS residencial por estado e PIS/COFINS por distribuidora (HIS-202).
 - Percentual do Desconto Social por distribuidora (HIS-203).
 

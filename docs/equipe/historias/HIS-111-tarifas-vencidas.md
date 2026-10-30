@@ -239,7 +239,40 @@ depois de o a3 entrar no `main`.
 
 ## Regras de negócio e fontes
 
-_(dominio-energia)_ Confirmar as sucessões, com o número do ato da ANEEL e o link, e o limite de 12 meses.
+_(dominio-energia, consultado em 30/10/2026.)_ O site da ANEEL (`www2.aneel.gov.br/cedoc`) não abre daqui. Por isso,
+alguns links são cópias do documento oficial. Quem tiver acesso troca pelo link do cedoc ou do `in.gov.br` no PR.
+
+**Sucessões (linhas do `sucessoes.json`):**
+
+| Antiga → sucessora (CNPJ) | `desde` | Ato | Fonte | Situação |
+| --- | --- | --- | --- | --- |
+| EDEVP, CNEE, EEB, CFLO → ESS (07282377000120) | 2017-06-30 | REA ANEEL nº 6.318/2017, "de 25 de março de 2017": aprova o agrupamento, com incorporação pela Caiuá, e forma a Energisa Sul Sudeste | Nota Técnica nº 150/2021-SGT/ANEEL, § 6, [cópia no RI da Energisa](https://api.mziq.com/mzfilemanager/v2/d/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/1f1a9406-2219-1c70-8239-1b42746c5de4?origin=2). A data de 30/06/2017 vem do [Relatório Anual Energisa 2017](https://mz-filemanager.s3.amazonaws.com/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/relatorios-anuais/9cb421b1892cf4fe509f85138356e1ed84175be536450bdec59e6ec2f2de8819/relatorio_anual_2017.pdf) | **Aprovada.** Conferir a data no DOU: 25/03/2017 caiu num sábado |
+| CPFL Leste Paulista, CPFL Mococa, CPFL Sul Paulista → CPFL Santa Cruz (53859112000169, Cia. Jaguari) | 2018-01-01 | REA ANEEL nº 6.723, de 21/11/2017. A incorporação foi feita em 31/12/2017 | [cedoc rea20176723ti.pdf](https://www2.aneel.gov.br/cedoc/rea20176723ti.pdf) e [demonstrações da Cia. Jaguari (RI CPFL)](https://ri.cpfl.com.br/Download.aspx?Arquivo=ppJOuVjC1xAIdBWbJYeeZA%3D%3D) | **Aprovada** |
+| ENF → EMR (19527639000158, ex-Energisa Minas Gerais) | 2023-06-22 | REA ANEEL nº 12.177, de 13/09/2022 (DOU de 21/09/2022, processo 48500.005211/2021-67): agrupa as áreas e aprova a incorporação da ENF pela EMG | [DOU de 21/09/2022 (cópia abrapch)](https://abrapch.org.br/2022/09/diario-oficial-da-uniao-21-09-2022/). Nova Friburgo está na área da EMR: [A Voz da Serra, reajuste de 22/06/2025](https://avozdaserra.com.br/noticias/contas-de-luz-em-friburgo-sobem-361-em-media-no-domingo) | **Aprovada, com a condição V7** (abaixo) |
+| EBO → EPB (09095183000140) | 2023-08-28 | REA ANEEL nº 12.687, de 13/09/2022 (DOU de 21/09/2022, processo 48500.005212/2021-10): agrupa as áreas e aprova a incorporação da EBO pela EPB. As tarifas da EBO foram prorrogadas até 27/08/2023 | DOU (mesma cópia) e [CanalEnergia, 24/01/2023](https://www.canalenergia.com.br/noticias/53236466/tarifas-da-energisa-borborema-serao-prorrogadas-ate-agosto) | **Aprovada, com a condição V7** |
+| CERR → Roraima Energia, hoje "Âmbar Roraima" (02341470000144, ex-Boa Vista Energia) | 2017-01-01 | **Não achei ato da ANEEL com número.** Há um despacho do MME (DOU de 12/08/2016, número não localizado): a Boa Vista Energia assume todo o interior. A Roraima Energia tem o Contrato de Concessão nº 04/2018-ANEEL | [MME: prazo de transição CERR → Boa Vista Energia](https://www.gov.br/mme/pt-br/assuntos/noticias/mme-define-prazo-de-transicao-de-prestacao-de-servico-da-cerr-para-a-boa-vista-energia) e [voto ANEEL de 09/12/2025 (cópia Poder360)](https://static.poder360.com.br/2025/12/roraima-sin-aneel.pdf) | **Aprovada com o ato do MME**: `ato` = "Despacho MME, DOU 12/08/2016". O número entra quando alguém abrir o DOU. Roraima tem uma só distribuidora, a do contrato 04/2018. Se o leitor exigir número, a CERR fica de fora: as 14 cidades mostram "Não achamos a sua distribuidora. Use o valor da sua conta de luz" |
+| RGE SUL ↔ RGE (mesmo CNPJ) | 2019-01-01 | Agrupamento aprovado pela ANEEL em 04/12/2018. A RGE Sul incorporou a RGE e passou a se chamar RGE. Número da REA não localizado | [Formulário de referência CPFL Energia, item 1.1](https://ri.cpfl.com.br/Download.aspx?Arquivo=AiJIS2TJi1r3E7fuxnXsSQ%3D%3D&linguagem=pt) | Só para a fonte. O D1 já resolve; não entra no `sucessoes.json` |
+
+**Condições e regras:**
+
+- **V7 (nova, bloqueia ENF e EBO):** depois de um agrupamento, a ANEEL pode manter um preço diferente para cada área
+  por um tempo. Em 2023, a EMR teve uma tabela "ENF" separada, com −2,20% no B1 contra +5,47% na EMG
+  ([ANEEL, 20/06/2023](https://www.gov.br/aneel/pt-br/assuntos/noticias/2023/aneel-aprova-reajuste-nas-tarifas-da-energisa-minas-rio)).
+  Hoje o `selecionarTarifasVigentes` fica com um valor qualquer quando há mais de um. No passo 0, conferir que cada
+  sucessora tem **um só** valor B1 residencial convencional na vigência atual. Se tiver mais de um, a rotina para.
+  Nesse caso, a cidade da área antiga não recebe tarifa até separarmos as áreas.
+- **Lista depois da troca:**
+  - tirar repetidos (Campina Grande: EPB + EBO viram EPB uma vez só);
+  - conferir a ordem em Guarapuava e Nova Friburgo. A cidade de Guarapuava era da CFLO (hoje ESS), mas a Copel
+    aparece primeiro. Nova Friburgo era da ENF (hoje EMR), mas a Enel RJ aparece primeiro.
+  - Isso é um risco; não é veto.
+- **D4 (limite de idade):**
+  - **aviso** no relatório desde o 1º dia vencida, porque uma tarifa em vigor sempre tem `fimVigencia ≥ hoje`;
+  - **descarte** depois de 6 meses, não 12. Um reajuste perdido erra a conta em 5% a 19% (ESS, 2025). Descartar por
+    engano leva a "use a sua conta", que é honesto; manter por engano mostra um número errado.
+  - V1 com o mesmo corte de 6 meses.
+- **Média da `/`:** fica simples (não bloqueia). Ponderar por unidades consumidoras residenciais só com a fonte da
+  ANEEL, numa história própria. Até lá, o texto chama o valor de "média das distribuidoras" e diz que é estimativa.
 
 ## Fluxo e textos
 
@@ -265,7 +298,7 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
 
 ## Perguntas abertas
 
-- [ ] `[para: dominio-energia]` Confirmar no cadastro de agentes ou nas resoluções autorizativas da ANEEL, com o
+- [x] `[para: dominio-energia]` _(respondida em 30/10: ver "Regras de negócio e fontes"; CERR sem número de ato da ANEEL)_ Confirmar no cadastro de agentes ou nas resoluções autorizativas da ANEEL, com o
   número do ato, a data e o link de cada sucessão:
   - (a) EDEVP, CNEE, EEB e CFLO incorporadas pela Caiuá Distribuição, que virou ESS, CNPJ 07282377000120, em 2017.
   - (b) CPFL Leste Paulista, CPFL Mococa e CPFL Sul Paulista incorporadas pela CPFL Jaguari, que virou CPFL Santa Cruz,
@@ -276,9 +309,9 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
     hoje o interior de Roraima, os 14 municípios fora de Boa Vista?
   - (f) A RGE Sul incorporou a RGE e passou a se chamar RGE em 2019, com o CNPJ 02016440000162. Isso é só para a
     fonte, porque o D1 já resolve.
-- [ ] `[para: dominio-energia]` O limite do D4 fica em 12 meses para descartar e 31 dias para avisar? Ou fica mais
+- [x] `[para: dominio-energia]` _(6 meses para descartar; aviso desde o 1º dia)_ O limite do D4 fica em 12 meses para descartar e 31 dias para avisar? Ou fica mais
   curto (6 meses), já que um reajuste perdido erra a conta em 5% a 15%?
-- [ ] `[para: dominio-energia]` (não bloqueia) A média nacional do simulador da `/` deve ser simples, como hoje, ou
+- [x] `[para: dominio-energia]` _(simples por enquanto, chamada de estimativa)_ (não bloqueia) A média nacional do simulador da `/` deve ser simples, como hoje, ou
   ponderada (por município ou por consumidores)?
 - [ ] `[para: tech-lead]` D7: aprovar `substituidas` no `ArquivoTarifas` e dizer onde a troca mora. E a ordem: a HIS-111
   começa depois do a3 da HIS-003a?
@@ -315,3 +348,22 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   - **tech-lead:** D7 e a ordem com a HIS-003a.
   - **ux:** o texto do D7.
   - **scrum-master:** a sprint.
+
+### [dominio-energia] 2026-10-30 — sucessões confirmadas, uma sem número de ato
+- **O que fiz:** busquei os atos da ANEEL e do DOU para as 11 empresas e preenchi "Regras de negócio e fontes".
+  O cedoc da ANEEL não abre daqui; usei cópias do documento oficial e marquei quais são.
+- **Resultado:**
+  - ESS: aprovada (REA 6.318/2017).
+  - CPFL Santa Cruz: aprovada (REA 6.723/2017).
+  - EMR e EPB: aprovadas (REA 12.177/2022 e REA 12.687/2022), com a condição V7.
+  - CERR → Roraima Energia: aprovada com o despacho do MME de 12/08/2016, sem número de ato da ANEEL.
+  - RGE: só a fonte, porque o D1 resolve.
+- **Decisões:**
+  - D4 descarta a tarifa depois de 6 meses vencida, não 12, e avisa desde o 1º dia.
+  - V7 nova: a sucessora com mais de um valor B1 na mesma vigência faz a rotina parar.
+  - A média da `/` fica simples e é chamada de estimativa.
+- **Riscos:**
+  - O preço pode ser diferente em cada área depois do agrupamento (ENF em 2023).
+  - A ordem da lista em Guarapuava e Nova Friburgo.
+  - A data da REA 6.318 cai num sábado: conferir no DOU.
+- **Próximo:** backend, com o passo 0 e o V7. Depois o qa, que confere os critérios 1 e 2 com a tabela.
