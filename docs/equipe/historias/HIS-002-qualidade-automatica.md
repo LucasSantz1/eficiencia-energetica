@@ -1048,3 +1048,39 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
   revisar `excecoes-axe.ts` no A5; **seguranca** — receber o artefato do A6 (Ra9). **scrum-master** — decidir o ponto
   da HIS-110 (`corDaParte` × `faixaDoPeso`) antes de ela começar e conferir que a HIS-003 cobre o Dependabot de
   `github-actions` e o `atualizar-dados.yml`.
+
+### [frontend] 2026-10-30 — A5: correções sem mudança visível (`aria-label` da casa ilustrada e `<dl>` da Tarifa Social)
+- O que fiz: commit próprio `b0bff1c` só com `apps/web/src`. (1) `CasaIlustrada.tsx`: `aria-label` exatamente o modelo
+  da ux, com o `reais()` local (U+00A0 depois do "R$", D16). (2) `PaginaInicial.tsx`: o `<p>` do CRAS saiu do `<dl>`;
+  um `<div class="grid gap-6 self-center">` envolve o `<dl class="grid gap-6">` (os 2 cartões) e o `<p>` — mesmo
+  espaço entre os 3 blocos, mesma ordem de leitura.
+- Decisões e porquê:
+  - **Achado: o texto da ux sozinho não zera o `label-content-name-mismatch`.** O axe 4.14.0 monta o texto visível
+    juntando os filhos **sem espaço** (`visibleVirtual` faz `join('')`): `<span>Quarto</span><span>19%</span>` vira
+    "quarto19%", um token só, que não está em nenhum nome. Medido: com só o `aria-label` novo, os 5 nós continuavam.
+    Correção sem mudança visível: `{" "}` entre os dois `<span>` (entre itens flex, texto só de espaço não é desenhado —
+    confirmado pelas capturas). O texto da ux não mudou.
+  - `display: contents` no `<dl>` recusado: já tirou a semântica de listas em navegadores; duas grades `gap-6` dão o
+    mesmo resultado sem esse risco.
+- Como verifiquei (cópias próprias em `scratchpad/fe-his002/antes` = `HEAD` anterior, porta 3121, e `…/depois`, porta
+  3122; `git archive` + `pnpm install --offline` + `pnpm build`; liberadas com `fuser -k`):
+  - `/` em 390 e 1280 px, sem e com a casa v2: **0 pixel diferente** nas 4 capturas de página inteira, caixas de
+    `dt`/`dd`/`p` da faixa iguais, `ariaSnapshot` da faixa igual, console sem erro nem aviso. Antes, uma execução de
+    **controle** (antes × antes) para validar o comparador: no começo dava diferença à toa (a `Contagem` e o `Revelar`
+    pegos no meio; o `clock.setFixedTime` trava a `Contagem`), corrigido com rolagem lenta, animações paradas por CSS
+    igual nas duas versões e espera até o texto visível da `Contagem` igualar o do leitor de tela → controle 0 px 3×.
+  - Nome acessível pela árvore do Chromium (CDP `Accessibility.getFullAXTree`) e pelo `ariaSnapshot`: os 5 iguais à
+    tabela da ux; o seletor do D16 (`/^Quarto, 19% da conta, R\$\s21,74 por mês$/` e os outros 4) acha 1 botão cada.
+  - axe 4.14.0 (da cópia do tech-lead, só leitura; nada instalado no repositório) na `/` estável: **somem**
+    `definition-list` e `label-content-name-mismatch` (5 nós passam); sobra só `color-contrast` (sério, HIS-110) e
+    `landmark-one-main`/`region` (moderados, informativos).
+  - `pnpm typecheck` e `pnpm test` verdes.
+  - Capturas: `scratchpad/fe-his002/telas/{antes,depois}-{celular,computador}-{sem,com}-casa.png`; relatório em
+    `scratchpad/fe-his002/relatorio.json`.
+- Para o **qa** (A5): o `color-contrast` estável da `/` tem **4 nós, não 2**: as pílulas de Quarto e Cozinha
+  (faixa D) **e** os dois `<dd class="mt-2 text-white/85">` dos cartões "Tarifa Social" e "Desconto Social" (branco 85%
+  sobre `bg-white/10` em cima do `bg-energia`). Também mudança de cor → HIS-110 (decidir com ux/scrum-master se esses
+  dois entram nela). Sem rolar e parar as animações, aparecem mais 2 falsos (nomes de Cozinha e Lavanderia na animação
+  `acende`). Testar: nomes por regex da tabela, axe da `/` sem `definition-list` nem `label-content-name-mismatch`.
+- Para o próximo: **qa** — seguir o A5 com estes nomes e os 4 nós de contraste; **ux-acessibilidade** — saber dos 2
+  `dd` na HIS-110 ao revisar `excecoes-axe.ts`.
