@@ -10,6 +10,15 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · code review do h6 (frontend) aprovado
+- **O que fiz:** revisei o `10166f5` (core, `aplicacao/casa.ts`, `Casca`, `AvisoTrocaDistribuidora`, `Aviso`,
+  `Cadastro`, `TelaAjustes`) e rodei typecheck, test (core 53, dados 87) e build numa cópia
+  (`scratchpad/tl-his111-h6/copia`): verdes. O ESLint ainda não existe nesta branch (vem com a 002b).
+- **Decisões e porquê:** aprovado. A regravação não entra em laço porque `trocaDeDistribuidora` só troca para um id
+  publicado. A `Casca` fica no layout, então o par da visita dura até "Entendi". `idDaSigla` duplicado vai para o h8.
+- **Arquivos:** `HIS-111-tarifas-vencidas.md` (nota), `contexto.md` e este diário.
+- **Próximos passos:** qa (h7) com o e2e da troca e as capturas; h8 com os itens das duas notas.
+
 ## 2026-10-30 · HIS-111 · code review do backend em `packages/dados` aprovado; T2 e ADR-005 revistos depois do passo 0
 - **O que fiz:** revisei os commits do backend em `packages/dados` desde `6daaabf` (h0–h5, correções do passo 0, linha
   12 do `sucessoes.json`) e rodei typecheck, test (core 48, dados 87) e build numa cópia

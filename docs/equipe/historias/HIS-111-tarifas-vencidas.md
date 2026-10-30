@@ -1156,3 +1156,10 @@ resto igual.
 - **Verifiquei:** typecheck, test e build verdes. Playwright (porta 3161, cópia própria, `tarifas.json` de teste com `substituidas`): 52 conferências em 390 e 1280 px, console limpo. Capturas e script em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/frontend-h6/`.
 - **Próximo:** qa (h7, critério 8: `rge-sul` sem conta → aviso, uma gravação, Ajustes com RGE; `cnee` → corpo sem nome; com conta → sem aviso); ux revisa as capturas.
 
+
+### [tech-lead] 2026-10-30 — code review do h6 (`10166f5`): aprovado
+- **Aprovado.** Camadas certas: o core é puro (`nomeComercialDoId` com `Map`, `descreverTroca`), a `aplicacao/casa.ts` é a única porta, a `Casca` e o aviso só usam `aplicacao/` e `ui/`, e o `Aviso` ganhou `anunciar` sem regra. A casa é regravada uma vez só e sem laço: o `trocaDeDistribuidora` só devolve troca para um id publicado (R6), o par fica num `ref`, e depois do `set` o id salvo é o de hoje. A `Casca` mora no `casa/layout`, então o aviso não some ao trocar de aba. typecheck, test (core 53, dados 87) e build verdes numa cópia. F2 fora, como combinado.
+- Itens, nenhum bloqueia:
+  1. `idDaSigla` (core) repete o `slug` da rotina. No h8, o `slug` de `packages/dados` passa a usar a função exportada do core (uma regra só).
+  2. O `setState` dentro do efeito entra na dívida da HIS-109 (`set-state-in-effect`).
+  3. qa (h7): e2e com a casa salva com `rge-sul` (regrava para `rge`, aviso uma vez, sem aviso com conta de luz, foco no `h1` ao tocar em "Entendi") e capturas em 390 e 1280 px.
