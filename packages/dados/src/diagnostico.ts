@@ -271,9 +271,9 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
   saida.push(`- (c) CNPJs com mais de uma sigla: ${d.cnpjsComVariasSiglas.map((g) => celulaMarkdown(`${g.cnpj} (${g.agentes.map((a) => a.sigla).join(", ")})`, LIMITE_LISTA)).join("; ") || "nenhum"}.`);
   const mantidos = d.relatorio.vinculosExtintosMantidos;
   saida.push(
-    `- (d) D3: ${mantidos.reduce((t, c) => t + c.municipios, 0)} cidades em que o vínculo extinto é o único (fica, com aviso)` +
+    `- (d) D3: ${mantidos.reduce((t, c) => t + c.municipios, 0)} cidades em que o vínculo extinto sem tarifa é o único (fica, com aviso; o V5 acusa)` +
       `${mantidos.length > 0 ? `: ${celulaMarkdown(contagens(mantidos), LIMITE_LISTA)}` : ""}; ` +
-      `${d.relatorio.vinculosExtintosDescartados.reduce((t, c) => t + c.municipios, 0)} vínculos extintos saem porque a cidade tem outro recente.`,
+      `${d.relatorio.vinculosExtintosDescartados.reduce((t, c) => t + c.municipios, 0)} vínculos extintos sem tarifa saem porque a cidade tem outro que fica.`,
   );
   saida.push("");
 

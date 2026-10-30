@@ -30,9 +30,9 @@ export interface Relatorio {
   renomeacoesPorCnpj: { de: string; para: string; cnpj: string; municipios: number }[];
   /** D2: linha do `sucessoes.json` usada, com os municípios que ela trocou. */
   sucessoesAplicadas: { de: string; para: string; municipios: number }[];
-  /** D3: vínculo de conjunto que parou de reportar, tirado porque a cidade tem outro recente. */
+  /** D3: vínculo de conjunto que parou de reportar e não chega a tarifa publicada, tirado porque a cidade tem outro. */
   vinculosExtintosDescartados: ContagemPorSigla[];
-  /** D3: vínculo de conjunto que parou de reportar, mantido por ser o único da cidade (aviso). */
+  /** D3: vínculo de conjunto que parou de reportar e não chega a tarifa publicada, mantido por ser o único (aviso). */
   vinculosExtintosMantidos: ContagemPorSigla[];
   /** D4: vencidas há mais de 6 meses, fora do arquivo. */
   tarifasDescartadasPorVencimento: TarifaVencida[];
@@ -179,15 +179,19 @@ export function montarArquivos(entrada: EntradaDaMontagem): Montagem {
   const ufsPorSigla = new Map<string, Set<string>>();
   const municipios: Municipio[] = localidades.municipios.map((m) => {
     const ids = new Set<string>(); // Set: Campina Grande com EPB e EBO fica com a EPB uma vez só
-    const lista = vinculosDe(m.ibge);
-    const temVinculoRecente = lista.some((v) => !extinto(v));
-    for (const v of lista) {
-      const r = resolver(v);
+    const lista = vinculosDe(m.ibge).map((v) => ({ v, r: resolver(v) }));
+    // D3 só vale para o vínculo que não chega a nenhuma tarifa publicada. Um dono com tarifa publicada (direto, pelo
+    // D1 ou pelo D2) é a empresa de hoje: o conjunto antigo dele não diz que ele saiu da cidade. No passo 0 o arquivo
+    // de conjuntos parou em 2014, e a regra antiga marcava a EQUATORIAL PI (vigente) como extinta em 222 cidades e
+    // tirava 63 vínculos de empresas vigentes (ELETROCAR, RGE, CEMIG-D, COELBA e outras).
+    const extintoSemTarifa = (x: (typeof lista)[number]) => x.r === undefined && extinto(x.v);
+    const temVinculoQueFica = lista.some((x) => !extintoSemTarifa(x));
+    for (const x of lista) {
+      const { v, r } = x;
       const sigla = v.agente ?? v.cnpj ?? "?";
-      // D3 com a regra segura (T2): conjunto que parou de reportar só sai se a cidade tiver outro recente.
-      // Se ele leva a uma sucessora (D1 ou D2), vale: é a empresa de hoje no lugar da antiga.
-      if (extinto(v) && r?.via !== "sucessao" && r?.via !== "renomeacao") {
-        if (temVinculoRecente) {
+      // Regra segura (T2): o vínculo extinto só sai se a cidade tiver outro que fica.
+      if (extintoSemTarifa(x)) {
+        if (temVinculoQueFica) {
           contar(extintosDescartados, sigla, m.ibge);
           continue;
         }

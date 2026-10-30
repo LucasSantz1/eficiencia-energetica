@@ -24,6 +24,7 @@ const ALEGRETE = 4300406;
 const ASSIS = 3504008;
 const UBERABA = 3170107;
 const MONTES_CLAROS = 3143302;
+const UBERLANDIA = 3170206;
 const RANCHARIA = 3542206;
 
 describe("D1: mesmo CNPJ é a mesma empresa (critério 4)", () => {
@@ -52,23 +53,35 @@ describe("D2 e D3: conjunto que parou de reportar (critério 5)", () => {
     expect(m.relatorio.sucessoesAplicadas).toEqual([{ de: "EDEVP", para: "ESS", municipios: 1 }]);
   });
 
-  it("sem linha de sucessão e com outro vínculo recente na cidade, o vínculo extinto sai", async () => {
+  it("sem linha de sucessão e com outro vínculo na cidade, o vínculo extinto sem tarifa sai", async () => {
     const m = await montar();
-    expect(cidade(m, UBERABA)).toEqual(["ess"]);
-    expect(m.relatorio.vinculosExtintosDescartados).toEqual([{ sigla: "CEMIG-D", municipios: 1 }]);
+    // COOP Z (vencida, sem sucessão) parou em 2022; a ESS e a CEMIG-D ficam.
+    expect(cidade(m, UBERABA)).toEqual(["cemig-d", "ess"]);
+    expect(m.relatorio.vinculosExtintosDescartados).toEqual([{ sigla: "COOP Z", municipios: 1 }]);
   });
 
-  it("sem linha de sucessão e sendo o único vínculo, o vínculo fica, com aviso", async () => {
+  it("sem linha de sucessão e sendo o único vínculo, o vínculo fica, com aviso (e o V5 acusa a falta de tarifa)", async () => {
     const m = await montar();
-    expect(cidade(m, MONTES_CLAROS)).toEqual(["cemig-d"]);
-    expect(m.relatorio.vinculosExtintosMantidos).toEqual([{ sigla: "CEMIG-D", municipios: 1 }]);
+    expect(cidade(m, MONTES_CLAROS)).toEqual([]);
+    expect(m.relatorio.vinculosExtintosMantidos).toEqual([{ sigla: "COOP Z", municipios: 1 }]);
+    expect(m.relatorio.agentesSemTarifa).toContain("COOP Z");
+  });
+
+  // Passo 0: o D3 marcava a EQUATORIAL PI (vigente) como extinta em 222 cidades e tirava a ELETROCAR, a CEMIG-D e a
+  // COELBA de outras. Empresa com tarifa publicada nunca é extinta, mesmo com um conjunto antigo.
+  it("conjunto antigo de empresa vigente não é extinto: não sai da cidade nem entra no aviso", async () => {
+    const m = await montar();
+    expect(cidade(m, UBERLANDIA)).toEqual(["cemig-d"]);
+    expect(cidade(m, UBERABA)).toContain("cemig-d");
+    const extintos = [...m.relatorio.vinculosExtintosDescartados, ...m.relatorio.vinculosExtintosMantidos].map((c) => c.sigla);
+    expect(extintos).not.toContain("CEMIG-D");
   });
 
   it("sem o sucessoes.json, a empresa vencida fica sem tarifa (o V5 para a rotina)", async () => {
     const m = await montar([]);
     expect(cidade(m, ASSIS)).toEqual([]);
     expect(m.relatorio.agentesSemTarifa).toEqual(["COOP Z", "EDEVP"]);
-    expect(m.relatorio.vinculosExtintosMantidos.map((c) => c.sigla)).toEqual(["CEMIG-D", "EDEVP"]);
+    expect(m.relatorio.vinculosExtintosMantidos.map((c) => c.sigla)).toEqual(["COOP Z", "EDEVP"]);
     expect(m.tarifas.substituidas).toEqual({ "rge-sul": "rge" });
   });
 

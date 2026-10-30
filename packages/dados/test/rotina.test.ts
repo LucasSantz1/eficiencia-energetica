@@ -86,11 +86,11 @@ describe("rotina de ponta a ponta (HIS-111)", () => {
   it("critério 9: as anotações mostram sucessões, vínculos extintos e tarifas vencidas", async () => {
     const { log } = await rodar();
     expect(log).toContain("::notice title=Sucessões aplicadas (HIS-111)::EDEVP → ESS: 1 municípios");
-    expect(log).toContain("::notice title=Vínculos extintos descartados (HIS-111)::CEMIG-D: 1 municípios");
+    expect(log).toContain("::notice title=Vínculos extintos descartados (HIS-111)::COOP Z: 1 municípios");
     expect(log).toContain(
       "::notice title=Tarifas descartadas por vencimento (HIS-111)::COOP Z (vigência até 2026-03-30); EDEVP (vigência até 2017-07-11); RGE SUL (vigência até 2019-06-18)",
     );
-    expect(log).toContain("::warning title=Vínculos extintos mantidos (único da cidade)::CEMIG-D: 1 municípios");
+    expect(log).toContain("::warning title=Vínculos extintos mantidos (único da cidade)::COOP Z: 1 municípios");
   });
 });
 
