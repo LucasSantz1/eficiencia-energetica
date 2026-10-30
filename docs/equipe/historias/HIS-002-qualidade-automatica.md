@@ -525,9 +525,60 @@ jobs e `permissions: contents: read` (D11), `playwright install --with-deps` só
 (14 dias, só dados inventados), servidor do teste em `127.0.0.1` sem reaproveitar servidor alheio. As ameaças das
 dependências do ESLint e os 21 casos ficam na [HIS-002b](HIS-002b-lint-e-camadas.md).
 
-| Ameaça | Gravidade | Mitigação |
+**Ativos:** o código e o histórico do repositório (público), o resultado do CI (é ele que libera a integração no
+`main`), o computador da equipe e o runner (onde os pacotes rodam), a casa salva de quem usa (nada dela pode ir para
+teste nem artefato) e a garantia de que o site não fala com terceiros. **Quem ataca:** pacote malicioso ou sequestrado
+na árvore de dependências ou numa action; PR de fora (fork) tentando usar o CI; e o próprio time por descuido
+(afrouxar uma barreira sem perceber).
+
+**Medido em 2026-10-29 (seguranca):** `npm view` dos 5 pacotes do navegador — `@playwright/test`, `playwright`,
+`playwright-core` 1.63.0 (mantenedores da Microsoft, `github.com/microsoft/playwright`) e `@axe-core/playwright` 4.14.0 /
+`axe-core` 4.14.0 (Deque, `github.com/dequelabs`): **nenhum tem `preinstall`/`install`/`postinstall`** (o `prepare` do
+`@axe-core/playwright` só roda em instalação por git, que não usamos). Fontes do site são locais (`@fontsource-variable/*`):
+nem o build nem a página buscam fonte fora. O `ci.yml` de hoje **não tem `permissions`** (o token herda o padrão do
+repositório, que pode ser escrita): o D11 melhora isso.
+
+| # | Ameaça | Gravidade | Mitigação |
+| --- | --- | --- | --- |
+| Aa1 | Pacote malicioso, nome parecido (typosquat) ou versão sequestrada entre os pacotes novos do navegador roda código na máquina da equipe e no runner | médio (impacto alto, chance baixa) | Nomes e mantenedores conferidos (acima); versão exata no `package.json`; lockfile com `integrity` sha512; `pnpm install --frozen-lockfile` no CI; nenhum script de instalação novo |
+| Aa2 | Script de instalação liberado sem revisão (`onlyBuiltDependencies` ganha um pacote, ex.: `unrs-resolver`) | baixo | `onlyBuiltDependencies` continua só `esbuild` e `sharp`; pacote novo que peça script entra só com nota da seguranca |
+| Aa3 | Lockfile com origem fora do registro (tarball de URL ou git) escondida num diff de mil linhas | médio | Toda `resolution` do `pnpm-lock.yaml` vem do registro com `integrity`; conferência por `grep` (Ra2) |
+| Aa4 | Vulnerabilidade conhecida alta/crítica na árvore nova | alto se aparecer | `pnpm audit --audit-level high` limpo no A1 e de novo antes da etapa 6; se aparecer, bloqueia até subir de versão ou ter justificativa escrita |
+| Aa5 | Pacote de teste indo para o navegador (import de `@playwright/test`/`axe-core` em `apps/web/src`) | baixo | Só em `devDependencies` de `apps/web`; o e2e não importa código do site e o site não importa o e2e; peso do A4 igual ao da HIS-001 e hosts em `.next/static` iguais à linha de base |
+| Aa6 | Token do CI com mais poder que precisa: um pacote ou action comprometida no job escreveria no repositório | médio | `permissions: contents: read` no topo e **nenhum** `permissions:` por job; nenhum `secrets.` no `ci.yml`; `persist-credentials: false` no `actions/checkout` dos dois jobs (ninguém faz push; assim o token não fica em `.git/config` ao alcance dos ~300 pacotes que rodam no job) |
+| Aa7 | Gatilho que roda código do PR com poder do repositório (`pull_request_target`, `workflow_run`) | alto se usado | Só `push` no `main`, `pull_request` e `workflow_dispatch` (sem `inputs`). PR de fork roda com token só de leitura e sem segredos |
+| Aa8 | Injeção de expressão no `run:` (`${{ github.event.pull_request.title }}`, `github.head_ref` viram comando de shell) | alto se usado | Nenhum `${{ github.event.* }}` nem `github.head_ref` dentro de `run:` no `ci.yml`; se um dia precisar, via `env:` e `"$VAR"` |
+| Aa9 | Action por etiqueta móvel (`@v5`, `@v4`): quem controla a action (inclusive a de terceiro `pnpm/action-setup`) troca o código e passa a marcar verde ou ler o job | médio | **Recomendado no A6**, já que o `ci.yml` é reescrito: as 4 actions fixadas pelo SHA completo de 40 caracteres com a versão em comentário (`uses: actions/checkout@<sha> # v5.x.y`) e a major atual do `upload-artifact` conferida. Se o scrum-master mantiver isso na HIS-003, ela fecha **antes do E4** (antes de existir qualquer segredo no CI), com Dependabot para actions |
+| Aa10 | Artefato com dado sensível: relatório, captura e trace de repositório público ficam 14 dias para qualquer conta do GitHub baixar; trace guarda DOM, rede, console e `localStorage` das telas | médio | Só fixtures inventadas (`casa-v1/v2.json`: ids `00000000-…`, cidade pública, sem nome, CPF, endereço, telefone, e-mail); job `e2e` sem `env:` de segredo; teste nunca lê `.env*`; `path` do artefato só `apps/web/playwright-report/` e `apps/web/test-results/` (nunca `.`, `.next/`, `.git/`, `~`); rede do teste só `127.0.0.1` |
+| Aa11 | e2e dependendo de rede externa (instável) ou site chamando terceiro sem a pessoa saber (LGPD) sem ninguém ver | médio | Fixture automática em `apoio/teste.ts` que **registra** toda requisição (`context.on("request")`, sem `route`, para não mexer no 11b) e reprova se o destino não for `http://127.0.0.1:<PORTA>` (`data:`/`blob:` liberados), com a URL na mensagem. Os testes conferem o `href` dos links da ANEEL, não clicam. `NEXT_TELEMETRY_DISABLED: 1` no `env:` do workflow (o `next build` manda telemetria anônima para a Vercel; o CI não precisa disso) |
+| Aa12 | Servidor do teste aberto na rede ou reaproveitado (build de outra pessoa) | baixo | `next start -H 127.0.0.1`, `baseURL` em `127.0.0.1`, `reuseExistingServer: false` (já no D9) |
+| Aa13 | Referência de peso atualizada pelo CI ou afrouxada em silêncio (sobe o número, o celular simples paga) | médio | Limites +1 024 / +2 048 B são **constantes no `peso-js.spec.ts`**, nunca no JSON nem em variável de ambiente; `ATUALIZAR_PESO_JS=1` com `GITHUB_ACTIONS=true` reprova (M15 do qa); o token é só leitura; último passo do job `e2e`: `git diff --exit-code` (nenhum teste muda arquivo versionado); mudança no `peso-js.json` só com o porquê na história do PR |
+| Aa14 | Exceção do axe virando regra desligada: `disableRules`, `withTags`, `withRules`, `exclude()`/`include()`, `options({ rules })`, ou exceção com `alvo` tão genérico que cobre a página | médio (acessibilidade é a segurança de quem enxerga pouco) | O `AxeBuilder` roda **sem** esses métodos; a exceção se aplica depois da análise, por regra + página + estado + nó; exceção que casa com 0 nós = erro (D10) **e com mais de 1 nó = erro**; `historia` tem que existir em `docs/planejamento.md`; lista e contagem de `incomplete` no resumo do job; ux revisa |
+| Aa15 | Barreira que passa sem testar: `test.only`, `test.skip`/`fixme` sem história, 0 testes | baixo | `forbidOnly` no CI (M16 do qa); todo `skip`/`fixme` cita `HIS-NNN` no título; sem `passWithNoTests` (o Playwright reprova "No tests found") |
+| Aa16 | Tela branca passa no CI (erro de página não pego) | baixo | Fixture automática com `pageerror` e `console.error` (N1, N2 do qa) |
+| Aa17 | Chromium baixado do CDN do Playwright no runner sem conferência nossa de hash | baixo, aceito | HTTPS da Microsoft, mesmo caminho da documentação; usar o Chrome do runner quebraria o critério 6. Só no runner, nunca no ambiente da equipe |
+| Aa18 | Cache do pnpm envenenado por PR | baixo, aceito | O GitHub isola o cache criado num PR (o `main` não o lê); `--frozen-lockfile` confere a integridade de cada pacote |
+
+Nenhuma ameaça crítica. As altas (Aa4, Aa7, Aa8) só existem se o desenho mudar ou o audit acusar: viram as conferências
+Ra4, Ra6 e Ra7. As médias têm mitigação no desenho ou aqui; a Aa9 tem destino se não entrar no A6.
+
+### Conferência da etapa 6 (Ra1–Ra13, seguranca)
+
+| # | Conferência | Esperado |
 | --- | --- | --- |
-| … | … | … |
+| Ra1 | `grep -nE '"(@playwright/test\|@axe-core/playwright)"' apps/web/package.json` e `pnpm why axe-core playwright-core` | só em `devDependencies` de `apps/web`, versão sem `^`/`~` (1.63.0 e 4.14.0) |
+| Ra2 | `grep -nE 'tarball:\|git\+\|codeload\|\.tgz' pnpm-lock.yaml`; `onlyBuiltDependencies` em `pnpm-workspace.yaml` | vazio; continua `esbuild`, `sharp` |
+| Ra3 | scripts de instalação na árvore: para cada `node_modules/.pnpm/*/node_modules/**/package.json`, `preinstall`/`install`/`postinstall` | só `esbuild` (liberado) e `unrs-resolver` (bloqueado, da 002b) |
+| Ra4 | `pnpm audit --audit-level high` no A1 e na etapa 6 | "No known vulnerabilities found" (ou nenhuma alta/crítica, com a lista na nota) |
+| Ra5 | `grep -rnE "playwright\|axe-core" apps/web/src` e `grep -rl "axe-core\|playwright" apps/web/.next/static` | vazios; peso do A4 igual à HIS-001 |
+| Ra6 | No `ci.yml`: `on:` só `push` (main), `pull_request`, `workflow_dispatch`; `permissions: contents: read` no topo; `grep -n "permissions:\|secrets\.\|pull_request_target\|workflow_run" .github/workflows/ci.yml` | uma linha `permissions:` (a do topo); nenhum `secrets.`, `pull_request_target`, `workflow_run` |
+| Ra7 | `grep -n '\${{' .github/workflows/ci.yml` | só em `concurrency` e `if:` (nada de `github.event`/`head_ref` em `run:`) |
+| Ra8 | `actions/checkout` dos dois jobs com `persist-credentials: false`; `uses:` fixados por SHA (se entrou no A6) ou registro na HIS-003 | um ou outro, escrito na nota do A6 |
+| Ra9 | Baixar o artefato do commit descartável do A6, descompactar e procurar: `grep -rEl "ghp_\|github_pat_\|ghs_\|AKIA\|eyJhbGci\|service_role\|BEGIN [A-Z ]*PRIVATE" .`; listar os arquivos | vazio; só `playwright-report/**` e `test-results/**`; dentro do trace, só pedidos a `127.0.0.1` e a casa das fixtures |
+| Ra10 | Numa cópia, plantar `fetch("https://exemplo.com/x")` num efeito da `/sobre` → `pnpm test:e2e` | reprova com a URL na mensagem; tirar → passa (pode virar N8 permanente do qa com `page.setContent`) |
+| Ra11 | `grep -n "1024\|1 024\|2048" apps/web/e2e/peso-js.json`; M15 do qa; `git diff --exit-code` como último passo do job | JSON sem limite; M15 vermelho com o JSON intacto; passo presente |
+| Ra12 | `grep -rnE "disableRules\|withTags\|withRules\|\.exclude\(\|\.include\(\|options\(" apps/web/e2e`; teste com exceção de `alvo` que casa 2 nós | vazio; reprova ("exceção cobre mais de um elemento") |
+| Ra13 | `grep -n "NEXT_TELEMETRY_DISABLED" .github/workflows/ci.yml`; `next start` com `-H 127.0.0.1`; `reuseExistingServer: false` | presentes |
 
 ## Plano de testes
 
@@ -732,6 +783,9 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
   8. **P-qa-8 · (opcional; seguranca opina) Nada sai do aparelho (A1).** A fixture automática também reprova pedido para
      host diferente de `127.0.0.1` (`page.on("request")`): é o princípio 5 do produto virando barreira — um script de
      análise ou uma fonte de CDN que entrasse por engano seria pego no PR. Negativo N8: `fetch("https://exemplo.com")`.
+     — **seguranca (2026-10-29): não é opcional — é a mitigação da Aa11** ("Ameaças"), entra no A1. Ouvir no
+     **contexto** (`context.on("request")`, pega também janela nova e worker), sem `route` (não mexe no 11b); liberar só
+     `http://127.0.0.1:<PORTA>`, `data:` e `blob:`; a URL vai na mensagem. N8 permanente de acordo.
 
   Custo estimado: +0,5 dia na HIS-002a (teclado, cômodos, estados do axe, sanidade); +~40 s no job `e2e`.
 
@@ -864,3 +918,20 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
 - Para o próximo: **tech-lead** — responder P-qa-1 a P-qa-8 (P-qa-8 com a **seguranca**). **ux-acessibilidade** — os
   nomes da tabela entram no `fluxo-principal`/`acessibilidade` por regex; chamo para revisar `excecoes-axe.ts` no A5.
   **Etapa 4:** eu escrevo os testes (A1–A5) seguindo o plano; o A7 só depois da tabela de cobertura toda verde.
+
+### [seguranca] 2026-10-29 — análise de ameaças da HIS-002a (etapa 3): aprovado para implementar
+- O que fiz: li a história inteira (com o plano do qa e o texto da ux), o ADR-003, a retro e o `ci.yml`/`atualizar-dados.yml`
+  de hoje. Conferi no registro (`npm view`) os 5 pacotes do navegador: mantenedores da Microsoft e da Deque, **nenhum
+  script de instalação**. Conferi que as fontes são locais (o site não busca nada fora) e que o `ci.yml` atual não tem
+  `permissions`. Escrevi "Ameaças" (Aa1–Aa18) e a conferência da etapa 6 (Ra1–Ra13); respondi a P-qa-8.
+- Decisões e porquê: **aprovado para implementar** — nenhuma ameaça crítica; as altas (Aa4 audit, Aa7 gatilho, Aa8
+  injeção no `run:`) só existem se o desenho mudar e viram conferência. Entram no desenho, sem custo de prazo:
+  `persist-credentials: false` no checkout (Aa6); fixture "nada sai do aparelho" no A1 (Aa11, era a P-qa-8 opcional —
+  agora obrigatória, porque é o princípio 5 do produto virando barreira); `NEXT_TELEMETRY_DISABLED: 1`; limites de peso
+  como constantes no spec e `git diff --exit-code` no fim do job `e2e` (Aa13); axe sem `disableRules`/`withTags`/
+  `exclude()` e exceção que cobre mais de um nó = erro (Aa14). **Recomendado no A6:** fixar as 4 actions por SHA (Aa9,
+  médio); se ficar na HIS-003, ela fecha antes do E4.
+- Arquivos alterados: esta história ("Ameaças", uma resposta na P-qa-8, esta nota); a HIS-002b; minha pasta. Nenhum código.
+- Para o próximo: **qa/frontend (etapa 4)** — seguir Aa6, Aa10, Aa11, Aa13 e Aa14; no A6, mandar para mim o artefato do
+  commit descartável (Ra9). **tech-lead** — decidir Aa9 (SHA agora ou HIS-003). **scrum-master** — se Aa9 for para a
+  HIS-003, anotar lá "antes do E4".
