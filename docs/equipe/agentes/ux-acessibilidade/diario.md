@@ -10,6 +10,17 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · aviso do D7 (empresa de luz mudou) e textos do D4 (cidade sem preço)
+- O que fiz: escrevi o F1 (aviso, quando, onde, por quanto tempo, textos, acessibilidade) e o F2 (cadastro, cartão do
+  painel e Minha casa sem preço). Respondi a pergunta da ux e abri 3 novas (tech-lead, dominio-energia, scrum-master).
+- Decisões e porquê:
+  - Avisar, porque a conta sobe até 55% sem a pessoa fazer nada. Só na visita da troca e só sem conta de luz: com a
+    conta, o valor não muda.
+  - O aviso fica na `Casca`, porque é lá que o hook roda. Assim ele aparece em qualquer aba e não guarda nada novo.
+  - Achei o painel mostrando R$ 0,00 e "Tarifa da :" vazio quando falta o preço. Troquei por "Falta o preço da luz".
+- Arquivos: `docs/equipe/historias/HIS-111-tarifas-vencidas.md`, esta pasta.
+- Próximos passos: revisar as capturas do h7 depois do frontend.
+
 ## 2026-10-30 · HIS-002 · nomes do "Quem mais gasta" (D-A5-1) e região rolável da tabela (D-A5-2)
 - O que fiz: escrevi em "Fluxo e textos" da HIS-002a o `aria-label` dos 6 botões e o nome e o foco da região que rola
   na tabela do "Painel geral". Deixei a nota na conversa.

@@ -38,8 +38,19 @@
     - Botões "Sim, está certo" e "Corrigir"; nenhum recebe o foco sozinho.
     - Salva só depois de confirmar.
   - Para o celular ou computador da pessoa, dizemos "aqui": "aparelho" é só eletrodoméstico.
+- Distribuidora que muda (HIS-111, F1/F2):
+  - A conta muda sem a pessoa fazer nada: avisar uma vez, na `Casca`, só na visita da troca e só sem conta de luz.
+    O aviso some com "Entendi" e não guarda nada novo no aparelho.
+  - O texto diz que o site usava o preço antigo. Nunca mostrar id nem sigla solta; sem nome conhecido, o texto sai
+    sem o nome antigo.
+  - Sem preço (`indisponivel`), a tela nunca mostra R$ 0,00. Mostra "Falta o preço da luz" e leva para a conta de luz.
+    Nada de "tarifa vencida", "vigência" ou "ANEEL" na tela.
 
 ## Pendências
+
+- HIS-111: respostas do tech-lead (nome do id antigo, `{ de, para }` durante a visita, `Aviso` sem `role` próprio) e
+  do dominio-energia (nomes de EDEVP, CNEE, EEB, CFLO, CERR). Revisar as capturas do h7. R$ 0,00 nos cômodos sem preço
+  e o caminho "A minha não está aqui" no cadastro: com o scrum-master.
 
 - HIS-003: revisar as capturas de T1 a T5 quando o frontend implementar. Conferir com o dominio-energia o formato de
   `{min}` e `{max}`.

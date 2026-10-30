@@ -294,7 +294,100 @@ alguns links são cópias do documento oficial. Quem tiver acesso troca pelo lin
 
 ## Fluxo e textos
 
-_(ux-acessibilidade)_ Só o texto do D7, se houver aviso.
+_(ux-acessibilidade, 2026-10-30. Li `Casca`, `PainelAcompanhamento`, `TelaAjustes`, o passo "distribuidora" do
+`Cadastro`, `ui/Aviso`, `ui/Botao` e `nomeDaDistribuidora`.)_
+
+### F1. Aviso do D7: a empresa de luz mudou
+
+**Decisão: avisar, sim.** A conta estimada pode subir até 55% sem a família mexer em nada. Um número que muda sozinho,
+sem explicação, parece erro do site. A família já recebe a conta com o nome novo há anos: quem estava atrasado era o
+site. O texto diz isso, sem culpar ninguém.
+
+**Quando aparece:** quando `useDistribuidoraAtualizada()` devolve `{ de, para }` **e** a casa não tem conta de luz
+informada (`precoKwh(...).origem === "aneel"`). Com a conta de luz, o valor não muda, e a troca fica sem aviso.
+
+**Onde:** na `Casca`, no topo do `<main>`, logo depois do aviso de dados de exemplo. Aparece em qualquer aba de `/casa`
+em que a troca acontecer e continua ao trocar de aba, porque a `Casca` fica montada no layout.
+
+**Por quanto tempo:** só na visita em que a troca acontece, até a pessoa tocar em "Entendi". Nada novo fica guardado no
+aparelho. Na próxima visita, o id salvo já é o novo, e o aviso não volta. Para isso, o `{ de, para }` fica guardado só
+durante a visita e não some quando a regravação muda o `distribuidoraId`.
+
+```
+360 px
+┌────────────────────────────────────┐
+│ (i) O preço da luz foi atualizado  │
+│ A CPFL Mococa hoje é a CPFL Santa  │
+│ Cruz. A gente ainda usava o preço  │
+│ antigo. Agora a conta estimada usa │
+│ o preço de hoje da CPFL Santa Cruz,│
+│ mais perto da conta que chega na   │
+│ sua casa.                          │
+│ Usar minha conta de luz            │
+│ ┌──────────┐                       │
+│ │ Entendi  │                       │
+│ └──────────┘                       │
+└────────────────────────────────────┘
+┌ Sua conta estimada por mês ────────┐
+```
+
+**Textos (prontos para copiar):**
+
+| Peça | Texto |
+| --- | --- |
+| Título (negrito, em `<p><strong>`, não `h2`) | O preço da luz foi atualizado |
+| Corpo, com os dois nomes | A {antiga} hoje é a {nova}. A gente ainda usava o preço antigo. Agora a conta estimada usa o preço de hoje da {nova}, mais perto da conta que chega na sua casa. |
+| Corpo, sem o nome antigo | A empresa de luz da sua cidade hoje é a {nova}. A gente ainda usava um preço antigo. Agora a conta estimada usa o preço de hoje da {nova}, mais perto da conta que chega na sua casa. |
+| Link (vai para `/casa/ajustes#conta`) | Usar minha conta de luz |
+| Botão (fecha o aviso) | Entendi |
+
+- `{nova}` = `nomeDistribuidora(distribuidora)`. `{antiga}` = o nome comercial do id antigo, que já saiu do
+  `tarifas.json` (pedido ao tech-lead abaixo).
+- **Nunca mostrar o id nem a sigla solta** ("edevp", "CERR"). Sem nome comercial conhecido, usar o corpo sem o nome
+  antigo.
+- Hoje já têm nome: `rge-sul`, `cpfl-mococa`, `cpfl-leste-pauli`, `cpfl-sul-paulist`, `enf` e `ebo`. Faltam `edevp`,
+  `cnee`, `eeb`, `cflo` e `cerr` (pedido ao dominio-energia abaixo).
+- "A {antiga} hoje é a {nova}" serve para a renomeação (RGE Sul → RGE) e para a incorporação. Não é preciso separar os casos.
+
+**Acessibilidade:**
+- `Aviso tom="faisca"` (tinta sobre amarelo claro, bem acima de 7:1), com o ícone `Info` `aria-hidden`. O título em
+  texto diz o que é; nada depende só da cor.
+- Anúncio: uma região `role="status"` fica sempre na `Casca`, vazia, e o aviso entra dentro dela (regra da HIS-003).
+  Para não ter um `status` dentro de outro, o `Aviso` ganha uma opção para não pôr o próprio `role` (mudança pequena em `ui/`).
+- O aviso não recebe o foco sozinho. Ordem: título, corpo, link, botão.
+- "Entendi" = `Botao variante="secundario"` (48 px). Ao fechar, o foco vai para o `h1` da tela (regra da HIS-003).
+- Entra com `surgir`, que o movimento reduzido desliga. Em 360 px e com zoom de 200%, nada corta nem rola para o lado.
+
+### F2. D4: cidade sem o preço de hoje
+
+Vale para a cidade cuja empresa saiu do arquivo sem sucessora (D4) e para as cidades sem nenhuma distribuidora. Nada
+de "tarifa vencida", "vigência" ou "ANEEL" na tela.
+
+**(a) Cadastro, passo "distribuidora", quando a cidade não tem nenhuma empresa com preço** (a lista do estado continua
+como hoje). O título fica igual. O subtítulo novo substitui "Não sabemos qual empresa atende {cidade}…":
+
+> Não achamos o preço de hoje da empresa de luz de {cidade}. Veja o nome no topo da sua conta de luz e escolha abaixo.
+> No fim, coloque o valor da sua conta: assim o cálculo usa o preço que você paga.
+
+**(b) Acompanhamento, cartão de cima, com `preco.origem === "indisponivel"`.** Hoje esse cartão mostra "R$ 0,00" e
+"Tarifa da : R$ 0,00 por kWh", e isso está errado. O `h1` "Sua conta estimada por mês" fica. No lugar do valor:
+
+| Peça | Texto |
+| --- | --- |
+| Frase grande (`text-faisca`, menor que o valor) | Falta o preço da luz |
+| Corpo | Não temos o preço de hoje da empresa de luz da sua cidade. Com um preço velho, a conta sairia errada. Coloque o valor e os kWh da sua última conta de luz, e a gente calcula com o preço que você paga. |
+| Botão (`BotaoLink`, vai para `/casa/ajustes#conta`) | Usar minha conta de luz |
+| Linha do consumo (fica) | A casa gasta cerca de {kWh} por mês. |
+
+Aqui o nome da empresa não aparece: ela pode nem estar mais no arquivo.
+
+**(c) Minha casa, "Onde você mora", sem distribuidora com preço.** Hoje aparece "Distribuidora: " vazio. Texto novo:
+
+> Distribuidora: não temos o preço de hoje. Use a sua conta de luz, mais abaixo.
+
+"mais abaixo" é um link para `#conta`.
+
+Em (b) e (c), o estado já vem pronto ao abrir a tela, então não há anúncio `aria-live`. O botão e o link têm 44 px ou mais.
 
 ## Desenho técnico
 
@@ -548,9 +641,19 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   sempre com o id final; a troca mora no core, na leitura, e no `aplicacao/`, na regravação, não no leitor da
   `Residencia`; formato salvo igual. A HIS-111 vem **antes** do a3)_ D7: aprovar `substituidas` no `ArquivoTarifas` e
   dizer onde a troca mora. E a ordem: a HIS-111 começa depois do a3 da HIS-003a?
-- [ ] `[para: ux-acessibilidade]` Quando a casa salva troca de `rge-sul` para `rge` (ou de EDEVP para Energisa
+- [x] `[para: ux-acessibilidade]` _(respondida em 30/10: avisar, sim, só na visita da troca e só sem conta de luz; ver
+  "Fluxo e textos", F1)_ Quando a casa salva troca de `rge-sul` para `rge` (ou de EDEVP para Energisa
   Sul-Sudeste), mostramos um aviso, como "Sua distribuidora agora se chama RGE. O preço foi atualizado.", ou a troca
   fica sem aviso?
+- [ ] `[para: tech-lead]` (não bloqueia o h0–h5) F1: (1) como o site acha o nome comercial de um id que já saiu do
+  `tarifas.json` (ex.: uma função no core, de id para nome, ou o nome junto do `substituidas`)? (2) O `{ de, para }`
+  precisa ficar guardado durante a visita, depois da regravação. (3) O `Aviso` pode ganhar uma opção para não pôr o
+  próprio `role`, para entrar numa região `status` que já existe?
+- [ ] `[para: dominio-energia]` (não bloqueia) Qual é o nome comercial, com fonte, de EDEVP, CNEE, EEB, CFLO e CERR,
+  para entrar em `nomeDaDistribuidora`? Sem isso, o aviso usa o texto sem o nome antigo.
+- [ ] `[para: scrum-master]` (não bloqueia) Com `preco.origem === "indisponivel"`, os cômodos e aparelhos do painel
+  também mostram R$ 0,00. O F2 corrige só o cartão de cima. O resto fica para uma história própria? Também falta um
+  caminho "A minha não está aqui" no passo "distribuidora" do cadastro (princípio 3).
 - [x] `[para: scrum-master]` _(respondida em 30/10: Sprint 0, prioridade 1, **um corte só**, antes do a3; o passo 0
   roda na Action pelo `push` da branch, que quem orquestra faz. Ver a nota do scrum-master)_ Prioridade e sprint. O pedido do dominio-energia é prioridade alta. Fazer um corte só ou
   dois (ver "Corte possível")? E lembrar que a rede do ambiente de nuvem não alcança a ANEEL: o passo 0 precisa da
@@ -679,3 +782,18 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   - **scrum-master:** V9 e V10 no critério 12.
   - **quem implementar a a3:** R7.
   - **qa:** R8 no h7/h8.
+
+### [ux-acessibilidade] 2026-10-30 — aviso do D7: sim, uma vez; textos do D4 para a cidade sem preço
+- **O que fiz:** escrevi "Fluxo e textos" (F1 e F2). Li a `Casca`, o painel, a Minha casa, o cadastro e o `Aviso`.
+- **Decisões e porquê:**
+  - **F1, avisar:** a conta pode subir até 55% sem a pessoa fazer nada. O aviso aparece na `Casca`, só na visita da
+    troca e só sem conta de luz, e some com "Entendi". Não guarda nada novo no aparelho.
+  - O texto diz que o site usava o preço antigo. A família já recebe a conta com o nome novo.
+  - Nunca mostrar id nem sigla solta. Sem nome conhecido, o texto sai sem o nome antigo.
+  - **F2:** hoje o painel mostra R$ 0,00 quando falta o preço. Troquei por "Falta o preço da luz" e o caminho da conta
+    de luz. Também escrevi os textos do cadastro e da Minha casa.
+- **Arquivos:** este arquivo ("Fluxo e textos" e "Perguntas abertas"); minha pasta.
+- **O que o frontend confere no h6:** a região `status` vazia antes do aviso; o foco vai para o `h1` ao fechar; nenhum
+  "R$ 0,00" ou "Tarifa da :" vazio no cartão de cima; os dois corpos do F1 (com e sem o nome antigo).
+- **Próximo:** tech-lead (3 pontos do F1, não bloqueiam o h0–h5); dominio-energia (5 nomes); depois o frontend no h6.
+  Eu reviso as capturas do qa (390 e 1280 px) no h7.
