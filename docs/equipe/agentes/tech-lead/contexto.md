@@ -37,7 +37,10 @@
 - **HIS-111 (tarifas vencidas, número errado no ar em 227 cidades):** desenho técnico pronto (T1–T7, 2026-10-30) e
   ADR-005 proposto. Passos h0–h8, cerca de 3 dias. Recomendei que ela venha **antes do a3** da 003a, em paralelo com o
   fim da 002a. Aguarda o scrum-master (sprint, critérios do T5), a seguranca (workflow do T3 e V8) e a ux (aviso do D7).
-- CI hoje: ~35 s por execução (um job). Com a HIS-002: dois jobs em paralelo, ~4 min de parede.
+- CI: `ci.yml` da HIS-002a escrito no A6 (2026-10-30, branch `his-002-qualidade`). São dois checks em paralelo:
+  "Lint, tipos e testes" e "Navegador (e2e, axe e peso)". Esses nomes valem para a proteção do `main` e a 002b não
+  pode mudá-los. Tempo estimado de parede: ~6–7 min, porque o e2e levou 4,3 min com 2 workers numa máquina de 2 CPUs.
+  Ainda falta ver a primeira execução no GitHub, com o artefato e o peso do runner.
 - Ambiente de nuvem: Playwright 1.63.0 com Chromium revisão 1243 em `/opt/pw-browsers` (`PLAYWRIGHT_BROWSERS_PATH`);
   baixar navegador é bloqueado. `CI` e `GITHUB_ACTIONS` não estão definidas aqui. A API do GitHub (`gh api`) não
   está liberada nesta sessão, mas `git ls-remote` e `git clone --depth 1` de repositório público passam (usado em
@@ -130,8 +133,14 @@
 - ~~Code review da HIS-001 (etapa 7)~~ aprovado em 2026-10-29.
 - ~~Desenho técnico definitivo da HIS-002~~ escrito em 2026-10-29 (D1–D15).
 - ~~HIS-002: resposta do scrum-master e ajustes da seguranca/qa~~ feito em 2026-10-30 (D16); ADR-003 aceito.
-- HIS-002a: code review na etapa 7. No A6, conferir com quem implementa: SHA das actions reconferidos no dia, peso do
-  runner × local e o passo "nada mudou" (se o `next build` reescrever arquivo versionado, ele acusa).
+- HIS-002a: code review na etapa 7. A6 feito: SHA reconferidos em 2026-10-30 e "nada mudou" limpo na simulação.
+  Falta conferir no GitHub:
+  - a primeira execução, com os 2 checks verdes;
+  - o artefato `relatorio-e2e`;
+  - o peso do runner × local (se for diferente, a referência passa a ser a medida do CI, D14);
+  - o commit descartável do critério 4 (Ra9).
+
+  Se o e2e passar de 10 min, rever os workers.
 - HIS-002b: implementação depois da 002a no `main`; no B8, a frase do ADR-001.
 - Dívida nova (HIS-109, se o scrum-master confirmar): 8 efeitos que copiam estado (`react-hooks/set-state-in-effect`)
   em `TelaComodos`, `armazenamento/casa`, `dados-publicos/navegador`, `Movimento`, `EditorAparelho` — reescrever com

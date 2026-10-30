@@ -1239,3 +1239,30 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
   ``new RegExp(`^${aparelho.nome} em .*Toque para ajustar\\.$`)``, só na minha cópia, o arquivo passa (2 de 2). Não
   mudei `e2e/` porque o arquivo é seu.
 - Para o próximo: **qa**: ajustar o seletor e rodar o A5 de novo para fechar.
+
+### [tech-lead] 2026-10-30 — A6: `ci.yml` com os dois jobs do D11, actions por SHA reconferidas hoje
+- O que fiz: reescrevi `.github/workflows/ci.yml` pelo D11/D16. Checks: **"Lint, tipos e testes"** (job `verificar`:
+  `typecheck` e `test`; o `pnpm lint` entra no B3 da 002b com o mesmo nome) e **"Navegador (e2e, axe e peso)"** (job
+  `e2e`: Chromium, `pnpm build`, `pnpm test:e2e`, artefato, "nada mudou"). O build saiu do `verificar`.
+- Decisões e porquê: `--only-shell` mantido (D11): o headless usa o `chromium_headless_shell-1243`, o mesmo do
+  ambiente. Artefato `relatorio-e2e` com `if: !cancelled()`, 14 dias, só `apps/web/playwright-report/` e
+  `apps/web/test-results/`. Os testes já escrevem o peso e as exceções do axe no `$GITHUB_STEP_SUMMARY`; acrescentei
+  um passo `if: failure()` que diz no resumo onde está o artefato.
+- SHA reconferidos hoje (`git ls-remote --tags`), iguais ao D16 e ainda as últimas versões: checkout v7.0.1
+  `3d3c42e5aac5ba805825da76410c181273ba90b1`; pnpm/action-setup v6.1.0 `ea17c68df8912ef543352723c149a84f56e3d413`
+  (linha `^{}`; a etiqueta anotada é `d9184bf1…`); setup-node v7.1.0 `949feb2413d6458794dcd2491c4babbbce0c15c1`;
+  upload-artifact v7.0.2 `cf430e030ddbb5b0abf93d22962f4752f3646cd9`.
+- Como verifiquei: YAML lido com `yaml.safe_load` e conferido por script (gatilhos, chaves dos passos, SHA de 40
+  caracteres, `persist-credentials: false` nos dois checkouts). Ra6: uma linha `permissions:`, nenhum `secrets.`,
+  `pull_request_target` ou `workflow_run`. Ra7: `${{` só em `concurrency` e `if:`. Ra13: `NEXT_TELEMETRY_DISABLED`
+  presente. O `actionlint` não foi usado (baixar o binário foi bloqueado aqui). Simulei o job numa cópia própria
+  (`git init`, `--frozen-lockfile --offline`, build, `GITHUB_ACTIONS=true`, porta 3161): 106 passam, 6 pendentes,
+  1 falha (o `aparelhos.spec.ts:43`, seletor que o qa já está trocando). O resumo saiu com o peso e as exceções, e o
+  "nada mudou" deu limpo depois do build e do e2e. O e2e levou 4,3 min com 2 workers numa máquina de 2 CPUs, então o
+  job fica em ~6–7 min (antes eu estimava ~4).
+- **[para: seguranca]** (Ra9): o `grep` da Ra9 acha `AKIA` no `playwright-report/index.html`. É falso positivo: são
+  dados em base64 embutidos (`…PAKIACoFCsGSE…`), sem a forma de chave da AWS. Para não confundir, usar
+  `AKIA[0-9A-Z]{16}`.
+- Para o próximo: **quem orquestra**: empurrar depois do seletor do qa, conferir os 2 checks verdes, o artefato e o
+  peso do runner × local (D14). Depois, o commit descartável com teste falhando (critério 4, Ra9) e a reversão.
+  **seguranca**: Ra9 com o artefato. **qa**: A7.

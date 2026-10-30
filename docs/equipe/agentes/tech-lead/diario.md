@@ -10,6 +10,20 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002 · A6: `ci.yml` com os dois jobs, actions por SHA reconferidas, simulação numa cópia
+- **O que fiz:** reescrevi o `ci.yml` pelo D11/D16 e reconferi os 4 SHA com `git ls-remote --tags` (iguais e ainda os
+  últimos). Validei o YAML com `yaml.safe_load`, conferi a estrutura por script e rodei os `grep` da Ra6, Ra7 e Ra13.
+  Simulei o job `e2e` numa cópia com `git init` (`scratchpad/tl-a6/copia`, porta 3161): só falhou o seletor conhecido
+  do qa, o resumo saiu e o "nada mudou" ficou limpo.
+- **Decisões e porquê:**
+  - `--only-shell`, porque o headless usa o headless shell 1243.
+  - Artefato em toda execução não cancelada.
+  - Um passo `if: failure()` diz no resumo onde está o artefato.
+  - O `actionlint` não foi usado: o download foi bloqueado.
+- **Arquivos:** `.github/workflows/ci.yml`, `HIS-002-qualidade-automatica.md` (nota), `contexto.md` e este diário.
+- **Próximos passos:** quem orquestra empurra e confere os 2 checks, o artefato e o peso do runner; depois, o commit
+  descartável (critério 4, Ra9). Eu faço o code review na etapa 7.
+
 ## 2026-10-30 · HIS-111 · D7 aprovado com ajustes, desenho h0–h8, passo 0 na Action, HIS-111 antes do a3
 - **O que fiz:** li a história, as notas do backend e do dominio-energia, o D2–D4 da HIS-003a e o código da rotina,
   do core, do `useResumo`, do store da casa, do `Cadastro`, da `TelaAjustes` e dos workflows. Escrevi o "Desenho
