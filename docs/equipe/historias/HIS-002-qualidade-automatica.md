@@ -128,6 +128,63 @@ setenta e quatro centavos por mês, botão, não pressionado".
 muda — o `<p>` do CRAS sai de dentro do `<dl>`, e a tela fica igual (ex.: um `<div>` com as classes de grade do
 `<dl>` em volta dos dois); a ordem de leitura continua a mesma.
 
+### D-A5-1: nome dos 6 botões do "Quem mais gasta" em `/casa` (ux-acessibilidade, 2026-10-30)
+
+**Problema:** o mesmo da casa ilustrada (WCAG 2.5.3). O axe 4.14 separa o texto visível em palavras (tira pontuação,
+"R$", "%" e "×") e exige que essas palavras apareçam **seguidas e na mesma ordem** dentro do nome. Ordem visível no
+botão (ordem do código): quantidade, nome, "em" e cômodo, porcentagem, uso, valor da barra. Uma palavra a mais no
+meio (ex.: "da conta" logo depois da porcentagem) reprova de novo.
+
+**Atributo:** continua `aria-label` no `<button>` (`PainelAcompanhamento.tsx`, linha 161), montado com **as mesmas
+expressões** que desenham o botão. O frontend guarda o nome do cômodo e a porcentagem numa variável só e usa nos dois
+lugares, para o nome e a tela nunca mostrarem números diferentes.
+
+**Modelo para o frontend:**
+
+```tsx
+const pct = formatarPorcentagem(participacao);
+const nomeComodo = comodos.find((c) => c.id === aparelho.comodoId)?.nome;
+const quantidade = aparelho.quantidade > 1 ? `${aparelho.quantidade} × ` : "";
+// visível primeiro, na mesma ordem; o que só o leitor ouve vem depois
+aria-label={`${quantidade}${aparelho.nome} em ${nomeComodo}, ${pct}, ${descreverUso(aparelho)}, ${formatarReais(valorMes)} por mês. É ${pct} da conta. Toque para ajustar.`}
+```
+
+**Textos finais (exemplos de conferência):**
+
+| Caso | Nome acessível |
+| --- | --- |
+| Chuveiro (o do relatório do qa) | Chuveiro elétrico em Banheiro, 41%, 4 banhos de 8 min por dia, R$ 45,12 por mês. É 41% da conta. Toque para ajustar. |
+| Quantidade maior que 1 | 3 × Lâmpada LED em Sala, 2%, Ligado 5 horas por dia, R$ 2,10 por mês. É 2% da conta. Toque para ajustar. |
+| Geladeira | Geladeira em Cozinha, 18%, Fica ligada o dia todo, R$ 19,80 por mês. É 18% da conta. Toque para ajustar. |
+
+(Os valores das duas últimas linhas são ilustrativos; o e2e confere com o texto visível do próprio botão, não com estes
+números. A porcentagem aparece duas vezes de propósito: a primeira é a da tela, a segunda diz o que ela significa.)
+
+**O que fica igual:** nada muda na tela; ícone com `aria-hidden`; a folha de ajuste abre do mesmo jeito.
+
+### D-A5-2: tabela do "Painel geral" que rola para o lado (ux-acessibilidade, 2026-10-30)
+
+**Problema (WCAG 2.1.1, teclado; axe `scrollable-region-focusable`):** em 390 px a tabela (`min-w-[34rem]`) passa da
+tela; quem usa teclado não consegue rolar até "kWh/mês" e "R$/mês".
+
+**Correção no `div.overflow-x-auto` (`TelaComodos.tsx`, linha 264), sem mudança visível:**
+
+| Atributo | Valor | Por quê |
+| --- | --- | --- |
+| `role` | `"region"` | o leitor anuncia uma área com nome ao chegar nela |
+| `aria-label` | `"Tabela com todos os aparelhos da casa"` | curto; o `<caption>` continua e completa ("juntando os iguais de todos os cômodos") |
+| `tabIndex` | `{0}` | entra na ordem do Tab logo depois dos 3 números e antes do que vem depois da tabela; com o foco nela, as setas ← e → rolam |
+
+- **Sempre** `tabIndex={0}`, também em 1280 px (sem rolagem lá): uma parada de Tab a mais é melhor que código para medir
+  a largura. Não usar `aria-describedby` com instrução de setas: o nome fica curto.
+- **Foco:** o contorno padrão do `:focus-visible` do `globals.css`, que só aparece com teclado (tocar ou clicar não
+  mostra nada). Não pôr `outline-none` nem estilo próprio.
+- **Ordem de leitura:** igual à de hoje (números, região, legenda da tabela, cabeçalhos, linhas).
+
+**Conferir no A5:** axe sem `label-content-name-mismatch` em `/casa` com casa e sem `scrollable-region-focusable` em
+`/casa/comodos?visao=geral`, nos 2 projetos; no celular, Tab até a tabela e → mostra a coluna "R$/mês"; o NVDA lê
+"Tabela com todos os aparelhos da casa, região" e depois a tabela.
+
 ## Desenho técnico (proposta inicial)
 
 _(tech-lead, 2026-10-29 — substituída pelo "Desenho técnico definitivo" logo abaixo das notas; mantida para histórico.
@@ -1143,3 +1200,17 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
 - Para o próximo: **frontend** + **ux-acessibilidade** — D-A5-1 e D-A5-2 (commit próprio em `apps/web/src`); depois,
   `pnpm test:e2e` verde fecha o A5. **ux** — revisar `excecoes-axe.ts`. **seguranca** — Ra5 parte 2 com o caminho do
   `next`. **tech-lead** — A6 (`ci.yml`) pode começar em paralelo; o artefato terá a tabela do peso e as exceções.
+
+### [ux-acessibilidade] 2026-10-30 — textos do D-A5-1 e do D-A5-2 (sem mudança visível)
+- O que fiz: escrevi em "Fluxo e textos" o nome acessível dos 6 botões do "Quem mais gasta" (D-A5-1) e o nome e o
+  foco da região rolável da tabela do "Painel geral" (D-A5-2).
+- D-A5-1: `aria-label` = todo o texto visível, na ordem do código (quantidade, nome, "em" cômodo, porcentagem, uso,
+  valor), e depois "por mês. É NN% da conta. Toque para ajustar.". Conferi no axe 4.14: ele compara palavra por
+  palavra, em sequência, então nada pode entrar no meio. Mesmas variáveis para a tela e o nome (o relatório do qa
+  mostra 41% e R$ 45,12 na tela, mas 42% e R$ 44,26 no nome; **[para: frontend]** confira se vêm da mesma renderização).
+- D-A5-2: `role="region"`, `aria-label="Tabela com todos os aparelhos da casa"`, `tabIndex={0}` sempre; foco com o
+  contorno padrão (só aparece com teclado); setas rolam.
+- Observação fora desta história **[para: scrum-master]**: o contorno de foco amarelo-faísca (#ffc629) dá cerca de
+  1,6:1 sobre o branco e 1,4:1 sobre o fundo (WCAG 1.4.11 pede 3:1). Vale para o site todo e muda a tela, então
+  proponho uma história própria (ex.: contorno duplo tinta + faísca).
+- Para o próximo: **frontend** aplica os dois (commit em `apps/web/src`); **qa** roda o A5 de novo.

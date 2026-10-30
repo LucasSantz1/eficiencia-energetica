@@ -10,6 +10,17 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002 · nomes do "Quem mais gasta" (D-A5-1) e região rolável da tabela (D-A5-2)
+- O que fiz: escrevi em "Fluxo e textos" da HIS-002a o `aria-label` dos 6 botões e o nome e o foco da região que rola
+  na tabela do "Painel geral". Deixei a nota na conversa.
+- Decisões e porquê:
+  - O nome repete todo o texto visível na ordem do código: o axe 4.14 compara as palavras em sequência.
+  - A porcentagem aparece duas vezes: a primeira é a da tela, a segunda explica o que ela é.
+  - `tabIndex={0}` sempre: uma parada de Tab a mais custa menos que código para medir a largura.
+  - Encontrei o contraste baixo do contorno de foco e mandei ao scrum-master, porque muda a tela do site todo.
+- Arquivos: `docs/equipe/historias/HIS-002-qualidade-automatica.md`, esta pasta.
+- Próximos passos: conferir no A5 de novo, depois da correção do frontend.
+
 ## 2026-10-30 · HIS-003 · alerta "Confere?" (T6) e ajustes do T5
 - O que fiz:
   - Escrevi o T6 com o texto por campo: potência, etiqueta, kWh e valor da conta, preço por kWh, leitura do relógio, e
