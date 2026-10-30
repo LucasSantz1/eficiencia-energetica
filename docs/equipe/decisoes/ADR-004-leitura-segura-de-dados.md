@@ -1,6 +1,7 @@
 # ADR-004 · Leitura segura dos dados de fora, com leitores no `@ee/core`
 
-- **Status:** proposto. Vira aceito quando a `seguranca` confirmar a P-tl-1 da HIS-003.
+- **Status:** aceito (2026-10-30, tech-lead). A `seguranca` confirmou a P-tl-1 da HIS-003 (nota de 2026-10-30) com
+  duas condições, R4c e R4d, que estão nas consequências.
 - **Data:** 2026-10-30
 - **Responsável:** tech-lead, com seguranca
 
@@ -60,6 +61,18 @@ O site é feito para celular simples e 3G.
 ## Consequências
 
 - Os leitores escritos à mão pesam cerca de 1,3 kB em gzip.
+- **Leitor completo (R4c, condição da seguranca):** o risco novo do leitor à mão é esquecer um campo opcional, o que
+  apagaria em silêncio, na primeira ação salva, a conta ou a etiqueta de todas as famílias. Por isso:
+  - cada leitor tem a lista dos seus campos, conferida pelo `typecheck` (`Exclude<keyof T, (typeof CAMPOS)[number]>`
+    tem que ser `never`): campo novo no tipo sem leitor quebra o build;
+  - a fixture `casa-completa`, com **todo** opcional preenchido, passa `toEqual` no `lerCasaSalva` e num ciclo
+    hidratar → ação → salvar;
+  - o texto devolvido é o original, **sem `trim`** (o leitor só confere `trim().length > 0`).
+- **Leitor total (R4d, condição da seguranca):** o leitor nunca lança, porque um `merge` que lança faz o `persist` não
+  marcar a hidratação (a falha P1 volta). Teste com os casos do R4 e 1.000 valores JSON gerados com semente fixa, sem
+  biblioteca. O `merge` tem `try/catch` que, se algo lançar, deixa a casa vazia em memória **sem regravar**. Data
+  conferida por componentes UTC (`Date.UTC` e comparação de ano, mês e dia), nunca `Date.parse` nem `new Date(texto)`.
+  Tamanho conferido antes de qualquer expressão regular. Só se lê propriedade própria (`Object.hasOwn`, A3).
 - Todo campo novo salvo, ou de arquivo público, precisa de leitor e teste no core, com caso de borda e com chave extra.
 - O peso de JS sobe de propósito na HIS-003 (referência `peso-js.json` atualizada no PR).
 - Se um dia a quantidade de formatos crescer muito (API do Supabase no E4), reavaliar o `zod/mini`, com medição de

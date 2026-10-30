@@ -10,6 +10,19 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002 · etapa 7 da 002a: code review aprovado; ADR-004 e ADR-005 aceitos
+- **O que fiz:** revisei o diff de código contra o D9–D16 e rodei typecheck, test e build numa cópia
+  (`scratchpad/tl-his002a-rev/copia`): tudo verde. Pela API REST do GitHub conferi os runs do PR #3: `4c860b5` e
+  `efab326` verdes (107 passam e 6 pendentes), `32f2cff` vermelho e com artefato.
+- **Decisões e porquê:**
+  - Aprovado sem devolver. As 3 observações são pequenas (dois exports sem uso, uma importação de tipo circular, "em
+    undefined" só com casa corrompida).
+  - O peso verde no runner basta para aprovar, mas não substitui o número (D14). A tabela fica pedida a quem orquestra.
+  - ADR-004 e ADR-005 aceitos, com os acréscimos que a seguranca pediu nas notas da HIS-003 e da HIS-111.
+- **Arquivos:** `HIS-002-qualidade-automatica.md` (nota), `ADR-004-…md`, `ADR-005-…md`, `decisoes/README.md`,
+  `contexto.md` e este diário.
+- **Próximos passos:** seguranca (Ra9); ux (`excecoes-axe.ts`); fechamento. No rebase da `his-111`, fica o ADR-005 aceito.
+
 ## 2026-10-30 · HIS-002 · A6: `ci.yml` com os dois jobs, actions por SHA reconferidas, simulação numa cópia
 - **O que fiz:** reescrevi o `ci.yml` pelo D11/D16 e reconferi os 4 SHA com `git ls-remote --tags` (iguais e ainda os
   últimos). Validei o YAML com `yaml.safe_load`, conferi a estrutura por script e rodei os `grep` da Ra6, Ra7 e Ra13.

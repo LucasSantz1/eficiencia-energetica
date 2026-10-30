@@ -39,12 +39,15 @@
   fim da 002a. Aguarda o scrum-master (sprint, critérios do T5), a seguranca (workflow do T3 e V8) e a ux (aviso do D7).
 - CI: `ci.yml` da HIS-002a escrito no A6 (2026-10-30, branch `his-002-qualidade`). São dois checks em paralelo:
   "Lint, tipos e testes" e "Navegador (e2e, axe e peso)". Esses nomes valem para a proteção do `main` e a 002b não
-  pode mudá-los. Tempo estimado de parede: ~6–7 min, porque o e2e levou 4,3 min com 2 workers numa máquina de 2 CPUs.
-  Ainda falta ver a primeira execução no GitHub, com o artefato e o peso do runner.
+  pode mudá-los. No runner (PR #3, 2026-10-30): job `e2e` ~2,8 min (Chromium 24 s, e2e ~1,9 min, 107 passam e 6
+  pendentes, igual ao local); `verificar` ~25 s. O commit descartável `32f2cff` deixou `relatorio-e2e` (10,2 MB).
+  **HIS-002a: code review aprovado em 2026-10-30** (etapa 7). Falta a ux revisar o `excecoes-axe.ts` e alguém copiar a
+  tabela de peso do resumo do job.
 - Ambiente de nuvem: Playwright 1.63.0 com Chromium revisão 1243 em `/opt/pw-browsers` (`PLAYWRIGHT_BROWSERS_PATH`);
-  baixar navegador é bloqueado. `CI` e `GITHUB_ACTIONS` não estão definidas aqui. A API do GitHub (`gh api`) não
-  está liberada nesta sessão, mas `git ls-remote` e `git clone --depth 1` de repositório público passam (usado em
-  2026-10-30 para os SHA das actions; clones em `scratchpad/tl-actions/`).
+  baixar navegador é bloqueado. `CI` e `GITHUB_ACTIONS` não estão definidas aqui. `git ls-remote` e `git clone
+  --depth 1` de repositório público passam (SHA das actions). Desde 2026-10-30, a API **REST** do GitHub passa
+  (`gh api repos/{owner}/{repo}/actions/runs/<id>/jobs` e `check-runs/<id>/annotations`, que trazem "N passed"). Não
+  passam: o GraphQL (`gh pr checks`) e o blob dos logs e artefatos (403). O resumo do job só se vê no navegador.
 
 ## Decisões em vigor
 
@@ -83,7 +86,7 @@
 - **Builds de revisão** sempre numa cópia própria no scratchpad (`git archive HEAD` + `pnpm install --offline`), nunca no
   `apps/web/.next` do repositório: build em paralelo derruba o servidor de quem está testando (lição do qa na HIS-001).
 
-- **Leitura segura de dados de fora (HIS-003, ADR-004 proposto).**
+- **Leitura segura de dados de fora (HIS-003, ADR-004 aceito em 2026-10-30, com R4c e R4d).**
   - Funções `lerX(bruto: unknown)` no `@ee/core`, sem biblioteca, com os limites em `limites.ts`.
   - Medição em gzip: `zod` 93 kB, com teste de `new Function` que a CSP bloqueia; `zod/mini` 8,2 kB; à mão 1,3 kB.
   - Rever o `zod/mini` quando os formatos crescerem (E4).
@@ -98,7 +101,8 @@
 
   Para regravar, `storage.setItem` no `onRehydrateStorage`. O tipo fica com `PersistStorage<unknown>` e
   `partialize: (s): unknown`, conferido com o `tsc`.
-- **Distribuidora que deixa de existir (HIS-111, ADR-005 proposto):**
+- **Distribuidora que deixa de existir (HIS-111, ADR-005 aceito em 2026-10-30, com V9/V10 e "sucessão para empresa
+  vigente" sem `--forcar`):**
   - tarifa vencida há mais de 6 meses não é publicada;
   - uma empresa vira outra só por CNPJ igual (com a sigla antiga não vigente) ou por linha do `sucessoes.json` com ato
     e fonte;
@@ -120,9 +124,12 @@
   - os testes de falso positivo (arquivos publicados e `casa-v1`/`casa-v2` sem aviso);
   - o peso até cerca de +3 kB por rota (acima de +4 kB, conversar antes).
 - HIS-111: no code review, conferir que `lerCasaSalva` não conhece `substituidas`, que `Object.hasOwn` está no
-  `acharDistribuidora`, que V1–V4, V7 e V8 ignoram o `--forcar`, que o h8 tirou o gatilho `push` do
-  `diagnosticar-dados.yml` e ligou o teste dos publicados. O ADR-005 vira aceito depois da revisão da seguranca.
-- ADR-004: passar para aceito com o R4c e o R4d nas consequências (pedido da seguranca na P-tl-1, ainda não feito).
+  `acharDistribuidora`, que V1–V4 e V7–V10 ignoram o `--forcar`, que o h8 tirou o gatilho `push` do
+  `diagnosticar-dados.yml` e ligou o teste dos publicados. A branch `his-111-tarifas-vencidas` tem a cópia antiga do
+  ADR-005: no rebase, vale a versão aceita (a da `his-002-qualidade`).
+- HIS-003: no code review, conferir também que o leitor garante o cômodo de cada aparelho (sem ele, o `aria-label` do
+  "Quem mais gasta" diria "em undefined").
+- Dívida T2 (e2e): `seletorDoNo` e `TelaAxe` exportados sem uso de fora (`e2e/apoio/axe.ts`).
 - Backlog sugerido (HIS-003, risco 6): avisar a pessoa quando o navegador não conseguir salvar (memória cheia ou
   bloqueada).
 
@@ -133,14 +140,9 @@
 - ~~Code review da HIS-001 (etapa 7)~~ aprovado em 2026-10-29.
 - ~~Desenho técnico definitivo da HIS-002~~ escrito em 2026-10-29 (D1–D15).
 - ~~HIS-002: resposta do scrum-master e ajustes da seguranca/qa~~ feito em 2026-10-30 (D16); ADR-003 aceito.
-- HIS-002a: code review na etapa 7. A6 feito: SHA reconferidos em 2026-10-30 e "nada mudou" limpo na simulação.
-  Falta conferir no GitHub:
-  - a primeira execução, com os 2 checks verdes;
-  - o artefato `relatorio-e2e`;
-  - o peso do runner × local (se for diferente, a referência passa a ser a medida do CI, D14);
-  - o commit descartável do critério 4 (Ra9).
-
-  Se o e2e passar de 10 min, rever os workers.
+- ~~HIS-002a: code review na etapa 7~~ aprovado em 2026-10-30 (2 checks verdes, artefato no descartável, mesma lista).
+  Resta o peso do runner × local: o verde só prova que está dentro do limite. Pedi a quem orquestra a tabela do resumo
+  do job; se a diferença passar de ±100 B, a referência passa a ser a do CI (D14). Se o e2e passar de 10 min, rever os workers.
 - HIS-002b: implementação depois da 002a no `main`; no B8, a frase do ADR-001.
 - Dívida nova (HIS-109, se o scrum-master confirmar): 8 efeitos que copiam estado (`react-hooks/set-state-in-effect`)
   em `TelaComodos`, `armazenamento/casa`, `dados-publicos/navegador`, `Movimento`, `EditorAparelho` — reescrever com
