@@ -471,7 +471,8 @@ real é **o próprio refatoramento**: um erro silencioso que passa no typecheck 
   bate com a coluna "Diretiva" da seção 3; rotas finas e `PaginaInicial` sem diretiva.
 - **R8 · cache da `/`.** `grep -rn "revalidate" apps/web/src` → só `app/page.tsx`; manifesto de prerender da `/` com `86400`.
 - **R9 · rotas.** Tabela de rotas do `pnpm build` igual à do `main` (mesmas 8, mesmas estáticas);
-  `curl -sI localhost:3100/casa/aparelhos` → 307 para `/casa/comodos`; `/casa/comodos?visao=geral` abre a visão geral.
+  `curl -s localhost:3100/casa/aparelhos` → **200** com `NEXT_REDIRECT;replace;/casa/comodos;307` no conteúdo (página
+  estática; o redirecionamento acontece no navegador — correção do qa); `/casa/comodos?visao=geral` abre a visão geral.
 - **R10 · ciclos.** Grafo de imports de `ui/` e `ui/aparelho/` sem ciclo (script de leitura no meu scratchpad, mesmas
   expressões do `verificar-camadas`); `tipos.ts` e `textosDeUso.ts` só importam `@ee/core`; console do QA sem erro.
 - **R11 · exceções novas.** `git diff -M main -- apps/web/src | grep -E '^\+.*\bthrow\b'` → vazio (fora linhas movidas).
@@ -493,6 +494,53 @@ real é **o próprio refatoramento**: um erro silencioso que passa no typecheck 
 **Decisão da etapa 3:** aprovado para implementar. Nenhum risco alto fica sem mitigação no desenho; A1–A5 dependem de a
 implementação seguir o desenho à risca e serão conferidos com evidência (R1–R4 e testes do QA). A13 pede ajustes no
 script antes do passo 1 (pergunta aberta abaixo); se não entrarem, a revisão da etapa 6 aponta como médio.
+
+### Revisão de código (etapa 6)
+
+_(seguranca, 2026-10-29 — `main` `57700ab` × `182f355` (commits `87bb6ba..182f355`; `da2a3c4` só tem docs). Revisado
+com `git diff -M -C main HEAD -- apps/web/src`. Build próprio: `pnpm build` verde, servidor na porta 3107, depois
+`fuser -k 3107/tcp`. Evidências fora do git em `…/scratchpad/his001/seg-*` e `…/his001/seg-camadas/`.)_
+
+**Barreiras:** `pnpm typecheck` (com `Camadas: tudo certo (64 arquivos)`), `pnpm test` (37 + 11) e `pnpm build` verdes;
+`pnpm audit --audit-level high` → "No known vulnerabilities found"; `git log -p main..HEAD` sem padrão de chave/segredo
+fora de `docs/`; nenhum `.env` versionado. **Código movido sem mudança:** linhas que não são import comparadas (ordenadas)
+entre o `main` e o destino de cada arquivo: `ui.tsx` × as 8 peças de `ui/`, `Comodo.tsx` × as 4 de `ui/aparelho/`, e
+mais 10 arquivos movidos → nenhuma diferença, exceto o `export type { LeituraRelogio }` removido (previsto). Corpos das
+rotas → funcionalidades: só o nome da função e a ligação do editor (`useEdicaoDeAparelho`).
+
+| Ponto | Resultado | Evidência |
+| --- | --- | --- |
+| R1 | ok | 1 `create(` (`infraestrutura/armazenamento/casa.ts:52`); 1 chave `eficiencia-energetica:casa` (l. 118); `zustand` só nesse arquivo; chave em **1** arquivo de `.next/static` (igual ao `main`) |
+| R2 | ok | `git diff main:…/lib/store.ts HEAD:…/armazenamento/casa.ts` → só `+import { novoId }` e a saída do `export const novoId`; `identificador.ts` com o corpo idêntico |
+| R3 | ok | `useCasaCarregada` definida 1 vez, usada em `Casca`, `Cadastro` e `BotaoComecar` (como no `main`); diff do `Cadastro.tsx` só em imports |
+| R4 | ok | `useCasa` ausente de `ui/`; `aoSalvar(limpo, id)` → `aoFechar()`, `aoRemover(r.id!)` → `aoFechar()`; hook usa `atualizarAparelho`/`adicionarAparelho`/`removerAparelho` do store, sem `filter` próprio; as 2 telas passam as 3 props |
+| R5 | ok | `node:`/`process.cwd` só em `arquivos.servidor.ts`; `.servidor` citado só por `app/page.tsx`, `PaginaInicial` (`import type`) e `numeros-do-inicio.servidor.ts`, nenhum `uc`; os 2 `.servidor.ts` com `import "server-only"` na 1ª linha; `readFile`/`process.cwd`/`node:fs`/`relatorio.json`/`server-only` em `.next/static` → vazio. **Prova do caso indireto:** numa cópia, `aplicacao/indireto.ts` (sem diretiva) reexportando o `.servidor` e importado pela `TelaDicas` (`uc`): `verificar-camadas` → código 0 (esperado, não segue grafo) e `next build` → **falha** com "'server-only' cannot be imported from a Client Component module" |
+| R6 | ok | `PaginaInicial` e rotas só importam componentes de módulos `uc` (`Contagem`, `Revelar`, `TransicaoTela`, `BotaoComecar`, `Simulador`, `CasaIlustrada`, telas). Pré-existente: ver S2 |
+| R7 | ok | 1ª linha de cada um dos 55 `.ts/.tsx` bate com a coluna "Diretiva" da seção 3; rotas finas e `PaginaInicial` sem diretiva (o "use client" na l. 45 da `PaginaInicial` é só texto de comentário) |
+| R8 | ok | `revalidate` só em `app/page.tsx:6`; prerender da `/`: `86400`, `htmlSize` 66 350, 12 entradas (igual ao `antes`) |
+| R9 | ok (expectativa corrigida pelo qa) | tabela de rotas do build idêntica à do `antes/build.log` (`diff` vazio); as 12 respostas (8 rotas, `?visao=geral`, manifest, ícone, `/dados/tarifas.json`) → 200; `/casa/aparelhos` → **200** com `NEXT_REDIRECT;replace;/casa/comodos;307;` no conteúdo, como no `main`; leitura de `?visao=geral` e `#comodo-<id>` foi junto para `TelaComodos` (l. 47 e 142) |
+| R10 | ok | grafo de `apps/web/src` (54 arquivos, 137 arestas internas, mesmas expressões do script): **0 ciclos**; `tipos.ts` e `textosDeUso.ts` só importam `@ee/core` |
+| R11 | ok | `git diff -M -C main HEAD -- apps/web/src \| grep -E '^\+.*\bthrow\b'` → vazio; `carregarNumerosDoInicio` mantém o `try/catch → undefined` do `numerosReais()` (JSON corrompido não derruba a `/`) |
+| R12 | ok | script só importa `node:fs` (`existsSync`, `readdirSync`, `readFileSync`), `node:module`, `node:path`; grep de `child_process\|exec\|spawn\|eval\|fetch\|https?:\|writeFile\|rm\|unlink\|import(\|try\|catch` → só comentários e textos de mensagem; sai com `process.exitCode = 1` |
+| R13 | ok, com lacunas baixas (S1) | roteiro do frontend (`teste-camadas/testar.mjs`, lido antes: só escreve em `teste-camadas/copias` e apaga só essa pasta) contra o HEAD: **36/36 ok** (cópia limpa de `/` com 64 arquivos, link ignorado, 34 negativos com código 1 e a mensagem da regra). Meus 21 casos extras (`seg-camadas/testar-seg.mjs`): a **regex nova do `import(`** está certa — `import( "x" )` não acusa; `import("a" + x)`, ``import(`…`)`` sem interpolação, aspas trocadas, `import  (x)`, `import(/* c */ x)` e `import(` em várias linhas acusam; `export *`, `import x = require()`, `@/aplicacao/../infraestrutura` e `"use client"` → `./x.servidor` acusam. 10 passam sem acusar: S1 |
+| R14 | ok | `git diff --stat main HEAD -- pnpm-lock.yaml apps/web/package.json apps/web/next.config.ts .github packages` → vazio; `package.json` da raiz só `camadas`/`typecheck`; linhas novas sem `fetch`/`sendBeacon`/`XMLHttpRequest`/`WebSocket`/URL/`localStorage`/`sessionStorage`/`cookie`/`indexedDB`; hosts em `.next/static`: w3.org, nextjs.org, react.dev, github.com + `https://a`, `https://x`, `http://n` (textos de teste de recurso do polyfill de `URL` e base do `Link`, sem rede) |
+| R15 | ok | `dangerouslySetInnerHTML\|innerHTML\|eval(\|new Function\|javascript:` em `apps/web/src` e `scripts` → vazio; `@/components\|@/lib` → vazio |
+
+Fora do código do site, também revisei `apps/web/e2e-base/` (QA, provisório, fora do CI): `execSync` só com 2 comandos
+fixos (`git rev-parse`, `git status`), `rmSync` só na subpasta `diferencas` da pasta de evidências; fixtures com dados
+fictícios (sem nome, CPF ou endereço; só cidade e ids de contador).
+
+**Achados**
+
+| # | Achado | Gravidade | Correção recomendada (para quem) |
+| --- | --- | --- | --- |
+| S1 | **Lacunas restantes do `verificar-camadas.mjs`** (provadas em cópia, código 0): (a) `from"x"` e `import"x"` sem espaço (`\bfrom\s+`, `import\s+`); (b) `import /* c */ ("…")`; (c) arquivos `.js`/`.jsx`/`.cjs`/`.cts` em `apps/web/src` e `.tsx` em `packages/core/src` não são lidos — o Next compila `page.jsx`; (d) **links simbólicos são pulados em silêncio**, mas o Next segue o link e compila o destino; (e) especificador com caminho absoluto ou com `?sufixo` vira "pacote externo"; (f) `process.getBuiltinModule("node:fs")` lê o disco sem import; (g) `"use server"` não é barrado. Nenhum caso existe hoje no código; todos pedem escrita deliberada, e o caso grave (servidor no navegador) é barrado no build pelo `server-only` (R5) | baixo | **tech-lead/frontend, na HIS-002** (no script ou no ESLint): `\bfrom\s*["']` e `^\s*import\s*["']`; ler toda extensão de código (`.js .jsx .cjs .mjs .ts .tsx .cts .mts`) nas duas pastas; link simbólico = erro, não pular; especificador que começa com `/` ou contém `?` = erro; `getBuiltinModule` = texto proibido como `require(`; `"use server"` = erro até existir regra própria (cada Server Action é um endpoint POST público: exige validação de entrada, limite e revisão da segurança antes do E4) |
+| S2 | `app/sobre/page.tsx` (componente de servidor) importa a **constante** `VOLTAR` de `ui/Movimento` (`"use client"`) e passa para `<Link transitionTypes>` — a armadilha da A7. Funciona hoje porque a referência só é repassada a um componente de cliente; usar o valor no servidor (ler, juntar) quebraria em silêncio. **Pré-existente** (igual no `main`), não muda nesta história | baixo | **tech-lead**: na HIS-002, tirar `IR_ADIANTE`/`VOLTAR`/`ENTRAR_NO_PAINEL` para um arquivo sem diretiva (ex.: `ui/tiposDeTransicao.ts`) e acrescentar ao script/ESLint: arquivo sem diretiva só importa de módulo `uc` nomes com inicial maiúscula |
+| — | A16 (links externos sem `rel`, agora em `PaginaInicial.tsx:275` e `sobre/page.tsx:44–56`) e os `as` na fronteira (`arquivos.servidor.ts`, `navegador.ts`, `migrate`) continuam como estavam | baixo (pré-existente) | HIS-003, como já registrado |
+
+**Decisão da etapa 6: aprovado com ressalvas (baixo).** Os riscos crítico/alto da análise (A1–A5, A15) foram conferidos
+com evidência e não se materializaram: um só store, formato salvo idêntico, portão de hidratação, editor e apagar tudo
+iguais, nada novo saindo do aparelho. S1 e S2 não bloqueiam e ficam para a HIS-002.
 
 ## Plano de testes
 
@@ -777,3 +825,26 @@ O `#comodo-<id>` (rolar até o cômodo) não é capturado: o fluxo chega aos cô
   resposta) — os números do `main` batem com os do frontend, descontado o polyfill `noModule` que o navegador moderno não baixa.
 - Para o próximo: **qa** — atualizar o item 11 do "Plano de testes" e o `linha-de-base.cjs` com 11a/11b (pode reaproveitar
   a extração do meu script) e marcar o item como aprovado. Depois sigo para o code review da etapa 7.
+
+### [seguranca] 2026-10-29 — revisão de código (etapa 6): aprovado com ressalvas (baixo)
+- O que fiz: conferi R1–R15 com comando e resultado (tabela em "Ameaças → Revisão de código (etapa 6)"); comparei as
+  linhas que não são import de cada arquivo movido ou dividido com o `main`; build próprio e servidor na porta 3107
+  (rotas, redirecionamento, prerender, hosts e chave da casa no `.next/static`); `pnpm audit`; busca de segredos no
+  `git log -p`; revisei o `linha-de-base.cjs` e as fixtures do QA. Repeti o roteiro do frontend (36/36 ok) e rodei 21
+  casos meus contra o script, inclusive a regex nova do `import(`; provei numa cópia que o `server-only` derruba o build
+  no caso indireto que o script não vê.
+- Decisões e porquê: **aprovado com ressalvas (baixo).** Nada do que era crítico/alto (A1–A5, A15) aconteceu: um store,
+  formato salvo byte a byte, portão de hidratação, editor e apagar tudo iguais, nenhuma dependência, configuração ou
+  envio novo. A regex do `import(` do frontend está certa (sem o falso positivo do desenho e sem perder caso). Ficam
+  dois baixos: S1, lacunas do script que pedem escrita deliberada (`from"x"` sem espaço, `.js/.jsx`, link simbólico
+  pulado em silêncio, caminho absoluto, `getBuiltinModule`, `"use server"`); S2, a constante `VOLTAR` importada de
+  módulo `"use client"` pela `/sobre` (pré-existente).
+- Arquivos alterados: esta história (só a subseção "Revisão de código (etapa 6)" em "Ameaças" e esta nota);
+  `docs/equipe/agentes/seguranca/contexto.md` e `diario.md`. Nenhum código. Repositório sem violação deixada (`git status`
+  só com docs); cópias apagadas.
+- Como verifiquei: ver a tabela; roteiros em `…/scratchpad/his001/seg-camadas/` (`testar-seg.mjs`, `ciclos.mjs`,
+  `saida.txt`), saída do roteiro do frontend em `…/his001/seg-testar-frontend.txt`, build em `…/his001/seg-build.log` e
+  `seg-build-indireto.log`.
+- Para o próximo: **tech-lead** — etapa 7 liberada pela segurança; levar S1 e S2 para a HIS-002 (correções na tabela de
+  achados). **qa** — nada novo da minha parte. **documentacao** — R9: a expectativa certa é 200 com `NEXT_REDIRECT` no
+  conteúdo, não 307.

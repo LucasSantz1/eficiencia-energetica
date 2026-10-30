@@ -14,8 +14,11 @@
 | Sem `app/error.tsx`: exceção de render vira tela branca | aberto | HIS-003 |
 | Sem cabeçalhos de segurança (CSP, HSTS, etc.) em `next.config.ts` | aberto | HIS-003 |
 | Sem `pnpm audit` nem Dependabot no CI | aberto | HIS-003 |
-| Links externos sem `rel="noopener noreferrer"` (`app/page.tsx` l. 292, `app/sobre/page.tsx` l. 44–56); sem `target="_blank"`, então baixo | aberto (baixo) | HIS-003 |
-| Refatoração em camadas: perda da casa salva, código de servidor no cliente, script de camadas com falso negativo | análise feita (etapa 3), aguarda revisão (etapa 6) | HIS-001 |
+| Links externos sem `rel="noopener noreferrer"` (`funcionalidades/inicio/PaginaInicial.tsx` l. 275, `app/sobre/page.tsx` l. 44–56); sem `target="_blank"`, então baixo | aberto (baixo) | HIS-003 |
+| Refatoração em camadas: perda da casa salva, código de servidor no cliente, script de camadas com falso negativo | etapa 6 **aprovada com ressalvas (baixo)** em `182f355`: R1–R15 ok | HIS-001 |
+| `verificar-camadas.mjs` com lacunas que pedem escrita deliberada (S1: `from"x"` sem espaço, `.js/.jsx` não lidos, link simbólico pulado em silêncio, caminho absoluto/`?sufixo`, `getBuiltinModule`, `"use server"` livre) | aberto (baixo) | HIS-002 |
+| Constante (`VOLTAR`) importada de módulo `"use client"` por componente de servidor (`app/sobre/page.tsx`) — armadilha A7, funciona hoje (S2) | aberto (baixo, pré-existente) | HIS-002 |
+| Server Actions (`"use server"`): cada uma vira endpoint POST público; nenhuma existe | regra a definir antes do E4 | E4 |
 | SQL injection | não se aplica ainda (sem banco); regra já vale para o E4 | E4 |
 | XSS | React escapa texto; não há `dangerouslySetInnerHTML`, `innerHTML`, `eval` nem `new Function` | — |
 | Dados pessoais | nenhum coletado; tudo no aparelho | — |
@@ -38,13 +41,24 @@
 - Código só de servidor em `*.servidor.ts`; recomendado `import "server-only"` neles (Next 16 trata sem pacote).
 - Scripts que rodam no CI só leem arquivos: sem `child_process`, `eval`, rede ou escrita; falham (código 1) se não
   leram nada.
+- Todo `*.servidor.ts` começa com `import "server-only";` (provado em 2026-10-29: import indireto a partir de `"use
+  client"` derruba o `next build`). O `verificar-camadas.mjs` cobre só o import direto.
+- `/casa/aparelhos` é estática: responde 200 com `NEXT_REDIRECT` no conteúdo (não 307).
+
+## Estrutura do site depois da HIS-001 (para as próximas revisões)
+
+- Store único: `apps/web/src/infraestrutura/armazenamento/casa.ts`; `aplicacao/casa.ts` só reexporta + `useEdicaoDeAparelho`.
+- Leitura de disco: só `infraestrutura/dados-publicos/arquivos.servidor.ts`; `/` revalida em `app/page.tsx`.
+- Testes negativos do script: roteiro do frontend `…/scratchpad/his001/teste-camadas/testar.mjs` (36 casos) e o meu
+  `…/scratchpad/his001/seg-camadas/testar-seg.mjs` (21 casos; os 10 "BRECHA" são o S1). Scratchpad é da sessão: se
+  sumir, o S1 na história tem a lista de casos.
 
 ## Pendências
 
-- **HIS-001:** resposta do tech-lead à pergunta sobre os ajustes do `verificar-camadas.mjs` e o `server-only`;
-  depois, revisão da etapa 6 com os pontos R1–R15 da seção "Ameaças" (inclui testes negativos do script numa cópia no
-  scratchpad).
+- **HIS-002:** conferir que S1 e S2 (seção "Revisão de código (etapa 6)" da HIS-001) entraram no ESLint ou no script;
+  rodar de novo os 21 casos de `testar-seg.mjs` esperando 0 "BRECHA".
 - **HIS-003:** completar a tabela de ameaças.
+- **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável
 
