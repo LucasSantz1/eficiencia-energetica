@@ -10,6 +10,22 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-29 · HIS-002 · desenho técnico definitivo (etapa 3), pergunta do e2e respondida, quebra proposta
+- O que fiz: li a história, ADR-001, retro, script de camadas, `linha-de-base.cjs`, `ci.yml`, `apps/web/src` e a doc
+  do Next 16 sobre ESLint. Numa cópia própria (`scratchpad/tl-his002/copia`, porta 3111): instalei e rodei ESLint 10 com
+  a configuração completa (82 arquivos; 42 casos de ensaio em `scratchpad/tl-his002/ensaio-casos.mjs`), testei
+  `import/order`, `simple-import-sort` e `import-x/order`, Playwright 1.63.0 + axe nas 7 páginas, build, `pnpm audit`, e
+  prototipei a regra S2 (`scratchpad/tl-his002/prototipo-s2.mjs`). Escrevi D1–D15 na história, ADR-003 e a frase no ADR-001.
+- Decisões e porquê: ESLint 10 (a 9 só em manutenção; regras ligadas rodam); `import-x` (o `import/order` quebra no
+  ESLint 10 e o `simple-import-sort` cola vírgulas sem Prettier); Playwright 1.63.0 (casa com o Chromium 1243 do
+  ambiente, sem download possível); parser do `typescript` no script (S2 precisa dos nomes); `import()` proibido
+  (o ESLint não o confere); e2e em PR e `main`, sem cache do navegador; `e2e-base` sai inteiro; ≈ 4 dias → 002a/002b.
+- Arquivos: `docs/equipe/historias/HIS-002-qualidade-automatica.md`, `docs/equipe/decisoes/ADR-003-qualidade-automatica.md`,
+  `docs/equipe/decisoes/ADR-001-camadas.md`, `docs/equipe/decisoes/README.md`, `docs/equipe/quadro.md`, `contexto.md`,
+  este diário.
+- Próximos passos: scrum-master decide a quebra e o HIS-109; seguranca (ameaças + 21 casos) e qa (D6, D9, D10) revisam;
+  eu ajusto o desenho se pedirem e faço o code review na etapa 7.
+
 ## 2026-10-29 · HIS-001 · code review final (etapa 7) aprovado; S1/S2 para a HIS-002, P1–P4 no backlog
 - O que fiz: revisei `git diff -M -C --find-copies-harder main...HEAD` arquivo a arquivo (camadas, diretiva dos 55
   arquivos, rotas finas, `PaginaInicial` sem diretiva, `revalidate`, um só `create`, contratos 4.1–4.4, tipos, código

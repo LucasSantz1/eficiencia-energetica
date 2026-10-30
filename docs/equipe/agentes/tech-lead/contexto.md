@@ -22,6 +22,12 @@
   `/casa/comodos` 172 950, `/casa/dicas` 166 026, `/casa/ajustes` 163 965, `/sobre` 139 573 B.
 - `next.config.ts`: `transpilePackages: ["@ee/core"]`, `poweredByHeader: false`, cache dos `/dados`.
   Cabeçalhos de segurança entram na HIS-003.
+- HIS-002 (branch `his-002-qualidade`): desenho técnico definitivo escrito em 2026-10-29 (D1–D15 na história),
+  ADR-003 proposto. Aguarda seguranca (ameaças + 21 casos), qa (revisão de D6/D9/D10) e a decisão de quebra (scrum-master).
+- CI hoje: ~35 s por execução (um job). Com a HIS-002: dois jobs em paralelo, ~4 min de parede.
+- Ambiente de nuvem: Playwright 1.63.0 com Chromium revisão 1243 em `/opt/pw-browsers` (`PLAYWRIGHT_BROWSERS_PATH`);
+  baixar navegador é bloqueado. `CI` e `GITHUB_ACTIONS` não estão definidas aqui. A API do GitHub (`gh api`) não
+  está liberada nesta sessão.
 
 ## Decisões em vigor
 
@@ -42,6 +48,13 @@
   `"use server"`, pacotes por camada, domínio só `./`). Script = o que exige outro arquivo ou a estrutura (diretiva do
   destino, `.servidor`/`server-only`, sem-diretiva só importa componentes de módulo `"use client"`, pastas antigas,
   0 arquivos, link simbólico = erro, toda extensão de código). A matriz sai do script quando o ESLint passar nos casos negativos.
+- **Ferramentas de qualidade (HIS-002, ADR-003 proposto):** ESLint 10.13.0 + `eslint-config-next` 16.4.3 +
+  `eslint-plugin-import-x` 4.17.1 (o `import/order` do `eslint-plugin-import` 2.32.0 quebra no ESLint 10; saída se
+  outra regra quebrar: ESLint 9.39.5) e `typescript` 5.9.3 na raiz; `@playwright/test` **1.63.0** (casada com o
+  Chromium do ambiente — subir junto) e `@axe-core/playwright` 4.14.0 em `apps/web`. Script de camadas passa a usar o
+  parser do `typescript`. `import()` dinâmico e `"use server"` proibidos até haver regra. e2e em todo PR e push no
+  `main`; sem cache do navegador no runner (rever se o passo passar de 60 s). Peso de JS com referência em
+  `apps/web/e2e/peso-js.json`. `e2e-base` sai no fim da parte do navegador.
 - **Builds de revisão** sempre numa cópia própria no scratchpad (`git archive HEAD` + `pnpm install --offline`), nunca no
   `apps/web/.next` do repositório: build em paralelo derruba o servidor de quem está testando (lição do qa na HIS-001).
 
@@ -49,11 +62,18 @@
 
 - ~~Responder: componentes de aparelho compartilhados vão para `ui/aparelho/`? (HIS-001)~~ respondido em 2026-10-29: sim.
 - ~~Responder: peso do JS da `/casa` sem casa (+1 449 B) (HIS-001)~~ respondido em 2026-10-29: aceito; item 11 em 11a/11b.
-- Responder: e2e em todo push ou só em PR e `main`? (HIS-002) — incluir nele a medida 11a/11b de peso.
+- ~~Responder: e2e em todo push ou só em PR e `main`? (HIS-002)~~ respondido em 2026-10-29: todo PR e push no `main`.
 - ~~HIS-002: ESLint substitui ou convive com o script?~~ decidido em 2026-10-29: convivem (ver "Decisões em vigor").
 - ~~Code review da HIS-001 (etapa 7)~~ aprovado em 2026-10-29.
-- Desenho técnico definitivo da HIS-002: partir das "Notas do tech-lead vindas da HIS-001" e dos critérios 7–9
-  (casos negativos automáticos, S2/T3 com `ui/tiposDeTransicao.ts`, peso de JS, saída do `apps/web/e2e-base/`).
+- ~~Desenho técnico definitivo da HIS-002~~ escrito em 2026-10-29 (D1–D15).
+- HIS-002: esperar a resposta do scrum-master (quebra 002a/002b, número HIS-109, destino da exceção de contraste) e
+  ajustar o desenho se a seguranca ou o qa pedirem mudança. Depois: code review (etapa 7) e passar ADR-003 para "aceito".
+- HIS-002, passo A6: conferir a major atual de `actions/upload-artifact` e comparar o peso medido no runner com o local.
+- Dívida nova (HIS-109, se o scrum-master confirmar): 8 efeitos que copiam estado (`react-hooks/set-state-in-effect`)
+  em `TelaComodos`, `armazenamento/casa`, `dados-publicos/navegador`, `Movimento`, `EditorAparelho` — reescrever com
+  `key`, estado derivado ou `useSyncExternalStore`, com e2e conferindo.
+- Observação para o backend (futuro): o commit diário dos dados usa `GITHUB_TOKEN`, que não dispara o CI — dados novos
+  não passam pelo e2e. Sugestão: rodar o e2e no `atualizar-dados.yml` antes do `git push`.
 - Dívida técnica registrada na HIS-001 (história futura, com `dominio-energia` quando houver número):
   - levar para `@ee/core` com teste: `faixaDoPeso` (`ui/Etiqueta`) e a escala repetida em `CasaIlustrada`; regras do
     rascunho do cadastro (banhos por pessoa, 8 min); `tarifaMedia`; `descreverUso`/`horasPorDiaTexto`;
