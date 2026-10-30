@@ -40,6 +40,20 @@ export function dataISO(valor: string | undefined): string | undefined {
   return undefined;
 }
 
+/** true quando o texto é AAAA-MM-DD e a data existe no calendário (31/02 não existe). */
+export function dataExiste(texto: string): boolean {
+  const m = texto.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return false;
+  const [ano, mes, dia] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const d = new Date(Date.UTC(ano, mes - 1, dia));
+  return d.getUTCFullYear() === ano && d.getUTCMonth() === mes - 1 && d.getUTCDate() === dia;
+}
+
+/** Dias de `de` até `ate` (datas AAAA-MM-DD, em UTC); negativo quando `ate` vem antes. */
+export function diasEntre(de: string, ate: string): number {
+  return Math.round((Date.parse(`${ate}T00:00:00Z`) - Date.parse(`${de}T00:00:00Z`)) / 86_400_000);
+}
+
 /** Data de hoje em Brasília, no formato AAAA-MM-DD. */
 export function hojeISO(agora: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(agora);
