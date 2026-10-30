@@ -175,6 +175,20 @@ test.describe("axe", () => {
   }
 });
 
+test("nomes acessíveis da casa ilustrada da / começam pelo que está escrito (texto da ux, D16)", async ({ page }) => {
+  // Os valores da casa ilustrada são do exemplo, não da tarifa do dia: o teste confere os números da tabela da ux.
+  // `\s` casa o espaço sem quebra (U+00A0) que o Intl põe depois do "R$".
+  const NOMES = [
+    /^Quarto, 19% da conta, R\$\s21,74 por mês$/,
+    /^Banheiro, 47% da conta, R\$\s53,74 por mês$/,
+    /^Sala, 11% da conta, R\$\s12,82 por mês$/,
+    /^Cozinha, 18% da conta, R\$\s20,36 por mês$/,
+    /^Lavanderia, 5% da conta, R\$\s5,23 por mês$/,
+  ];
+  await page.goto("/");
+  for (const nome of NOMES) await expect(page.getByRole("button", { name: nome })).toHaveCount(1);
+});
+
 test.describe("zoom de 200% em 390 px (195 × 422 px de CSS)", () => {
   test.use({ viewport: { width: 195, height: 422 }, deviceScaleFactor: 2 });
 
