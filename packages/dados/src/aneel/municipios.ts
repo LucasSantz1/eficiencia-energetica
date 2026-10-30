@@ -44,13 +44,19 @@ export function mapearColunasConjuntos(cabecalho: string[]) {
  */
 export function criarLeitorConjuntos(c: ReturnType<typeof mapearColunasConjuntos>) {
   const donos = new Map<string, DonoConjunto>();
+  let anoMaisRecente = 0;
   return {
     donos,
+    /** Maior `AnoIndice` do arquivo (0 sem a coluna). Um conjunto que parou antes disso deixou de reportar (HIS-111, D3). */
+    get anoMaisRecente() {
+      return anoMaisRecente;
+    },
     ler(linha: Linha) {
       const conjunto = soDigitos(linha[c.conjunto]);
       const agente = linha[c.agente]?.trim();
       if (!conjunto || !agente) return;
       const ano = c.ano ? Number(soDigitos(linha[c.ano]).slice(0, 4)) || 0 : 0;
+      if (ano > anoMaisRecente) anoMaisRecente = ano;
       const atual = donos.get(conjunto);
       if (!atual || ano > atual.ano) donos.set(conjunto, { agente, cnpj: c.cnpj ? soDigitos(linha[c.cnpj]) || undefined : undefined, ano });
     },

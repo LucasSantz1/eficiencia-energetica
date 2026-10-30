@@ -139,6 +139,51 @@ export function selecionarTarifasVigentes(linhas: Linha[], c: ColunasTarifas, ho
   return { tarifas, descartadas };
 }
 
+/** O que o CSV de tarifas diz de cada sigla, vigente ou não (HIS-111: diagnóstico, V9 e V10). */
+export interface AgenteDaTarifa {
+  sigla: string;
+  cnpj?: string;
+  /** Inícios de vigência distintos, em ordem. */
+  inicios: string[];
+  /** Início da vigência mais recente que já começou (ou a mais antiga, se nenhuma começou). */
+  ultimoInicio: string;
+  /** Fim dessa vigência, quando informado. */
+  ultimoFim?: string;
+  /** Alguma vigência cobre o dia de hoje. */
+  vigente: boolean;
+}
+
+/** Resume as linhas B1 por sigla, sem escolher valor: serve para saber quem existe, com qual CNPJ e até quando. */
+export function resumirAgentes(linhas: Linha[], c: ColunasTarifas, hoje: string): AgenteDaTarifa[] {
+  const porSigla = new Map<string, { cnpj?: string; vigencias: { inicio: string; fim?: string }[] }>();
+  for (const linha of linhas) {
+    const sigla = (linha[c.agente] ?? "").trim();
+    const inicio = dataISO(linha[c.inicio]);
+    if (!sigla || semValor(sigla) || normalizar(sigla) === "nao informado" || !inicio) continue;
+    const atual = porSigla.get(sigla) ?? { vigencias: [] };
+    atual.cnpj ??= c.cnpj ? soDigitos(linha[c.cnpj]) || undefined : undefined;
+    atual.vigencias.push({ inicio, fim: c.fim ? dataISO(linha[c.fim]) : undefined });
+    porSigla.set(sigla, atual);
+  }
+  const agentes: AgenteDaTarifa[] = [];
+  for (const [sigla, { cnpj, vigencias }] of porSigla) {
+    const iniciadas = vigencias.filter((v) => v.inicio <= hoje);
+    const base = iniciadas.length > 0 ? iniciadas : vigencias;
+    const ultimoInicio = base.reduce((maior, v) => (v.inicio > maior ? v.inicio : maior), base[0]?.inicio ?? "");
+    const fins = base.filter((v) => v.inicio === ultimoInicio).map((v) => v.fim);
+    const ultimoFim = fins.includes(undefined) ? undefined : fins.reduce<string | undefined>((maior, f) => (f && (!maior || f > maior) ? f : maior), undefined);
+    agentes.push({
+      sigla,
+      cnpj,
+      inicios: [...new Set(vigencias.map((v) => v.inicio))].sort(),
+      ultimoInicio,
+      ultimoFim,
+      vigente: iniciadas.some((v) => !v.fim || v.fim >= hoje),
+    });
+  }
+  return agentes.sort((a, b) => a.sigla.localeCompare(b.sigla));
+}
+
 export function soDigitos(texto: string | undefined): string {
   return (texto ?? "").replace(/\D/g, "");
 }
