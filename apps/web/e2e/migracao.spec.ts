@@ -1,7 +1,7 @@
 /*
  * Quem já usa o site não pode perder a casa (CLAUDE.md, "nada que quebre quem já usa"). As fixtures são o que as
- * versões 1 e 2 do `persist` gravaram de verdade (copiadas byte a byte do e2e-base; nunca regerar — versão nova do
- * persist = fixture nova). Cobertura 4 e 5 do plano do qa. Não depende da largura: só celular.
+ * versões 1 e 2 do `persist` gravaram de verdade (copiadas byte a byte da linha de base da HIS-001; nunca regerar —
+ * versão nova do persist = fixture nova). Cobertura 4 e 5 do plano do qa. Não depende da largura: só celular.
  */
 import { casaSalva, lerFixture, semearCasa } from "./apoio/casa";
 import { expect, test } from "./apoio/teste";

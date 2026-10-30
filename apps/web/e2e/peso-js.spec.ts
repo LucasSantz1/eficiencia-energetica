@@ -2,7 +2,7 @@
  * Peso de JavaScript (critério 9; D8; P-qa-5), só no celular, comparado com `e2e/peso-js.json` — sem compilar o
  * main no CI. Para o celular simples com 3G, cada KB conta.
  *   11a · `jsDoHtml`: soma (gzip) dos `<script src>` sem `noModule` e dos `<link rel="preload" as="script">` do HTML
- *         da rota — o que a página precisa para abrir. Baixado pelo Node, como o jsDoHtml do e2e-base.
+ *         da rota — o que a página precisa para abrir. Baixado pelo Node, como o jsDoHtml da linha de base da HIS-001.
  *   11b · `totalComPrefetch`: soma de `encodedBodySize` de todo `.js` que o navegador baixou até `networkidle` + 1 s
  *         (o prefetch dos <Link> visíveis entra). Sem relógio falso: ele troca o `performance`.
  * Atualizar de propósito (num PR que explica o porquê na história):
