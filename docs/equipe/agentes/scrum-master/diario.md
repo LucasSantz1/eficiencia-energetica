@@ -10,6 +10,17 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-003 · quebra em 003a/003b aceita (P-tl-3)
+- O que fiz: retitulei a HIS-003 como HIS-003a (mesmo arquivo e branch), com o critério 5 só no domínio; criei a
+  HIS-003b a partir do modelo, movendo T5, T6, o bloco "T5 e T6" do D5, o `campos.spec.ts` e b1–b3, com remissões;
+  escrevi o critério 8 (T6), que faltava; atualizei quadro e planejamento.
+- Decisões e porquê: 3,75 dias não cabem em M. 003a primeiro (A1, A2, A7 altas); 003a ‖ 002b porque o lockfile não
+  muda e o conflito é pequeno (empate: 003a antes); 003b depois da 003a (usa o a1 e as mesmas telas do T2). Tudo na
+  Sprint 0.
+- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md`, `docs/equipe/historias/HIS-003b-campos-com-limite.md`
+  (novo), `docs/planejamento.md`, `docs/equipe/quadro.md`, `contexto.md`, este diário.
+- Próximos passos: seguranca (P-tl-1) ‖ dominio-energia (P-tl-2) ‖ qa (plano da 003b); etapa 4 da 003a depois da 002a.
+
 ## 2026-10-29 · HIS-002 · quebra em 002a/002b aceita; HIS-109 e HIS-110 criadas; quadro com trabalho em paralelo
 - O que fiz: respondi as 3 perguntas do tech-lead; retitulei a HIS-002 como HIS-002a (mesmo arquivo e branch) e criei a
   HIS-002b a partir do modelo, movendo critérios 1, 5, 7, 8, notas vindas da HIS-001, D4–D7, B1–B8 e a pergunta dos 21

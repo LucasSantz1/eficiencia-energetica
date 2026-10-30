@@ -9,9 +9,10 @@
 
 ## Estado atual
 
-- **Sprint 0 (Fundação)**: HIS-001 **Pronto** (2026-10-29) → **HIS-002a** testes no navegador (Preparada; arquivo
-  `HIS-002-qualidade-automatica.md`) → **HIS-002b** lint e camadas (Preparada; implementação depois da 002a no `main`)
-  → HIS-003 base de segurança (Preparada). Agora: seguranca ‖ qa ‖ ux na etapa 3 das duas.
+- **Sprint 0 (Fundação)**: HIS-001 **Pronto** (2026-10-29) → **HIS-002a** testes no navegador (Preparada, liberada
+  para a etapa 4; arquivo `HIS-002-qualidade-automatica.md`) → **HIS-003a** dados quebrados (Preparada; arquivo
+  `HIS-003-base-de-seguranca.md`) ‖ **HIS-002b** lint e camadas (Preparada) → **HIS-003b** campos com limite
+  (Preparada; `HIS-003b-campos-com-limite.md`).
 - HIS-004 (sem menção a instituição de ensino; espaços reservados desligados) já entregue.
 - Backlog priorizado para a Sprint 1: **HIS-110** (contraste das cores padrão), HIS-107 (zoom 200%), HIS-102, HIS-103.
   Sprint 3: **HIS-109** antes da HIS-301. Sprint 4: HIS-108, HIS-101, HIS-105, HIS-106.
@@ -34,6 +35,10 @@
   gente livre; função nova não.
 - Se a Sprint 1 não couber, passa a HIS-102, nunca a HIS-103 (Tarifa Social, maior impacto na conta).
 - Dívida técnica que toca arquivos de uma história futura entra antes dela (HIS-109 antes da HIS-301).
+- HIS-003 dividida (2026-10-30): 003a (critérios 1–4, 6, 7 e o 5 no domínio; a1–a7) e 003b (5 nas telas + critério 8
+  novo do T6; b1–b3). Arquivo da 003a manteve o nome antigo. 003a ‖ 002b em branches separadas, integradas uma de cada
+  vez (empate: 003a antes, por ter as ameaças altas); 003b depois da 003a no `main`. As cinco fecham a Sprint 0.
+- Na quebra, critério que só existe nos textos (ex.: T6) ganha critério Dado/Quando/Então próprio na história nova.
 
 ## Pendências
 
@@ -41,11 +46,12 @@
 - Dono do projeto: decidir o texto novo da nota "Estado atual" do `CLAUDE.md` (proposto pela documentacao).
 - Dono do projeto, ao fechar a HIS-002a: checks "Lint, tipos e testes" e "Navegador (e2e, axe e peso)" obrigatórios na
   proteção do `main`. No fechamento da HIS-002b, conferir que continuam obrigatórios.
-- HIS-002a: esperar seguranca (Ameaças) + qa (D9, D10) para liberar a etapa 4; ux (5 nomes) antes do A5.
-- HIS-002b: esperar seguranca (Ameaças + 21 casos) + qa (D6) e a 002a no `main` para liberar a etapa 4.
+- HIS-002b: etapa 4 depois da 002a no `main`.
+- HIS-003a: P-tl-1 (seguranca, bloqueia a2) e P-tl-2 (dominio-energia, bloqueia a3) abertas; etapa 4 depois da 002a.
+- HIS-003b: qa escrever o "Plano de testes"; etapa 4 depois da 003a no `main`.
+- Backlog: "avisar quando não der para salvar" (risco 6 da 003a) ainda sem ID; criar quando refinar a Sprint 1.
 - Refinar HIS-110 (arquivo de história, com a ux) antes da Sprint 1 — ou antes, se for puxada assim que a 002a integrar.
 - Refinar HIS-107 (critério verificável: em 390 px com zoom 200%, `scrollWidth <= clientWidth` em todas as rotas) antes da Sprint 1.
-- Acompanhar a pergunta aberta da HIS-003.
 - Preparar o roteiro do teste com famílias (HIS-106) com a UX.
 
 ## Orientações do responsável

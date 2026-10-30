@@ -67,7 +67,8 @@ Os papéis listados são os principais; QA, segurança, tech lead e documentaç�
 | HIS-001 | ✅ Reorganizar o site em camadas (`funcionalidades/`, `ui/`, `aplicacao/`, `infraestrutura/`) sem mudar nada para quem usa | tech-lead, frontend | M |
 | HIS-002a | Testes no navegador no CI: fluxo principal com Playwright em 390 e 1280 px, axe nas páginas principais, artefatos do job e peso de JS com referência (critérios 2, 3, 4, 6, 9 da HIS-002; arquivo `HIS-002-qualidade-automatica.md`) | qa, tech-lead | M |
 | HIS-002b | Lint e camadas no CI: ESLint (config do Next 16), matriz de camadas no lint, casos negativos automáticos, regra S2 e ordem dos imports (critérios 1, 5, 7, 8 + T1 da HIS-002). Depende da HIS-002a | tech-lead, frontend, seguranca | M |
-| HIS-003 | Base de segurança: cabeçalhos HTTP (CSP, HSTS...), validação com zod do localStorage e dos JSON públicos, tela de erro amigável, `pnpm audit` e Dependabot no CI, `.env.example` | seguranca, frontend | M |
+| HIS-003a | Dados quebrados não travam o site: leitores da casa salva e dos JSON públicos no `@ee/core` (sem zod, ADR-004), `limites.ts`, avisos de dado descartado e de falha de carga, telas de erro e 404, cabeçalhos HTTP (CSP, HSTS...), `pnpm audit` e Dependabot no CI, `atualizar-dados.yml` em dois jobs, `.env.example` (critérios 1–4, 6, 7 e o 5 no domínio da HIS-003; arquivo `HIS-003-base-de-seguranca.md`). Depende da HIS-002a | seguranca, backend, frontend | M |
+| HIS-003b | Campos com limite e "Confere?": mensagem de campo fora do limite (T5), pergunta para valor raro (T6) e aviso de consumo alto da casa; sai o corte escondido de 30.000 W (critério 5 nas telas + critério 8). Depende da HIS-003a | frontend, ux, qa | M |
 | HIS-004 | ✅ Retirar menção a instituição de ensino e reservar espaços para parceiros (desligados) | — | P |
 
 Critérios gerais da E0: nenhuma mudança visível para quem usa (exceto a tela de erro), CI verde, tudo documentado.
@@ -170,7 +171,7 @@ atualizada, consentimento para qualquer rastreamento e revisão de `seguranca` e
 
 | Sprint | Foco | Histórias |
 | --- | --- | --- |
-| 0 | Fundação | HIS-001, HIS-002a, HIS-002b, HIS-003 |
+| 0 | Fundação | HIS-001, HIS-002a, HIS-002b, HIS-003a, HIS-003b |
 | 1 | Inclusão I | HIS-110, HIS-107, HIS-102, HIS-103 |
 | 2 | Precisão I | HIS-201, HIS-205, HIS-104 |
 | 3 | Offline | HIS-109, HIS-301, HIS-302, HIS-303 |
@@ -198,6 +199,13 @@ HIS-002a estiver no `main`, se houver frontend e ux livres — é correção de 
 couber, quem passa para a seguinte é a **HIS-102** (modo opcional), não a HIS-103 (Tarifa Social, a de maior impacto
 na conta). A **HIS-109** (efeitos que copiam estado) vai para a Sprint 3, **antes** da HIS-301, porque o PWA mexe em
 dois dos oito lugares (`armazenamento/casa.ts` e `dados-publicos/navegador.ts`).
+
+_Revisão de 2026-10-30 (desenho da HIS-003):_ a HIS-003 (≈ 3,75 dias no desenho) foi **dividida** em HIS-003a (dados
+quebrados, telas de erro, cabeçalhos e CI, ≈ 3 dias) e HIS-003b (campos com limite e "Confere?", ≈ 1,5 dia). Ordem da
+Sprint 0: HIS-002a → HIS-003a e HIS-002b em paralelo (branches separadas, integradas uma de cada vez; se ficarem
+prontas juntas, a 003a entra antes) → HIS-003b. A Sprint 0 só fecha com as cinco; a 003b não sai da Sprint 0 porque o
+corte escondido em 30.000 W e o "135.90" lido como R$ 13.590 dão conta errada para a família. O aviso "não deu para
+salvar" (memória do navegador cheia, risco 6 do D9 da 003a) fica no backlog, sem sprint.
 
 ## 6. Riscos
 
