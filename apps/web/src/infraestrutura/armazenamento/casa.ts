@@ -1,0 +1,136 @@
+"use client";
+
+import { aparelhoInicial, COMODOS_PADRAO, itemDoCatalogo, type Aparelho, type Comodo, type ContaMensal, type LeituraRelogio, type Residencia, type TipoComodo } from "@ee/core";
+import { useEffect, useState } from "react";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { novoId } from "@/infraestrutura/identificador";
+
+/**
+ * Os dados da casa ficam guardados no próprio aparelho da pessoa (localStorage), sem precisar de conta.
+ * Quando houver login, este mesmo formato será sincronizado com o servidor.
+ */
+export interface DadosCasa {
+  residencia?: Residencia;
+  comodos: Comodo[];
+  aparelhos: Aparelho[];
+  /** Contas de luz registradas mês a mês no acompanhamento. */
+  contas: ContaMensal[];
+  /** Leituras do relógio de luz anotadas pela pessoa. */
+  leituras: LeituraRelogio[];
+  /** Dicas que a pessoa marcou no plano de economia. */
+  plano: string[];
+}
+
+interface Acoes {
+  definirResidencia: (r: Residencia) => void;
+  atualizarResidencia: (parcial: Partial<Residencia>) => void;
+  adicionarComodo: (tipo: TipoComodo, nome?: string) => Comodo;
+  renomearComodo: (id: string, nome: string) => void;
+  removerComodo: (id: string) => void;
+  /** Cria um aparelho a partir do catálogo, criando o cômodo sugerido se ainda não existir. */
+  adicionarDoCatalogo: (catalogoId: string, extra?: Partial<Aparelho>) => Aparelho | undefined;
+  adicionarAparelho: (a: Omit<Aparelho, "id">) => Aparelho;
+  atualizarAparelho: (id: string, parcial: Partial<Aparelho>) => void;
+  removerAparelho: (id: string) => void;
+  /** Substitui a casa inteira (usado ao terminar o cadastro). */
+  criarCasa: (dados: { residencia: Residencia; comodos: Comodo[]; aparelhos: Aparelho[] }) => void;
+  salvarConta: (c: Omit<ContaMensal, "id"> & { id?: string }) => void;
+  removerConta: (id: string) => void;
+  salvarLeitura: (l: Omit<LeituraRelogio, "id"> & { id?: string }) => void;
+  removerLeitura: (id: string) => void;
+  alternarNoPlano: (dicaId: string) => void;
+  apagarTudo: () => void;
+}
+
+function nomeDoComodo(tipo: TipoComodo, existentes: Comodo[]): string {
+  const base = COMODOS_PADRAO.find((c) => c.tipo === tipo)?.nome ?? "Cômodo";
+  const iguais = existentes.filter((c) => c.tipo === tipo).length;
+  return iguais === 0 ? base : `${base} ${iguais + 1}`;
+}
+
+export const useCasa = create<DadosCasa & Acoes>()(
+  persist(
+    (set, get) => ({
+      comodos: [],
+      aparelhos: [],
+      contas: [],
+      leituras: [],
+      plano: [],
+
+      criarCasa: ({ residencia, comodos, aparelhos }) => set({ residencia, comodos, aparelhos, plano: [] }),
+      salvarConta: (c) => {
+        const id = c.id ?? novoId();
+        // Um registro por mês: salvar o mesmo mês de novo substitui o anterior.
+        const outras = get().contas.filter((x) => x.id !== id && x.competencia !== c.competencia);
+        set({ contas: [...outras, { ...c, id }] });
+      },
+      removerConta: (id) => set({ contas: get().contas.filter((c) => c.id !== id) }),
+      salvarLeitura: (l) => {
+        const id = l.id ?? novoId();
+        const outras = get().leituras.filter((x) => x.id !== id && x.data !== l.data);
+        set({ leituras: [...outras, { ...l, id }] });
+      },
+      removerLeitura: (id) => set({ leituras: get().leituras.filter((l) => l.id !== id) }),
+      alternarNoPlano: (dicaId) => {
+        const plano = get().plano;
+        set({ plano: plano.includes(dicaId) ? plano.filter((d) => d !== dicaId) : [...plano, dicaId] });
+      },
+
+      definirResidencia: (residencia) => set({ residencia }),
+      atualizarResidencia: (parcial) => {
+        const atual = get().residencia;
+        if (atual) set({ residencia: { ...atual, ...parcial } });
+      },
+
+      adicionarComodo: (tipo, nome) => {
+        const comodo: Comodo = { id: novoId(), tipo, nome: nome?.trim() || nomeDoComodo(tipo, get().comodos) };
+        set({ comodos: [...get().comodos, comodo] });
+        return comodo;
+      },
+      renomearComodo: (id, nome) => set({ comodos: get().comodos.map((c) => (c.id === id ? { ...c, nome: nome.trim() || c.nome } : c)) }),
+      removerComodo: (id) =>
+        set({
+          comodos: get().comodos.filter((c) => c.id !== id),
+          aparelhos: get().aparelhos.filter((a) => a.comodoId !== id),
+        }),
+
+      adicionarDoCatalogo: (catalogoId, extra = {}) => {
+        const item = itemDoCatalogo(catalogoId);
+        if (!item) return undefined;
+        let comodoId = extra.comodoId;
+        if (!comodoId) {
+          const existente = get().comodos.find((c) => c.tipo === item.comodoSugerido);
+          comodoId = existente?.id ?? get().adicionarComodo(item.comodoSugerido).id;
+        }
+        return get().adicionarAparelho({ ...aparelhoInicial(item), ...extra, comodoId });
+      },
+      adicionarAparelho: (dados) => {
+        const aparelho: Aparelho = { ...dados, id: novoId() };
+        set({ aparelhos: [...get().aparelhos, aparelho] });
+        return aparelho;
+      },
+      atualizarAparelho: (id, parcial) => set({ aparelhos: get().aparelhos.map((a) => (a.id === id ? { ...a, ...parcial } : a)) }),
+      removerAparelho: (id) => set({ aparelhos: get().aparelhos.filter((a) => a.id !== id), plano: get().plano.filter((d) => !d.startsWith(`${id}:`)) }),
+      apagarTudo: () => set({ residencia: undefined, comodos: [], aparelhos: [], contas: [], leituras: [], plano: [] }),
+    }),
+    {
+      name: "eficiencia-energetica:casa",
+      version: 2,
+      storage: createJSONStorage(() => localStorage),
+      partialize: ({ residencia, comodos, aparelhos, contas, leituras, plano }) => ({ residencia, comodos, aparelhos, contas, leituras, plano }),
+      // Versão 1 não tinha acompanhamento nem plano de economia.
+      migrate: (salvo) => ({ contas: [], leituras: [], plano: [], ...(salvo as Partial<DadosCasa>) }) as DadosCasa & Acoes,
+    },
+  ),
+);
+
+/** true depois que os dados guardados no aparelho foram carregados (evita piscar a tela vazia). */
+export function useCasaCarregada(): boolean {
+  const [carregada, setCarregada] = useState(false);
+  useEffect(() => {
+    if (useCasa.persist.hasHydrated()) setCarregada(true);
+    return useCasa.persist.onFinishHydration(() => setCarregada(true));
+  }, []);
+  return carregada;
+}

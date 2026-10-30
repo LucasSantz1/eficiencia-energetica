@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Marca } from "@/components/Marca";
-import { TransicaoTela, VOLTAR } from "@/components/Movimento";
+import { Marca } from "@/ui/Marca";
+import { TransicaoTela, VOLTAR } from "@/ui/Movimento";
 
 export const metadata: Metadata = { title: "Sobre o projeto" };
 

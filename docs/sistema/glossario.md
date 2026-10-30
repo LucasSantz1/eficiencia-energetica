@@ -29,6 +29,7 @@
 | **Competência** | Mês de referência de uma conta (AAAA-MM). |
 | **Plano de economia** | As dicas que a família marcou para seguir, com a nova conta calculada. |
 | **PWA** | Site que pode ser instalado no celular como aplicativo. |
+| **Camadas** | Forma de organizar o código do site em pastas com papéis separados (telas, componentes, dados), em que cada pasta só usa as de baixo. Um programa (`pnpm camadas`) confere isso a cada mudança. |
 | **LGPD** | Lei Geral de Proteção de Dados (Lei 13.709/2018). |
 | **RLS** (Row Level Security) | Regra do banco de dados que faz cada pessoa ver só os próprios dados (planejado no E4). |
 | **SQL injection** | Ataque que tenta enganar o banco com texto malicioso; evitado com consultas parametrizadas. |

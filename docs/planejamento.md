@@ -64,7 +64,7 @@ Os papéis listados são os principais; QA, segurança, tech lead e documentaç�
 
 | ID | História | Papéis | Tam. |
 | --- | --- | --- | --- |
-| HIS-001 | Reorganizar o site em camadas (`funcionalidades/`, `ui/`, `aplicacao/`, `infraestrutura/`) sem mudar nada para quem usa | tech-lead, frontend | M |
+| HIS-001 | ✅ Reorganizar o site em camadas (`funcionalidades/`, `ui/`, `aplicacao/`, `infraestrutura/`) sem mudar nada para quem usa | tech-lead, frontend | M |
 | HIS-002 | Qualidade automática: ESLint (config do Next 16), testes de ponta a ponta com Playwright e verificação de acessibilidade com axe no CI | qa, tech-lead | M |
 | HIS-003 | Base de segurança: cabeçalhos HTTP (CSP, HSTS...), validação com zod do localStorage e dos JSON públicos, tela de erro amigável, `pnpm audit` e Dependabot no CI, `.env.example` | seguranca, frontend | M |
 | HIS-004 | ✅ Retirar menção a instituição de ensino e reservar espaços para parceiros (desligados) | — | P |
@@ -81,6 +81,8 @@ Critérios gerais da E0: nenhuma mudança visível para quem usa (exceto a tela 
 | HIS-104 | Meta de gasto: "quero pagar até R$ X" e o painel mostra o quanto falta e quais dicas chegam lá | dominio-energia, frontend | M |
 | HIS-105 | Compartilhar e imprimir o resumo (Web Share, página de impressão leve), sem enviar dado a servidor | ux, frontend | P |
 | HIS-106 | Teste com pessoas reais (5 famílias): roteiro, observação, ajustes de texto | ux, scrum-master | M |
+| HIS-107 | Zoom de 200% sem rolagem para o lado (WCAG 1.4.10): em 390 px, `/` (254 px de conteúdo em 195), `/casa` e `/casa/dicas` (211 px) rolam na horizontal e, no `/casa`, números e nomes quebram palavra a palavra (achado P2 do qa na HIS-001, médio, igual antes da HIS-001) | ux, frontend | M |
+| HIS-108 | Foco e rolagem: (P1) no passo "cidade" do cadastro o foco começa na busca e pula para o título entre 300 e 600 ms — quem digita logo perde o foco e o leitor de tela anuncia duas coisas; (P3) pelo link do acompanhamento o cômodo abre, mas não fica alinhado ao topo como na entrada direta (`#comodo-<id>`); (P4, conferir) com o diálogo aberto, 1 em 25 Tabs leva o foco para fora do `<dialog>` (achados do qa na HIS-001, baixos, iguais antes da HIS-001) | ux, frontend | P |
 
 ### E2 · Precisão da conta — chegar mais perto do valor real
 
@@ -166,10 +168,10 @@ atualizada, consentimento para qualquer rastreamento e revisão de `seguranca` e
 | Sprint | Foco | Histórias |
 | --- | --- | --- |
 | 0 | Fundação | HIS-001, HIS-002, HIS-003 |
-| 1 | Inclusão I | HIS-102, HIS-103, HIS-105 |
+| 1 | Inclusão I | HIS-107, HIS-102, HIS-103 |
 | 2 | Precisão I | HIS-201, HIS-205, HIS-104 |
 | 3 | Offline | HIS-301, HIS-302, HIS-303 |
-| 4 | Inclusão II | HIS-101, HIS-106 |
+| 4 | Inclusão II | HIS-108, HIS-101, HIS-105, HIS-106 |
 | 5 | Precisão II | HIS-202, HIS-203 |
 | 6–7 | Plataforma | HIS-401 a HIS-406 |
 | 8 | Câmera | HIS-501, HIS-502 |
@@ -178,6 +180,12 @@ atualizada, consentimento para qualquer rastreamento e revisão de `seguranca` e
 | depois | E8, E9, E10, E11, HIS-204 | conforme prioridade |
 
 A ordem pode mudar depois de cada retrospectiva; a Sprint 0 vem sempre primeiro.
+
+_Revisão de 2026-10-29 (fim da HIS-001):_ a **HIS-107** (zoom de 200%, médio, WCAG 1.4.10) entra na Sprint 1 **antes**
+da HIS-102, porque letra maior agrava o mesmo problema de conteúdo que não cabe na tela. A **HIS-108** (foco e rolagem,
+baixo) vai para a Sprint 4, **antes** do teste com famílias (HIS-106), para o foco que pula não atrapalhar quem usa
+leitor de tela. A HIS-105 (compartilhar) sai da Sprint 1 para a Sprint 4; se a Sprint 4 não couber, ela é a primeira a
+passar para a seguinte (menor impacto na conta que as outras).
 
 ## 6. Riscos
 

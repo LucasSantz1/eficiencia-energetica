@@ -22,7 +22,7 @@
 
 ## Fase 3: conta opcional e sincronização
 
-- "Usa antes, cria conta depois": o formato salvo no navegador (`DadosCasa` em `apps/web/src/lib/store.ts`) é o mesmo que irá para o servidor.
+- "Usa antes, cria conta depois": o formato salvo no navegador (`DadosCasa` em `apps/web/src/infraestrutura/armazenamento/casa.ts`) é o mesmo que irá para o servidor.
 - Sugestão: Supabase (Postgres + login por e-mail, Google ou link mágico), com tabelas `residencias`, `comodos` e `aparelhos` e Row Level Security por usuário.
 - Ao criar a conta, os dados locais são enviados uma vez e passam a sincronizar.
 
