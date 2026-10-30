@@ -21,6 +21,7 @@ async function montar(sucessoes?: Sucessao[]): Promise<Montagem> {
 const cidade = (m: Montagem, ibge: number) => m.municipiosPorUF.flatMap((a) => a.municipios).find((x) => x.ibge === ibge)?.distribuidoras;
 
 const ALEGRETE = 4300406;
+const CAXIAS_DO_SUL = 4305108;
 const ASSIS = 3504008;
 const UBERABA = 3170107;
 const MONTES_CLAROS = 3143302;
@@ -34,6 +35,24 @@ describe("D1: mesmo CNPJ é a mesma empresa (critério 4)", () => {
     expect(m.tarifas.substituidas).toMatchObject({ "rge-sul": "rge" });
     expect(m.tarifas.distribuidoras.map((d) => d.id)).not.toContain("rge-sul");
     expect(m.relatorio.renomeacoesPorCnpj).toEqual([{ de: "rge-sul", para: "rge", cnpj: "02016440000162", municipios: 1 }]);
+  });
+
+  // Passo 0 de novo (run 41130096649): a RGE antiga (02016439000138) foi incorporada pela RGE Sul, que virou a RGE de hoje
+  // (02016440000162). Nome igual, CNPJ de outra raiz: sem a linha do sucessoes.json, 263 cidades ficavam sem a RGE.
+  it("a RGE antiga (outro CNPJ) chega à RGE de hoje pela linha do sucessoes.json", async () => {
+    const m = await montar();
+    expect(cidade(m, CAXIAS_DO_SUL)).toEqual(["rge"]);
+    expect(m.relatorio.ligacoesPelaSiglaRecusadas).toEqual([]);
+    expect(m.relatorio.agentesSemTarifa).not.toContain("RGE");
+    expect(Object.hasOwn(m.tarifas.substituidas, "rge")).toBe(false);
+  });
+
+  it("sem a linha, a RGE antiga fica sem tarifa e aparece como ligação recusada (o V5 para a rotina)", async () => {
+    const semRge = (await carregarSucessoes(pasta("sucessoes.json"))).filter((s) => s.siglaAntiga !== "RGE");
+    const m = await montar(semRge);
+    expect(cidade(m, CAXIAS_DO_SUL)).toEqual([]);
+    expect(m.relatorio.agentesSemTarifa).toContain("RGE");
+    expect(m.relatorio.ligacoesPelaSiglaRecusadas).toEqual([{ sigla: "RGE", cnpj: "02016439000138", siglaDaTarifa: "RGE", cnpjDaTarifa: "02016440000162", municipios: 1 }]);
   });
 
   it("duas siglas vigentes com o mesmo CNPJ ficam as duas (o V2 para a rotina)", () => {
@@ -50,7 +69,10 @@ describe("D2 e D3: conjunto que parou de reportar (critério 5)", () => {
     expect(m.relatorio.anoMaisRecenteDosConjuntos).toBe(2025);
     expect(cidade(m, ASSIS)).toEqual(["ess"]); // EDEVP parou em 2022, 3 anos antes de 2025
     expect(m.tarifas.substituidas).toEqual({ edevp: "ess", "rge-sul": "rge" });
-    expect(m.relatorio.sucessoesAplicadas).toEqual([{ de: "EDEVP", para: "ESS", municipios: 1 }]);
+    expect(m.relatorio.sucessoesAplicadas).toEqual([
+      { de: "EDEVP", para: "ESS", municipios: 1 },
+      { de: "RGE", para: "RGE", municipios: 1 },
+    ]);
   });
 
   it("sem linha de sucessão e com outro vínculo na cidade, o vínculo extinto sem tarifa sai", async () => {
@@ -80,7 +102,7 @@ describe("D2 e D3: conjunto que parou de reportar (critério 5)", () => {
   it("sem o sucessoes.json, a empresa vencida fica sem tarifa (o V5 para a rotina)", async () => {
     const m = await montar([]);
     expect(cidade(m, ASSIS)).toEqual([]);
-    expect(m.relatorio.agentesSemTarifa).toEqual(["COOP Z", "EDEVP"]);
+    expect(m.relatorio.agentesSemTarifa).toEqual(["COOP Z", "EDEVP", "RGE"]);
     expect(m.relatorio.vinculosExtintosMantidos.map((c) => c.sigla)).toEqual(["COOP Z", "EDEVP"]);
     expect(m.tarifas.substituidas).toEqual({ "rge-sul": "rge" });
   });

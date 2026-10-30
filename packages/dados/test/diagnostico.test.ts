@@ -52,7 +52,10 @@ describe("diagnóstico da HIS-111 (passo 0)", () => {
 
   it("portão (b): a sucessora do sucessoes.json tem um só valor na vigência", async () => {
     const { dados, markdown } = await rodar();
-    expect(dados.sucessoras).toEqual([{ sigla: "ESS", cnpj: "07282377000120", valores: 1 }]);
+    expect(dados.sucessoras).toEqual([
+      { sigla: "ESS", cnpj: "07282377000120", valores: 1 },
+      { sigla: "RGE", cnpj: "02016440000162", valores: 1 },
+    ]);
     expect(dados.comMaisDeUmValor).toEqual([]);
     expect(markdown).toContain("**As linhas ENF e EBO entram.**");
   });
@@ -72,9 +75,9 @@ describe("diagnóstico da HIS-111 (passo 0)", () => {
     expect(dados.anosDosConjuntos.linhasPorAno.map((a) => a.ano)).toEqual([2021, 2022, 2025]);
     expect(dados.anosDosConjuntos.conjuntosPorUltimoAno).toEqual([
       { ano: 2022, conjuntos: 4 },
-      { ano: 2025, conjuntos: 5 },
+      { ano: 2025, conjuntos: 6 },
     ]);
-    expect(markdown).toContain("- Arquivo de conjuntos: coluna do ano = AnoIndice; linhas por ano: 2021 (1), 2022 (4), 2025 (5)");
+    expect(markdown).toContain("- Arquivo de conjuntos: coluna do ano = AnoIndice; linhas por ano: 2021 (1), 2022 (4), 2025 (6)");
     expect(markdown).not.toContain("O arquivo de conjuntos para em");
     // Passo 0 real: o arquivo parou em 2014. O resumo diz que o ano do conjunto não separa empresa extinta.
     expect(escreverMarkdown({ ...dados, anoMaisRecenteDosConjuntos: 2014 })).toContain("**O arquivo de conjuntos para em 2014:**");
