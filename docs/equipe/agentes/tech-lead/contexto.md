@@ -22,12 +22,15 @@
   `/casa/comodos` 172 950, `/casa/dicas` 166 026, `/casa/ajustes` 163 965, `/sobre` 139 573 B.
 - `next.config.ts`: `transpilePackages: ["@ee/core"]`, `poweredByHeader: false`, cache dos `/dados`.
   Cabeçalhos de segurança entram na HIS-003.
-- HIS-002 (branch `his-002-qualidade`): desenho técnico definitivo escrito em 2026-10-29 (D1–D15 na história),
-  ADR-003 proposto. Aguarda seguranca (ameaças + 21 casos), qa (revisão de D6/D9/D10) e a decisão de quebra (scrum-master).
+- HIS-002 dividida em **002a** (navegador; arquivo `HIS-002-qualidade-automatica.md`, branch `his-002-qualidade`) e
+  **002b** (lint e camadas; branch própria depois da 002a no `main`). Desenho D1–D15 (2026-10-29) + **D16** (2026-10-30,
+  decisões sobre as revisões de seguranca, qa e ux, nas duas). **002a liberada para a etapa 4** (qa A1–A5, frontend no
+  A5, A6 CI, A7 tira o `e2e-base`); ≈ 2,75 dias. 002b ≈ 2–2,5 dias. ADR-003 **aceito** em 2026-10-30.
 - CI hoje: ~35 s por execução (um job). Com a HIS-002: dois jobs em paralelo, ~4 min de parede.
 - Ambiente de nuvem: Playwright 1.63.0 com Chromium revisão 1243 em `/opt/pw-browsers` (`PLAYWRIGHT_BROWSERS_PATH`);
   baixar navegador é bloqueado. `CI` e `GITHUB_ACTIONS` não estão definidas aqui. A API do GitHub (`gh api`) não
-  está liberada nesta sessão.
+  está liberada nesta sessão, mas `git ls-remote` e `git clone --depth 1` de repositório público passam (usado em
+  2026-10-30 para os SHA das actions; clones em `scratchpad/tl-actions/`).
 
 ## Decisões em vigor
 
@@ -48,7 +51,15 @@
   `"use server"`, pacotes por camada, domínio só `./`). Script = o que exige outro arquivo ou a estrutura (diretiva do
   destino, `.servidor`/`server-only`, sem-diretiva só importa componentes de módulo `"use client"`, pastas antigas,
   0 arquivos, link simbólico = erro, toda extensão de código). A matriz sai do script quando o ESLint passar nos casos negativos.
-- **Ferramentas de qualidade (HIS-002, ADR-003 proposto):** ESLint 10.13.0 + `eslint-config-next` 16.4.3 +
+- **Endurecimentos do D16 (HIS-002, 2026-10-30):** actions do `ci.yml` por SHA de 40 caracteres com a versão em
+  comentário (checkout v7.0.1 `3d3c42e5…`, pnpm/action-setup v6.1.0 `ea17c68d…`, setup-node v7.1.0 `949feb24…`,
+  upload-artifact v7.0.2 `cf430e03…`; conferir com `git ls-remote --tags`, que passa pelo proxy — usar a linha `^{}`
+  em etiqueta anotada); `persist-credentials: false`; `NEXT_TELEMETRY_DISABLED`; último passo do job `e2e` "nada mudou
+  no repositório". e2e: fixture que reprova pedido para fora do `baseURL` (`data:`/`blob:` liberados); exceção do axe =
+  um elemento (seletor CSS com exatamente 1); limites de peso como constantes em `e2e/apoio/peso.ts`. 002b: regra
+  **C10** no script (nenhum comentário de ESLint em `src`, salvo a forma da HIS-109), ignores do ESLint ancorados +
+  contagem = `git ls-files`, ids obrigatórios nos casos negativos.
+- **Ferramentas de qualidade (HIS-002, ADR-003 aceito):** ESLint 10.13.0 + `eslint-config-next` 16.4.3 +
   `eslint-plugin-import-x` 4.17.1 (o `import/order` do `eslint-plugin-import` 2.32.0 quebra no ESLint 10; saída se
   outra regra quebrar: ESLint 9.39.5) e `typescript` 5.9.3 na raiz; `@playwright/test` **1.63.0** (casada com o
   Chromium do ambiente — subir junto) e `@axe-core/playwright` 4.14.0 em `apps/web`. Script de camadas passa a usar o
@@ -66,9 +77,10 @@
 - ~~HIS-002: ESLint substitui ou convive com o script?~~ decidido em 2026-10-29: convivem (ver "Decisões em vigor").
 - ~~Code review da HIS-001 (etapa 7)~~ aprovado em 2026-10-29.
 - ~~Desenho técnico definitivo da HIS-002~~ escrito em 2026-10-29 (D1–D15).
-- HIS-002: esperar a resposta do scrum-master (quebra 002a/002b, número HIS-109, destino da exceção de contraste) e
-  ajustar o desenho se a seguranca ou o qa pedirem mudança. Depois: code review (etapa 7) e passar ADR-003 para "aceito".
-- HIS-002, passo A6: conferir a major atual de `actions/upload-artifact` e comparar o peso medido no runner com o local.
+- ~~HIS-002: resposta do scrum-master e ajustes da seguranca/qa~~ feito em 2026-10-30 (D16); ADR-003 aceito.
+- HIS-002a: code review na etapa 7. No A6, conferir com quem implementa: SHA das actions reconferidos no dia, peso do
+  runner × local e o passo "nada mudou" (se o `next build` reescrever arquivo versionado, ele acusa).
+- HIS-002b: implementação depois da 002a no `main`; no B8, a frase do ADR-001.
 - Dívida nova (HIS-109, se o scrum-master confirmar): 8 efeitos que copiam estado (`react-hooks/set-state-in-effect`)
   em `TelaComodos`, `armazenamento/casa`, `dados-publicos/navegador`, `Movimento`, `EditorAparelho` — reescrever com
   `key`, estado derivado ou `useSyncExternalStore`, com e2e conferindo.
@@ -78,6 +90,9 @@
   - levar para `@ee/core` com teste: `faixaDoPeso` (`ui/Etiqueta`) e a escala repetida em `CasaIlustrada`; regras do
     rascunho do cadastro (banhos por pessoa, 8 min); `tarifaMedia`; `descreverUso`/`horasPorDiaTexto`;
   - juntar o `semAcento` repetido (`SeletorCatalogo`, `BuscaCidade`);
+  - `CasaIlustrada` formata dinheiro com um `reais()` local (Intl, espaço sem quebra U+00A0) em vez do `formatarReais`
+    do `@ee/core` (que troca o U+00A0 por espaço comum). Trocar muda o texto lido e o do e2e da HIS-002a: fazer junto da
+    decisão `corDaParte` × `faixaDoPeso` (HIS-110) ou quando a `CasaIlustrada` for mexida, com o e2e ajustado;
   - dividir `Cadastro.tsx` (554 linhas) e `TelaComodos.tsx` (415);
   - tirar o `export` do que só é usado no próprio arquivo (T2, igual no `main`): `Faixa`, `DESCRICAO_FAIXA`
     (`ui/Etiqueta`), `Simbolo` (`ui/Marca`), `prefereMenosMovimento`, `useValorAnimado`, `useVisivel` (`ui/Movimento`),

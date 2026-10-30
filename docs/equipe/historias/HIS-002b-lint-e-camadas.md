@@ -4,7 +4,7 @@
 | --- | --- |
 | Épico | E0 · Fundação |
 | Sprint | 0 |
-| Tamanho | M (≈ 1,5–2 dias, D12) |
+| Tamanho | M (≈ 2–2,5 dias: D12 + 0,5 das revisões de seguranca e qa; revisto em 2026-10-30, D16) |
 | Papéis principais | tech-lead, frontend, seguranca |
 | Status | Preparada (implementação bloqueada: ver "Dependências") |
 | Branch | `his-002b-lint-camadas` (sai do `main` **depois** da integração da HIS-002a) |
@@ -55,7 +55,9 @@ _(numeração da HIS-002 mantida)_
   eles só ganham o `eslint-disable-next-line` com motivo.
 - Regra própria para `import()` dinâmico (vem quando precisar, ex.: OCR no E3/E5) e para `"use server"` (E4, com a
   seguranca): aqui os dois ficam **proibidos**.
-- Fixar as actions do GitHub por SHA, Dependabot e `pnpm audit` no CI: HIS-003.
+- Fixar as actions do GitHub por SHA, Dependabot e `pnpm audit` no CI: HIS-003. _(tech-lead, 2026-10-30: as actions do
+  `ci.yml` já ficam fixadas por SHA na HIS-002a, passo A6; o B3 só acrescenta o `pnpm lint` e mantém os SHA. Dependabot,
+  `atualizar-dados.yml` e `pnpm audit` no CI continuam na HIS-003.)_
 - Testes no navegador, axe, peso de JS e artefatos do job: HIS-002a.
 - Qualquer mudança visível para quem usa (critério geral da E0).
 
@@ -131,6 +133,12 @@ Pontos do arquivo que valem explicar:
   **Medido:** o Babel do `eslint-config-next` dá erro de parse em `.cjs` a partir da raiz (`Cannot find module
   'next/babel'`) e a detecção do React não acha o pacote na raiz.
 - `reportUnusedDisableDirectives: "error"`: um `eslint-disable` que deixou de ser preciso vira erro.
+- _(tech-lead, 2026-10-30 — D16)_ Revisto com a seguranca: ignores **ancorados** no que é gerado (Ab4), caminhos por
+  `import.meta.dirname` (Ab11), 3 seletores de HTML a partir de texto e `jsx-no-script-url`/`jsx-no-target-blank`
+  (Ab6). **Medido** na minha cópia com o arquivo abaixo: carrega, lê 64 arquivos nas duas pastas (= `git ls-files
+  --cached --others --exclude-standard` das 8 extensões), `apps/web/src/ui/out/T.ts` plantado passa a ser lido e
+  acusado (`no-restricted-imports`), chamado de `/tmp` com `-c` dá o mesmo resultado, e os achados são os mesmos de
+  antes (68 `import-x/order`, 8 `set-state-in-effect`, 1 `no-children-prop`) — nada novo das regras da Ab6.
 
 <details><summary>Arquivo completo (contrato da implementação; validado na cópia)</summary>
 
@@ -140,6 +148,7 @@ Pontos do arquivo que valem explicar:
 // estrutura das pastas. Os casos negativos de cada regra estão em scripts/testes/casos-de-camadas.mjs.
 import { readdirSync, readFileSync } from "node:fs";
 import { builtinModules } from "node:module";
+import { join } from "node:path";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
@@ -153,10 +162,12 @@ const SERVIDOR = `**/*.servidor.${EXTENSOES}`;
 const blocoNext = nextVitals.find((bloco) => bloco.name === "next");
 // O parser do typescript-eslint já vem com o eslint-config-next/typescript (sem dependência nova).
 const parserTs = nextTs.find((bloco) => bloco.languageOptions?.parser)?.languageOptions.parser;
+// Caminhos a partir deste arquivo, não da pasta atual: o ESLint pode ser chamado de outra pasta (Ab11).
+const RAIZ = import.meta.dirname;
 // A detecção automática procura o react a partir da raiz, onde ele não está instalado: lê a versão do site.
-const versaoDoReact = JSON.parse(readFileSync("apps/web/package.json", "utf8")).dependencies.react;
+const versaoDoReact = JSON.parse(readFileSync(join(RAIZ, "apps/web/package.json"), "utf8")).dependencies.react;
 
-const FUNCIONALIDADES = readdirSync(`${SITE}/funcionalidades`, { withFileTypes: true })
+const FUNCIONALIDADES = readdirSync(join(RAIZ, SITE, "funcionalidades"), { withFileTypes: true })
   .filter((entrada) => entrada.isDirectory())
   .map((entrada) => entrada.name);
 
@@ -209,14 +220,20 @@ const SINTAXE_PROIBIDA = [
   { selector: "ExpressionStatement[directive='use server']", message: '"use server" cria um endpoint POST público: proibido até existir regra própria de Server Actions (E4, com a seguranca).' },
   { selector: "AssignmentExpression > MemberExpression.left[property.name=/^(inner|outer)HTML$/]", message: "Proibido innerHTML/outerHTML (CLAUDE.md, Segurança)." },
   { selector: "CallExpression[callee.property.name=/^(insertAdjacentHTML|write|writeln)$/]", message: "Proibido inserir HTML a partir de texto (CLAUDE.md, Segurança)." },
+  // Ab6 da seguranca (2026-10-29): outros caminhos de HTML a partir de texto.
+  { selector: "CallExpression[callee.property.name=/^(setHTMLUnsafe|parseHTMLUnsafe|createContextualFragment)$/]", message: "Proibido inserir HTML a partir de texto (CLAUDE.md, Segurança)." },
+  { selector: "AssignmentExpression > MemberExpression.left[property.name='srcdoc']", message: "Proibido srcdoc: é HTML a partir de texto (CLAUDE.md, Segurança)." },
+  { selector: "JSXAttribute[name.name='srcDoc']", message: "Proibido srcDoc: é HTML a partir de texto (CLAUDE.md, Segurança)." },
 ];
 
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
+  // Só o que é gerado, com caminho ancorado: um padrão solto (**/out/**) tiraria do lint uma pasta do site com o
+  // mesmo nome, ex.: apps/web/src/ui/out/ (Ab4 da seguranca). O controle de contagem do D6 confere.
   globalIgnores([
-    "**/.next/**", "**/out/**", "**/build/**", "**/next-env.d.ts", "**/node_modules/**",
-    "**/playwright-report/**", "**/test-results/**",
+    "apps/web/.next/**", "apps/web/out/**", "apps/web/playwright-report/**", "apps/web/test-results/**",
+    "packages/*/dist/**", "packages/dados/.cache/**", "**/node_modules/**", "**/next-env.d.ts",
   ]),
   { name: "projeto/diretivas", linterOptions: { reportUnusedDisableDirectives: "error" } },
   {
@@ -236,6 +253,9 @@ export default defineConfig([
       "@typescript-eslint/ban-ts-comment": "error",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" }],
       "react/no-danger": "error",
+      // Ab6: link "javascript:" e target="_blank" sem rel="noopener noreferrer" (CLAUDE.md, Segurança).
+      "react/jsx-no-script-url": "error",
+      "react/jsx-no-target-blank": ["error", { allowReferrer: false }],
       "no-eval": "error",
       "no-implied-eval": "error",
       "no-new-func": "error",
@@ -304,10 +324,13 @@ zustand, módulos do Node, `server-only` fora de `.servidor`, `require(`/`import
 | C7 · `"use client"` não importa `*.servidor` (nem com `import type`) | (já existe) |
 | C8 · **S2:** arquivo **sem** `"use client"` que importa ou reexporta de um módulo `"use client"` do site só leva **componente** (nome em PascalCase com ao menos uma minúscula: `TransicaoTela` sim; `VOLTAR`, `novoId`, `useCasa` não) ou **tipo** (`import type`, `{ type X }`). `import * as` e `export *` de módulo `"use client"` = erro. Em `import X from`, vale o nome local | `arquivo sem "use client" só importa componentes de um módulo "use client" (S2): VOLTAR de @/ui/Movimento` |
 | C9 · destino interno (`@/` ou `./`) que não existe = erro (sem isso a C8 passaria em silêncio) | "destino não encontrado" |
+| C10 · **comentário que muda regra do ESLint** em `apps/web/src` e `packages/core/src` (Ab3 da seguranca; tech-lead, 2026-10-30). Lido nos comentários do AST (`ts.getLeadingCommentRanges`/`getTrailingCommentRanges` em cada token, ou varredura com `ts.createScanner` sem pular comentários). É erro todo comentário que, sem `//`/`/* */` e sem espaços e `*` do começo, **começa** com `eslint` ou com `global`, `globals` ou `exported` seguidos de espaço — **ou** que **contém** `eslint-disable` ou `eslint-enable` em qualquer ponto. Única exceção, comentário de linha inteiro igual a `// eslint-disable-next-line react-hooks/set-state-in-effect -- <motivo> (HIS-109)`, com motivo de pelo menos 10 caracteres (regex `^// eslint-disable-next-line react-hooks\/set-state-in-effect -- \S.{9,} \(HIS-109\)$`). É o critério 11 automático (P-qa-b3, forma estrita) | `comentário que muda regra do ESLint não é permitido (só o da HIS-109): <arquivo>:<linha>` |
 
 Contrato: `node scripts/verificar-camadas.mjs [--raiz=<pasta>]` (padrão: a raiz do repositório por
 `import.meta.dirname`; `--raiz` só para os testes). Continua só lendo: não executa nem importa os arquivos lidos, sem
-rede, sem escrita, sem try/catch, código 1 em qualquer problema. Usa `ts.createSourceFile` (só análise de sintaxe, sem
+rede, sem escrita, sem try/catch, código 1 em qualquer problema. _(2026-10-30, Ab8: só `ts.createSourceFile` — nunca
+`createProgram`, `tsconfig` nem plugins do TS; `lstat`/`Dirent.isSymbolicLink()` **antes** de ler, link = C4; sem
+`child_process`.)_ Usa `ts.createSourceFile` (só análise de sintaxe, sem
 checar tipos); a diretiva sai dos primeiros `ExpressionStatement` de texto do AST, não mais do texto cru. Resolução:
 `@/x` → `apps/web/src/x`, `./x` → pasta do arquivo, tentando sem extensão e com as 8.
 
@@ -352,6 +375,22 @@ Formato de um caso:
 - **Casos obrigatórios:** os do item 7 da §10 da HIS-001; os do R13; S1-a a S1-g (pelo menos um cada); os 21 da
   seguranca (pergunta aberta; entram com `origem: "seguranca-NN"`); C1–C9. O teste imprime "N casos: X no ESLint, Y no
   script" e falha se faltar alguma origem obrigatória (assim ninguém apaga um caso sem perceber).
+- _(tech-lead, 2026-10-30 — D16; acréscimos ao contrato, pedidos por qa e seguranca)_
+  - **Ids obrigatórios** (P-qa-b1 = Ab10): `casos-de-camadas.mjs` exporta `OBRIGATORIOS`, lista fixa de ids — a tabela
+    "Casos obrigatórios" do qa, mais `seguranca-01` a `seguranca-30`, `seguranca-14b`, `controle-seguranca-01` e `C10`.
+    Falta de um = erro "faltando caso obrigatório: <id>". Id repetido na tabela = erro.
+  - **Caso pela linha de comando** (P-qa-b2): o teste lê o script `lint` do `package.json` da raiz, separa por espaço,
+    tira o `.`, o `--cache` e o `--cache-location <pasta>`, acrescenta `--stdin --stdin-filename
+    apps/web/src/ui/Exemplo.tsx` e roda `execFileSync(process.execPath, [<bin do eslint>, ...args], { input })`, sem
+    `shell`. `<img src="x" />` → código 1; o mesmo sem o `<img>` → código 0. Tirar o `--max-warnings 0` faz o caso falhar (V6).
+  - **Contagem do ESLint** (Ab4): `controle-repositorio` também exige que o número de resultados de
+    `eslint.lintFiles(["apps/web/src", "packages/core/src"])` seja igual ao de `git ls-files --cached --others
+    --exclude-standard` das 8 extensões (local e CI). Hoje 64 = 64 (medido).
+  - **C10 no repositório** (critério 11): `controle-repositorio` exige no máximo **8** comentários da forma da HIS-109
+    (só pode diminuir; a HIS-109 leva a 0). Um 9º com motivo falha aqui; sem motivo, falha na C10 (V8).
+  - **Arquivo que não faz parse** (Ab12): caso com sintaxe quebrada → `pnpm lint` reprova (erro de parse do ESLint).
+  - **Segurança do próprio teste** (Ab9): `mkdtemp(join(os.tmpdir(), "camadas-"))`; antes do `rm`, conferir que o
+    caminho começa com esse prefixo; links da C4 apontam para dentro do `tmp`; `execFileSync` sempre sem `shell`.
 
 ### D7. Correção S2/T3 (critério 8) — sem mudança visível
 
@@ -373,14 +412,30 @@ página. Confere-se com o e2e (transição de `/sobre` para `/`) e com o peso de
 
 | Passo | O que | Verde quando |
 | --- | --- | --- |
-| B1 | Dependências do ESLint; `eslint.config.mjs` **sem** `import-x/order`; `pnpm lint`; achados do D4 (8 `eslint-disable` com motivo, `children`, `postcss`) | `pnpm lint` com 0 erros e 0 avisos |
+| B1 | Dependências do ESLint; `eslint.config.mjs` **sem** `import-x/order` (já com ignores ancorados, `import.meta.dirname` e o bloco da Ab6 — D16); `pnpm lint`; achados do D4 (8 `eslint-disable` com motivo, `children`, `postcss`) | `pnpm lint` com 0 erros e 0 avisos; Rb1, Rb2, Rb5, Rb9 |
 | B2 | Liga `import-x/order` e aplica `pnpm lint --fix` duas vezes — commit **só** de formatação (T1) | `git diff -U0 HEAD~1` tem só linhas de `import`/`export … from` (e a linha da configuração); `pnpm lint` 0 |
 | B3 | `pnpm lint` no job `verificar` | CI verde |
-| B4 | `scripts/testes/` com os casos do ESLint e os do script que já existem (C1–C3, C6, C7) | todos os casos e controles passam |
-| B5 | Script com parser TS: tira a matriz e o resto do "Sai" (D5); C4, C5, C9; `--raiz`; casos novos | os casos da matriz continuam passando — agora só pelo ESLint |
+| B4 | `scripts/testes/` com os casos do ESLint e os do script que já existem (C1–C3, C6, C7); `OBRIGATORIOS`, caso pela linha de comando, contagem do ESLint, gêmeos da matriz (D6, D16) | todos os casos e controles passam; Rb7 |
+| B5 | Script com parser TS: tira a matriz e o resto do "Sai" (D5); C4, C5, C9, **C10**; `--raiz`; casos novos (`seguranca-22` a `26`) | os casos da matriz continuam passando — agora só pelo ESLint; Rb4, Rb6 |
 | B6 | Correção S2/T3 (D7) | e2e e peso verdes |
 | B7 | C8 no script + casos (`VOLTAR`, `novoId`, `import * as`, `export *`, default em minúscula; controles: `import type` e componente) | `pnpm camadas` verde no repositório; casos da C8 acusam |
-| B8 | ADR-001 (frase da HIS-002) e ADR-003 para "aceito" (tech-lead); docs (documentacao) | — |
+| B8 | ADR-001 (frase da HIS-002) (tech-lead; o ADR-003 já está "aceito" desde 2026-10-30, D16); docs (documentacao) | Rb3, Rb8 (seguranca) |
+
+### D16 (parte HIS-002b). Decisões sobre as revisões de qa e seguranca (tech-lead, 2026-10-30)
+
+| Ponto | Decisão | Onde |
+| --- | --- | --- |
+| P-qa-b1 · ids obrigatórios | **Aceito** (é a Ab10): lista `OBRIGATORIOS` fixa, falta = erro com o id | D6, B4 |
+| P-qa-b2 · caso pela linha de comando | **Aceito**, com o contrato do D6 (args do `lint` do `package.json`, sem `--cache`, `--stdin`, sem `shell`) | D6, B4 |
+| P-qa-b3 · critério 11 automático | **Aceito na forma estrita da seguranca**: vira a **C10** do script (só a forma da HIS-109 passa), mais o teto de 8 no `controle-repositorio`. A forma frouxa proposta (`eslint-disable-next-line <qualquer regra> -- <motivo>`) é **recusada**: ainda deixaria desligar `no-restricted-imports` e `no-restricted-syntax` | D5, D6, B5 |
+| Ab3 · comentário desliga a barreira | **Aceito como C10 no script**, não com o `@eslint-community/eslint-plugin-eslint-comments`: sem dependência nova, o script já tem o AST do TS, e a barreira fica **fora** do ESLint de propósito — nada na configuração do ESLint consegue desligá-la. Casos `seguranca-22` a `26` | D5, B5 |
+| Ab4 · pastas do site fora do lint | **Aceito**: ignores ancorados (D4) + contagem do ESLint = `git ls-files` (D6, medido 64 = 64). Caso `seguranca-27` | D4, D6, B1, B4 |
+| Ab6 · 3 seletores, `jsx-no-script-url`, `jsx-no-target-blank` | **Aceitos** (D4; medido: 0 achados no código atual). Casos `seguranca-28` e `29` | D4, B1 |
+| Ab5, Ab8, Ab9, Ab11, Ab12 | **Aceitos** como escritos pela seguranca (C1/C2 ficam no script; script só lê; teste sem `shell` e `rm` só no prefixo; `import.meta.dirname`; caso de parse quebrado) | D4–D6 |
+| Ab7, Ab14 | Aceitos como risco baixo, sem regra (como a seguranca propôs) | — |
+| Rb1–Rb9 | **Todas aceitas**, cada uma no passo em que se confere (B1, B4, B5, B8; tabela acima) | B1–B8 |
+
+A pergunta `[para: tech-lead]` do qa fica respondida por esta tabela. Estimativa: +0,5 dia (D12 da HIS-002a).
 
 ## Ameaças
 
@@ -587,7 +642,7 @@ controles; o resumo "N casos: X no ESLint, Y no script".
   qa: serve como a C10 da Ab3 **só se for mais estrita** — aceitar `eslint-disable-next-line <qualquer regra> --
   <motivo>` ainda deixa desligar `no-restricted-imports` e `no-restricted-syntax`; a única forma permitida é a da
   HIS-109 (`react-hooks/set-state-in-effect`). A P-qa-b1 (ids obrigatórios) é a mitigação da Ab10: de acordo.
-- [ ] `[para: tech-lead]` (qa, 2026-10-29 — entra no B4; não bloqueia o desenho) Três ajustes no contrato do D6:
+- [x] `[para: tech-lead]` (qa, 2026-10-29 — entra no B4; não bloqueia o desenho) Três ajustes no contrato do D6:
   1. **P-qa-b1 · Ids obrigatórios, não só origens.** O D6 falha "se faltar alguma origem obrigatória"; apagar um dos
      três casos S1-a passaria. Proposta: `casos-de-camadas.mjs` exporta `OBRIGATORIOS` (lista de ids do "Plano de
      testes") e o teste falha com "faltando caso obrigatório: <id>".
@@ -600,6 +655,9 @@ controles; o resumo "N casos: X no ESLint, Y no script".
      `apps/web/src` e `packages/*/src` e exige que todo `eslint-disable` seja `eslint-disable-next-line <regra> --
      <motivo>` (nada de arquivo inteiro, sem regra ou sem motivo), com caso negativo. Se preferir deixar o `grep`,
      registrar aqui que a forma dos `eslint-disable` só é conferida na revisão.
+  — **Resposta (tech-lead, 2026-10-30):** b1 e b2 **aceitos** como propostos; b3 **aceito na forma estrita** — vira a
+  C10 do script (só `react-hooks/set-state-in-effect -- <motivo> (HIS-109)` passa) mais o teto de 8; a forma "qualquer
+  regra com motivo" fica recusada pelo motivo da seguranca. Contratos no D5, D6 e no **D16 (parte HIS-002b)**.
 
 ## Conversa da equipe
 
@@ -653,3 +711,27 @@ ficam na [HIS-002a](HIS-002-qualidade-automatica.md), "Conversa da equipe", e va
   bloco da Ab6 no contrato do D4/D5/D6; responder a P-qa-b3 junto (a C10 é a forma estrita dela). **qa** — a tabela de
   ids obrigatórios (P-qa-b1) inclui `seguranca-01` a `30`, `14b` e `controle-seguranca-01`. **Etapa 4** liberada pela
   seguranca assim que a HIS-002a estiver no `main`.
+
+### [tech-lead] 2026-10-30 — revisões de qa e seguranca decididas (D16, parte HIS-002b); contrato do D4–D6 atualizado
+- O que fiz: reli a história inteira e a HIS-002a. Decidi P-qa-b1 a b3 e as ameaças Ab3–Ab14 no **D16 (parte
+  HIS-002b)** e levei para o contrato com edição pontual: D4 (ignores ancorados, `import.meta.dirname`, bloco da Ab6),
+  D5 (regra **C10** e as garantias da Ab8), D6 (ids obrigatórios, caso pela linha de comando, contagem do ESLint, teto
+  de 8, parse quebrado, segurança do próprio teste), passos B1, B4, B5 e B8. Marquei a pergunta como respondida.
+- Decisões e porquê:
+  - **Ab3 → C10 no script**, não plugin: sem dependência nova, o AST do TS já está lá, e a barreira fica fora do alcance
+    da configuração do ESLint. Só passa a forma exata da HIS-109 com motivo de pelo menos 10 caracteres.
+  - **P-qa-b3 aceita na forma estrita** (= C10 + teto de 8 no `controle-repositorio`); a forma "qualquer regra com
+    motivo" fica recusada, porque deixaria desligar a matriz e a sintaxe proibida.
+  - **Ab4:** ignores só do que é gerado, com caminho; controle "resultados do `lintFiles` = `git ls-files`".
+  - **Ab6:** 3 seletores e `jsx-no-script-url`/`jsx-no-target-blank` aceitos. **P-qa-b1/b2** aceitas como propostas.
+  - Fixar actions por SHA saiu do "Fora do escopo" daqui: já entra na HIS-002a (A6).
+- Arquivos alterados: esta história (D4, D5, D6, D13, D16, pergunta, "Fora do escopo", tamanho, esta nota); demais na
+  nota da HIS-002a.
+- Como verifiquei: na minha cópia (`scratchpad/tl-his002/copia`), troquei o `eslint.config.mjs` pelo arquivo do D4
+  revisto (extraído desta história) e rodei o ESLint nas duas pastas: carrega, lê 64 arquivos (= `git ls-files
+  --cached --others --exclude-standard`), um `apps/web/src/ui/out/T.ts` plantado passa a ser lido e acusado, chamado de
+  `/tmp` com `-c` dá o mesmo, e os achados são os de antes (68 `import-x/order`, 8 `set-state-in-effect`, 1
+  `no-children-prop`), 0 novos. Depois voltei o arquivo antigo da cópia. A regex da C10 testada com `node -e`: aceita a
+  forma da HIS-109 com motivo e recusa sem motivo, motivo curto e outra regra.
+- Para o próximo: implementação (frontend com o tech-lead) **só depois da HIS-002a no `main`**, seguindo o D16; **qa**
+  — a lista `OBRIGATORIOS` inclui `C10`, `seguranca-01` a `30`, `14b` e `controle-seguranca-01`.

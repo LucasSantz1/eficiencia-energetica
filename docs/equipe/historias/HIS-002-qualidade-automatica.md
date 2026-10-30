@@ -4,7 +4,7 @@
 | --- | --- |
 | Épico | E0 · Fundação |
 | Sprint | 0 |
-| Tamanho | M (≈ 2–2,5 dias, D12) |
+| Tamanho | M (≈ 2,75 dias: 2,25 do D12 + 0,5 das revisões do qa; revisto em 2026-10-30, D16) |
 | Papéis principais | qa, tech-lead (frontend nas correções do A5) |
 | Status | Preparada |
 | Branch | `his-002-qualidade` (a branch já existe; continua com o nome antigo) |
@@ -69,7 +69,8 @@ _(numeração da HIS-002 mantida; 1, 5, 7 e 8 estão na [HIS-002b](HIS-002b-lint
 - HIS-001 em "Pronto" e integrada ao `main` (a `his-002-qualidade` parte das pastas novas).
 - Etapa 4 (implementação) começa quando a **seguranca** registrar as ameaças desta parte (seção "Ameaças") e o **qa**
   revisar D9 e D10 (seção "Plano de testes"). O texto dos 5 nomes acessíveis da `/` (**ux-acessibilidade**) bloqueia só
-  o passo A5.
+  o passo A5. _(tech-lead, 2026-10-30: as três estão feitas — seguranca, qa e ux escreveram; as decisões sobre o que eles
+  pediram estão no **D16**. Nada mais bloqueia a etapa 4.)_
 - Desta história são, no D2, `@playwright/test` e `@axe-core/playwright` (em `apps/web`); no D3, `test:e2e` (raiz e
   `apps/web`), o `typecheck` do `apps/web` com o `e2e/` e o `.gitignore`; no D11, o job `e2e` e a saída do `pnpm build`
   do `verificar` (o `pnpm lint` do `verificar` entra na HIS-002b, passo B3).
@@ -236,8 +237,10 @@ apps/web/
   e2e/
     tsconfig.json              estende ../../../tsconfig.base.json; lib dom + ES2022; types node
     apoio/
-      teste.ts                 test/expect com a fixture automática "console e página sem erro"
+      teste.ts                 test/expect com a fixture automática "console, página e rede sem erro" (D16, Aa11)
       casa.ts                  CHAVE_CASA, semearCasa(contexto, fixture), casaSalva(página)
+      axe.ts                   aplicarExcecoes(violacoes, excecoes, ...) — função pura (D16, P-qa-6/P-qa-7)
+      peso.ts                  compararPeso(referencia, medido) e os limites como constantes — função pura (D16)
       resumo-do-ci.ts          acrescenta Markdown em $GITHUB_STEP_SUMMARY quando ele existe
     fixtures/
       casa-v1.json             copiadas do e2e-base (dados inventados, Presidente Prudente)
@@ -248,6 +251,9 @@ apps/web/
     ajustes.spec.ts
     rotas.spec.ts
     transicoes.spec.ts
+    teclado.spec.ts            P-qa-2 (2 projetos)
+    comodos.spec.ts            P-qa-3 (2 projetos)
+    sanidade.spec.ts           N1–N8: cada barreira reprova o que deve (P-qa-6; só celular)
     acessibilidade.spec.ts     critério 3
     excecoes-axe.ts
     peso-js.spec.ts            critério 9
@@ -263,7 +269,7 @@ import { defineConfig, devices } from "@playwright/test";
 const PORTA = Number(process.env.PORTA_E2E ?? 3100);
 const NO_GITHUB = process.env.GITHUB_ACTIONS === "true";
 // Testes que não dependem da largura da tela rodam uma vez só, no celular.
-const SO_NO_CELULAR = /(migracao|aparelhos|ajustes|rotas|peso-js)\.spec\.ts$/;
+const SO_NO_CELULAR = /(migracao|aparelhos|ajustes|rotas|peso-js|sanidade)\.spec\.ts$/;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -343,14 +349,16 @@ Escolhas para o qa confirmar ou mudar:
     regra: string;                      // id da regra do axe, ex.: "color-contrast"
     pagina: string;                     // ex.: "/"
     estado: "sem casa" | "com casa";
-    alvo: string;                       // trecho do seletor do nó: a exceção é por elemento, nunca pela regra inteira
-    historia: `HIS-${number}`;          // história da E1 que corrige
+    alvo: string;                       // seletor CSS que casa com EXATAMENTE 1 elemento da página (D16, P-qa-7 + Aa14)
+    historia: `HIS-${number}`;          // história da E1 que corrige; tem que existir em docs/planejamento.md
     motivo: string;
   }
   export const EXCECOES_AXE: readonly ExcecaoAxe[] = [];
   ```
   Exceção que não casa com nenhuma violação = erro ("exceção velha: tire da lista"). A lista aplicada vai para o
   relatório e para o resumo do job. Quem revisa: `ux-acessibilidade`.
+  _(tech-lead, 2026-10-30: `alvo` deixou de ser "trecho do seletor" — ver D16, P-qa-7. O `AxeBuilder` roda sem
+  `disableRules`, `withTags`, `withRules`, `exclude`, `include` nem `options`: `new AxeBuilder({ page }).analyze()`.)_
 - **Levantamento prévio (medido; sem casa, ainda sem movimento reduzido):** só a `/` tem violação séria; as outras 6
   páginas, 0.
   - `color-contrast`: pílula de porcentagem branca em `bg-faixa-d` (#ec7a1a), 2,85:1 — real e **muda cor** → exceção +
@@ -363,7 +371,8 @@ Escolhas para o qa confirmar ou mudar:
 
 ### D11. CI e resposta da pergunta aberta
 
-`.github/workflows/ci.yml` final:
+`.github/workflows/ci.yml` final _(revisto em 2026-10-30 com a seguranca — D16: actions por SHA, `persist-credentials:
+false`, telemetria do Next desligada, último passo "nada mudou no repositório")_:
 
 ```yaml
 name: Verificação
@@ -382,20 +391,28 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # O next build manda telemetria anônima para a Vercel; o CI não precisa disso (Aa11).
+  NEXT_TELEMETRY_DISABLED: "1"
+
+# Actions fixadas pelo SHA do commit, com a versão em comentário (Aa9): uma etiqueta como v7 pode ser movida por
+# quem controla a action. Para subir: git ls-remote --tags https://github.com/<action> (usar a linha ^{} quando houver).
 jobs:
   verificar:
     name: Lint, tipos e testes
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # ninguém faz push daqui: o token não fica no .git/config (Aa6)
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
+      # pnpm lint entra aqui na HIS-002b (passo B3)
       - run: pnpm typecheck
       - run: pnpm test
 
@@ -404,9 +421,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: pnpm
@@ -418,7 +437,7 @@ jobs:
       - run: pnpm test:e2e
       - name: Guardar relatório, capturas e traces
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: relatorio-e2e
           path: |
@@ -426,6 +445,9 @@ jobs:
             apps/web/test-results/
           retention-days: 14
           if-no-files-found: ignore
+      # Nenhum teste nem o build muda arquivo do repositório (Aa13): a referência de peso só muda num PR, de propósito.
+      - name: Conferir que nada mudou no repositório
+        run: git diff --exit-code && test -z "$(git status --porcelain)"
 ```
 
 - Dois jobs em paralelo. O `pnpm build` sai do `verificar` e fica só no `e2e`, onde é preciso (um build só por execução).
@@ -439,8 +461,9 @@ jobs:
   dias. Conteúdo: só os dados inventados das fixtures e do fluxo (a seguranca confere).
 - Proteção do `main` (dono do projeto, nas configurações do GitHub): exigir os checks "Lint, tipos e testes" e
   "Navegador (e2e, axe e peso)" para integrar.
-- `actions/upload-artifact@v4`: conferir a major atual na implementação (a API do GitHub não estava acessível daqui);
-  fixar actions por SHA é assunto da seguranca (HIS-003).
+- ~~`actions/upload-artifact@v4`: conferir a major atual na implementação; fixar actions por SHA é assunto da
+  seguranca (HIS-003).~~ _(2026-10-30: majors conferidas por `git ls-remote` — checkout v7, action-setup v6, setup-node
+  v7, upload-artifact v7 — e actions fixadas por SHA já aqui; ver D16, Aa9.)_
 
 **Resposta da pergunta `[para: tech-lead]`** — está nas "Perguntas abertas", junto da pergunta.
 
@@ -471,19 +494,24 @@ vão junto com eles porque o ESLint, a matriz e os casos negativos são uma cois
 [HIS-002b](HIS-002b-lint-e-camadas.md) foi criada. Ordem: 002a → 002b, em sequência (a 002b sai do `main` depois da
 002a integrada). A preparação da 002b (21 casos, ameaças, revisão do D6) roda **em paralelo** com a 002a.
 
+**Estimativa revista (tech-lead, 2026-10-30, depois das revisões — D16):** **HIS-002a ≈ 2,75 dias** (2,25 dos blocos
+acima + 0,5 do qa: `teclado`, `comodos`, 24 estados do axe, `sanidade`; as conferências da seguranca e o SHA das actions
+cabem nos passos sem prazo a mais). **HIS-002b ≈ 2–2,5 dias** (+0,5: C10, ignores ancorados e contagem, casos
+`seguranca-22` a `30`, gêmeos da matriz, caso pela linha de comando). As duas continuam M (até 3 dias).
+
 ### D13. Ordem dos passos (cada um verde: `pnpm typecheck`, `pnpm test`, `pnpm build` e o que o passo acrescenta)
 
 **HIS-002a**
 
 | Passo | O que | Verde quando |
 | --- | --- | --- |
-| A1 | Dependências do Playwright e do axe; `playwright.config.ts`; `e2e/tsconfig.json`; `e2e/apoio/*`; scripts; `.gitignore`; `rotas.spec.ts` | `pnpm build && PORTA_E2E=<sua> pnpm test:e2e` passa; o `typecheck` cobre o `e2e/` |
-| A2 | `fluxo-principal.spec.ts` | passa nos 2 projetos, sem erro de console |
-| A3 | fixtures copiadas; `migracao`, `aparelhos`, `ajustes`, `transicoes` | todas as verificações de comportamento da tabela do D9 |
-| A4 | `peso-js.spec.ts` + `peso-js.json` medido neste commit (código igual ao `main`) | números batem com os da HIS-001 (D8) |
-| A5 | `acessibilidade.spec.ts` + `excecoes-axe.ts`; correções sem mudança visível num commit próprio (texto da ux) | 0 sério/crítico fora das exceções; peso dentro do limite; ux revisou a lista |
-| A6 | `ci.yml` (job `e2e`, artefato, resumo; build sai do `verificar`) | CI verde no PR; peso do runner igual ao local (se não, referência = medida do CI); um commit descartável com teste falhando mostra capturas e trace no artefato (critério 4) e é revertido |
-| A7 | `git rm -r apps/web/e2e-base` | `grep -rn "e2e-base" apps scripts .github` vazio |
+| A1 | Dependências do Playwright e do axe; `playwright.config.ts`; `e2e/tsconfig.json`; `e2e/apoio/teste.ts` (console, página **e rede**: Aa11/P-qa-8), `casa.ts`, `resumo-do-ci.ts`; scripts; `.gitignore`; `rotas.spec.ts` (com as 8 rotas em `routes` do manifesto, P-qa-5); `sanidade.spec.ts` com N1, N2, N3 e N8 | `pnpm build && PORTA_E2E=<sua> pnpm test:e2e` passa; o `typecheck` cobre o `e2e/`; **Ra1–Ra4** (versão exata só em `devDependencies` de `apps/web`; lockfile só do registro; scripts de instalação só `esbuild`/`unrs-resolver`; `pnpm audit --audit-level high` limpo), **Ra5** parte 1 (`grep` em `apps/web/src` vazio) e **Ra13** (`-H 127.0.0.1`, `reuseExistingServer: false`) conferidos e escritos na nota |
+| A2 | `fluxo-principal.spec.ts` com o contador de transições por ação (P-qa-1, inclusive `/sobre` → `/`) e datas relativas (obs. do qa) | passa nos 2 projetos, sem erro de console nem pedido para fora |
+| A3 | fixtures copiadas (`sha256sum` igual); `migracao`, `aparelhos`, `ajustes`, `transicoes` (com `reduce`: +1 por aba e durações 0 no `transition.ready`, P-qa-1; N7), `teclado` (P-qa-2), `comodos` (P-qa-3), com os `test.fixme("HIS-107 …")`/`("HIS-108 …")` | linhas 1–13 e 16–23 da tabela "Cobertura" do qa |
+| A4 | `apoio/peso.ts` (`compararPeso` e os limites como constantes), `peso-js.spec.ts` + `peso-js.json` medido neste commit (código igual ao `main`), com `/casa (com casa)` (P-qa-5); N6 no `sanidade` | números batem com os da HIS-001 (D8 e critério 6 do qa); **Ra5** parte 2 (`.next/static` sem `axe-core`/`playwright`); **Ra11** (JSON sem limite; M15 vermelho com o JSON intacto) |
+| A5 | `apoio/axe.ts` (`aplicarExcecoes`), `acessibilidade.spec.ts` (24 estados × 2, P-qa-4) + `excecoes-axe.ts` (1 elemento por exceção, D16); N4 e N5 no `sanidade`; correções sem mudança visível num commit próprio: `aria-label` da casa ilustrada com o texto da ux (D16, "UX") e o `<dl>` da faixa "Tarifa Social" | 0 sério/crítico fora das exceções; peso dentro do limite; ux revisou a lista; **Ra12** (`grep` vazio; exceção que casa 2 elementos reprova) |
+| A6 | `ci.yml` do D11 (job `e2e`, artefato, resumo; actions por SHA reconferidas; `persist-credentials: false`; `NEXT_TELEMETRY_DISABLED`; último passo "nada mudou"); build sai do `verificar` | CI verde no PR; peso do runner igual ao local (se não, referência = medida do CI, D14); **Ra6–Ra8** e **Ra11** (passo final presente); um commit descartável com teste falhando mostra capturas e trace no artefato (critério 4), o artefato vai para a seguranca (**Ra9**) e o commit é revertido |
+| A7 | `git rm -r apps/web/e2e-base` | tabela "Cobertura" do qa, linhas 1–21, cada uma com o nome do teste e verde; `grep -rn "e2e-base" apps scripts .github` vazio; o commit do A7 fica no ADR-003 e no `contexto.md` do qa |
 
 **HIS-002b** — passos B1–B8 movidos para a [HIS-002b](HIS-002b-lint-e-camadas.md) ("D13 (parte HIS-002b)").
 
@@ -504,6 +532,8 @@ vão junto com eles porque o ESLint, a matriz e os casos negativos são uma cois
 | Heurística da C8 (PascalCase = componente): uma constante em PascalCase passaria | Convenção do projeto: constante em CAIXA_ALTA, componente em PascalCase. Aceito |
 | Os 8 `eslint-disable` virarem permanentes | HIS-109 no backlog; `reportUnusedDisableDirectives` acusa quando sobrarem |
 | CI mais lento: ~35 s → ~4 min | Jobs em paralelo; execução velha do PR cancelada |
+| Action fixada por SHA ficar sem correção de segurança (D16, Aa9) | Dependabot para `github-actions` na HIS-003 (critério 6 dela) abre o PR com o SHA novo; até lá, reconferir as majors a cada história que mexer no `ci.yml` |
+| Fixture de rede reprovar pedido legítimo do próprio Next (D16, P-qa-8) | Tudo do site sai da mesma origem (fontes locais, `/dados` estático, medido pela seguranca); se um dia precisar de terceiro, entra com a seguranca e consentimento (LGPD), nunca afrouxando a fixture |
 
 ### D15. Como verificar (qa e seguranca)
 
@@ -517,6 +547,51 @@ pnpm audit --audit-level high
 - Critério 4: o artefato do commit descartável do A6 tem `playwright-report/index.html`, captura e `trace.zip`.
 - Critério 6: o mesmo `pnpm test:e2e` no ambiente de nuvem e no CI → mesma lista de testes, mesmo resultado.
 - Critério 9: plantar 2 KB num componente de `/sobre` numa cópia → o teste de peso falha com a tabela; tirar → passa.
+
+### D16. Decisões sobre as revisões de qa, seguranca e ux (tech-lead, 2026-10-30)
+
+_Tudo aceito; um ajuste (P-qa-7 com Aa14). Os passos A1–A7 (D13), o D9, o D10 e o D11 já estão atualizados com o que
+segue. Nada aqui muda a essência do ADR-003, que passa a "aceito"._
+
+**QA (perguntas P-qa-1 a P-qa-8)**
+
+| Ponto | Decisão | Passo |
+| --- | --- | --- |
+| P-qa-1 · transição por passo | **Aceito.** `fluxo-principal`: contador lido antes e depois de cada ação (+1 por passo do cadastro, 0 em "Por cômodo/Tudo junto", 0 ao abrir e fechar folhas, +1 por aba e por link, **inclusive `/sobre` → `/`**, que prova o B6 da 002b). `transicoes` com `reduce`: +1 por troca de aba e durações 0 lidas no `transition.ready`, sem espera fixa | A2, A3 |
+| P-qa-2 · `teclado.spec.ts` | **Aceito**, 2 projetos, como proposto; `test.fixme("HIS-108 · P1 …")` para o foco da cidade | A3 |
+| P-qa-3 · `comodos.spec.ts` | **Aceito**, 2 projetos; `test.fixme("HIS-108 · P3 …")` para o alinhamento ao topo | A3 |
+| P-qa-4 · mais estados no axe | **Aceito**: os 13 do D10 + 7 passos do cadastro + `/casa/comodos?visao=geral` + 3 folhas = 24 × 2. Um teste por estado, com nome "axe · <página> · <estado>"; antes da análise, conferir que a tela certa abriu e exigir `passes.length > 0` (obs. do qa) | A5 |
+| P-qa-5 · peso e rotas | **Aceito.** `"/casa (com casa)"` só com `totalComPrefetch`. Contrato: a lista de medidas é **fixa no spec** (`MEDIDAS`: rota, estado e quais campos); o JSON tem que ter exatamente essas chaves e campos — falta = "rota sem referência", sobra = "referência sem medida: tire do JSON". `rotas`: as 8 rotas em `routes` do `prerender-manifest.json` | A1, A4 |
+| P-qa-6 · `sanidade.spec.ts` | **Aceito.** Cada negativo entra no passo da sua barreira: N1, N2, N3, N8 no A1; N7 no A3; N6 no A4; N4, N5 no A5. `aplicarExcecoes` em `e2e/apoio/axe.ts` e `compararPeso` em `e2e/apoio/peso.ts`: funções puras exportadas (recebem dados, devolvem a lista de problemas; sem `page` dentro), usadas pelos specs e pelo `sanidade`. `SO_NO_CELULAR` ganha `sanidade` | A1–A5 |
+| P-qa-7 · exceção mais estreita | **Aceito com ajuste, unindo com a Aa14:** uma exceção = **um** elemento. `alvo` é seletor CSS; no navegador, `document.querySelectorAll(alvo)` tem que dar **exatamente 1** elemento, e ele tem que ser um dos nós da violação (comparado por identidade com o elemento do `target` do axe). Sem campo `nos`: dois elementos com o mesmo defeito = duas entradas. Mensagens: 0 nós da violação → "exceção velha: tire da lista"; seletor com 2+ elementos → "exceção cobre mais de um elemento". Por quê: um elemento novo com o defeito falha sozinho, um a menos vira exceção velha, e não há número para manter. Na `/` devem ser 2 entradas `color-contrast` (pílulas de Quarto e Cozinha, faixa D — o qa confirma no A5), ex.: `alvo: 'button[aria-label^="Quarto,"] .numeros'` | A5 |
+| P-qa-8 · nada sai do aparelho | **Confirmado no A1, obrigatório** (= Aa11 da seguranca): fixture automática em `apoio/teste.ts` com `context.on("request")` (pega janela nova e worker), **sem** `route` (não mexe no 11b); libera só a origem do `baseURL` (tirada da fixture `baseURL` do Playwright, não de constante repetida), `data:` e `blob:`; reprova com a URL na mensagem. N8 permanente: `fetch("https://exemplo.com/x")` por `page.setContent` | A1 |
+
+A pergunta `[para: tech-lead]` do qa fica respondida por esta tabela. O custo (+0,5 dia, +~40 s no job) está no D12.
+
+**Seguranca (Aa9, pontos do desenho e Ra1–Ra13)**
+
+| Ponto | Decisão | Passo |
+| --- | --- | --- |
+| Aa9 · actions por SHA | **Aceito já no A6** (não fica para a HIS-003): o `ci.yml` é reescrito de qualquer forma, custa minutos, e o check do e2e passa a ser o que libera a integração no `main`. **Conferido hoje** por `git ls-remote` (a API do GitHub continua fechada daqui; o git passa) e lendo o `action.yml` e as notas de cada uma: `actions/checkout` v7.0.1 `3d3c42e5aac5ba805825da76410c181273ba90b1`; `pnpm/action-setup` v6.1.0 `ea17c68df8912ef543352723c149a84f56e3d413` (etiqueta anotada: é o commit da linha `^{}`); `actions/setup-node` v7.1.0 `949feb2413d6458794dcd2491c4babbbce0c15c1`; `actions/upload-artifact` v7.0.2 `cf430e030ddbb5b0abf93d22962f4752f3646cd9`. As majors subiram desde o D11 (era v5/v4); as quebras não nos atingem (setup-node v7 tirou o `NODE_AUTH_TOKEN` falso — não usamos `registry-url`; checkout v7 bloqueia fork em `pull_request_target` — não usamos), e as entradas que usamos existem (`persist-credentials`, `node-version`, `cache: pnpm`, `name`/`path`/`retention-days`/`if-no-files-found`); o `action-setup` lê o `packageManager` (`pnpm@10.28.0`). Quem implementa reconfere os SHA no dia e escreve na nota do A6. **Fica na HIS-003:** Dependabot para `github-actions` (já no critério 6 dela; é ele que mantém os SHA em dia) e fixar o `atualizar-dados.yml` | A6 |
+| `persist-credentials: false` (Aa6) | **Aceito**, nos dois jobs | A6 |
+| `NEXT_TELEMETRY_DISABLED` (Aa11) | **Aceito**, `"1"` no `env:` do topo do workflow (vale para os dois jobs e para o `next start` do e2e) | A6 |
+| Limites de peso fixos + `git diff` (Aa13) | **Aceito.** `LIMITE_JS_DO_HTML = 1024` e `LIMITE_TOTAL_COM_PREFETCH = 2048` são constantes de código em `e2e/apoio/peso.ts` (onde mora o `compararPeso`, que o N6 testa), com comentário apontando a HIS-001 — nunca no JSON nem em variável de ambiente. Último passo do job `e2e`: `git diff --exit-code && test -z "$(git status --porcelain)"` (o `status` pega também arquivo novo não ignorado). Conferido: `next-env.d.ts` e `.next/` são ignorados; se o `next build` reescrever um arquivo versionado, o passo acusa — é o que se quer | A4, A6 |
+| axe sem filtro (Aa14) | **Aceito.** Só `new AxeBuilder({ page }).analyze()`; a exceção se aplica depois, em `aplicarExcecoes`. `historia` tem que existir como linha `\| HIS-NNN \|` em `docs/planejamento.md` (o `sanidade` lê o arquivo); lista aplicada e contagem de `incomplete` no resumo do job. Conferido no `axe-core` 4.14.0: `label-content-name-mismatch` **não** é mais `experimental` (roda no conjunto padrão, impacto `serious`) | A5 |
+| Ra1–Ra13 | **Todas aceitas**, cada uma no passo em que dá para conferir (D13): Ra1–Ra4, Ra5 parte 1 e Ra13 no A1; Ra5 parte 2 e Ra11 (JSON, M15) no A4; Ra12 no A5; Ra6–Ra9 e Ra11 (passo final) no A6. A Ra10 vira o **N8 permanente** (A1); a seguranca repete a mutação na `/sobre` na etapa 6 se quiser. Ra4 também de novo antes da etapa 6 | A1–A6 |
+
+**UX**
+
+- A pergunta `[para: ux-acessibilidade]` está respondida em "Fluxo e textos" (caixa marcada nas "Perguntas abertas").
+- **O A5 usa exatamente o "Modelo para o frontend" e a tabela "Textos finais" da ux** (em "Fluxo e textos"), no
+  `aria-label` do `<button>`. Fica o `reais()` local da `CasaIlustrada` (Intl, que põe **U+00A0**, espaço sem
+  quebra, depois do "R$" — conferido: `R$ 21,74`). **Não** trocar por `formatarReais` nesse passo: ele troca o
+  U+00A0 por espaço comum e a legenda visível continuaria com o `reais()` — o nome e o que se vê ficariam diferentes. O
+  `reais()` local repetido vira dívida (registrada no meu `contexto.md`), não muda na E0.
+- **Seletor do e2e:** os valores da casa ilustrada são constantes do exemplo (não vêm da tarifa do dia), então o teste
+  confere o número da tabela, com `\s` no lugar do espaço: `getByRole("button", { name: /^Quarto, 19% da conta,
+  R\$\s21,74 por mês$/ })` (em JS, `\s` casa o U+00A0). Se o exemplo mudar de propósito, o teste muda junto.
+- A observação da ux sobre `corDaParte` × `faixaDoPeso` **não é desta história** (muda a cor da Lavanderia, mudança
+  visível): registrada na linha da HIS-110 em `docs/planejamento.md` como ponto para o scrum-master decidir.
 
 ## Ameaças
 
@@ -745,13 +820,16 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
   na página inicial, onde a família vê pela primeira vez quanto cada cômodo pesa na conta — quem enxerga pouco ou usa o
   celular no sol não lê. A HIS-110 pode entrar assim que a HIS-002a estiver no `main`, mesmo com a Sprint 0 aberta, se
   houver frontend e ux livres: é correção de defeito, não função nova.
-- [ ] `[para: ux-acessibilidade]` (tech-lead, 2026-10-29 — bloqueia o passo A5, não o início) Texto do nome acessível
+- [x] `[para: ux-acessibilidade]` (tech-lead, 2026-10-29 — bloqueia o passo A5, não o início) Texto do nome acessível
   dos 5 botões da casa ilustrada da `/`, para incluir a porcentagem que aparece (hoje `aria-label="Quarto: R$ 21,74 por
   mês"` e a tela mostra também "19%"; axe `label-content-name-mismatch`). E revisar a lista de exceções do axe quando o
   qa a montar.
+  — **Respondida (ux-acessibilidade, 2026-10-29)** em "Fluxo e textos", "Nomes acessíveis dos 5 cômodos": modelo e os 5
+  textos finais. Caixa marcada pelo tech-lead em 2026-10-30; o A5 usa esses textos (D16, "UX"). A revisão de
+  `excecoes-axe.ts` continua para o A5.
 - `[para: seguranca]` lista dos 21 casos (critério 7) — **movida para a [HIS-002b](HIS-002b-lint-e-camadas.md)**
   (scrum-master, 2026-10-29); bloqueia a implementação da 002b, não a desta.
-- [ ] `[para: tech-lead]` (qa, 2026-10-29 — **bloqueia o A7** (tirar o `e2e-base`), não o A1; cada item diz em que passo
+- [x] `[para: tech-lead]` (qa, 2026-10-29 — **bloqueia o A7** (tirar o `e2e-base`), não o A1; cada item diz em que passo
   entra) Lacunas do D9/D10 em relação ao `linha-de-base.cjs` e ao manual da HIS-001 (tabela "Cobertura" no "Plano de
   testes"). Proposta:
   1. **P-qa-1 · Transição por passo (A2/A3).** No `fluxo-principal`, ler o contador de `startViewTransition` antes e
@@ -788,6 +866,9 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
      `http://127.0.0.1:<PORTA>`, `data:` e `blob:`; a URL vai na mensagem. N8 permanente de acordo.
 
   Custo estimado: +0,5 dia na HIS-002a (teclado, cômodos, estados do axe, sanidade); +~40 s no job `e2e`.
+  — **Resposta (tech-lead, 2026-10-30):** os 8 **aceitos**; a P-qa-7 com um ajuste que a une à Aa14 (uma exceção = um
+  elemento, seletor CSS com exatamente 1 elemento, sem campo `nos`); a P-qa-8 é obrigatória no A1. Detalhes e passo de
+  cada um no **D16**; estimativa revista no D12 (+0,5 dia aceito).
 
 ## Conversa da equipe
 
@@ -935,3 +1016,35 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
 - Para o próximo: **qa/frontend (etapa 4)** — seguir Aa6, Aa10, Aa11, Aa13 e Aa14; no A6, mandar para mim o artefato do
   commit descartável (Ra9). **tech-lead** — decidir Aa9 (SHA agora ou HIS-003). **scrum-master** — se Aa9 for para a
   HIS-003, anotar lá "antes do E4".
+
+### [tech-lead] 2026-10-30 — revisões de qa, seguranca e ux decididas (D16); ADR-003 aceito; 002a liberada para a etapa 4
+- O que fiz: reli as duas histórias inteiras (com "Ameaças", "Plano de testes" e "Fluxo e textos"), o ADR-003 e a minha
+  pasta. Decidi cada ponto no novo **D16** e levei as decisões para os lugares do contrato, com edição pontual: D9
+  (estrutura e `SO_NO_CELULAR`), D10 (`alvo` da exceção), D11 (`ci.yml`), D12 (estimativa), D13 (passos A1–A7 com as
+  conferências Ra1–Ra13), D14 (2 riscos). Marquei as duas perguntas como respondidas. Registrei na linha da HIS-110 do
+  `docs/planejamento.md` o ponto `corDaParte` × `faixaDoPeso` para o scrum-master. ADR-003 → "aceito".
+- Decisões e porquê:
+  - **P-qa-1 a P-qa-8: aceitos.** Ajuste na P-qa-7, unida à Aa14: uma exceção = um elemento (seletor CSS com exatamente 1
+    elemento, sem campo `nos`), para não haver número a manter e um elemento novo com o defeito falhar sozinho. P-qa-8 =
+    Aa11, obrigatória no A1, origem tirada do `baseURL`. Cada negativo do `sanidade` entra no passo da sua barreira.
+  - **Aa9: SHA já no A6.** O `ci.yml` é reescrito de qualquer forma e passa a ser o portão do `main`. As majors subiram
+    (checkout v7.0.1, action-setup v6.1.0, setup-node v7.1.0, upload-artifact v7.0.2); SHA conferidos por `git ls-remote`
+    e `action.yml` lido; nenhuma quebra nos atinge. Dependabot de actions e o `atualizar-dados.yml` ficam na HIS-003.
+  - **`persist-credentials: false`, `NEXT_TELEMETRY_DISABLED`, limites como constantes em `apoio/peso.ts`, último passo
+    `git diff --exit-code && git status --porcelain` vazio, axe sem filtro, `historia` existente no planejamento:
+    aceitos.** Ra1–Ra13 aceitas e distribuídas nos passos; a Ra10 vira o N8 permanente.
+  - **UX:** o A5 usa o modelo e a tabela da ux, mantendo o `reais()` local (põe U+00A0 depois do "R$"; o `formatarReais`
+    troca por espaço comum e o nome ficaria diferente do que se vê). Como os valores da casa ilustrada são constantes do
+    exemplo, o e2e confere os números da tabela com `\s` no lugar do espaço.
+  - **Estimativa:** 002a ≈ 2,75 dias (+0,5 do qa aceito); 002b ≈ 2–2,5 dias. As duas continuam M.
+- Arquivos alterados: esta história; `HIS-002b-lint-e-camadas.md`; `docs/equipe/decisoes/ADR-003-qualidade-automatica.md`
+  e `README.md`; `docs/planejamento.md` (linha da HIS-110); `docs/equipe/quadro.md`; minha pasta. Nenhum código.
+- Como verifiquei: `git ls-remote --tags` das 4 actions e clone raso de cada etiqueta no scratchpad (entradas e notas
+  de versão); no `axe-core` 4.14.0 da minha cópia, `label-content-name-mismatch` sem a tag `experimental` (roda no
+  padrão); `.gitignore` ignora `next-env.d.ts` e `.next/` (o passo "nada mudou" não acusa à toa); `node -e` mostrou que o
+  Intl dá `R$ 21,74` e que o `formatarReais` troca o U+00A0.
+- Para o próximo: **HIS-002a liberada para a etapa 4.** **qa** — A1 a A5 seguindo o D16 (começa pelo A1 com a fixture
+  de rede e o `sanidade`); **frontend** — no A5, o commit próprio com o `aria-label` e o `<dl>`; **ux-acessibilidade** —
+  revisar `excecoes-axe.ts` no A5; **seguranca** — receber o artefato do A6 (Ra9). **scrum-master** — decidir o ponto
+  da HIS-110 (`corDaParte` × `faixaDoPeso`) antes de ela começar e conferir que a HIS-003 cobre o Dependabot de
+  `github-actions` e o `atualizar-dados.yml`.
