@@ -21,10 +21,20 @@
   depois. Casa ilustrada da `/`: "Cômodo, NN% da conta, R$ X por mês" (HIS-002a).
 - Texto sobre cor de faixa da etiqueta: A e E com branco (4,72 e 5,21:1); B, C e D com tinta (5,80, 8,45 e 5,50:1).
   Nunca branco em B, C ou D (HIS-110).
+- Erros e avisos (HIS-003):
+  - Dado descartado usa `Aviso tom="faisca"` (status), não `alerta`.
+  - Região `role="status"`/`aria-live` sempre presente e vazia antes do texto.
+  - Erro de campo aparece ao sair do campo, com `aria-invalid` + `aria-describedby` + ícone + borda.
+  - Nunca corrigir número escondido. Botão de continuar não fica `disabled`: mostra o erro e foca o campo.
+  - Quando o elemento com foco some, o foco vai para o `h1` da tela.
+  - Tela de erro foca o `h1` ao abrir.
+  - Nada técnico na tela.
+  - Para o celular ou computador da pessoa, dizemos "aqui": "aparelho" é só eletrodoméstico.
 
 ## Pendências
 
-- Texto do aviso quando parte dos dados salvos foi descartada (HIS-003).
+- HIS-003: revisar as capturas de T1 a T5 quando o frontend implementar. Conferir com o dominio-energia o formato de
+  `{min}` e `{max}`.
 - Roteiro do teste com famílias (HIS-106), com o Scrum Master.
 - HIS-002a: revisar `excecoes-axe.ts` quando o qa montar; conferir no A5 os 5 nomes da casa ilustrada.
 - HIS-110: aprovar a cor nas capturas 390/1280 px (proposta: faixa D com `text-tinta`).
