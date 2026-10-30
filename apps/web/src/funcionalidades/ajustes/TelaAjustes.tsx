@@ -1,6 +1,6 @@
 "use client";
 
-import { formatarReais, precoKwh, type Beneficio, type Distribuidora, type Ligacao, type Municipio } from "@ee/core";
+import { distribuidorasDaCidade, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type Ligacao, type Municipio } from "@ee/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -42,8 +42,8 @@ export function TelaAjustes() {
 
   const municipios = useMunicipios(residencia?.uf);
   const municipioAtual = municipios.dados?.municipios.find((m) => m.ibge === residencia?.municipioIbge);
-  const porId = useMemo(() => new Map((arquivo?.distribuidoras ?? []).map((d) => [d.id, d])), [arquivo]);
-  const opcoesDistribuidora = (municipioAtual?.distribuidoras ?? []).map((id) => porId.get(id)).filter((d): d is Distribuidora => Boolean(d));
+  // Com o id de hoje no lugar do antigo (HIS-111): um municipios/{UF}.json antigo no cache ainda pode trazer rge-sul.
+  const opcoesDistribuidora = arquivo && municipioAtual ? distribuidorasDaCidade(arquivo, municipioAtual.distribuidoras) : [];
 
   if (!residencia) return null;
 
@@ -181,7 +181,7 @@ export function TelaAjustes() {
         aoFechar={() => setMudandoCidade(false)}
         ufAtual={residencia.uf}
         estados={arquivo?.estados ?? []}
-        distribuidorasValidas={porId}
+        arquivo={arquivo}
         aoEscolher={(m, distribuidoraId) => {
           atualizar({ uf: m.uf, municipioIbge: m.ibge, municipioNome: m.nome, distribuidoraId });
           setMudandoCidade(false);
@@ -207,14 +207,14 @@ function TrocarCidade({
   aoFechar,
   ufAtual,
   estados,
-  distribuidorasValidas,
+  arquivo,
   aoEscolher,
 }: {
   aberta: boolean;
   aoFechar: () => void;
   ufAtual: string;
   estados: { uf: string; nome: string; distribuidoras: string[] }[];
-  distribuidorasValidas: Map<string, Distribuidora>;
+  arquivo: ArquivoParaBusca | undefined;
   aoEscolher: (m: Municipio, distribuidoraId: string) => void;
 }) {
   const [uf, setUf] = useState(ufAtual);
@@ -222,11 +222,11 @@ function TrocarCidade({
   const municipios = useMunicipios(uf);
 
   const opcoes = useMemo(() => {
-    if (!escolhido) return [];
-    const daCidade = escolhido.distribuidoras.map((id) => distribuidorasValidas.get(id)).filter((d): d is Distribuidora => Boolean(d));
+    if (!escolhido || !arquivo) return [];
+    const daCidade = distribuidorasDaCidade(arquivo, escolhido.distribuidoras);
     if (daCidade.length > 0) return daCidade;
-    return (estados.find((e) => e.uf === uf)?.distribuidoras ?? []).map((id) => distribuidorasValidas.get(id)).filter((d): d is Distribuidora => Boolean(d));
-  }, [escolhido, distribuidorasValidas, estados, uf]);
+    return distribuidorasDaCidade(arquivo, estados.find((e) => e.uf === uf)?.distribuidoras ?? []);
+  }, [escolhido, arquivo, estados, uf]);
 
   return (
     <Folha
@@ -253,8 +253,9 @@ function TrocarCidade({
               autoFocus={false}
               municipios={municipios.dados.municipios}
               aoEscolher={(m) => {
-                const validas = m.distribuidoras.filter((id) => distribuidorasValidas.has(id));
-                if (validas.length === 1) aoEscolher(m, validas[0]!);
+                const validas = arquivo ? distribuidorasDaCidade(arquivo, m.distribuidoras) : [];
+                const [unica] = validas;
+                if (validas.length === 1 && unica) aoEscolher(m, unica.id);
                 else setEscolhido(m);
               }}
             />

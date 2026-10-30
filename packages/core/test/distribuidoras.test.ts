@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { acharDistribuidora, distribuidorasDaCidade, precoKwh, trocaDeDistribuidora, type ArquivoParaBusca, type Distribuidora } from "../src";
+import { acharDistribuidora, descreverTroca, distribuidorasDaCidade, nomeComercialDoId, precoKwh, trocaDeDistribuidora, type ArquivoParaBusca, type Distribuidora } from "../src";
 
 const distribuidora = (id: string, sigla: string, tarifaKwh: number): Distribuidora => ({
   id,
@@ -92,5 +92,48 @@ describe("trocaDeDistribuidora (R6: a regravação não entra em laço)", () => 
     const ciclo = arquivo({ x: "y", y: "x" });
     expect(trocaDeDistribuidora(ciclo, "x")).toBeUndefined();
     expect(trocaDeDistribuidora(ciclo, "y")).toBeUndefined();
+  });
+});
+
+describe("nomeComercialDoId (HIS-111, F1: nome do id que saiu do arquivo)", () => {
+  it("dá o nome comercial dos ids que saíram do tarifas.json", () => {
+    const esperados: Record<string, string> = {
+      "rge-sul": "RGE Sul",
+      "cpfl-mococa": "CPFL Mococa",
+      "cpfl-leste-pauli": "CPFL Leste Paulista",
+      "cpfl-sul-paulist": "CPFL Sul Paulista",
+      "cpfl-jaguari": "CPFL Jaguari",
+      enf: "Energisa Nova Friburgo",
+      ebo: "Energisa Borborema",
+      edevp: "Vale Paranapanema",
+      eeb: "Bragantina",
+      cflo: "Força e Luz do Oeste",
+      cerr: "Companhia Energética de Roraima",
+      "ambar-roraima": "Roraima Energia",
+    };
+    for (const [id, nome] of Object.entries(esperados)) expect(nomeComercialDoId(id)).toBe(nome);
+  });
+
+  it("sem nome conhecido devolve undefined, nunca a sigla solta (CNEE, cooperativas, protótipo)", () => {
+    for (const id of ["cnee", "certaja", "constructor", "__proto__", "toString", ""]) expect(nomeComercialDoId(id)).toBeUndefined();
+  });
+});
+
+describe("descreverTroca", () => {
+  it("com os dois nomes", () => {
+    expect(descreverTroca(COM_TROCAS, { de: "rge-sul", para: "rge" })).toEqual({ de: "rge-sul", para: "rge", nomeAntigo: "RGE Sul", nomeNovo: "RGE" });
+    expect(descreverTroca(COM_TROCAS, { de: "edevp", para: "ess" })).toEqual({ de: "edevp", para: "ess", nomeAntigo: "Vale Paranapanema", nomeNovo: "Energisa Sul-Sudeste" });
+  });
+
+  it("sem o nome antigo quando não sabemos (CNEE) ou quando ele é igual ao novo", () => {
+    expect(descreverTroca(COM_TROCAS, { de: "cnee", para: "ess" })).toEqual({ de: "cnee", para: "ess", nomeNovo: "Energisa Sul-Sudeste" });
+    // "A CPFL Santa Cruz hoje é a CPFL Santa Cruz" não diz nada: sai o texto sem o nome antigo.
+    const mesmoNome = { distribuidoras: [distribuidora("jaguari", "CPFL Santa Cruz", 0.81258)] };
+    expect(descreverTroca(mesmoNome, { de: "cpfl-santa-cruz", para: "jaguari" })).toEqual({ de: "cpfl-santa-cruz", para: "jaguari", nomeNovo: "CPFL Santa Cruz" });
+    expect(descreverTroca(arquivo(), { de: "rge-sul", para: "rge" })?.nomeAntigo).toBe("RGE Sul");
+  });
+
+  it("undefined quando a de hoje não está no arquivo", () => {
+    expect(descreverTroca(COM_TROCAS, { de: "rge-sul", para: "nao-existe" })).toBeUndefined();
   });
 });

@@ -19,7 +19,7 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
 | `funcionalidades/comodos/` · `dicas/` · `ajustes/` | `TelaComodos` (sanfona, painel geral, novo/editar cômodo) · `TelaDicas` (plano) · `TelaAjustes` (minha casa, apagar tudo) |
 | `ui/` | um componente por arquivo: `Botao` (+`BotaoLink`), `Opcao`, `Pilulas`, `Contador`, `Campo`, `Entrada`, `Folha`, `Aviso`, `Icone`, `Marca`, `Movimento`, `Barras`, `Etiqueta`, `EspacoReservado`, `BuscaCidade` |
 | `ui/aparelho/` | componentes de aparelho compartilhados, sem store: `tipos.ts` (`ItemComodo`), `textosDeUso.ts`, `LinhaAparelho`, `BlocoIluminacao`, `TempoUso`, `SeletorCatalogo`, `EditorAparelho` (props `comodos`/`aoSalvar`/`aoRemover`) |
-| `aplicacao/` | única porta para `infraestrutura/`: `casa.ts` (`useCasa`, `useCasaCarregada`, `novoId`, `useEdicaoDeAparelho`), `dados-publicos.ts` (`useTarifas`, `useMunicipios`), `resumo.ts` (`useResumo`, `tarifaMedia`, `nomeDistribuidora`), `numeros-do-inicio.servidor.ts` |
+| `aplicacao/` | única porta para `infraestrutura/`: `casa.ts` (`useCasa`, `useCasaCarregada`, `novoId`, `useEdicaoDeAparelho`, `useDistribuidoraAtualizada`), `dados-publicos.ts` (`useTarifas`, `useMunicipios`), `resumo.ts` (`useResumo`, `tarifaMedia`, `nomeDistribuidora`), `numeros-do-inicio.servidor.ts` |
 | `infraestrutura/` | `armazenamento/casa.ts` (o único `create` do store: chave `eficiencia-energetica:casa`, versão 2 + `migrate`), `identificador.ts` (`novoId`), `dados-publicos/navegador.ts` (fetch de `/dados`), `dados-publicos/arquivos.servidor.ts` (único `node:fs`) |
 | `config/recursos.ts` | `RECURSOS.espacosReservados = false` |
 
@@ -32,12 +32,18 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
 - Transições com `<ViewTransition>` + `transitionTypes` (`nav-forward`, `nav-back`, `entrar-painel`); `viewTransitionName`
   "topo" e "navegacao" fixam cabeçalho e navegação; indicadores "aba-ativa" e "pilula-ativa".
 - Toda conta vem de `@ee/core`. Nomes longos quebram linha (não truncar). Valores fora de barras curtas.
+- Distribuidora pelo id salvo: sempre `acharDistribuidora`/`distribuidorasDaCidade` do core (seguem `substituidas`,
+  HIS-111/ADR-005); nunca `find`/`Map` por id na tela. Aviso que entra depois do carregamento vai numa região
+  `role="status"` sempre presente, com `Aviso anunciar={false}`.
 
 ## Pendências
 
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
   em `/casa` sem casa, vindos da repetição de `ui/` nos chunks das abas pré-carregadas.
 - HIS-003: validação com zod, tela de erro, limites de entrada.
+- HIS-111: h6 feito (30/10, branch `his-111-tarifas-vencidas`); aguarda qa (h7) e revisão do tech-lead (F1, 3 pontos).
+  O F2 (cidade sem preço: cadastro, cartão de cima do painel, Minha casa) não entrou: mexe no `PainelAcompanhamento`
+  da 002a.
 
 ## Orientações do responsável
 

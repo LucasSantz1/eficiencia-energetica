@@ -54,6 +54,13 @@ const NOMES: Record<string, string> = {
   CHESP: "Chesp",
   COCEL: "Cocel",
   DMED: "DME Poços de Caldas",
+  // Empresas incorporadas que já saíram do tarifas.json, para o aviso da troca (HIS-111, F1). Fonte: dominio-energia,
+  // 30/10/2026: Relatório Anual Energisa 2017 (EDEVP, EEB, CFLO) e ANEEL na Câmara, 29/11/2017 (CERR). A CNEE fica de
+  // fora de propósito: o relatório só diz "Nacional", que não se entende sozinho.
+  EDEVP: "Vale Paranapanema",
+  EEB: "Bragantina",
+  CFLO: "Força e Luz do Oeste",
+  CERR: "Companhia Energética de Roraima",
 };
 
 /** Nome que aparece na conta de luz (ou a sigla da ANEEL, se não soubermos o nome comercial). */
@@ -64,6 +71,27 @@ export function nomeDaDistribuidora(sigla: string): string {
 /** true quando conhecemos o nome comercial (senão vale mostrar também a sigla). */
 export function temNomeComercial(sigla: string): boolean {
   return sigla in NOMES;
+}
+
+/** O id que a rotina dá a cada sigla (mesma regra do `slug` de `packages/dados/src/util.ts`). */
+function idDaSigla(sigla: string): string {
+  return sigla
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/** Map, e não objeto: o id vem do localStorage, e "constructor" não pode achar nada. */
+const NOMES_POR_ID = new Map(Object.entries(NOMES).map(([sigla, nome]) => [idDaSigla(sigla), nome]));
+
+/**
+ * Nome comercial de um id que pode já ter saído do `tarifas.json` (ex.: `rge-sul` → "RGE Sul"), para o aviso da troca
+ * (HIS-111, F1). `undefined` quando não sabemos o nome: a tela nunca mostra o id nem a sigla solta.
+ */
+export function nomeComercialDoId(id: string): string | undefined {
+  return NOMES_POR_ID.get(id);
 }
 
 /**
@@ -136,4 +164,22 @@ export function trocaDeDistribuidora(arquivo: ArquivoParaBusca, id: string): { d
   if (lista.some((d) => d.id === id)) return undefined;
   const nova = acharDistribuidora(arquivo, id);
   return nova && nova.id !== id ? { de: id, para: nova.id } : undefined;
+}
+
+/** O que o aviso da troca mostra (HIS-111, F1): o nome de hoje e, se soubermos, o nome antigo. */
+export interface TrocaDescrita {
+  de: string;
+  para: string;
+  /** Ausente quando não sabemos o nome comercial do id antigo, ou quando ele é igual ao novo: o texto sai sem ele. */
+  nomeAntigo?: string;
+  nomeNovo: string;
+}
+
+/** Junta a troca com os nomes que a família conhece. `undefined` se `para` não está no arquivo. */
+export function descreverTroca(arquivo: ArquivoParaBusca, troca: { de: string; para: string }): TrocaDescrita | undefined {
+  const nova = listaDe(arquivo).find((d) => d.id === troca.para);
+  if (!nova) return undefined;
+  const nomeNovo = nomeDaDistribuidora(nova.sigla);
+  const nomeAntigo = nomeComercialDoId(troca.de);
+  return nomeAntigo === undefined || nomeAntigo === nomeNovo ? { ...troca, nomeNovo } : { ...troca, nomeAntigo, nomeNovo };
 }

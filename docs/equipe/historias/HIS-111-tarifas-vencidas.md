@@ -798,7 +798,7 @@ resto igual.
   "Fluxo e textos", F1)_ Quando a casa salva troca de `rge-sul` para `rge` (ou de EDEVP para Energisa
   Sul-Sudeste), mostramos um aviso, como "Sua distribuidora agora se chama RGE. O preço foi atualizado.", ou a troca
   fica sem aviso?
-- [ ] `[para: tech-lead]` (não bloqueia o h0–h5) F1: (1) como o site acha o nome comercial de um id que já saiu do
+- [ ] `[para: tech-lead]` _(frontend, h6: resolvido assim, para revisar: (1) `nomeComercialDoId` no core, pelo mesmo `slug` da rotina; (2) o par fica num `useState` do `useDistribuidoraAtualizada`; (3) `Aviso` com `anunciar={false}`)_ (não bloqueia o h0–h5) F1: (1) como o site acha o nome comercial de um id que já saiu do
   `tarifas.json` (ex.: uma função no core, de id para nome, ou o nome junto do `substituidas`)? (2) O `{ de, para }`
   precisa ficar guardado durante a visita, depois da regravação. (3) O `Aviso` pode ganhar uma opção para não pôr o
   próprio `role`, para entrar numa região `status` que já existe?
@@ -815,7 +815,7 @@ resto igual.
 - [ ] `[para: dominio-energia]` (não bloqueia) No `base/sucessoes.json`, cada linha tem um link só em `fonte`; os
   outros links e as ressalvas (data da REA 6.318 num sábado, número do despacho do MME) foram para o campo opcional
   `observacao`. Revisar as 10 linhas no PR (R4) e trocar a `fonte` pelo link do cedoc ou do DOU quando tiver acesso.
-- [ ] `[para: frontend]` (h6) O core ganhou `trocaDeDistribuidora(arquivo, id)`, que devolve `{ de, para }` só quando
+- [x] `[para: frontend]` _(feito no h6, 30/10)_ (h6) O core ganhou `trocaDeDistribuidora(arquivo, id)`, que devolve `{ de, para }` só quando
   `de` não está publicado e `para` está (R6). O `useDistribuidoraAtualizada` pode usar direto, guardando o par só na
   visita (F1).
 - [x] `[para: scrum-master]` _(respondida em 30/10: Sprint 0, prioridade 1, **um corte só**, antes do a3; o passo 0
@@ -1148,3 +1148,11 @@ resto igual.
   2. Comentários velhos: `MAXIMO_DE_LINHAS` diz "hoje são 10" (são 12); `VinculoMunicipio.ano` ainda fala em "conjunto que parou de reportar".
   3. h8: trocar o `push` do `diagnosticar-dados.yml` por `pull_request` e ligar o teste dos publicados.
 - **Próximo:** frontend (h6), depois qa (h7).
+
+### [frontend] 2026-10-30 — h6: troca de id nas telas e aviso do D7 na Casca
+- **Fiz:** `useResumo` com `acharDistribuidora`; `Cadastro` e `TelaAjustes` com `distribuidorasDaCidade` (salvam o id de hoje mesmo com `municipios/{UF}.json` antigo); `useDistribuidoraAtualizada` em `aplicacao/casa.ts` (regrava uma vez por par, R6); aviso F1 em `casca/AvisoTrocaDistribuidora.tsx`, dentro de um `status` sempre presente, só com `origem === "aneel"`; "Entendi" leva o foco ao `h1`.
+- **Core:** nomes de EDEVP, EEB, CFLO e CERR (dominio-energia), `nomeComercialDoId` e `descreverTroca`, com 5 testes novos (core 53). `Aviso` ganhou `anunciar`.
+- **Não fiz:** o F2 (cidade sem preço), que mexe no `PainelAcompanhamento` da 002a; fica para outra etapa.
+- **Verifiquei:** typecheck, test e build verdes. Playwright (porta 3161, cópia própria, `tarifas.json` de teste com `substituidas`): 52 conferências em 390 e 1280 px, console limpo. Capturas e script em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/frontend-h6/`.
+- **Próximo:** qa (h7, critério 8: `rge-sul` sem conta → aviso, uma gravação, Ajustes com RGE; `cnee` → corpo sem nome; com conta → sem aviso); ux revisa as capturas.
+
