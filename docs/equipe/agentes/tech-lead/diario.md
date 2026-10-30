@@ -10,6 +10,23 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · D7 aprovado com ajustes, desenho h0–h8, passo 0 na Action, HIS-111 antes do a3
+- **O que fiz:** li a história, as notas do backend e do dominio-energia, o D2–D4 da HIS-003a e o código da rotina,
+  do core, do `useResumo`, do store da casa, do `Cadastro`, da `TelaAjustes` e dos workflows. Escrevi o "Desenho
+  técnico" (T1–T7), o ADR-005 e o contrato do `substituidas` no D2 da HIS-003a.
+- **Decisões e porquê:**
+  - `substituidas` é opcional e guarda sempre o id final, porque há arquivo antigo no cache e o site ainda não tem
+    leitor.
+  - A troca fica no core e no `aplicacao/`, não no leitor da casa: ele roda antes das tarifas e não corrige valor.
+  - O D3 usa a regra segura: o vínculo extinto só sai se a cidade tiver outro.
+  - As barreiras de número errado ignoram o `--forcar`.
+  - O passo 0 é um workflow só de leitura, com `push` na branch.
+  - A HIS-111 vem antes do a3: uns 30 minutos de rebase contra dias de conta errada.
+- **Arquivos:** `HIS-111-tarifas-vencidas.md`, `HIS-003-base-de-seguranca.md` (D2), `ADR-005-…md` (novo),
+  `decisoes/README.md`, `quadro.md`, `contexto.md` e este diário.
+- **Próximos passos:** scrum-master (sprint e critérios do T5), seguranca (T3 e V8), ux (aviso), backend h0. Code
+  review com a lista do contexto.
+
 ## 2026-10-30 · HIS-003 · desenho técnico definitivo (D1–D9), sem zod, ADR-004 proposto, quebra 003a/003b
 - **O que fiz:**
   - Li a história inteira, os ADRs 001 e 003, a retro e o código de `infraestrutura/`, `aplicacao/`, `ui/Campo`,

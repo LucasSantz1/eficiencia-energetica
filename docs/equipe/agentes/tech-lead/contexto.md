@@ -34,6 +34,9 @@
   - Aguarda a P-tl-1 (seguranca), a P-tl-2 (dominio-energia) e a P-tl-3 (scrum-master).
   - Depende só da 002a no `main`.
   - Protótipo do `persist` em `scratchpad/tl-his003/persist/`; medição do zod em `scratchpad/tl-his003/zod/`.
+- **HIS-111 (tarifas vencidas, número errado no ar em 227 cidades):** desenho técnico pronto (T1–T7, 2026-10-30) e
+  ADR-005 proposto. Passos h0–h8, cerca de 3 dias. Recomendei que ela venha **antes do a3** da 003a, em paralelo com o
+  fim da 002a. Aguarda o scrum-master (sprint, critérios do T5), a seguranca (workflow do T3 e V8) e a ux (aviso do D7).
 - CI hoje: ~35 s por execução (um job). Com a HIS-002: dois jobs em paralelo, ~4 min de parede.
 - Ambiente de nuvem: Playwright 1.63.0 com Chromium revisão 1243 em `/opt/pw-browsers` (`PLAYWRIGHT_BROWSERS_PATH`);
   baixar navegador é bloqueado. `CI` e `GITHUB_ACTIONS` não estão definidas aqui. A API do GitHub (`gh api`) não
@@ -92,6 +95,17 @@
 
   Para regravar, `storage.setItem` no `onRehydrateStorage`. O tipo fica com `PersistStorage<unknown>` e
   `partialize: (s): unknown`, conferido com o `tsc`.
+- **Distribuidora que deixa de existir (HIS-111, ADR-005 proposto):**
+  - tarifa vencida há mais de 6 meses não é publicada;
+  - uma empresa vira outra só por CNPJ igual (com a sigla antiga não vigente) ou por linha do `sucessoes.json` com ato
+    e fonte;
+  - `substituidas?` no `tarifas.json`, sempre com o id final;
+  - id guardado é resolvido pelo core (`acharDistribuidora`, `distribuidorasDaCidade`) e regravado uma vez pelo
+    `aplicacao/`, nunca pelo leitor da casa salva;
+  - barreiras de número errado ou de contrato não passam com `--forcar`; as de cobertura passam.
+- **Diagnóstico da rotina na Action:** a ANEEL dá 403 daqui. Para ler os CSVs, usar um workflow só de leitura
+  (`contents: read`, `persist-credentials: false`, sem gravar, último passo "nada mudou"). O `workflow_dispatch` só
+  aparece com o arquivo no `main`; numa branch, usar um gatilho `push` limitado à branch.
 - **SHA de actions:** `actions/download-artifact` v8.0.2 `9000827ccba6bdab643e8b6fd33ac0654aef8333` (etiqueta leve,
   conferida em 2026-10-30).
 
@@ -102,6 +116,10 @@
   - nenhum `as` sobre dado de fora;
   - os testes de falso positivo (arquivos publicados e `casa-v1`/`casa-v2` sem aviso);
   - o peso até cerca de +3 kB por rota (acima de +4 kB, conversar antes).
+- HIS-111: no code review, conferir que `lerCasaSalva` não conhece `substituidas`, que `Object.hasOwn` está no
+  `acharDistribuidora`, que V1–V4, V7 e V8 ignoram o `--forcar`, que o h8 tirou o gatilho `push` do
+  `diagnosticar-dados.yml` e ligou o teste dos publicados. O ADR-005 vira aceito depois da revisão da seguranca.
+- ADR-004: passar para aceito com o R4c e o R4d nas consequências (pedido da seguranca na P-tl-1, ainda não feito).
 - Backlog sugerido (HIS-003, risco 6): avisar a pessoa quando o navegador não conseguir salvar (memória cheia ou
   bloqueada).
 

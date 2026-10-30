@@ -332,6 +332,10 @@ export function lerRelatorioDosDados(bruto: unknown): { municipios: number; muni
 - Entrada inválida sai e conta em `descartados`, sem correção de valor.
 - As funções de apoio (`ehObjeto`, `numeroNaFaixa`, `textoLimitado`, `umaDas`) ficam em `leitura-segura.ts` e não são
   exportadas no `index.ts`.
+- **(tech-lead, 2026-10-30, da HIS-111)** O `lerArquivoTarifas` também lê `substituidas?` (id antigo → id final). Se
+  faltar, vira `{}`, sem descarte; se não for objeto simples, lança `ErroDeFormato`; a entrada que quebra o V8 sai e
+  conta em `descartados`. Os casos de teste P8 estão no T1 do desenho da
+  [HIS-111](HIS-111-tarifas-vencidas.md). A HIS-111 entra antes do a3; quem fizer o a3 faz o rebase (T7 de lá).
 
 ### D3. Casa salva (`infraestrutura/armazenamento/`)
 

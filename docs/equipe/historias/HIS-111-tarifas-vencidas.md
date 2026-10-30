@@ -195,8 +195,8 @@ D5 e D6 na barreira e no relatório. O D7 é a ponte para quem já salvou a casa
 
 Quem regrava `apps/web/public/dados/` é a própria rotina; ninguém edita esses arquivos à mão.
 
-**Conflito com a HIS-003a:** o a3 mexe em `tarifas.ts` e no `validar`. Para não haver conflito, a HIS-111 começa
-depois de o a3 entrar no `main`.
+**Conflito com a HIS-003a:** o a3 mexe em `tarifas.ts` e no `validar`. ~~Para não haver conflito, a HIS-111 começa
+depois de o a3 entrar no `main`.~~ _(tech-lead, 30/10: a HIS-111 vem antes; ver "Desenho técnico", T7.)_
 
 ## Critérios de aceite
 
@@ -280,8 +280,211 @@ _(ux-acessibilidade)_ Só o texto do D7, se houver aviso.
 
 ## Desenho técnico
 
-_(tech-lead)_ Confirmar D7 (campo `substituidas` no contrato do `ArquivoTarifas` e quem faz a troca: o leitor da
-`Residencia` ou `aplicacao/`) e a ordem em relação à HIS-003a.
+_(tech-lead, 2026-10-30. Li `montar.ts`, `aneel/tarifas.ts`, `aneel/municipios.ts`, `atualizar.ts`, `escrever.ts`,
+`tipos.ts`, `distribuidoras.ts`, `aplicacao/resumo.ts`, o store da casa, `Cadastro`, `TelaAjustes`, os dois workflows e o
+D2–D4 da HIS-003a. Decisão que vale além da história: [ADR-005](../decisoes/ADR-005-distribuidora-que-deixa-de-existir.md).)_
+
+### T1. D7 aprovado, com ajustes: `substituidas` no `tarifas.json`
+
+```ts
+// packages/core/src/tipos.ts
+export interface ArquivoTarifas {
+  // … campos de hoje
+  /** Id que saiu do arquivo → id que ficou no lugar (empresa renomeada ou incorporada). Sempre o id final.
+   *  Ausente = nenhuma troca (arquivo antigo no cache, `dados:exemplo`). */
+  substituidas?: Readonly<Record<string, string>>;
+}
+
+// packages/core/src/distribuidoras.ts (funções puras, com teste)
+export function acharDistribuidora(arquivo: Pick<ArquivoTarifas, "distribuidoras" | "substituidas">, id: string): Distribuidora | undefined;
+export function distribuidorasDaCidade(arquivo: Pick<ArquivoTarifas, "distribuidoras" | "substituidas">, ids: readonly string[]): Distribuidora[];
+```
+
+- `acharDistribuidora`: procura o id; se não achar e `Object.hasOwn(substituidas, id)`, procura o substituto. **Um salto
+  só** (a rotina já grava o id final). `Object.hasOwn` porque o id vem do `localStorage` (`"constructor"` daria a função
+  do protótipo).
+- `distribuidorasDaCidade`: troca cada id pelo substituto, tira os repetidos (Campina Grande: EPB + EBO → EPB uma vez),
+  mantém a ordem da rotina e tira o que não existe.
+- **Por que opcional:** até a 003a o site lê o `tarifas.json` sem leitor, e pode receber um arquivo antigo do cache
+  (`max-age` 1 h + `stale-while-revalidate` 1 dia). A rotina **sempre** grava o campo, com as chaves em ordem (a assinatura
+  fica estável).
+- **Invariantes (V8):** chave e valor no formato de id (`^[a-z0-9]+(-[a-z0-9]+)*$`, até 64 caracteres); todo valor é um
+  id publicado; nenhuma chave é id publicado; nenhum valor é chave. Na rotina, sem `--forcar` (T2); no navegador, pelo
+  leitor da a3 (abaixo).
+
+**Onde a troca mora: não no leitor da `Residencia`.** O `lerCasaSalva` roda no `merge` do `persist`, na hidratação,
+antes de o `tarifas.json` chegar, e pelo ADR-004 ele não corrige valor. Ele ficaria preso a um arquivo de rede. A troca
+mora em dois lugares:
+
+1. **Na leitura (core):** `useResumo` usa `acharDistribuidora`; `Cadastro` (linhas 66–77 e 115) e `TelaAjustes` (226 e
+   256) usam `distribuidorasDaCidade` no lugar do `Map` + `filter` repetido 4 vezes. O preço fica certo **desde a primeira
+   tela, mesmo sem regravar**, e mesmo com um `municipios/{UF}.json` antigo no cache que ainda diga `rge-sul`.
+2. **Na regravação (`aplicacao/casa.ts`):** `useDistribuidoraAtualizada(): { de: string; para: string } | undefined`,
+   chamado na `Casca`. Quando a casa carregou, as tarifas chegaram e `residencia.distribuidoraId` é chave de
+   `substituidas`, chama `atualizarResidencia({ distribuidoraId: para })` uma vez. Assim a `TelaAjustes` marca a opção
+   certa. O retorno serve ao aviso, se a ux pedir; se não pedir, ninguém usa e ele não é exportado para tela.
+
+**Formato salvo não muda:** `distribuidoraId: string`, `version: 2`, sem `migrate`. Só o valor muda, por uma ação
+normal (que passa pelos leitores da 003a quando eles existirem). Os e2e `casa-v1`/`casa-v2` da 002a continuam iguais.
+
+**Impacto no `lerArquivoTarifas` (a3 da HIS-003a), contrato para quem implementar o a3:**
+- `substituidas` ausente → `{}`, sem descarte. Presente e não objeto simples → `ErroDeFormato`.
+- Entrada que quebra o V8 sai e conta em `descartados` (na rotina, isso para a gravação, como todo descarte).
+- Casos novos no `arquivos-publicos.test.ts` (P8): ausente; `{"rge-sul": "rge"}` fica; valor que não existe sai; chave
+  que é id publicado sai; chave `"__proto__"` sai e o protótipo continua o normal; cadeia `a → b` + `b → c` sai.
+
+### T2. Ajustes ao D1–D6 (decisões técnicas)
+
+- **D1 só junta siglas do mesmo CNPJ quando a mais antiga não está vigente.** Duas siglas vigentes com o mesmo CNPJ
+  querem dizer que a ANEEL tarifa áreas diferentes (o caso do V7). Aí o V2 para a rotina: não adivinhamos qual cidade
+  fica com qual preço.
+- **D2, `sucessoes.json`:** `packages/dados/base/sucessoes.json` = `{ "sucessoes": [ … ] }`. Leitor à mão em
+  `packages/dados/src/sucessoes.ts`: `lerSucessoes(bruto: unknown): Sucessao[]`, que **lança** com o índice e a
+  `siglaAntiga` da linha. Regras:
+  - CNPJs com 14 dígitos e diferentes entre si; siglas com 1 a 40 caracteres;
+  - `desde` e `consultadoEm` são datas que existem (UTC); linha com `desde` no futuro não é aplicada;
+  - `ato` é texto não vazio. **Não exige número**: a CERR entra com `"Despacho MME, DOU 12/08/2016"`, como o
+    dominio-energia aprovou. `fonte` começa com `https://`;
+  - `cnpjAntigo` repetido, ciclo ou mais de 5 saltos = erro.
+- **Ordem no `acharTarifa`:** (1) segue a cadeia de sucessão pelo CNPJ do vínculo (pela sigla compacta só quando o
+  vínculo não tem CNPJ); (2) procura a tarifa pelo CNPJ final no índice do D1; (3) só então pela sigla. Toda sigla
+  trocada em (1) ou pelo D1 entra em `substituidas`.
+- **D3 com a regra segura:** o vínculo extinto (`ano < anoMaisRecente − 1`) **sai só se a cidade tiver outro vínculo
+  não extinto**. Se for o único, fica e entra em `vinculosExtintosMantidos` (aviso). Motivo: o D2 + D4 + V5 já pegam a
+  empresa que acabou (a tarifa dela vence, sai, e a rotina para). O D3 sozinho tiraria o único preço de uma cidade em que
+  o IndQual não liga o conjunto novo, e esse preço é de uma empresa com tarifa vigente. O passo 0 diz quantos casos são.
+- **D4 com 6 meses** (dominio-energia). `subtrairMeses(dataISO, meses)` em `util.ts`, presa ao fim do mês (31/08 menos
+  6 meses = 28/02 ou 29/02). `fimVigencia < hoje − 6 meses` → `descartadas` com "vencida desde AAAA-MM-DD";
+  `fimVigencia < hoje` e não descartada → `tarifasVencidasEmUso` (aviso desde o 1º dia). Sai o "perto de vencer": toda
+  tarifa vence em menos de um ano, seria ruído.
+- **V7:** `selecionarTarifasVigentes` passa a contar os valores (TE, TUSD) diferentes da vigência escolhida (mesmo
+  `inicioVigencia`, depois do filtro de `DscDetalhe`). O relatório lista todas as distribuidoras com mais de um valor; a
+  barreira vale só para as sucessoras do `sucessoes.json`.
+- **D5 em duas barreiras:**
+  - `conferirCoerencia(montagem, sucessoes, hoje): string[]` (nova, em `montar.ts`) **não passa com `--forcar`**, como
+    o `conferirFormato` do ADR-004: V1, V2, V3, V4, V7 e V8. Quebrar qualquer uma é número errado ou contrato quebrado.
+  - `validar` (o de hoje, que aceita `--forcar`) ganha V5 e V6. São cobertura: uma pessoa pode decidir publicar sabendo
+    que algumas cidades vão pedir a conta de luz.
+- **D6:** os campos do backend, com `tarifasVencidasEmUso`, `vinculosExtintosMantidos` e `tarifasComMaisDeUmValor`. O
+  `atualizar.ts` imprime as linhas `::notice::` e `::warning::` direto no log, o que funciona em qualquer passo e **não
+  mexe no `atualizar-dados.yml`** (a a6 da 003a reescreve esse arquivo). O `relatorio.json` só ganha chaves; o
+  `lerRelatorioDosDados` da a3 lê só duas e ignora o resto. O `exemplo.ts` grava `substituidas: {}`.
+
+### T3. Passo 0 na Action: diagnóstico sem escrita
+
+- `packages/dados/src/fontes.ts`: sai do `atualizar.ts` a parte que baixa e lê os 4 CSVs
+  (`lerFontes({ cache, hoje, baixar })`). O diagnóstico e a rotina usam o mesmo código.
+- `packages/dados/src/diagnosticar.ts` (`pnpm dados:diagnosticar`, script novo na raiz e no pacote):
+  - o script do scratchpad do backend (conjuntos de cada vencida, último `AnoIndice` × ano máximo, cidades com conjunto
+    recente de outra empresa);
+  - CNPJs com mais de uma sigla, com a vigência de cada; valores B1 diferentes na vigência de cada distribuidora (V7);
+  - a montagem com o código da branch e o resultado de `conferirCoerencia` e `validar`, **sem sair com erro**;
+  - a comparação com `apps/web/public/dados/municipios/*.json`: quantas cidades mudam por UF e a lista, em ordem, das 6
+    do critério 1 e de Guarapuava, Nova Friburgo e Campina Grande.
+  - **Não chama `escreverArquivos`.** Sai com 1 só se não conseguir baixar ou ler. Escreve um resumo curto em Markdown
+    no `$GITHUB_STEP_SUMMARY`, quando a variável existir.
+- `.github/workflows/diagnosticar-dados.yml`:
+
+```yaml
+name: Diagnosticar dados (sem gravar)
+on:
+  workflow_dispatch: {}
+  push:                      # só durante a HIS-111: sai no passo h8
+    branches: [his-111-tarifas-vencidas]
+    paths: ["packages/dados/**", ".github/workflows/diagnosticar-dados.yml"]
+permissions: {}
+concurrency: { group: diagnosticar-dados, cancel-in-progress: true }
+jobs:
+  diagnosticar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions: { contents: read }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { persist-credentials: false }
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm dados:diagnosticar
+      - name: Nada mudou no repositório
+        run: test -z "$(git status --porcelain --untracked-files=all)"
+```
+
+- **Por que `push` na branch:** o `workflow_dispatch` só aparece quando o arquivo já está no `main`. O gatilho de `push`
+  roda o passo 0 no primeiro push da branch, sem um PR antes, e roda de novo a cada push (é daí que sai o critério 10).
+  Não há segredo, não há escrita, o token é só de leitura e o `.cache` está no `.gitignore`.
+- **Quem lê:** nesta sessão o `gh api` não está liberado. Quem disparar (orquestra ou dono) cola o resumo do job aqui,
+  numa seção "Resultado do passo 0".
+- **Portão do passo 0** (o backend confere antes do h3):
+  - (a) último `AnoIndice` dos conjuntos das vencidas abaixo de `ano máximo − 1` → C2 confirmada;
+  - (b) EMR e EPB com um só valor na vigência → as linhas ENF e EBO entram. Com mais de um, a linha fica fora e volta ao
+    dominio-energia (V7);
+  - (c) só RGE/RGE SUL e CPFL JAGUARI/CPFL Santa Cruz com CNPJ repetido;
+  - (d) quantos vínculos extintos são os únicos da cidade (regra segura do D3).
+
+### T4. Passos, quem faz e estimativa
+
+| Passo | Quem | O quê | Est. |
+| --- | --- | --- | --- |
+| h0 | backend | `fontes.ts`, `diagnosticar.ts` + teste com fixtures (caso EDEVP inventado), workflow do T3. **Primeiro push = passo 0** | 0,5 d |
+| h1 | backend | `sucessoes.json` (linhas do dominio-energia) + `sucessoes.ts` + testes (critério 7) | 0,25 d |
+| h2 | backend | D4 e V7 em `tarifas.ts`, `subtrairMeses` + testes de borda (`fim` = limite fica; limite − 1 dia sai; 31/08; ano bissexto) | 0,25 d |
+| h3 | backend | D1, D2 e D3 em `montar.ts`/`municipios.ts`, `substituidas`, sem repetidos + testes (critérios 4 e 5), **depois do portão** | 0,5 d |
+| h4 | backend | `conferirCoerencia`, V5/V6 no `validar`, D6 no relatório e no log, `exemplo.ts` + testes (critério 6) | 0,25 d |
+| h5 | backend | core: `substituidas?`, `acharDistribuidora`, `distribuidorasDaCidade` + testes (critério 8 na unidade) | 0,25 d |
+| h6 | frontend | `useResumo`, `Cadastro`, `TelaAjustes`, `useDistribuidoraAtualizada` na `Casca`, aviso se a ux pedir | 0,25 d |
+| h7 | qa | critérios 1, 2, 9 e 10 pelo resumo do diagnóstico da branch; critério 8 no Playwright (390 e 1280 px), numa cópia própria, com `tarifas.json` de teste que tenha `substituidas` e `localStorage` com `rge-sul` | 0,5 d |
+| h8 | quem orquestra + backend | depois do merge: rodar `atualizar-dados.yml` à mão; qa confere as 6 cidades nos arquivos publicados; tirar o gatilho `push` do T3; ligar o teste dos publicados (V1, V2, V3, V8) | 0,25 d |
+
+Total: cerca de 3 dias (2,25 de backend). Fixtures novas em `packages/dados/fixtures/sucessao/`, para não mudar os
+números dos testes de hoje: RGE (2026) e RGE SUL (2019) com o mesmo CNPJ; EDEVP vencida e ESS vigente; um conjunto que
+parou de reportar 3 anos antes; uma sucessora com dois valores na vigência.
+
+**Por que o teste dos publicados só entra no h8:** com os arquivos de hoje ele reprova (RGE SUL de 2019). Se entrar no
+PR, o CI do `main` fica vermelho até a rotina rodar. No PR, o critério 3 é provado pela mesma `conferirCoerencia`,
+rodada sobre a montagem real no diagnóstico da branch.
+
+**Ordem de entrada no ar:** primeiro o código (o site aceita os dois formatos, porque `substituidas` é opcional e
+`acharDistribuidora` funciona sem ele); depois a rotina grava os arquivos novos. Nunca o contrário.
+
+### T5. Ajustes nos critérios (para o scrum-master)
+
+- Critérios 3 e 6: "12 meses" passa a "6 meses" (dominio-energia). No 6, com a tarifa vencida há 7 meses e sem
+  sucessora, quem acusa é o **V5** (o D4 já a tirou do arquivo, e a cidade fica com um agente sem tarifa).
+- Critério 5, 2ª parte: com a regra segura do D3, o vínculo extinto sem sucessão **sai** quando a cidade tem outro
+  vínculo recente (`vinculosExtintosDescartados`) e **fica com aviso** quando é o único (`vinculosExtintosMantidos`).
+  Duas fixtures.
+- Critério 8: o e2e automático entra no `casa-salva.spec.ts` da a7 da HIS-003a (a infraestrutura de e2e é da 002a). Na
+  HIS-111 ficam o teste de unidade (h5) e a conferência do qa no Playwright (h7).
+- Critério 3: o teste dos arquivos publicados entra no h8.
+
+### T6. Riscos
+
+1. **A rotina para todo dia** (V4, V5 ou V7 depois de uma sucessão nova). Os dados do dia anterior ficam no ar (já
+   certos depois da HIS-111), e a Action vermelha avisa o dono. É de propósito: parar é melhor que publicar errado.
+2. **D3 tirar o preço certo de uma cidade:** a regra segura e o V6 seguram.
+3. **Cache do navegador com arquivo antigo:** `distribuidorasDaCidade` e `acharDistribuidora` cobrem os dois lados.
+4. **Ordem da lista em Guarapuava e Nova Friburgo:** sai no diagnóstico, e o qa confere no h7.
+5. **Conflito com a HIS-003a:** ver T7.
+
+### T7. Ordem em relação à HIS-003a
+
+**A HIS-111 vem antes do a3, e não depois.** Número errado está no ar hoje, e a 003a só começa quando a 002a entrar no
+`main`, com o a1 e o a2 antes do a3. Esperar custa vários dias com 227 cidades erradas. O conflito é pequeno e de texto:
+
+| Arquivo | HIS-111 | HIS-003a | Custo para quem chega depois |
+| --- | --- | --- | --- |
+| `aneel/tarifas.ts` | D4 e V7 em `selecionarTarifasVigentes` | a3: troca uma linha (`total <= 0.05 …` → `LIMITES`) | 1 linha |
+| `atualizar.ts` | chama `conferirCoerencia`, imprime `::notice::` | a3: chama `conferirFormato` | 2 a 3 linhas vizinhas |
+| `core/tipos.ts` | `substituidas?` no `ArquivoTarifas` | a2: `DadosCasa` entra no mesmo arquivo | lugares diferentes |
+| `aplicacao/resumo.ts` | a linha do `.find` | a4: `erro` → `falhasSeguidas` | 2 linhas |
+| `lerArquivoTarifas` | — | a3 lê `substituidas` (contrato do T1) | já previsto, sem retrabalho |
+
+Cerca de 30 minutos de rebase para a 003a. A HIS-111 não depende da 002a: não muda dependência nem `ci.yml`, e o e2e do
+critério 8 vai para a a7. Pode ser implementada já, em paralelo com o fim da 002a, numa branch própria que sai do `main`
+(levando os commits desta história). Ela não pisa nos arquivos que a 002a está mexendo agora (`PainelAcompanhamento` e
+`TelaComodos`).
 
 ## Ameaças
 
@@ -313,8 +516,10 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   curto (6 meses), já que um reajuste perdido erra a conta em 5% a 15%?
 - [x] `[para: dominio-energia]` _(simples por enquanto, chamada de estimativa)_ (não bloqueia) A média nacional do simulador da `/` deve ser simples, como hoje, ou
   ponderada (por município ou por consumidores)?
-- [ ] `[para: tech-lead]` D7: aprovar `substituidas` no `ArquivoTarifas` e dizer onde a troca mora. E a ordem: a HIS-111
-  começa depois do a3 da HIS-003a?
+- [x] `[para: tech-lead]` _(respondida em 30/10: ver "Desenho técnico", T1 e T7. `substituidas` aprovado, opcional,
+  sempre com o id final; a troca mora no core, na leitura, e no `aplicacao/`, na regravação, não no leitor da
+  `Residencia`; formato salvo igual. A HIS-111 vem **antes** do a3)_ D7: aprovar `substituidas` no `ArquivoTarifas` e
+  dizer onde a troca mora. E a ordem: a HIS-111 começa depois do a3 da HIS-003a?
 - [ ] `[para: ux-acessibilidade]` Quando a casa salva troca de `rge-sul` para `rge` (ou de EDEVP para Energisa
   Sul-Sudeste), mostramos um aviso, como "Sua distribuidora agora se chama RGE. O preço foi atualizado.", ou a troca
   fica sem aviso?
@@ -367,3 +572,36 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   - A ordem da lista em Guarapuava e Nova Friburgo.
   - A data da REA 6.318 cai num sábado: conferir no DOU.
 - **Próximo:** backend, com o passo 0 e o V7. Depois o qa, que confere os critérios 1 e 2 com a tabela.
+
+### [tech-lead] 2026-10-30 — D7 aprovado com ajustes, desenho h0–h8, passo 0 na Action; HIS-111 antes do a3
+- **O que fiz:** li o código da rotina (`montar`, `tarifas`, `municipios`, `atualizar`, `escrever`), o core
+  (`tipos`, `distribuidoras`), `aplicacao/resumo.ts`, o store da casa, `Cadastro`, `TelaAjustes`, os dois workflows e o
+  D2–D4 da HIS-003a. Escrevi o "Desenho técnico" (T1–T7) e o ADR-005.
+- **Decisões e porquê:**
+  - **D7 aprovado:** `substituidas?` opcional no `ArquivoTarifas`, sempre com o id final, com as regras do V8. Opcional
+    porque o site lê arquivo antigo do cache e ainda não tem leitor.
+  - **A troca não fica no leitor da `Residencia`.** Ele roda antes de o `tarifas.json` chegar e não corrige valor
+    (ADR-004). A troca fica no core (`acharDistribuidora` e `distribuidorasDaCidade`): o preço fica certo sem
+    regravar, e a regra repetida em 4 lugares das telas sai. A regravação, uma vez só, fica no `aplicacao/`
+    (`useDistribuidoraAtualizada`). O formato salvo não muda.
+  - **D1** só junta sigla vencida. Duas vigentes com o mesmo CNPJ fazem a rotina parar (V2).
+  - **D3 com a regra segura:** o vínculo extinto só sai se a cidade tiver outro. O D2 + D4 + V5 já pegam a empresa
+    que acabou.
+  - **Duas barreiras:** V1–V4, V7 e V8 sem `--forcar` (número errado); V5 e V6 com `--forcar` (cobertura).
+  - **Passo 0:** `diagnosticar-dados.yml`, só leitura (`contents: read`, sem credencial, sem gravar, confere que nada
+    mudou), com `workflow_dispatch` e `push` na branch da história. O `push` deixa rodar sem PR antes, porque o
+    `workflow_dispatch` só aparece com o arquivo no `main`.
+  - **Ordem:** a HIS-111 vem **antes** do a3 (T7). O conflito custa uns 30 minutos de rebase. Esperar custa dias de
+    conta errada em 227 cidades.
+- **Arquivos alterados:** este arquivo; `docs/equipe/decisoes/ADR-005-distribuidora-que-deixa-de-existir.md` (novo);
+  `docs/equipe/decisoes/README.md`; `HIS-003-base-de-seguranca.md` (contrato do `substituidas` no D2 do a3);
+  `docs/equipe/quadro.md`; minha pasta.
+- **Como verifiquei:** confirmei no código que o `merge` do `persist` roda antes do `fetch` das tarifas, que `Cadastro`
+  e `TelaAjustes` filtram por `Map` de ids (4 lugares) e que o cache dos `/dados` é de 1 h + 1 dia. Confirmei também que
+  `--forcar` pula todo o `validar`, que o `.cache` está no `.gitignore`, que o `relatorio.json` é lido só em 2 campos e
+  que os SHA do workflow são os do ADR-003. Não rodei a rotina: a ANEEL dá 403 daqui.
+- **Para o próximo:**
+  - **scrum-master:** sprint e prioridade; aceitar os ajustes dos critérios 3, 5, 6 e 8 (T5).
+  - **ux:** o aviso do D7 (sim ou não). Não bloqueia o h0–h5.
+  - **seguranca:** olhar o workflow do T3 e o V8 antes do h0.
+  - **backend:** h0 a h5. O primeiro push roda o passo 0. O h3 só começa depois do portão.
