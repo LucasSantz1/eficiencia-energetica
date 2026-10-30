@@ -3,7 +3,8 @@
 ## O que eu cuido
 
 - Testes de unidade: `packages/core/test/` (37) e `packages/dados/test/` (11, com fixtures em `packages/dados/fixtures/`).
-- Testes no navegador: futuro `apps/web/e2e/` (HIS-002). Até lá, a linha de base da HIS-001 em `apps/web/e2e-base/`.
+- Testes no navegador: `apps/web/e2e/` (Playwright 1.63.0 + axe 4.14.0; HIS-002a). `pnpm build && PORTA_E2E=31xx
+  pnpm test:e2e` numa cópia própria. O `apps/web/e2e-base/` sai no A7.
 
 ## Estado atual
 
@@ -23,11 +24,24 @@
   arquivo do `apps/web/e2e/`), negativos permanentes N1–N7 (`sanidade.spec.ts`, `test.fail()`), mutações M1–M16 (002a)
   e V1–V8 (002b), ids obrigatórios `I7-01…15`, `R13-01…03`. Perguntas `[para: tech-lead]` abertas: P-qa-1…8 (002a,
   bloqueiam o A7) e P-qa-b1…b3 (002b, entram no B4). Protótipo em `…/scratchpad/qa-his002/prova/`.
+- **HIS-002a, etapa 4 (2026-10-30):** A1 `06be352`, A2 `9156363`, A3 `6ec68c7`, A4 `e84edad`, A5 `f527b5b` + `c6bbc17`.
+  113 testes em 11 arquivos (4,2 min, 1 worker): 104 passam (12 negativos esperados), 6 `fixme`, 3 falham pelos
+  defeitos D-A5-1 (`label-content-name-mismatch` no "Quem mais gasta", `/casa` com casa) e D-A5-2
+  (`scrollable-region-focusable` no painel geral, 390 px) — devolvidos ao frontend/ux. Cópia em
+  `…/scratchpad/h2a/copia` (porta 3141), `sincronizar.sh` copia só os meus caminhos.
+- Peso: referência `peso-js.json` com o lockfile novo (11a `/` 164 215 … 11b `/casa` com casa 212 282). O spec no build
+  do `main` dá a HIS-001 byte a byte; o lockfile muda −5…+23 B (caminho `next@…_@playwright+test@1.63.0` embutido).
 - Como subir o site para testar: `pnpm build && pnpm --filter @ee/web start -p 3100` (em segundo plano);
   liberar a porta com `fuser -k 3100/tcp` (não usar `pkill -f "next start"`).
 - O Chromium já está instalado no ambiente de nuvem: `require('playwright')` (1.63, via NODE_PATH global), sem `playwright install`.
 
 ## Decisões em vigor
+
+- e2e: fixture automática reprova `pageerror`, `console.error` e pedido fora da origem do `baseURL`; contexto novo por
+  teste (não usar `browser.newContext`, que fica sem vigia — usar `test.use`). Scripts de `addInitScript` precisam
+  ignorar a `about:blank` (lá o `sessionStorage` é proibido e vira erro de página).
+- Exceção do axe = 1 elemento, por `pagina` + `estado` de `TELAS_AXE` (13 estados); ux revisa `excecoes-axe.ts`.
+- Pendente com história = `test.fixme("HIS-NNN · …")` com a asserção de verdade dentro; conferir que falha hoje.
 
 - Comparação antes × depois só vale com relógio fixo (`context.clock.setFixedTime`), fuso `America/Sao_Paulo`, `pt-BR`
   e `crypto.randomUUID` trocado por contador (`addInitScript`). Assim texto, DOM e casa salva batem byte a byte.
@@ -64,13 +78,12 @@
 
 ## Pendências
 
-- HIS-002a, etapa 4: escrever os testes (A1–A5) pelo plano, depois das respostas do tech-lead (P-qa-1…8); o A7 (tirar
-  o `e2e-base`) só com as linhas 1–21 da "Cobertura" verdes. Registrar no ADR-003 e aqui o commit do A7 (o comparador
+- HIS-002a: A5 fecha quando o frontend corrigir D-A5-1/D-A5-2 (rodar `pnpm test:e2e` verde nos 2 projetos). Depois,
+  etapa 5 (M1–M16, `--repeat-each=3`) e o A7 (tirar o `e2e-base`) com as linhas 1–21 da "Cobertura" verdes. Registrar no ADR-003 e aqui o commit do A7 (o comparador
   fica no histórico: `git show <commit>^:apps/web/e2e-base/linha-de-base.cjs`).
-- HIS-002a: o `manual-qa.cjs` (scratchpad) vira `teclado.spec.ts` e `comodos.spec.ts` (P-qa-2/3); zoom 200% = `fixme` HIS-107.
 - HIS-002b, etapa 5: V1–V8 e os ids obrigatórios (inclusive `seguranca-01…21` quando a lista existir).
 - Backlog (pré-existentes, HIS-001 P1–P4): foco no passo "cidade" pula da busca para o título (ux/frontend); zoom 200%
-  com rolagem horizontal em `/`, `/casa`, `/casa/dicas` (ux); âncora pelo link não alinha ao topo (frontend).
+  com rolagem horizontal em `/`, `/casa`, `/casa/dicas` (ux); âncora não alinha ao topo pelo link **nem** direto numa página nova (371/491 px; frontend, HIS-108).
 
 ## Orientações do responsável
 

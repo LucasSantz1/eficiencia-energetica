@@ -1084,3 +1084,62 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
   `acende`). Testar: nomes por regex da tabela, axe da `/` sem `definition-list` nem `label-content-name-mismatch`.
 - Para o próximo: **qa** — seguir o A5 com estes nomes e os 4 nós de contraste; **ux-acessibilidade** — saber dos 2
   `dd` na HIS-110 ao revisar `excecoes-axe.ts`.
+
+### [qa] 2026-10-30 — etapa 4: A1–A4 feitos e A5 com os testes prontos; A5 devolvido ao frontend com 2 defeitos novos
+- O que fiz: implementei A1–A5 pelo D9–D16, numa **cópia própria** (`scratchpad/h2a/copia`: `git archive` + `pnpm
+  install --offline`, porta 3141, `src` do `main` até o A4 e do `HEAD` com o `b0bff1c` no A5). Commits:
+  `06be352` (A1), `9156363` (A2), `6ec68c7` (A3), `e84edad` (A4), `f527b5b` e `c6bbc17` (A5, só testes, mais a linha
+  da HIS-110 no planejamento). Nenhum arquivo de `apps/web/src` mudou nos meus commits.
+- Resultado (rodada final, `HEAD`): **113 testes em 11 arquivos**, 4,2 min com 1 worker; 104 passam (12 são os
+  negativos N1–N8 com `test.fail()`, todos "falha esperada"), 6 pendentes (3 `fixme` × 2 projetos), **3 falham** com os
+  2 defeitos abaixo. `pnpm typecheck` (cobre `e2e/` e `playwright.config.ts`; erro plantado → código 2) e `pnpm test`
+  (48) verdes.
+- Conferências: **Ra1** só em `devDependencies` de `apps/web`, 1.63.0 e 4.14.0 exatas (o `pnpm why` mostra o
+  `@playwright/test` também como par **opcional** do `next`, que já o declara); **Ra2** lockfile sem `tarball`/`git+`
+  (0), `onlyBuiltDependencies` igual; **Ra3** 95 pacotes, só `esbuild` com `postinstall`; **Ra4** `pnpm audit
+  --audit-level high` → "No known vulnerabilities found"; **Ra5** `src` sem `playwright`/`axe-core` e `.next/static`
+  sem `axe-core` (ver o achado do caminho do `next` abaixo); **Ra11** JSON sem limite, M15 (`GITHUB_ACTIONS=true
+  ATUALIZAR_PESO_JS=1`) reprova e o JSON fica intacto; **Ra12** `grep` vazio e exceção com alvo de 2 elementos reprova
+  (N5); **Ra13** `-H 127.0.0.1` e `reuseExistingServer: false`. Cada negativo foi conferido desligando a sua barreira
+  numa cópia (console, `pageerror`, axe, vigia de rede → "Expected to fail, but passed", código 1).
+- **Peso (A4).** Referência em `e2e/peso-js.json`, medida com o código do site igual ao `main` e o lockfile do A1:
+  11a `/` 164 215, `/comecar` 172 560, `/casa` 175 055, `/casa/comodos` 172 949, `/casa/dicas` 166 021, `/casa/ajustes`
+  163 963, `/sobre` 139 574; 11b 184 415 (`/`, `/comecar`), 232 482 (as 4 da casa sem casa), 168 342 (`/sobre`),
+  212 282 (`/casa` com casa). O **mesmo spec no build do `main`** dá os números da HIS-001 byte a byte (164 212 …
+  212 267); dois builds do mesmo código dão ±0. A diferença de −5 a +23 B vem **só do lockfile**: o `next` passa a
+  ficar em `.pnpm/next@16.4.3_@playwright+test@1.63.0_…` e o build embute esse caminho num chunk
+  (`u.ab="/ROOT/node_modules/.pnpm/next@…"`). É também a única ocorrência de "playwright" em `.next/static` — nome de
+  pasta, nenhum código. **[para: seguranca]** a Ra5 parte 2 precisa ignorar esse caminho (o `grep -rl` cru acha 1
+  arquivo). Correção do frontend (`b0bff1c`): +15 B no 11a da `/` e no 11b de todas (limites +1 024/+2 048).
+- Achados e desvios:
+  - **`/casa/aparelhos` só redireciona com casa** (sem casa a `Casca` mostra "Vamos cadastrar" e a página não roda):
+    igual ao `main`; o `rotas` testa com a casa v2. Fixtures copiadas já no A1 (sha256 iguais) por isso.
+  - **P3 é mais largo que o registrado:** direto pelo endereço numa página nova o cômodo **também** para a 371 px
+    (celular) / 491 px (computador) do topo; os 112 px da HIS-001 eram uma navegação só de âncora na mesma página. O
+    `fixme` "HIS-108 · P3" cobre as duas entradas (vale anotar na HIS-108).
+  - Os 3 `fixme` falham hoje com os números da HIS-001 (zoom: 254 e 211 px em 195; P1: foco passa pela busca; P3: 371 px).
+  - Estrutura: além do D9, `apoio/transicoes.ts` (contador e durações no `transition.ready`) e `apoio/telas.ts` (aba
+    visível, diálogo, datas relativas). `apoio/axe.ts` nasceu no A1 (o N3 precisa dele). `ExcecaoAxe.estado` aceita os
+    13 estados das 24 telas (`TELAS_AXE`), não só "sem/com casa": uma exceção de um passo do cadastro não pode virar
+    "exceção velha" nos outros 7 estados de `/comecar`. O N7 está no `sanidade` usando o site (precisa das transições).
+  - "São Paulo" digitado no `<select>` às vezes para em "SC": o `teclado` usa as setas (determinístico).
+- **Defeitos (devolvido para frontend, com ux no texto), A5 continua vermelho por eles — os dois se corrigem sem
+  mudança visível, então são desta história (critério 3):**
+  1. **D-A5-1 · `label-content-name-mismatch` (sério)** nos 6 botões do "Quem mais gasta" em `/casa` com casa, 390 e
+     1280 px. Passos: `PORTA_E2E=31xx pnpm test:e2e -g "axe · /casa · com casa"`. Esperado: 0 sério. Obtido: o
+     `aria-label` (`PainelAcompanhamento.tsx:161`) começa com "Chuveiro elétrico: R$ 44,26 por mês, 42% da conta…",
+     mas o texto visível é "Chuveiro elétrico em Banheiro · 4 banhos de 8 min por dia · 41% · R$ 45,12". Gravidade:
+     média (comando de voz não acha o botão). Precisa de texto da **ux** (como o da casa ilustrada).
+  2. **D-A5-2 · `scrollable-region-focusable` (sério)** na tabela do "Painel geral" (`TelaComodos.tsx:264`,
+     `div.overflow-x-auto`), só em 390 px. Passos: `pnpm test:e2e --project=celular -g "visao=geral"`. Esperado: 0
+     sério. Obtido: região com rolagem para o lado que o teclado não alcança. Gravidade: média (quem usa teclado não
+     vê as colunas da direita). Correção típica: `tabIndex={0}` + nome acessível na região (contorno só no foco).
+- Exceções (`excecoes-axe.ts`, para a **ux** revisar): 4 `color-contrast` na `/`, sem e com casa (8 entradas), todas
+  HIS-110 — pílulas de Quarto e Cozinha e os 2 `<dd>` `text-white/85` dos cartões "Tarifa Social" e "Desconto Social"
+  (acrescentados na linha da HIS-110 em `docs/planejamento.md`). Nenhuma velha nem com mais de 1 elemento, nos 2 projetos.
+- Evidências: capturas do fluxo anexadas ao relatório (`fluxo-principal`: acompanhamento, cômodos, dicas, sobre);
+  saída da rodada final em `scratchpad/h2a/saida-final.txt`; capturas e traces das 3 falhas em
+  `scratchpad/h2a/copia/apps/web/test-results/`.
+- Para o próximo: **frontend** + **ux-acessibilidade** — D-A5-1 e D-A5-2 (commit próprio em `apps/web/src`); depois,
+  `pnpm test:e2e` verde fecha o A5. **ux** — revisar `excecoes-axe.ts`. **seguranca** — Ra5 parte 2 com o caminho do
+  `next`. **tech-lead** — A6 (`ci.yml`) pode começar em paralelo; o artefato terá a tabela do peso e as exceções.

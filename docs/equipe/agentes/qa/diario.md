@@ -10,6 +10,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002a · etapa 4: A1–A5 implementados; A5 devolvido ao frontend com 2 defeitos
+- O que fiz: Playwright/axe com versão exata, `playwright.config.ts`, fixture de console/página/rede, `rotas`,
+  `sanidade` (N1–N8), `fluxo-principal` com transição por passo, `migracao`, `aparelhos`, `ajustes`, `transicoes`,
+  `teclado`, `comodos`, `peso-js` + `peso-js.json`, `acessibilidade` (24 telas × 2) + `excecoes-axe.ts`; Ra1–Ra5,
+  Ra11–Ra13; cada negativo conferido desligando a barreira; peso do `main` reproduzido byte a byte.
+- Decisões e porquê: referência de peso com o lockfile novo (é o que o CI compila); `estado` da exceção = estados das 24
+  telas; fixtures no A1 (o `rotas` precisa da casa); `apoio/transicoes.ts` e `apoio/telas.ts` além do D9 (coesão).
+  Defeitos D-A5-1 e D-A5-2 não viraram exceção: corrigem-se sem mudança visível (critério 3).
+- Arquivos: `apps/web/e2e/**`, `apps/web/playwright.config.ts`, `apps/web/package.json`, `package.json`,
+  `pnpm-lock.yaml`, `.gitignore`, `docs/planejamento.md` (HIS-110), a história, `contexto.md`, este diário.
+- Próximos passos: correção do frontend → A5 verde; etapa 5 (M1–M16, `--repeat-each=3`); A7.
+
 ## 2026-10-29 · HIS-002 · revisão do D9/D10 (002a) e do D6 (002b) e plano de testes das duas
 - O que fiz: li as duas histórias, o ADR-003, a retro e o §10/R13 e a etapa 5 da HIS-001; comparei o D9/D10 com o
   `linha-de-base.cjs` e o `manual-qa.cjs`; conferi no código o movimento reduzido e o manifesto de prerender. Protótipo
