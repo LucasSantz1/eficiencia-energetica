@@ -21,8 +21,8 @@
 | Comentário `eslint-disable`/`/* eslint … off */` derruba matriz, `innerHTML` e `"use server"` (medido) | médio; mitigação C10 no script, só a forma HIS-109 | HIS-002b (Ab3) |
 | `globalIgnores` com `**/build/**`, `**/out/**`, `**/test-results/**` tira pastas do site do lint (medido) | médio; ignores ancorados + controle de contagem | HIS-002b (Ab4) |
 | HTML a partir de texto fora da lista (`setHTMLUnsafe`, `createContextualFragment`, `srcdoc`/`srcDoc`) | baixo; 3 seletores propostos | HIS-002b (Ab6) |
-| CI: `ci.yml` sem `permissions`, actions por etiqueta, `persist-credentials` padrão; artefato público 14 dias | médio; mitigação no D11 + Aa6/Aa9/Aa10 | HIS-002a / HIS-003 |
-| Site chamando terceiro sem a pessoa saber: sem barreira automática | médio; fixture "nada sai do aparelho" (Aa11, A1) | HIS-002a |
+| CI: `ci.yml` sem `permissions`, actions por etiqueta, `persist-credentials` padrão; artefato público 14 dias | **resolvido no `ci.yml`** (etapa 6 da HIS-002a aprovada com ressalva baixa em 2026-10-30: Ra1–Ra13 ok); falta: dono do projeto conferir o artefato no GitHub (Ra9) e o Dependabot de actions + `atualizar-dados.yml` (HIS-003) | HIS-002a / HIS-003 |
+| Site chamando terceiro sem a pessoa saber: sem barreira automática | **resolvido**: fixture do e2e reprova pedido fora de `127.0.0.1` (Ra10 plantada na `/sobre`: 3 vermelhos com a URL) | HIS-002a |
 | Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | médio; análise aprovada, V9/V10 no h1/h3; workflow de diagnóstico só leitura aprovado | HIS-111 |
 | Server Actions (`"use server"`): cada uma vira endpoint POST público; nenhuma existe | regra a definir antes do E4 | E4 |
 | SQL injection | não se aplica ainda (sem banco); regra já vale para o E4 | E4 |
@@ -35,6 +35,8 @@
 - Chave `eficiencia-energetica:casa` em 1 arquivo de `apps/web/.next/static`.
 - Nenhum `readFile`, `process.cwd` ou `node:fs` em `.next/static`.
 - Endereços nos scripts do cliente: só textos de bibliotecas (w3.org, nextjs.org, react.dev, github.com).
+  Depois da HIS-002a (conferido em `efab326`): também fragmentos de teste do polyfill de URL (`https://a`, `http://n`,
+  `https://x`), sem pedido; e 1 chunk com o caminho `/ROOT/node_modules/.pnpm/next@…_@playwright+test@…` (nome de pasta).
 - `packages/core/src` só com imports relativos.
 - zustand 5 `persist` só grava ao hidratar quando a versão muda (`middleware.mjs` l. 397–428): abrir o site com a
   mesma versão não reescreve a casa.
@@ -52,6 +54,8 @@
 - `/casa/aparelhos` é estática: responde 200 com `NEXT_REDIRECT` no conteúdo (não 307).
 - CI: `permissions: contents: read` no topo, nada de `pull_request_target`/`workflow_run`, nada de `${{ github.event.* }}`
   em `run:`, `persist-credentials: false`; artefato só com dado inventado e só das pastas do relatório.
+- Ra9/varredura de segredo em artefato: padrão estrito (`AKIA[0-9A-Z]{16}`, `gh[pousr]_[A-Za-z0-9]{36}`…) e **extrair os
+  `.zip`** (trace e `playwright-report/data/`) antes do `grep`; o `AKIA` cru no `index.html` é base64 (falso positivo).
 - e2e: nenhum pedido fora de `127.0.0.1` (fixture automática); limites de peso no spec, nunca no JSON; axe sem
   `disableRules`/`withTags`/`exclude()`, exceção por nó (1 só) com história.
 - CSP sem nonce enquanto não houver Auth nem script de terceiro: `script-src`/`style-src 'self' 'unsafe-inline'`, sem
@@ -83,8 +87,8 @@
 
 ## Pendências
 
-- **HIS-002a (etapa 6):** Ra1–Ra13 da história; pedir o artefato do commit descartável do A6 (Ra9); saber se a Aa9
-  (actions por SHA) entrou no A6 ou foi para a HIS-003 "antes do E4".
+- **HIS-002a:** etapa 6 feita (aprovado com ressalvas, baixo). Fica só a Ra9 no GitHub, com o dono do projeto (roteiro
+  na minha nota da história). Aa9 entrou no A6 (SHA); Dependabot de actions segue na HIS-003.
 - **HIS-002b (etapa 6):** Rb1–Rb9; rodar de novo os 21 + 9 casos numa cópia própria (roteiros em
   `scratchpad/seg-his002/casos-eslint.mjs` e `propostas.mjs`; se sumirem, as tabelas estão na história) esperando 0
   diferente; conferir C10 (Ab3) e ignores ancorados (Ab4).
