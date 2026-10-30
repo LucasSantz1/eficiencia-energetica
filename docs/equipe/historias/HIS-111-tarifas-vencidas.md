@@ -6,7 +6,7 @@
 | Sprint | **Sprint 0, prioridade 1** (scrum-master, 2026-10-30): defeito com número errado no ar, não função nova |
 | Tamanho | M (≈ 3 dias: 2,25 backend, 0,25 frontend, 0,5 qa; T4) |
 | Papéis principais | backend, dominio-energia, qa; tech-lead (contrato do `tarifas.json`) e ux (um texto) |
-| Status | Preparada (h0 depois da revisão da seguranca no workflow do T3 e no V8) |
+| Status | Em andamento: h0–h5 feitos pelo backend em 30/10; falta o resultado do passo 0 (push da branch), o h6 (frontend), o h7 (qa) e o h8 |
 | Branch | `his-111-tarifas-vencidas` |
 
 > **Origem:** achado P-de-1 do dominio-energia na HIS-003 ("Achado: tarifas vencidas", 2026-10-30). Investigação e
@@ -443,6 +443,11 @@ normal (que passa pelos leitores da 003a quando eles existirem). Os e2e `casa-v1
 - Entrada que quebra o V8 sai e conta em `descartados` (na rotina, isso para a gravação, como todo descarte).
 - Casos novos no `arquivos-publicos.test.ts` (P8): ausente; `{"rge-sul": "rge"}` fica; valor que não existe sai; chave
   que é id publicado sai; chave `"__proto__"` sai e o protótipo continua o normal; cadeia `a → b` + `b → c` sai.
+- _(backend, 30/10, R7 da seguranca: contrato para quem implementar o a3)_ O leitor monta o resultado com
+  `Object.fromEntries` **depois** de validar cada chave, e as regras do V8 olham o objeto original inteiro (não o que
+  sobrou depois de cada descarte). Mais de **500** entradas = `ErroDeFormato` (a rotina usa o mesmo limite,
+  `MAXIMO_DE_SUBSTITUIDAS` em `packages/dados/src/montar.ts`, e nunca publica mais que isso). Falta só o caso de 501
+  entradas no P8. O formato do id é o mesmo da rotina e do core: `^[a-z0-9]+(-[a-z0-9]+)*$`, até 64 caracteres.
 
 ### T2. Ajustes ao D1–D6 (decisões técnicas)
 
@@ -620,6 +625,31 @@ estranho vindo da ANEEL, um `tarifas.json` antigo ou malformado no cache do nave
 
 _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` da HIS-003a.
 
+## Resultado do passo 0
+
+_(quem orquestra cola aqui o resumo do job "Diagnosticar dados (sem gravar)", que roda no push da branch.)_
+
+**O que conferir no resumo do job** (página da execução, `$GITHUB_STEP_SUMMARY`; o mesmo texto está no log do passo
+"Diagnosticar"):
+
+1. O job termina verde, e o passo "Nada mudou no repositório" passa (nada foi gravado).
+2. **Portão (a):** a linha diz "**C2 confirmada.**". Se disser "não confirmada para essas", a lista mostra quais
+   empresas reportaram em `ano máximo − 1` ou depois: o backend revê o D3 para elas.
+3. **Portão (b):** "todas com um só valor B1 na vigência". Se EMR ou EPB aparecerem "com problema", as linhas ENF ou
+   EBO saem do `sucessoes.json` (sem isso o V7 para a rotina). Se aparecer "sem tarifa", a sigla da sucessora no
+   `sucessoes.json` não é a da ANEEL: o V10 também acusa.
+4. **Portão (c):** só `02016440000162 (RGE, RGE SUL)` e `53859112000169 (CPFL JAGUARI, CPFL Santa Cruz)`. Outro par,
+   com as duas siglas vigentes, faz o V2 parar a rotina.
+5. **Portão (d):** quantas cidades ficam com um vínculo extinto por ser o único (aviso, não para).
+6. **Coerência (critério 3):** "ok". Qualquer V1–V4, V7–V10 aqui para a rotina do h8, mesmo com `--forcar`.
+7. **Validação:** o esperado é "ok". Se aparecer V5 (agente sem tarifa) ou V6 (mais de 30 cidades sem distribuidora),
+   há uma sucessão que ainda não está na tabela: anotar a sigla para o dominio-energia.
+8. **Comparação (critérios 1, 2 e 10):** na tabela das cidades, "Confere" = "sim" nas 6 primeiras; "ainda com uma"
+   = **0** e "ficam sem distribuidora" = **0**; "mudam" perto de 227 (mais o que o D3 tirar), com RS, SP, RR, MG,
+   PB, PR e RJ. Guarapuava, Nova Friburgo e Campina Grande: anotar a ordem para o qa (h7).
+9. Sucessões aplicadas (D2) com as 10 linhas, e renomeações (D1) com `rge-sul → rge` e `cpfl-jaguari →
+   cpfl-santa-cruz`.
+
 ## Perguntas abertas
 
 - [x] `[para: dominio-energia]` _(respondida em 30/10: ver "Regras de negócio e fontes"; CERR sem número de ato da ANEEL)_ Confirmar no cadastro de agentes ou nas resoluções autorizativas da ANEEL, com o
@@ -654,6 +684,16 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
 - [ ] `[para: scrum-master]` (não bloqueia) Com `preco.origem === "indisponivel"`, os cômodos e aparelhos do painel
   também mostram R$ 0,00. O F2 corrige só o cartão de cima. O resto fica para uma história própria? Também falta um
   caminho "A minha não está aqui" no passo "distribuidora" do cadastro (princípio 3).
+- [ ] `[para: tech-lead]` (não bloqueia) **V4, sentido de "vigente":** implementei o V4 como "a sucessora final está
+  publicada"; junto com o V1, isso quer dizer "vigente ou vencida há até 6 meses (D4)". Com "vigente" estrito
+  (`fimVigencia ≥ hoje`), a rotina pararia todo dia em que a ANEEL atrasa o reajuste de ESS, CPFL Santa Cruz, EMR, EPB
+  ou Âmbar Roraima, o que contradiz o aviso desde o 1º dia do dominio-energia. Confirmar ou pedir o estrito.
+- [ ] `[para: dominio-energia]` (não bloqueia) No `base/sucessoes.json`, cada linha tem um link só em `fonte`; os
+  outros links e as ressalvas (data da REA 6.318 num sábado, número do despacho do MME) foram para o campo opcional
+  `observacao`. Revisar as 10 linhas no PR (R4) e trocar a `fonte` pelo link do cedoc ou do DOU quando tiver acesso.
+- [ ] `[para: frontend]` (h6) O core ganhou `trocaDeDistribuidora(arquivo, id)`, que devolve `{ de, para }` só quando
+  `de` não está publicado e `para` está (R6). O `useDistribuidoraAtualizada` pode usar direto, guardando o par só na
+  visita (F1).
 - [x] `[para: scrum-master]` _(respondida em 30/10: Sprint 0, prioridade 1, **um corte só**, antes do a3; o passo 0
   roda na Action pelo `push` da branch, que quem orquestra faz. Ver a nota do scrum-master)_ Prioridade e sprint. O pedido do dominio-energia é prioridade alta. Fazer um corte só ou
   dois (ver "Corte possível")? E lembrar que a rede do ambiente de nuvem não alcança a ANEEL: o passo 0 precisa da
@@ -797,3 +837,76 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   "R$ 0,00" ou "Tarifa da :" vazio no cartão de cima; os dois corpos do F1 (com e sem o nome antigo).
 - **Próximo:** tech-lead (3 pontos do F1, não bloqueiam o h0–h5); dominio-energia (5 nomes); depois o frontend no h6.
   Eu reviso as capturas do qa (390 e 1280 px) no h7.
+
+### [backend] 2026-10-30 — h0 a h5 implementados; passo 0 pronto para o push
+- **O que fiz** (branch `his-111-tarifas-vencidas`, um commit por passo):
+  - **h0** `76aee18`: `fontes.ts` (a leitura saiu do `atualizar.ts`), `diagnostico.ts` + `diagnosticar.ts`
+    (`pnpm dados:diagnosticar`), `anotacoes.ts` (R2) e `.github/workflows/diagnosticar-dados.yml` com os `paths` do R1.
+  - **h1** `81e1f89`: `base/sucessoes.json` com as 10 linhas do dominio-energia e `sucessoes.ts` (leitor que lança com a
+    linha; V9 e V10 do R3; aviso do `desde`).
+  - **h2** `175d74d`: D4 com 6 meses e V7 em `tarifas.ts`; `subtrairMeses` preso ao fim do mês.
+  - **h3** `db01535`: D1, D2 e D3 em `montar.ts` e `municipios.ts`; `substituidas`; campos do D6; `rotina.ts`.
+  - **h4** `64b2dd8`: `conferirCoerencia` (V1–V4, V7–V10, sem `--forcar`); V5 e V6 no `validar`; `executarAtualizacao`
+    testável; `::notice`/`::warning` do D6.
+  - **h5** `92e1a0a`: core com `substituidas?`, `acharDistribuidora`, `distribuidorasDaCidade` e
+    `trocaDeDistribuidora` (R5, R6).
+- **Decisões e porquê:**
+  - **D3 com a regra segura:** um vínculo extinto que leva a uma sucessora (D1 ou D2) vale; os outros só saem quando a
+    cidade tem outro vínculo recente. Assim o D3 nunca tira o único preço de uma cidade.
+  - **D1 também olha as vencidas descartadas pelo D4.** Sem isso, a RGE SUL (2019) sairia pelo D4 e `rge-sul` nunca
+    entraria em `substituidas`.
+  - **`substituidas` leva também ids sem cidade hoje** (`cflo`, `cnee`, `eeb`, `cpfl-jaguari`), porque uma casa salva
+    ainda pode ter o id antigo.
+  - **V4 = sucessora publicada**, e "vigente" vem do V1 (até 6 meses). Pergunta aberta ao tech-lead.
+  - **Assinatura nova:** `conferirCoerencia(montagem, contexto)` recebe também os agentes da tarifa e as siglas dos
+    conjuntos, porque o V9 e o V10 precisam do que a ANEEL diz de cada CNPJ, e isso não está no `tarifas.json`.
+  - A rotina lê o `sucessoes.json` **antes** de baixar: uma linha errada para tudo sem gastar o download.
+  - A rotina continua gravando só em `apps/web/public/dados`; nenhum código escreve em `packages/dados/base/` (R4).
+  - A fixture antiga da LIGHT SESA passou a vencer em 2026-05-14, e não mais em 2026-03-14. Os valores não mudaram, e o
+    teste continua provando "usa a mais recente que já começou", agora dentro dos 6 meses.
+- **Condicionado ao passo 0** (ver "Resultado do passo 0"):
+  - (a) a folga do D3;
+  - (b) as linhas ENF e EBO (V7);
+  - (c) nenhum outro par de CNPJ com as duas siglas vigentes (V2);
+  - V5, V6 e V10 com os dados reais. As siglas do `sucessoes.json` foram copiadas do `tarifas.json` publicado, e o
+    V10 também aceita a sigla dos conjuntos.
+  - Os critérios 1, 2 e 10 só se provam com os CSVs reais.
+- **Ameaças:** a seção "Ameaças" (R1–R9) e as notas da conversa desta cópia são idênticas às da `his-002-qualidade`;
+  não faltava nada. Situação de cada uma:
+  - R1: feito nos `paths`.
+  - R2: `anotacao`/`umaLinha`/`celulaMarkdown`/`limitarResumo`, com teste da sigla `"X\n::add-mask::a"`.
+  - R3: V9 e V10, com uma fixture para cada caso.
+  - R4: nada escreve em `base/`.
+  - R5 e R6: no core.
+  - R7: contrato registrado no T1, para o a3.
+- **Arquivos:**
+  - `packages/dados/src/`: `anotacoes.ts`, `fontes.ts`, `diagnostico.ts`, `diagnosticar.ts`, `sucessoes.ts` e
+    `rotina.ts` (novos); `atualizar.ts`, `montar.ts`, `util.ts`, `exemplo.ts`, `aneel/tarifas.ts` e
+    `aneel/municipios.ts`.
+  - `packages/dados/base/sucessoes.json`.
+  - `packages/dados/fixtures/sucessao/` (CSVs, `tarifas-v7.csv`, os 6 `sucessoes*.json` e `publicados/`) e
+    `fixtures/tarifas.csv` (datas da LIGHT).
+  - `packages/dados/test/`: `anotacoes`, `diagnostico`, `sucessoes`, `vencimento`, `montagem-sucessao`, `coerencia` e
+    `rotina` (novos); `dados.test.ts`.
+  - `packages/core/src/tipos.ts` e `distribuidoras.ts`; `packages/core/test/distribuidoras.test.ts`.
+  - `.github/workflows/diagnosticar-dados.yml`, `package.json` e `packages/dados/package.json`.
+  - `apps/web/public/dados/` não foi tocado.
+- **Como verifiquei:**
+  - `pnpm typecheck` e `pnpm test` verdes em cada passo (dados: de 11 para 72 testes; core: de 37 para 48).
+  - `pnpm build` verde no h5.
+  - Rodei `pnpm dados:diagnosticar --sem-baixar` com as fixtures copiadas para o `.cache`, comparando com os arquivos
+    publicados de verdade. Alegrete e Assis passam a `rge` e `ess`. O `git status` continuou limpo.
+  - Não rodei com os CSVs reais: a ANEEL dá 403 daqui.
+- **Para o próximo:**
+  - **Quem orquestra:** fazer o push da branch (roda o passo 0) e colar o resumo em "Resultado do passo 0". O que
+    conferir está lá.
+  - **Backend:** ajustar o D3 ou o `sucessoes.json` se o portão reprovar.
+  - **Frontend (h6):** `acharDistribuidora` no `useResumo`; `distribuidorasDaCidade` no `Cadastro` e na
+    `TelaAjustes`; `trocaDeDistribuidora` no `useDistribuidoraAtualizada`.
+  - **Seguranca (etapa 6):** R1–R7 nos arquivos acima. O V9 e o V10 estão em `sucessoes.ts`; as fixtures, em
+    `fixtures/sucessao/sucessoes-v9.json` e `sucessoes-v10.json`; os testes, em `test/rotina.test.ts`, com `--forcar`.
+  - **qa (h7):**
+    - critérios 4 a 7, 9 e 12 nos testes de `packages/dados/test/`;
+    - critério 8 na unidade, em `packages/core/test/distribuidoras.test.ts`;
+    - critérios 1, 2 e 10 pelo resumo do job.
+  - **dominio-energia:** revisar o `sucessoes.json` no PR.
