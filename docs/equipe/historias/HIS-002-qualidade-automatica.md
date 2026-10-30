@@ -83,6 +83,50 @@ _(numeração da HIS-002 mantida; 1, 5, 7 e 8 estão na [HIS-002b](HIS-002b-lint
 _(ux-acessibilidade)_ Não há tela nova. Dois pedidos (ver "Perguntas abertas"): o texto dos 5 nomes acessíveis da casa
 ilustrada da `/` (antes do passo A5) e a revisão da lista de exceções do axe (`excecoes-axe.ts`) quando o qa a montar.
 
+### Nomes acessíveis dos 5 cômodos da casa ilustrada (passo A5) — ux-acessibilidade, 2026-10-29
+
+**Problema (WCAG 2.5.3, "rótulo no nome"; axe `label-content-name-mismatch`):** cada botão mostra o nome do cômodo e a
+porcentagem ("Quarto" e "19%"), mas o `aria-label` só diz "Quarto: R$ 21,74 por mês". Quem usa comando de voz diz o
+que vê ("tocar em Quarto 19%") e o celular não acha o botão; quem enxerga pouco e usa leitor de tela ouve uma coisa
+diferente da que está escrita.
+
+**Atributo:** continua `aria-label` no `<button>` (`funcionalidades/inicio/CasaIlustrada.tsx`, linha 46). Por quê:
+uma troca de atributo só, nada muda na tela, e o texto sai dos mesmos campos (`nome`, `parte`, `valor`) que desenham o
+botão — se um número mudar, o nome muda junto. O axe compara o texto visível ("quarto 19", sem pontuação nem símbolo)
+com o nome: o nome precisa **começar** com o nome do cômodo seguido da porcentagem, nessa ordem, sem palavra entre os
+dois. O valor em R$ fica no nome porque, navegando com Tab, é a única forma de ouvir quanto o cômodo custa sem
+apertar; ao apertar, a legenda (`aria-live="polite"`) repete o valor com o aparelho que mais pesa — repetição aceita.
+
+**Modelo para o frontend:**
+
+```tsx
+aria-label={`${c.nome}, ${Math.round(c.parte * 100)}% da conta, ${reais(c.valor)} por mês`}
+```
+
+**Textos finais (o que o leitor de tela lê; servem de conferência no e2e):**
+
+| Cômodo | Nome acessível |
+| --- | --- |
+| Quarto | Quarto, 19% da conta, R$ 21,74 por mês |
+| Banheiro | Banheiro, 47% da conta, R$ 53,74 por mês |
+| Sala | Sala, 11% da conta, R$ 12,82 por mês |
+| Cozinha | Cozinha, 18% da conta, R$ 20,36 por mês |
+| Lavanderia | Lavanderia, 5% da conta, R$ 5,23 por mês |
+
+(`reais()` põe espaço sem quebra entre "R$" e o número; o seletor do e2e deve usar o nome com expressão regular ou
+`exact: false`, não a cadeia literal com espaço comum.)
+
+**O que fica igual:** `aria-pressed` (o leitor diz "pressionado" no cômodo escolhido), a legenda com `aria-live`, os
+ícones (o lucide já sai com `aria-hidden`), o foco amarelo-faísca. Nada muda na tela.
+
+**Conferir no A5:** axe sem `label-content-name-mismatch` na `/` nos dois projetos, sem e com casa; no leitor de tela
+(NVDA ou TalkBack em português) o primeiro botão soa "Quarto, dezenove por cento da conta, vinte e um reais e
+setenta e quatro centavos por mês, botão, não pressionado".
+
+**Fora deste texto (frontend, sem ux):** o `definition-list` da faixa "Tarifa Social" (D10) é estrutura; nenhum texto
+muda — o `<p>` do CRAS sai de dentro do `<dl>`, e a tela fica igual (ex.: um `<div>` com as classes de grade do
+`<dl>` em volta dos dois); a ordem de leitura continua a mesma.
+
 ## Desenho técnico (proposta inicial)
 
 _(tech-lead, 2026-10-29 — substituída pelo "Desenho técnico definitivo" logo abaixo das notas; mantida para histórico.
@@ -612,3 +656,22 @@ estados, lista de exceções). O D6 (casos negativos) é revisado na HIS-002b.
   - **ux-acessibilidade** — texto dos 5 nomes acessíveis da `/` (resposta na pergunta aberta) e, depois, a lista de
     exceções.
   - Quando seguranca e qa terminarem nesta: **etapa 4 da HIS-002a** (qa nos testes; frontend nas correções do A5).
+
+### [ux-acessibilidade] 2026-10-29 — nomes acessíveis dos 5 cômodos da `/` e correção de cor da HIS-110
+- O que fiz: li a história inteira, `CasaIlustrada.tsx`, `PaginaInicial.tsx`, `app/page.tsx`, `ui/Etiqueta.tsx` e os
+  tokens do `globals.css`. Escrevi em "Fluxo e textos" o nome acessível final de cada um dos 5 botões, o atributo e o
+  modelo para copiar. Calculei o contraste de todas as faixas com branco, tinta e noite (fórmula de luminância da WCAG
+  2.2) e deixei a correção da HIS-110 na linha dela em `docs/planejamento.md`.
+- Decisões e porquê:
+  - **Nome = "Cômodo, NN% da conta, R$ X por mês"**, no `aria-label` montado dos mesmos campos do botão. Começa com o
+    que está escrito (exigência da WCAG 2.5.3 e do axe: "quarto 19" seguido, sem palavra no meio); "da conta" diz o
+    que a porcentagem quer dizer; o valor em R$ fica para quem navega com Tab. Nada visível muda.
+  - **HIS-110: faixa D com texto `text-tinta`** (5,50:1) em vez de branco (2,85:1). Mantém o laranja da etiqueta do
+    INMETRO e não cria token. Regra geral: A e E com branco; B, C e D com tinta (contas no planejamento).
+- Arquivos alterados: esta história ("Fluxo e textos" e esta nota), `docs/planejamento.md` (linha da HIS-110), minha
+  pasta (`contexto.md`, `diario.md`). Nenhum código.
+- Para o próximo: **frontend** (passo A5) — trocar o `aria-label` pelo modelo e conferir a tabela; o `definition-list`
+  é estrutura, sem texto meu. **qa** — usar os nomes da tabela nos seletores (atenção ao espaço sem quebra depois do
+  "R$") e me chamar para revisar `excecoes-axe.ts`. **quem orquestra** — a pergunta `[para: ux-acessibilidade]` está
+  respondida em "Fluxo e textos" (não marquei a caixa para não editar fora da minha seção). **scrum-master** — a
+  HIS-110 já tem a cor; decidir se a pílula passa a usar `faixaDoPeso` (muda a Lavanderia de A para B).
