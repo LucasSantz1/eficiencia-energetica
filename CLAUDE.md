@@ -97,8 +97,8 @@ olhar as capturas de tela e conferir que não há erro no console. Nada é "pron
 O processo completo está em [`docs/equipe/processo.md`](docs/equipe/processo.md). Em resumo:
 
 - O plano geral está em [`docs/planejamento.md`](docs/planejamento.md); o quadro da sprint em [`docs/equipe/quadro.md`](docs/equipe/quadro.md).
-- Cada história tem um arquivo em `docs/equipe/historias/`. **Todo agente lê a história inteira (inclusive as notas dos colegas)
-  antes de começar e escreve a sua nota no fim, na seção "Conversa da equipe".** É assim que a equipe conversa.
+- Cada história tem um arquivo em `docs/equipe/historias/`. **Todo agente lê a história antes de começar (do jeito enxuto
+  descrito em "Economia de uso") e escreve a sua nota no fim, na seção "Conversa da equipe".** É assim que a equipe conversa.
 - Cada agente tem uma pasta em `docs/equipe/agentes/<papel>/` com `contexto.md` e `diario.md`: lê antes de começar e
   atualiza ao terminar. A seção "Orientações do responsável" do `contexto.md` vale como instrução do dono do projeto.
 - Perguntas para outro papel vão em "Perguntas abertas", marcadas com o papel (ex.: `[para: seguranca]`). Quem orquestra
