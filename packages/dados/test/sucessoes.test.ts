@@ -30,7 +30,7 @@ const linha = (mudancas: Record<string, unknown> = {}): Record<string, unknown> 
 const ler = (...linhas: Record<string, unknown>[]) => lerSucessoes({ sucessoes: linhas });
 
 describe("base/sucessoes.json (dado revisado pelo dominio-energia)", () => {
-  it("tem as 10 linhas aprovadas, todas com ato e fonte https", async () => {
+  it("tem as 11 linhas aprovadas, todas com ato e fonte https", async () => {
     const sucessoes = await carregarSucessoes();
     expect(sucessoes.map((s) => `${s.siglaAntiga}→${s.siglaSucessora}`)).toEqual([
       "EDEVP→ESS",
@@ -40,13 +40,16 @@ describe("base/sucessoes.json (dado revisado pelo dominio-energia)", () => {
       "CPFL LESTE PAULI→CPFL Santa Cruz",
       "CPFL MOCOCA→CPFL Santa Cruz",
       "CPFL SUL PAULIST→CPFL Santa Cruz",
+      "CPFL SANTA CRUZ→CPFL Santa Cruz",
       "ENF→EMR",
       "EBO→EPB",
       "CERR→Âmbar Roraima",
     ]);
-    // A CERR entra sem número de ato da ANEEL, com o despacho do MME (decisão do dominio-energia).
-    expect(sucessoes.find((s) => s.siglaAntiga === "CERR")?.ato).toBe("Despacho MME, DOU 12/08/2016");
-    expect(sucessoesEmVigor(sucessoes, HOJE)).toHaveLength(10);
+    // A CERR entra sem número de ato da ANEEL, com o despacho do MME de 23/09/2016 (dominio-energia, passo 0).
+    expect(sucessoes.find((s) => s.siglaAntiga === "CERR")?.ato).toMatch(/^Despacho MME s\/n, de 23\/09\/2016/);
+    // A antiga CPFL SANTA CRUZ tem outro CNPJ, apesar do nome igual ao da sucessora (passo 0).
+    expect(sucessoes.find((s) => s.siglaAntiga === "CPFL SANTA CRUZ")).toMatchObject({ cnpjAntigo: "61116265000144", cnpjSucessor: "53859112000169" });
+    expect(sucessoesEmVigor(sucessoes, HOJE)).toHaveLength(11);
   });
 });
 

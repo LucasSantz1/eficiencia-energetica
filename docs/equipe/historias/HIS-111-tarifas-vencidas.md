@@ -266,6 +266,7 @@ alguns links são cópias do documento oficial. Quem tiver acesso troca pelo lin
 | --- | --- | --- | --- | --- |
 | EDEVP, CNEE, EEB, CFLO → ESS (07282377000120) | 2017-06-30 | REA ANEEL nº 6.318/2017, "de 25 de março de 2017": aprova o agrupamento, com incorporação pela Caiuá, e forma a Energisa Sul Sudeste | Nota Técnica nº 150/2021-SGT/ANEEL, § 6, [cópia no RI da Energisa](https://api.mziq.com/mzfilemanager/v2/d/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/1f1a9406-2219-1c70-8239-1b42746c5de4?origin=2). A data de 30/06/2017 vem do [Relatório Anual Energisa 2017](https://mz-filemanager.s3.amazonaws.com/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/relatorios-anuais/9cb421b1892cf4fe509f85138356e1ed84175be536450bdec59e6ec2f2de8819/relatorio_anual_2017.pdf) | **Aprovada.** Conferir a data no DOU: 25/03/2017 caiu num sábado |
 | CPFL Leste Paulista, CPFL Mococa, CPFL Sul Paulista → CPFL Santa Cruz (53859112000169, Cia. Jaguari) | 2018-01-01 | REA ANEEL nº 6.723, de 21/11/2017. A incorporação foi feita em 31/12/2017 | [cedoc rea20176723ti.pdf](https://www2.aneel.gov.br/cedoc/rea20176723ti.pdf) e [demonstrações da Cia. Jaguari (RI CPFL)](https://ri.cpfl.com.br/Download.aspx?Arquivo=ppJOuVjC1xAIdBWbJYeeZA%3D%3D) | **Aprovada** |
+| Antiga CPFL Santa Cruz (Companhia Luz e Força Santa Cruz, 61116265000144) → CPFL Santa Cruz (53859112000169, Cia. Jaguari) | 2018-01-01 | **A mesma REA ANEEL nº 6.723/2017.** As demonstrações da Cia. Jaguari listam as quatro incorporadas: Santa Cruz, Leste Paulista, Sul Paulista e Mococa. A Jaguari passou a usar o nome CPFL Santa Cruz | As mesmas duas fontes da linha acima | **Aprovada** (30/10, depois do passo 0). Nome igual, empresa diferente (raiz do CNPJ diferente) |
 | ENF → EMR (19527639000158, ex-Energisa Minas Gerais) | 2023-06-22 | REA ANEEL nº 12.177, de 13/09/2022 (DOU de 21/09/2022, processo 48500.005211/2021-67): agrupa as áreas e aprova a incorporação da ENF pela EMG | [DOU de 21/09/2022 (cópia abrapch)](https://abrapch.org.br/2022/09/diario-oficial-da-uniao-21-09-2022/). Nova Friburgo está na área da EMR: [A Voz da Serra, reajuste de 22/06/2025](https://avozdaserra.com.br/noticias/contas-de-luz-em-friburgo-sobem-361-em-media-no-domingo) | **Aprovada, com a condição V7** (abaixo) |
 | EBO → EPB (09095183000140) | 2023-08-28 | REA ANEEL nº 12.687, de 13/09/2022 (DOU de 21/09/2022, processo 48500.005212/2021-10): agrupa as áreas e aprova a incorporação da EBO pela EPB. As tarifas da EBO foram prorrogadas até 27/08/2023 | DOU (mesma cópia) e [CanalEnergia, 24/01/2023](https://www.canalenergia.com.br/noticias/53236466/tarifas-da-energisa-borborema-serao-prorrogadas-ate-agosto) | **Aprovada, com a condição V7** |
 | CERR → Roraima Energia, hoje "Âmbar Roraima" (02341470000144, ex-Boa Vista Energia) | 2017-01-01 | **Não achei ato da ANEEL com número.** Há um despacho do MME (DOU de 12/08/2016, número não localizado): a Boa Vista Energia assume todo o interior. A Roraima Energia tem o Contrato de Concessão nº 04/2018-ANEEL | [MME: prazo de transição CERR → Boa Vista Energia](https://www.gov.br/mme/pt-br/assuntos/noticias/mme-define-prazo-de-transicao-de-prestacao-de-servico-da-cerr-para-a-boa-vista-energia) e [voto ANEEL de 09/12/2025 (cópia Poder360)](https://static.poder360.com.br/2025/12/roraima-sin-aneel.pdf) | **Aprovada com o ato do MME**: `ato` = "Despacho MME, DOU 12/08/2016". O número entra quando alguém abrir o DOU. Roraima tem uma só distribuidora, a do contrato 04/2018. Se o leitor exigir número, a CERR fica de fora: as 14 cidades mostram "Não achamos a sua distribuidora. Use o valor da sua conta de luz" |
@@ -679,7 +680,7 @@ _(quem orquestra cola aqui o resumo do job "Diagnosticar dados (sem gravar)", qu
   `tarifas.json` (ex.: uma função no core, de id para nome, ou o nome junto do `substituidas`)? (2) O `{ de, para }`
   precisa ficar guardado durante a visita, depois da regravação. (3) O `Aviso` pode ganhar uma opção para não pôr o
   próprio `role`, para entrar numa região `status` que já existe?
-- [ ] `[para: dominio-energia]` (não bloqueia) Qual é o nome comercial, com fonte, de EDEVP, CNEE, EEB, CFLO e CERR,
+- [x] `[para: dominio-energia]` _(respondida em 30/10: 4 nomes com fonte, CNEE sem nome; ver a nota do dominio-energia de 30/10, "passo 0")_ Qual é o nome comercial, com fonte, de EDEVP, CNEE, EEB, CFLO e CERR,
   para entrar em `nomeDaDistribuidora`? Sem isso, o aviso usa o texto sem o nome antigo.
 - [ ] `[para: scrum-master]` (não bloqueia) Com `preco.origem === "indisponivel"`, os cômodos e aparelhos do painel
   também mostram R$ 0,00. O F2 corrige só o cartão de cima. O resto fica para uma história própria? Também falta um
@@ -910,3 +911,44 @@ _(quem orquestra cola aqui o resumo do job "Diagnosticar dados (sem gravar)", qu
     - critério 8 na unidade, em `packages/core/test/distribuidoras.test.ts`;
     - critérios 1, 2 e 10 pelo resumo do job.
   - **dominio-energia:** revisar o `sucessoes.json` no PR.
+
+### [dominio-energia] 2026-10-30 — passo 0: CPFL Santa Cruz antiga entra; Equatorial PI é falso positivo; nomes
+- **Antiga CPFL SANTA CRUZ (61116265000144): entra.** Ela está na mesma REA nº 6.723/2017. As demonstrações da
+  Cia. Jaguari (RI CPFL) citam a Companhia Luz e Força Santa Cruz entre as quatro incorporadas em 31/12/2017. Pus a
+  linha 11 no `base/sucessoes.json` (→ `cpfl-santa-cruz`). V9 passa: a tarifa dela acabou em 21/03/2018. V10 passa: a
+  sigla é a da ANEEL. O `substituidas` não ganha chave, porque o id é o mesmo da sucessora.
+  - **[para: backend]** O `test/sucessoes.test.ts` espera 10 linhas: ele precisa passar a esperar 11, com
+    `"CPFL SANTA CRUZ→CPFL Santa Cruz"` depois da Sul Paulista.
+  - **[para: backend]** A forma compacta da `siglaAntiga` é igual à da sucessora. Um vínculo **sem CNPJ** com o
+    nome "CPFL Santa Cruz" entra por esta linha. O resultado é o mesmo, mas a contagem de `sucessoesAplicadas` sobe.
+- **Equatorial PI: a empresa é a certa; o "extinto" é falso positivo.** Ela é a antiga Cepisa (Companhia Energética
+  do Piauí). Em 2018 houve só troca de controle: leilão nº 2/2018, Despacho ANEEL nº 2.018/2018 e contrato de
+  17/10/2018 ([demonstrações de 30/09/2018](https://api.mziq.com/mzfilemanager/v2/d/abb77a17-3348-4bc7-849a-154998e06ca3/12cf1585-8372-48ec-ad4f-6c9cfa303e2f?origin=1)).
+  É a mesma pessoa jurídica, e o CNPJ da tarifa vigente é o mesmo (06840748000189). O que está velho é o **conjunto**,
+  não a empresa: o arquivo de atributos para em **2014**, e a ANEEL escreve a sigla de hoje até nas linhas antigas.
+  Concordo com a regra nova do D3 que o backend pôs em `montar.ts`: o vínculo só é extinto quando não chega a nenhuma
+  tarifa publicada. Ela também salva os 63 vínculos de empresas vigentes.
+  - **Dado real, a conferir [para: backend/qa]:** Nova Santa Rita (PI, 2207959) aparece com `certaja`, uma
+    cooperativa do RS. Parece código IBGE trocado com Nova Santa Rita (RS) no IndQual. Com a regra antiga, essa cidade
+    provavelmente ficava **só** com a Certaja (é a minha leitura do "PI 1" da comparação; não abri o `.cache`). Com a regra nova, a Equatorial volta, mas a Certaja
+    continua na lista. Sugiro tirar a distribuidora que não atende a UF da cidade, numa história própria.
+  - **Falso positivo no critério 2:** o "ainda com uma: 45" vem do id `cpfl-santa-cruz`. A sigla vencida
+    "CPFL SANTA CRUZ" vira o mesmo id da vigente. As contas: 27 + 7 + 5 + 4 + 2 (Jaguari) = 45. O diagnóstico deve
+    ignorar o id vencido que também é id publicado.
+- **CERR, ato melhor [para: backend]** (não bloqueia): segundo a [ANEEL, na Câmara em 29/11/2017](https://www2.camara.leg.br/atividade-legislativa/comissoes/comissoes-permanentes/cme/apresentacoes-em-eventos/2017/29-11-2017-discutir-o-constante-aumento-de-tarifa-de-energia-eletrica-em-roraima/Aneel%20-Roraima_SGT_Camara.pdf),
+  o ato é o "Despacho MME s/n, de 23/09/2016", que põe a Boa Vista no interior, e o Despacho ANEEL nº 580/2016
+  recomenda unificar as áreas. O despacho de 12/08/2016 só adiou a extinção da concessão da CERR. Pode trocar o `ato`
+  quando mexer no teste.
+- **Nomes para o aviso do F1** (em `nomeDaDistribuidora`; fonte: [Relatório Anual Energisa 2017](https://mz-filemanager.s3.amazonaws.com/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/relatorios-anuais/9cb421b1892cf4fe509f85138356e1ed84175be536450bdec59e6ec2f2de8819/relatorio_anual_2017.pdf)
+  e a apresentação da ANEEL acima):
+
+  | Sigla (id) | Nome | Fonte |
+  | --- | --- | --- |
+  | EDEVP (`edevp`) | Vale Paranapanema | Relatório Anual Energisa 2017 |
+  | EEB (`eeb`) | Bragantina | Relatório Anual Energisa 2017 |
+  | CFLO (`cflo`) | Força e Luz do Oeste | Relatório Anual Energisa 2017 |
+  | CERR (`cerr`) | Companhia Energética de Roraima | ANEEL, 29/11/2017 |
+  | CNEE (`cnee`) | **sem nome**: usar o corpo sem o nome antigo | O relatório só diz "Nacional", que não se entende sozinho |
+
+  Não pus "Energisa" na frente: não achei fonte oficial da marca usada na conta entre 2014 e 2017.
+- **Próximo:** backend (teste de 11 linhas e o diagnóstico do critério 2), depois o qa.

@@ -79,6 +79,17 @@
       "observacao": "Mesmo ato e mesma fonte da CPFL Leste Paulista."
     },
     {
+      "cnpjAntigo": "61116265000144",
+      "siglaAntiga": "CPFL SANTA CRUZ",
+      "cnpjSucessor": "53859112000169",
+      "siglaSucessora": "CPFL Santa Cruz",
+      "desde": "2018-01-01",
+      "ato": "REA ANEEL nº 6.723, de 21/11/2017: incorporação da Companhia Luz e Força Santa Cruz pela Companhia Jaguari de Energia (CPFL Santa Cruz), feita em 31/12/2017",
+      "fonte": "https://www2.aneel.gov.br/cedoc/rea20176723ti.pdf",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Mesmo ato da CPFL Leste Paulista. As demonstrações da Cia. Jaguari (RI CPFL) listam a Companhia Luz e Força Santa Cruz entre as quatro incorporadas e dizem que a Jaguari passou a usar o nome CPFL Santa Cruz. O nome igual ao da sucessora é coincidência de marca: o CNPJ (raiz 61116265) é outro."
+    },
+    {
       "cnpjAntigo": "33249046000106",
       "siglaAntiga": "ENF",
       "cnpjSucessor": "19527639000158",
@@ -106,10 +117,10 @@
       "cnpjSucessor": "02341470000144",
       "siglaSucessora": "Âmbar Roraima",
       "desde": "2017-01-01",
-      "ato": "Despacho MME, DOU 12/08/2016",
-      "fonte": "https://www.gov.br/mme/pt-br/assuntos/noticias/mme-define-prazo-de-transicao-de-prestacao-de-servico-da-cerr-para-a-boa-vista-energia",
+      "ato": "Despacho MME s/n, de 23/09/2016: a Boa Vista Energia passa a atender o interior de Roraima (o Despacho ANEEL nº 580/2016 recomenda unificar as áreas)",
+      "fonte": "https://www2.camara.leg.br/atividade-legislativa/comissoes/comissoes-permanentes/cme/apresentacoes-em-eventos/2017/29-11-2017-discutir-o-constante-aumento-de-tarifa-de-energia-eletrica-em-roraima/Aneel%20-Roraima_SGT_Camara.pdf",
       "consultadoEm": "2026-10-30",
-      "observacao": "Número do despacho não localizado; entra quando alguém abrir o DOU. A Boa Vista Energia (hoje Roraima Energia / Âmbar Roraima) assume todo o interior; Contrato de Concessão nº 04/2018-ANEEL. Voto ANEEL de 09/12/2025 (cópia Poder360): https://static.poder360.com.br/2025/12/roraima-sin-aneel.pdf"
+      "observacao": "Fonte: apresentação da ANEEL na Câmara, 29/11/2017. O despacho do MME de 12/08/2016 só adiou a extinção da concessão da CERR: https://www.gov.br/mme/pt-br/assuntos/noticias/mme-define-prazo-de-transicao-de-prestacao-de-servico-da-cerr-para-a-boa-vista-energia. A Boa Vista Energia (hoje Roraima Energia / Âmbar Roraima) assume todo o interior; Contrato de Concessão nº 04/2018-ANEEL. Voto ANEEL de 09/12/2025 (cópia Poder360): https://static.poder360.com.br/2025/12/roraima-sin-aneel.pdf"
     }
   ]
 }
