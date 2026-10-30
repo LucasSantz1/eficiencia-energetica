@@ -466,7 +466,13 @@ normal (que passa pelos leitores da 003a quando eles existirem). Os e2e `casa-v1
 - **Ordem no `acharTarifa`:** (1) segue a cadeia de sucessão pelo CNPJ do vínculo (pela sigla compacta só quando o
   vínculo não tem CNPJ); (2) procura a tarifa pelo CNPJ final no índice do D1; (3) só então pela sigla. Toda sigla
   trocada em (1) ou pelo D1 entra em `substituidas`.
-- **D3 com a regra segura:** o vínculo extinto (`ano < anoMaisRecente − 1`) **sai só se a cidade tiver outro vínculo
+  _(Revisto em 30/10, depois do passo 0, ADR-005 item 2.)_ Em (3), a sigla só liga com a **mesma raiz de CNPJ** (8
+  dígitos) ou quando um dos lados não tem CNPJ; o recusado fica sem tarifa (V5) e vai para `ligacoesPelaSiglaRecusadas`.
+  Vínculo sem CNPJ com a sigla de uma empresa publicada é ela mesma: não segue linha de sucessão. Para o V9 e o V10, o
+  `resumirAgentes` agrupa por **sigla + CNPJ** ("RGE" tem dois CNPJs).
+- **D3 com a regra segura:** _(revisto em 30/10: o arquivo de conjuntos para em 2014, e o ano sozinho marcava empresa
+  vigente, como a Equatorial PI. **Só conta como extinto o vínculo que não chega a nenhuma tarifa publicada**, nem
+  direto, nem pelo D1, nem pelo D2.)_ O vínculo extinto (`ano < anoMaisRecente − 1`) **sai só se a cidade tiver outro vínculo
   não extinto**. Se for o único, fica e entra em `vinculosExtintosMantidos` (aviso). Motivo: o D2 + D4 + V5 já pegam a
   empresa que acabou (a tarifa dela vence, sai, e a rotina para). O D3 sozinho tiraria o único preço de uma cidade em que
   o IndQual não liga o conjunto novo, e esse preço é de uma empresa com tarifa vigente. O passo 0 diz quantos casos são.
@@ -801,7 +807,8 @@ resto igual.
 - [ ] `[para: scrum-master]` (não bloqueia) Com `preco.origem === "indisponivel"`, os cômodos e aparelhos do painel
   também mostram R$ 0,00. O F2 corrige só o cartão de cima. O resto fica para uma história própria? Também falta um
   caminho "A minha não está aqui" no passo "distribuidora" do cadastro (princípio 3).
-- [ ] `[para: tech-lead]` (não bloqueia) **V4, sentido de "vigente":** implementei o V4 como "a sucessora final está
+- [x] `[para: tech-lead]` _(respondida em 30/10: **confirmado**, V4 = "sucessora final publicada"; o V1 já limita a
+  6 meses, e o estrito pararia a rotina a cada atraso da ANEEL)_ (não bloqueia) **V4, sentido de "vigente":** implementei o V4 como "a sucessora final está
   publicada"; junto com o V1, isso quer dizer "vigente ou vencida há até 6 meses (D4)". Com "vigente" estrito
   (`fimVigencia ≥ hoje`), a rotina pararia todo dia em que a ANEEL atrasa o reajuste de ESS, CPFL Santa Cruz, EMR, EPB
   ou Âmbar Roraima, o que contradiz o aviso desde o 1º dia do dominio-energia. Confirmar ou pedir o estrito.
@@ -824,7 +831,7 @@ resto igual.
   ordem é "quem atende mais cidades", e a cidade era da CFLO (hoje ESS). A família vê a Copel marcada primeiro no
   cadastro. Basta o qa anotar no h7, ou vale uma regra (por exemplo, a sucessora da empresa que tinha a sede na cidade)
   numa história própria?
-- [ ] `[para: tech-lead]` (para ciência) O D3 do T2 mudou depois do passo 0: o vínculo "extinto" só conta quando **não
+- [x] `[para: tech-lead]` _(feito em 30/10: T2 e ADR-005, item 2)_ (para ciência) O D3 do T2 mudou depois do passo 0: o vínculo "extinto" só conta quando **não
   chega a nenhuma tarifa publicada**. Motivo: o arquivo de conjuntos para em 2014, e o ano sozinho marcava empresas
   vigentes (Equatorial PI). A regra segura continua. A sigla também não liga mais CNPJs de raiz diferente (ADR-005,
   item 2). Se concordar, o T2 e o ADR-005 ganham uma linha cada.
@@ -1133,3 +1140,11 @@ resto igual.
   de hoje; sem a correção, 12 testes reprovam. Testes novos provam que o V9 e o V10 continuam reprovando os casos
   errados. `pnpm typecheck` e `pnpm test` (dados 87, core 48) verdes. Detalhes em "Terceira execução".
 - **Para o próximo:** quem orquestra roda o diagnóstico de novo. O dominio-energia ainda confirma a linha 12.
+
+### [tech-lead] 2026-10-30 — code review do backend em `packages/dados` (h0–h5 e correções do passo 0): aprovado
+- **Aprovado**, sem devolver. Diagnóstico 4 (`fcb4462`) com todos os portões; typecheck, test (core 48, dados 87) e build verdes numa cópia (`dc30f99`). Camadas, sem `any`/`as` novos, coerência fora do `--forcar` com teste. T2 e ADR-005 (item 2) registram o D3 novo, a sigla só com a mesma raiz de CNPJ e o agrupamento sigla + CNPJ; V4 confirmado (perguntas abertas).
+- Itens, nenhum bloqueia:
+  1. `selecionarTarifasVigentes` ainda agrupa só pela sigla. A RGE passa porque a vigência mais nova é a de hoje. No h8, comentar isso e testar a mesma sigla com dois CNPJs no mesmo início de vigência (hoje entraria como "mais de um valor", V7, sem dizer que são duas empresas).
+  2. Comentários velhos: `MAXIMO_DE_LINHAS` diz "hoje são 10" (são 12); `VinculoMunicipio.ano` ainda fala em "conjunto que parou de reportar".
+  3. h8: trocar o `push` do `diagnosticar-dados.yml` por `pull_request` e ligar o teste dos publicados.
+- **Próximo:** frontend (h6), depois qa (h7).

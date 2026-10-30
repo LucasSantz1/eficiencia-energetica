@@ -1,6 +1,10 @@
 # ADR-005 · Distribuidora que deixa de existir: tarifa vencida não sai, e quem guardou o id antigo continua com preço
 
-- **Status:** proposto. Vira aceito quando a `seguranca` revisar o workflow de diagnóstico e o V8 da HIS-111.
+- **Status:** aceito (2026-10-30, tech-lead). A `seguranca` revisou o workflow de diagnóstico e o V8 na análise de
+  ameaças da HIS-111 (nota de 2026-10-30) e pediu dois acréscimos, já feitos: a condição da linha de sucessão no item 2
+  (V9, V10) e "sucessão para empresa vigente" nas barreiras do item 5. Revisto no mesmo dia, depois do passo 0
+  (diagnóstico 4, commit `fcb4462`): item 2 ganhou a regra da sigla, o agrupamento por sigla + CNPJ e o limite do ano
+  do conjunto.
 - **Data:** 2026-10-30
 - **Responsável:** tech-lead, com backend e dominio-energia
 
@@ -19,13 +23,23 @@ ele também vai ficar no app e no Supabase (E4). Quando a empresa some do arquiv
 2. **Uma empresa só vira outra por um destes dois caminhos:**
    - mesmo CNPJ (renomeação, automática, só quando a sigla antiga não está vigente);
    - uma linha de `packages/dados/base/sucessoes.json` com `ato` e `fonte` oficiais, revisada pelo dominio-energia.
+     A linha só vale para empresa sem tarifa vigente, e as siglas batem com o CNPJ na ANEEL (V9 e V10 da HIS-111,
+     pedido da seguranca no R3). Para conferir isso, cada empresa da tarifa é **sigla + CNPJ**, não só a sigla: a
+     mesma sigla pode ser de duas empresas ("RGE" é a RGE antiga até 2019 e a RGE de hoje depois).
+
+   **Nome igual não é a mesma empresa.** A sigla só liga um vínculo a uma tarifa quando um dos lados não tem CNPJ ou
+   os dois têm a mesma raiz de CNPJ (8 primeiros dígitos). Com raiz diferente, o vínculo fica sem tarifa e a rotina
+   para (V5) até alguém pôr a linha no `sucessoes.json` (passo 0 da HIS-111: CPFL SANTA CRUZ e RGE antigas).
 
    A coincidência de datas entre as vigências só aparece no relatório, como candidata. Nunca troca sozinha.
+   O ano do conjunto elétrico também não troca: o arquivo de conjuntos da ANEEL parou em 2014. Um conjunto antigo
+   só sai da cidade quando não chega a nenhuma tarifa publicada e a cidade tem outro vínculo (D3 da HIS-111).
 3. **`tarifas.json` publica `substituidas`** (id antigo → id final). Todo valor é um id publicado, e nenhuma chave é.
 4. **Quem guarda um id resolve pelo `@ee/core`** (`acharDistribuidora`, `distribuidorasDaCidade`), na leitura. A
    regravação do id novo é uma ação normal, feita uma vez pelo `aplicacao/`. O formato salvo não muda.
 5. **Na dúvida, a rotina para em vez de publicar**, e nada é gravado. As barreiras de número errado ou de contrato
-   (vencida, CNPJ repetido, sucessora ausente, mais de um valor na vigência da sucessora, `substituidas` inválido) não
+   (vencida, CNPJ repetido, sucessora ausente, mais de um valor na vigência da sucessora, `substituidas` inválido,
+   sucessão para empresa vigente) não
    passam com `--forcar`. As de cobertura (agente sem tarifa, cidades sem distribuidora) passam, porque uma pessoa pode
    decidir publicar sabendo do efeito.
 
