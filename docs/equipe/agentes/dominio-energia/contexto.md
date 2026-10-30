@@ -24,6 +24,8 @@
 
 - Sucessões no `packages/dados/base/sucessoes.json` só com ato oficial e link. São 11 linhas: ESS (4), CPFL Santa
   Cruz (4, incluindo a antiga CPFL SANTA CRUZ, 61116265000144), EMR, EPB e Âmbar Roraima. A CERR entra com despacho do MME.
+- Linha 12 (RGE antiga 02016439000138 → RGE 02016440000162) confirmada, `desde` 2019-01-01 ok (aprovação 04/12/2018,
+  agrupamento 31/12/2018, segundo a CPFL). Número da REA não localizado; `ato` sem número, aceito para o merge.
 - Tarifa vencida: aviso desde o 1º dia; descarte depois de 6 meses.
 - O arquivo de atributos dos conjuntos (IndQual) para em 2014. A sigla é a de hoje. "Conjunto velho" não quer dizer
   "empresa extinta": o D3 só vale para o vínculo sem tarifa publicada (Equatorial PI foi falso positivo).
@@ -36,7 +38,8 @@
 - Faixas aceitáveis de potência, minutos, kWh e valor da conta (pergunta da HIS-003).
 - Pesquisar ICMS residencial por estado e PIS/COFINS por distribuidora (HIS-202).
 - Percentual do Desconto Social por distribuidora (HIS-203).
-- HIS-111: trocar as fontes de cópia pelo cedoc/DOU quando houver acesso. Ato da CERR melhor: Despacho MME s/n de
+- HIS-111: achar o número da REA de dez/2018 (RGE) no cedoc/DOU. Trocar as fontes de cópia pelo cedoc/DOU quando houver
+  acesso. Ato da CERR melhor: Despacho MME s/n de
   23/09/2016 e Despacho ANEEL nº 580/2016. Nova Santa Rita (PI) com `certaja` (RS): parece erro de código IBGE no
   IndQual, para uma história própria.
 

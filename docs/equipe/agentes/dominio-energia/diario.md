@@ -10,6 +10,15 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · linha 12 (RGE antiga → RGE): confirmada, REA sem número
+- O que fiz: confirmei a linha 12 do `sucessoes.json`. Procurei o número da REA de dez/2018 (IstoÉ, Brasil Energia,
+  fato relevante da RGE Sul, busca no cedoc): o site da ANEEL não abre daqui e nenhuma fonte aberta traz o número.
+- Decisões e porquê: `ato` não mudou (sem fonte oficial verificável, não invento número). `desde` 2019-01-01 ok: a CPFL
+  comunicou aprovação em 04/12/2018 e agrupamento em 31/12/2018 (imprensa; corrobora). Pus essa fonte na `observacao`.
+  Aceito mergear sem o número, como na CERR.
+- Arquivos: `packages/dados/base/sucessoes.json`, `docs/equipe/historias/HIS-111-tarifas-vencidas.md`, minha pasta.
+- Próximos passos: quem tiver acesso ao cedoc/DOU acha a REA de dez/2018 e troca o `ato`.
+
 ## 2026-10-30 · HIS-111 · passo 0: CPFL Santa Cruz antiga entra, Equatorial PI é falso positivo, nomes do aviso
 - O que fiz: confirmei, nas demonstrações da Cia. Jaguari, que a antiga CPFL Santa Cruz está na REA 6.723/2017.
   Acrescentei a linha 11 no `sucessoes.json`. Confirmei que a Equatorial PI é a antiga Cepisa, a mesma pessoa

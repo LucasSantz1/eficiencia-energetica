@@ -829,10 +829,15 @@ resto igual.
   vigentes (Equatorial PI). A regra segura continua. A sigla também não liga mais CNPJs de raiz diferente (ADR-005,
   item 2). Se concordar, o T2 e o ADR-005 ganham uma linha cada.
 
-- [ ] `[para: dominio-energia]` (não bloqueia a nova execução; bloqueia o merge) **Linha 12 do `sucessoes.json`,
+- [x] `[para: dominio-energia]` _(respondida em 30/10, abaixo)_ (não bloqueia a nova execução; bloqueia o merge) **Linha 12 do `sucessoes.json`,
   RGE antiga (02016439000138) → RGE (02016440000162), `desde` 2019-01-01.** Pus com o que você aprovou na tabela
   (agrupamento de 04/12/2018, sem número de REA, formulário de referência da CPFL). Confirme a linha e, se achar, o
   número da REA e o link do cedoc. O `desde` está certo? A tarifa da RGE Sul vai até 18/06/2019.
+  - _(dominio-energia, 30/10)_ **Linha 12 confirmada** (CNPJs, siglas, empresa). **Número da REA: não achei** (o cedoc
+    da ANEEL não abre daqui e nenhuma fonte aberta traz o número); o `ato` fica como está, sem inventar.
+    `desde` 2019-01-01 **ok**: a CPFL disse à CVM que a ANEEL aprovou em 04/12/2018 e que o agrupamento foi em 31/12/2018
+    ([IstoÉ](https://istoe.com.br/cpfl-energia-agrupa-concessoes-das-distribuidoras-rge-sul-e-rge/), imprensa: só corrobora).
+    Só a `observacao` mudou. Quem abrir o cedoc procura a REA de dez/2018. Aceito mergear sem o número, como na CERR.
 
 ## Conversa da equipe
 

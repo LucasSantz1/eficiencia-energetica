@@ -131,7 +131,7 @@
       "ato": "Agrupamento das concessões da RGE e da RGE Sul aprovado pela ANEEL em 04/12/2018: a RGE Sul incorporou a RGE e passou a se chamar RGE (número da REA não localizado)",
       "fonte": "https://ri.cpfl.com.br/Download.aspx?Arquivo=AiJIS2TJi1r3E7fuxnXsSQ%3D%3D&linguagem=pt",
       "consultadoEm": "2026-10-30",
-      "observacao": "Fonte: Formulário de referência da CPFL Energia, item 1.1 (dominio-energia, 30/10, tabela da HIS-111). A RGE antiga (Rio Grande Energia, CNPJ 02016439000138) só aparece nos conjuntos; a RGE de hoje tem o CNPJ da antiga RGE Sul. Nome igual, empresa diferente (raiz do CNPJ diferente). Trocar o ato pelo número da REA quando alguém abrir o cedoc."
+      "observacao": "Fonte: Formulário de referência da CPFL Energia, item 1.1 (dominio-energia, 30/10, tabela da HIS-111). A RGE antiga (Rio Grande Energia, CNPJ 02016439000138) só aparece nos conjuntos; a RGE de hoje tem o CNPJ da antiga RGE Sul. Nome igual, empresa diferente (raiz do CNPJ diferente). Trocar o ato pelo número da REA quando alguém abrir o cedoc. `desde` conferido: comunicado da CPFL à CVM (IstoÉ, imprensa) dá aprovação em 04/12/2018 e agrupamento em 31/12/2018."
     }
   ]
 }
