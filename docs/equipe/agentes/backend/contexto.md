@@ -31,6 +31,8 @@
   - **Segunda execução (41130096649):** a regra da sigla recusou a RGE antiga (02016439000138, 263 cidades). Entrou
     a linha 12 no `sucessoes.json` (RGE antiga → RGE), que o dominio-energia ainda precisa confirmar. O diagnóstico
     roda de novo.
+  - **Terceira execução:** a coerência reprovou a linha da RGE porque o `resumirAgentes` agrupava só pela sigla.
+    Agora agrupa por sigla + CNPJ. O diagnóstico roda de novo.
 - A rede do ambiente de nuvem **não alcança** `dadosabertos.aneel.gov.br` (o proxy devolve 403). Para usar os CSVs
   brutos, só pela Action ou numa máquina com acesso.
 

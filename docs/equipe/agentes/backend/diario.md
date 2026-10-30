@@ -10,6 +10,11 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · terceira execução: resumirAgentes por sigla + CNPJ (V9/V10 da RGE)
+- O que fiz: corrigi o agrupamento, que pegava o CNPJ da primeira linha de cada sigla. Testes do V9 e do V10 para a
+  RGE, nos dois sentidos. Dados: 87 testes.
+- Lição: a sigla não identifica a empresa nem na tarifa. Todo índice do CSV da ANEEL deve usar o CNPJ.
+
 ## 2026-10-30 · HIS-111 · segunda execução: RGE antiga (outro CNPJ) entra no sucessoes.json
 - O que fiz: corrigi a regressão do `2804a5c` (263 cidades da RGE antiga sem tarifa) com a linha 12. A fixture ganhou
   Caxias do Sul. `pnpm typecheck` e `pnpm test` (dados 83) verdes.

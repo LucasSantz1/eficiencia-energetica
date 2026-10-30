@@ -736,6 +736,17 @@ vínculos "RGE" que o D3 tirava voltam a chegar a uma tarifa. **O diagnóstico p
 "agentes sem tarifa: nenhum", "mesma sigla, outro CNPJ: nenhuma", sucessão "RGE → RGE (263)", cerca de 10 cidades
 sem distribuidora e "mudam" perto de 227.
 
+### Terceira execução (commit `8e66fe2`)
+
+_(backend, 30/10.)_ Mudam 227 cidades, 10 ficam sem distribuidora, nenhuma ligação recusada, critério 2 ok. Mas a
+**coerência reprovou** a linha 12, a da RGE, no V9 e no V10. **Causa:** o `resumirAgentes` juntava as linhas da tarifa
+pela sigla e guardava o CNPJ da primeira. A sigla "RGE" tem dois CNPJs: o da RGE antiga, até 2019, e o da RGE de hoje.
+Com isso, o CNPJ antigo "ganhava" a vigência de 2026. **Correção:** um agente por sigla + CNPJ; o V9 e o V10 ficam como
+estavam. Testes: a linha da RGE passa, e o V9 (CNPJ antigo vigente) e o V10 (sigla errada) continuam reprovando.
+O mesmo defeito escondia o par `02016440000162 (RGE, RGE SUL)` no portão (c), que agora deve aparecer. O resumo também
+passa a listar a RGE antiga entre as vencidas. **O diagnóstico precisa rodar de novo.** Esperado: coerência "ok" e o
+resto igual.
+
 **O que conferir no resumo do job** (vale para cada nova execução):
 
 1. O job termina verde, e o passo "Nada mudou no repositório" passa (nada foi gravado).
@@ -1111,3 +1122,9 @@ sem distribuidora e "mudam" perto de 227.
   antiga em Caxias do Sul, testada com e sem a linha. Detalhes em "Segunda execução".
 - **Como verifiquei:** `pnpm typecheck` e `pnpm test` (dados 83, core 48) verdes.
 - **Para o próximo:** quem orquestra roda o diagnóstico de novo; o dominio-energia confirma a linha 12 (pergunta aberta).
+
+### [backend] 2026-10-30 — terceira execução: V9/V10 com o CNPJ certo de cada sigla
+- **O que fiz:** o `resumirAgentes` passou a agrupar por sigla + CNPJ. A fixture tem a tarifa da RGE antiga antes da
+  de hoje; sem a correção, 12 testes reprovam. Testes novos provam que o V9 e o V10 continuam reprovando os casos
+  errados. `pnpm typecheck` e `pnpm test` (dados 87, core 48) verdes. Detalhes em "Terceira execução".
+- **Para o próximo:** quem orquestra roda o diagnóstico de novo. O dominio-energia ainda confirma a linha 12.
