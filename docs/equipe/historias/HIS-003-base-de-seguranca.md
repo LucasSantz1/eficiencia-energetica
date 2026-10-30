@@ -1,13 +1,19 @@
-# HIS-003 · Base de segurança e robustez
+# HIS-003a · Dados quebrados não travam o site (base de segurança)
 
 | Campo | Valor |
 | --- | --- |
 | Épico | E0 · Fundação |
 | Sprint | 0 |
-| Tamanho | M |
-| Papéis principais | seguranca, frontend, tech-lead |
-| Status | Preparada |
-| Branch | `his-003-seguranca` |
+| Tamanho | M (≈ 3 dias com o qa: passos a1–a7 do D9) |
+| Papéis principais | seguranca, backend, frontend, tech-lead |
+| Status | Preparada (a2 espera a P-tl-1; a3 espera a P-tl-2; etapa 4 depois da 002a no `main`) |
+| Branch | `his-003-seguranca` (sai do `main` **depois** da integração da HIS-002a) |
+
+> **Origem:** dividida da HIS-003 pelo scrum-master em 2026-10-30, a partir da proposta D9 do tech-lead (P-tl-3). A
+> outra parte é a [HIS-003b · Campos com limite e "Confere?"](HIS-003b-campos-com-limite.md). O arquivo manteve o nome
+> antigo para não quebrar links. A numeração dos critérios continua a da HIS-003. Aqui fica o critério 5 só na parte
+> do domínio (`limites.ts`); o critério 5 nas telas, o T5, o T6, o bloco "T5 e T6" do D5, o `campos.spec.ts` e os
+> passos b1–b3 foram **movidos** para a 003b. D1–D4, D6 e D7 valem para as duas e ficam aqui.
 
 ## Problema e valor
 
@@ -28,8 +34,11 @@ navegador) pode quebrar a tela. O site também não envia cabeçalhos de seguran
    amigável com "Tentar de novo", sem tela branca.
 4. **Dado** um erro inesperado em qualquer página, **quando** acontece, **então** aparece a tela de erro do projeto (`error.tsx`)
    com "Tentar de novo" e "Voltar ao início", sem detalhes técnicos.
-5. **Dado** os campos de entrada (nome de cômodo, potência, minutos, kWh, valor da conta), **quando** a pessoa digita,
-   **então** há limites de tamanho e faixa definidos em um só lugar e testados.
+5. _(parte do domínio; a parte das telas está na [HIS-003b](HIS-003b-campos-com-limite.md))_ **Dado** os limites de
+   tamanho e faixa (nome de cômodo, potência, minutos, kWh, valor da conta, leitura, pessoas), **quando** o `pnpm test`
+   roda, **então** eles estão só em `packages/core/src/limites.ts`, com fonte em comentário, os leitores da casa salva e
+   dos `/dados` usam esses limites, e os casos 1–23 do dominio-energia e as bordas de cada `Faixa` (limite, limite + 1,
+   `NaN`, `Infinity`) passam no `limites.test.ts`.
 6. **Dado** um push, **quando** o CI roda, **então** `pnpm audit --audit-level high` passa e o Dependabot está configurado
    para npm e GitHub Actions.
 7. Existe `.env.example` (vazio por enquanto, com comentário) e `.env*` está no `.gitignore`.
@@ -38,6 +47,8 @@ navegador) pode quebrar a tela. O site também não envia cabeçalhos de seguran
 
 - Autenticação e banco (E4).
 - Limite de taxa (não há endpoint próprio ainda).
+- Mensagens de campo fora do limite (T5), "Confere?" (T6) e aviso de consumo alto da casa: [HIS-003b](HIS-003b-campos-com-limite.md).
+- Avisar quando a memória do navegador estiver cheia e não der para salvar (risco 6 do D9): backlog.
 
 ## Fluxo e textos
 
@@ -183,119 +194,9 @@ com o visual do botão, porque o layout raiz quebrou e a página precisa carrega
 - **Acessibilidade:** o `h1` é o primeiro texto na ordem de leitura e não precisa puxar o foco. O código 404 o Next já
   manda.
 
-### T5. Campos fora do limite (critério 5)
+### T5 e T6. Campos fora do limite e "Confere?"
 
-| Campo (id) | Quando | Mensagem |
-| --- | --- | --- |
-| Potência (`ap-potencia`, `EditorAparelho`) | vazio ou zero | Digite a potência do aparelho, em watts (W). |
-| Potência | fora da faixa | A potência vai de {min} a {max}. Confira a etiqueta ou a plaquinha atrás do aparelho. |
-| Consumo na etiqueta (`ap-etiqueta`) | fora da faixa | Digite um consumo entre {min} e {max} por mês, como está na etiqueta. |
-| Consumo da conta (`conta-kwh`, cadastro e acompanhamento) | fora da faixa | Digite um consumo entre {min} e {max}. Na conta, ele aparece como "Consumo (kWh)". |
-| Valor da conta (`conta-valor`, cadastro e acompanhamento) | fora da faixa | Digite um valor entre {min} e {max}. É o valor total a pagar, com impostos. |
-| Conta no cadastro ou nos ajustes (calibração) | consumo 0 ou valor R$ 0,00 | Com a conta zerada não dá para ajustar o cálculo. Se ela veio zerada, toque em "Pular, não tenho a conta agora". |
-
-`{min}` da conta muda conforme a tela (dominio-energia): no cadastro e nos ajustes é 1 kWh e R$ 0,01; no
-acompanhamento é 0 kWh e R$ 0,00. A mensagem é a mesma; muda só o número, que vem do uso certo no `limites.ts`.
-| Campos com vírgula (kWh, valor) | número mal escrito (ex.: "1,2,5") | Escreva só o número. Para centavos, use vírgula: 135,90. |
-| Nome do cômodo (`nome-comodo`) | vazio | Dê um nome ao cômodo, por exemplo: Quarto do casal. |
-| Nome do aparelho (`ap-nome`) | vazio | Dê um nome ao aparelho, por exemplo: Geladeira. |
-
-**Minutos (por dia e por banho)**
-- Hoje usam `Contador` (+ e −) com `min` e `max`, e não dá para digitar. Por isso não precisam de mensagem: o botão para
-  no limite.
-- Conferir: o `+` e o `−` ficam `disabled` no limite, e o leitor ouve o valor novo.
-- Se algum campo de minutos virar digitável:
-  - por dia, texto fixo (sem `formatarTempo`, que escreve "1 min" e "o dia todo"): "O tempo de uso vai de 1 minuto a
-    24 horas por dia.";
-  - por banho: "Cada banho vai de {min} a {max} minutos."
-
-**Nome com tamanho máximo:** o `maxLength` (40 e 60) já impede passar do limite. Mensagem não precisa.
-
-**Comportamento**
-- **Quando mostrar:** ao sair do campo ou ao tocar no botão de continuar, nunca a cada tecla. Quem digita "1" a caminho
-  de "1500" não pode ver erro. Depois que a mensagem aparece, ela some assim que o valor fica certo (aí sim, conferindo
-  a cada tecla).
-- **Não corrigir o número escondido:** hoje a potência corta em 30.000 com `Math.min`. Isso sai e entra a mensagem. O
-  campo mantém o que a pessoa digitou. O salvar automático guarda só valor válido, e a conta continua com o último
-  valor válido.
-- **Botão de continuar:** "Ver o resultado" fica habilitado, sem `disabled` (botão desabilitado não diz o que falta).
-  Ao tocar com campo errado, aparecem as mensagens e o foco vai para o primeiro campo errado.
-
-**Componentes e acessibilidade do T5**
-- `Campo` ganha a prop `erro?: string`. A mensagem fica num `<p id="{id}-erro">`, com ícone `CircleAlert`
-  (`aria-hidden`) e texto `text-alerta font-bold`. Fica abaixo da entrada e acima da ajuda.
-- A ajuda também ganha id (`{id}-ajuda`); hoje não tem.
-- `Entrada` recebe `aria-invalid="true"` e `aria-describedby="{id}-erro {id}-ajuda"`.
-- A borda da `Entrada` vira `border-alerta`. O erro não depende só da cor: tem ícone, texto e borda.
-- O `<p>` do erro fica dentro de um recipiente com `aria-live="polite"`, sempre na página (vazio quando está tudo
-  certo). Assim a mensagem é lida quando aparece ao sair do campo.
-- Contraste do `alerta` (#b42318): 6,6:1 sobre `papel`, 5,8:1 sobre `fundo` e 5,6:1 sobre `alerta-claro`. Passa AA nos três.
-
-### T6. Valor possível, mas raro: "Confere?" (alerta do dominio-energia)
-
-O T5 é para valor **impossível**: a tela não salva. O T6 é para valor **raro**: a tela pergunta e salva se a pessoa
-confirmar. O texto nunca diz que o número está errado. Ele pergunta, mostra o valor que foi entendido e dá uma pista
-do erro mais comum.
-
-| Campo | Quando (dominio-energia) | Texto |
-| --- | --- | --- |
-| Potência (`ap-potencia`) | > 10.000 W | **Confere?** {valor} é muito para um aparelho de casa. Um chuveiro forte tem até 7.800 W. Veja se não sobrou um zero. |
-| Consumo na etiqueta (`ap-etiqueta`) | > 150 kWh/mês | **Confere?** {valor} por mês é muito para um aparelho. As geladeiras que mais gastam ficam perto de 115 kWh por mês. Veja se você copiou o número que vem com "kWh/mês". |
-| Consumo da conta (`conta-kwh`) | > 2.000 kWh | **Confere?** {valor} é muito mais do que uma casa costuma gastar: a média no Brasil é perto de 180 kWh por mês. Veja se você copiou o consumo do mês, e não o número do relógio de luz. |
-| Valor da conta (`conta-valor`) | > R$ 3.000,00 | **Confere?** {valor} é uma conta muito alta para uma casa. Veja se a vírgula dos centavos está no lugar certo. |
-| Consumo e valor juntos (preço por kWh, **estimativa**) | fora de R$ 0,30 a R$ 3,00 por kWh, com kWh ≥ 30 e sem Tarifa Social | **Confere os dois números?** Com {kwh} e {valor}, cada kWh sairia por {preco}. Costuma ficar entre R$ 0,30 e R$ 3,00. Veja se a vírgula está no lugar certo. |
-| Leitura do relógio (acompanhamento) | > 100 kWh por dia entre duas leituras | **Confere?** Entre {data anterior} e {data nova}, isso dá {n} kWh por dia. Uma casa costuma gastar perto de 6 kWh por dia. Veja se você não pulou ou trocou um número do relógio. |
-
-Botões, em todos: **[Sim, está certo]** e **[Corrigir]**.
-- `{valor}`, `{kwh}` e `{preco}`: o número que a tela entendeu, formatado com `formatarWatts` / `formatarKwh` /
-  `formatarReais`.
-- Datas como "3 de outubro".
-- Os números de referência saem do `limites.ts` e do catálogo, com a fonte que o dominio-energia já citou: 7.800 W do
-  chuveiro no catálogo, 115 kWh da geladeira no catálogo, 178,2 kWh da EPE arredondado para "perto de 180", e
-  5,9 kWh/dia para "perto de 6".
-
-**Consumo estimado da casa > 2.000 kWh/mês** não é um campo, então não tem "Sim/Corrigir". Aparece como
-`Aviso tom="faisca"` (`role="status"`) no resumo do cadastro e no painel:
-
-> **Confere seus aparelhos?** A conta estimada da sua casa deu {kwh} por mês, muito acima do comum. Veja se algum
-> aparelho ficou com potência ou tempo a mais.
-> [Ver meus aparelhos]
-
-Se o T6 da potência já apareceu e a pessoa confirmou, esse aviso da casa também aparece. Não precisa esconder.
-
-**Comportamento**
-- **Quando:** igual ao T5. Aparece ao sair do campo ou ao tocar em continuar, nunca a cada tecla.
-  - O do preço aparece só quando os dois campos estão preenchidos, embaixo do campo "Valor total da conta".
-  - O da leitura aparece ao tocar em salvar a leitura.
-- **Salvar:** o valor em alerta só é salvo depois de "Sim, está certo". Até lá, a conta usa o último valor salvo.
-- **"Sim, está certo":** o alerta some, o valor é salvo e o foco volta para o campo. O alerta não volta para o mesmo
-  valor. Só volta se a pessoa mudar o número.
-- **"Corrigir":** o alerta some e o foco vai para o campo, com o texto todo selecionado, pronto para digitar por cima.
-  No alerta do preço, o foco vai para "Valor total da conta".
-- **Tocar em continuar, ou fechar a `Folha`, sem responder:** não segue. O foco vai para o campo com o alerta (o leitor
-  ouve o rótulo e a pergunta pelo `aria-describedby`). Nada se perde: o número digitado continua no campo.
-- Nunca usar janela (`dialog`) para o "Confere?": a pergunta fica junto do campo, na mesma tela.
-
-**Componentes e acessibilidade do T6**
-- Mesmo lugar do erro do T5, dentro do `Campo`, abaixo da entrada.
-  - A pergunta fica num `<p id="{id}-alerta">` dentro do recipiente `aria-live="polite"` que o T5 já criou.
-  - Os dois botões ficam **fora** desse recipiente, logo abaixo. Assim o leitor anuncia a pergunta, e não
-    "Sim, está certo, Corrigir".
-- Visual: caixa `bg-faisca-claro text-tinta` (como o `Aviso tom="faisca"`) com ícone `CircleHelp` (`aria-hidden`).
-  - Amarelo, não vermelho: o valor pode estar certo.
-  - Contraste passa de 14:1.
-- `Campo` ganha a prop `alerta?: { texto: string; aoConfirmar: () => void; aoCorrigir: () => void }`.
-  - `erro` e `alerta` nunca aparecem juntos: o erro ganha.
-- A `Entrada` em alerta **não** recebe `aria-invalid`, porque o valor é válido. Ela recebe
-  `aria-describedby="{id}-alerta {id}-ajuda"`.
-- O alerta do preço: as duas entradas apontam para o mesmo `id`.
-- Botões:
-  - "Sim, está certo": `Botao variante="secundario"`.
-  - "Corrigir": `Botao variante="fantasma"`.
-  - Os dois com `min-h-12`; em 360 px, um embaixo do outro.
-  - O nome acessível é o próprio texto do botão. A pergunta acima já dá o contexto.
-- Nenhum dos dois botões recebe o foco sozinho. Um Enter sem querer não pode confirmar um valor errado.
-- Sem animação além do `surgir`. Com movimento reduzido, aparece pronto.
+_(scrum-master, 2026-10-30)_ **Movidos para a [HIS-003b](HIS-003b-campos-com-limite.md)**, sem mudança.
 
 ## Desenho técnico (proposta inicial)
 
@@ -536,29 +437,8 @@ onRehydrateStorage: () => (estado) => { if (estado?.avisoDaCasaSalva) armazename
 - A frase da 2ª falha: o frontend confere se o estado do componente sobrevive a um `retry()` que falha. Se não
   sobreviver, guarda num módulo o instante do último toque: uma falha nova em até 10 s conta como a 2ª.
 
-**T5 e T6, campos fora do limite e "Confere?" (003b)**
-
-- `ui/Campo.tsx`:
-  - `id` passa a ser obrigatório; todos os usos já têm.
-  - Ganha `erro` e `alerta: { titulo; texto; aoConfirmar; aoCorrigir }`.
-  - Região `aria-live` sempre na página, com os ids `{id}-erro`, `{id}-alerta` e `{id}-ajuda`.
-  - Os botões do alerta ficam fora da região.
-  - No "Corrigir", o foco vai para a entrada com o texto selecionado; no "Sim", só o foco. A `Entrada` se registra pelo
-    contexto.
-- `ui/Entrada.tsx`: lê o contexto (`aria-invalid`, `aria-describedby`, junto com o que vier por prop, e `border-alerta`).
-- `ui/campos/useCampoNumerico.ts`:
-  - Guarda o texto, se o campo já foi tocado e qual valor a pessoa confirmou.
-  - Mostra a mensagem ao sair do campo e no `conferir()`. Depois disso, confere a cada tecla.
-  - `valorValido` é o que pode ser salvo.
-- `ui/campos/mensagens.ts`: textos do T5 e do T6 a partir de `LIMITES` e dos `formatar*`.
-- `ui/conta/CamposDaConta.tsx`: kWh, valor e o alerta de preço, para `uso: "calibracao" | "acompanhamento"`. Substitui
-  as três cópias de hoje (cadastro, ajustes e acompanhamento).
-- Telas:
-  - `EditorAparelho`: o `Math.min(30000)` sai.
-  - `TelaComodos`: nome do cômodo.
-  - Leitura do relógio: `maxLength={6}` e alerta ao salvar.
-  - `ui/AvisoConsumoAlto.tsx`: aviso do consumo estimado da casa.
-  - Pessoas até 20.
+**T5 e T6, campos fora do limite e "Confere?"**: movido para a [HIS-003b](HIS-003b-campos-com-limite.md), "Desenho
+técnico" (scrum-master, 2026-10-30).
 
 **Links (A15)**
 
@@ -717,7 +597,7 @@ jobs:
 | `casa-salva.spec.ts` | (a) JSON quebrado: T1c em `/casa`, chave regravada, depois de recarregar sem aviso. (b) potência `-5` em 1 de 2 aparelhos: "Tiramos 1 aparelho." e o outro aparece. (c) `uf` `"../x"`: T1b, **nenhum pedido a `/dados/municipios`** (R7); "Escolher minha cidade" faz a casa voltar com os aparelhos. (d) `version` 99 válida: sem aviso. (e) 10 000 aparelhos: abre em menos de 5 s. (f) aviso também em `/` e `/comecar`. (g) `role="status"` presente e vazio no HTML do servidor |
 | `dados-publicos.spec.ts` | `page.route`: `tarifas.json` com 500, HTML ou `{}`: T2a no cadastro e no painel; entrada com tarifa `-1` some e as outras ficam. "Tentar de novo" depois do `unroute`: o aviso some e o foco vai para o `h1`. 2ª falha: frase nova. `setOffline`: T2c. `municipios/SP.json` com 500: T2b com "São Paulo" |
 | `erros.spec.ts` | `/nao-existe`: 404 + T4. `addInitScript` que faz `Intl.NumberFormat.prototype.format` lançar enquanto uma flag estiver ligada: T3 sem o texto do erro, foco no `h1`; desligar a flag + "Tentar de novo": a tela volta; "Voltar ao início" leva a `/` |
-| `campos.spec.ts` (003b) | potência vazia, 0, 75.001 e 10.001 (ao sair do campo, `aria-invalid`/`aria-describedby`, mín. e máx. formatados, "Sim" salva, "Corrigir" seleciona); "Ver o resultado" com erro põe o foco no 1º campo errado; preço da conta 150 kWh / R$ 1.359,00 dá alerta, e com Tarifa Social não; conta 0 no acompanhamento é aceita; leitura acima de 100 kWh por dia dá alerta |
+| `campos.spec.ts` | movido para a [HIS-003b](HIS-003b-campos-com-limite.md) |
 
 - **Fixture:** a opção `errosEsperados: RegExp[]` (o 500 e o erro de render geram `console.error` de propósito) só vale
   se cada padrão aparecer. Assim ela não esconde outro erro.
@@ -726,7 +606,7 @@ jobs:
   `test.fail()`.
 - **`global-error`:** o qa confere à mão, numa cópia própria, com um `throw` temporário no layout raiz. Nada disso vai
   para o repositório.
-- **axe:** entram os estados com T1, T2, T3 e T4, e o campo com erro e com alerta.
+- **axe:** entram os estados com T1, T2, T3 e T4 (o campo com erro e com alerta é da 003b).
 - **Peso:** a referência `peso-js.json` muda de propósito no PR. Espero no máximo cerca de +3 kB gzip por rota
   (leitores com cerca de 1,3 kB, mais os avisos e a tela de erro). **Acima de +4 kB, falar comigo antes.**
 
@@ -751,15 +631,8 @@ São cerca de 3,75 dias, acima dos 3. **Proponho quebrar** (decisão do scrum-ma
 
 Total da 003a: cerca de 3 dias, com o qa. O frontend pode adiantar o T3/T4 e o D6 enquanto o a1 e o a2 andam.
 
-**HIS-003b**
-
-Depende do a1 no `main`.
-
-| Passo | Quem | O quê | Est. |
-| --- | --- | --- | --- |
-| b1 | frontend | `Campo`/`Entrada` com contexto, `useCampoNumerico`, `mensagens.ts` | 0,5 d |
-| b2 | frontend | `CamposDaConta` nos 3 lugares, `EditorAparelho`, `TelaComodos`, leitura, `AvisoConsumoAlto`, pessoas até 20 | 0,75 d |
-| b3 | qa | `campos.spec.ts` + axe | 0,25–0,5 d |
+**HIS-003b**: passos b1–b3 movidos para a [HIS-003b](HIS-003b-campos-com-limite.md) (scrum-master, 2026-10-30).
+Ela começa depois da 003a no `main`.
 
 **Dependências**
 
@@ -1019,6 +892,83 @@ Riscos: (1) relógio que "dá a volta" (99.999 → 00.012) hoje cai em "leitura 
 (2) relógio digital com casa decimal: a tela aceita só número inteiro, então a ajuda deve dizer para ignorar o que vem depois da vírgula (ux);
 (3) o alerta de preço é estimativa, não regra: o texto deve perguntar, nunca afirmar que a conta está errada.
 
+### Faixas dos arquivos públicos (P-tl-2)
+
+_dominio-energia, 2026-10-30. Rígido de `lerArquivoTarifas`: a entrada fora da faixa sai e conta em `descartados`.
+Conferido no `tarifas.json` publicado (gerado em 29/10/2026: 114 distribuidoras e 142 meses de bandeira, de 2015-01 a 2026-10)._
+
+| Campo | Rígido | No arquivo de hoje (menor – maior) | Folga e porquê |
+| --- | --- | --- | --- |
+| `tarifaKwh` (R$/kWh, sem impostos) | **> 0,05** e ≤ 3,00 | 0,35264 (CERR, vigência de 2014) – 1,56923 (CERES, REH 1.454/2026) | O teto é 1,9 vez a maior tarifa. **O piso muda de "> 0" para "> 0,05".** Assim ele pega a divisão por 1.000 feita duas vezes (0,00088), e é o mesmo corte que a rotina já faz em `packages/dados/src/aneel/tarifas.ts` (`total <= 0.05`). |
+| `teKwh` | 0 – 3,00 | 0,04105 (CEA) – 0,40556 (CERES) | 7 vezes a maior. O 0 entra porque a tarifa total já tem piso. |
+| `tusdKwh` | 0 – 3,00 | 0,18892 (CNEE, de 2017) – 1,16367 (CERES) | 2,6 vezes a maior. |
+| Coerência (nova) | \|`teKwh` + `tusdKwh` − `tarifaKwh`\| ≤ 0,00001 | diferença máxima de 0,000001 (`montar.ts` arredonda cada valor para 6 casas) | Pega `tarifaKwh` alterado à mão ou por extensão, que a faixa sozinha deixa passar. |
+| `adicionalKwh` (R$/kWh) | 0 – 1,00 | 0 – 0,142 (escassez hídrica, set/2021 a mar/2022). Maior bandeira comum: 0,09492 (vermelha 2, jul e ago/2021). Hoje: amarela 0,01885, vermelha 1 0,04463, vermelha 2 0,07877 | 7 vezes a maior já cobrada. Pega R$/MWh sem dividir (142) e R$/100 kWh (14,2). |
+| Coerência (nova) | `verde` = 0; as outras > 0 | todas as 142 linhas passam | Toda bandeira que não é a verde tem acréscimo. A rotina já põe 0 na verde (`bandeiras.ts`). |
+
+Com essas regras, o arquivo publicado hoje passa inteiro (`descartados` = 0).
+
+**Casos de teste (qa e backend, `arquivos-publicos.test.ts`)**
+
+| # | Entrada | Esperado |
+| --- | --- | --- |
+| P1 | `tarifaKwh` 0,05 / 0,050001 / 3,00 / 3,000001 | sai / fica / fica / sai |
+| P2 | `tarifaKwh` 875,71 (R$/MWh sem converter) / 0,00087571 (dividido duas vezes) | sai / sai |
+| P3 | `teKwh` 0 / −0,01; `tusdKwh` 3,01 | fica / sai / sai |
+| P4 | `teKwh` 0,28111 + `tusdKwh` 0,5946 com `tarifaKwh` 0,87571 / 0,9 | fica / sai (incoerente) |
+| P5 | `adicionalKwh` 0,142 / 1,00 / 1,000001 / 142 / 14,2 / −0,01 | fica / fica / sai / sai / sai / sai |
+| P6 | `amarela` com 0; `verde` com 0,01885 | sai / sai |
+| P7 | `tarifas.json` publicado hoje | lê sem erro, `descartados` = 0 |
+
+**Para o backend (não bloqueia):**
+- (a) Trocar o corte `total <= 0.05 || total > 5` de `tarifas.ts` por `validarFaixa(LIMITES.tarifaKwh, …)`. Assim fica um
+  lugar só. Hoje uma tarifa de R$ 4,00 passaria pela rotina e derrubaria o processo no leitor estrito.
+- (b) Risco no `divisorDaUnidade` (`bandeiras.ts`): se a ANEEL publicar só meses com valor até 20 R$/MWh (verde e
+  amarela), a amarela 18,85 seria lida como R$/100 kWh. Daria 0,1885, 10 vezes o certo, e passaria no rígido de 1,00.
+  Sugestão: no `validar()` de variação (aceita `--forcar`), dar erro se algum `adicionalKwh` passar de 0,15. Isso fica
+  um pouco acima da maior bandeira já cobrada.
+
+**Fontes (consultadas em 30/10/2026):**
+- ANEEL, dados abertos: [Tarifas de aplicação](https://dadosabertos.aneel.gov.br/dataset/tarifas-distribuidoras-energia-eletrica)
+  e [Bandeiras Tarifárias, acionamento](https://dadosabertos.aneel.gov.br/dataset/bandeiras-tarifarias). Daí saem todos
+  os valores, inclusive o 142 R$/MWh da escassez hídrica, lidos no `tarifas.json` de 29/10/2026.
+- ANEEL, [Sobre Bandeiras Tarifárias](https://www.gov.br/aneel/pt-br/assuntos/tarifas/bandeiras-tarifarias): valores de
+  hoje, R$ 1,885, R$ 4,463 e R$ 7,877 por 100 kWh.
+- ANEEL, [FAQ da Bandeira Escassez Hídrica](https://www.gov.br/aneel/pt-br/assuntos/noticias/2022/faq-tire-suas-duvidas-sobre-a-bandeira-escassez-hidrica):
+  vigência de setembro de 2021 a abril de 2022, por determinação da CREG. O valor de R$ 14,20 por 100 kWh foi conferido no
+  arquivo da ANEEL e na [Canal Solar](https://canalsolar.com.br/aneel-anuncia-bandeira-escassez-hidrica-com-r-1420-a-cada-100-kwh-consumidos/),
+  que não é fonte oficial.
+
+### Achado: tarifas vencidas (P-de-1, alto, fora da P-tl-2)
+
+Onze distribuidoras do `tarifas.json` têm a última tarifa vencida entre 2016 e 2023. Mesmo assim, elas aparecem como
+distribuidora de cerca de 200 municípios em `municipios/{UF}.json`, e em muitos deles são a única opção. São elas:
+CERR (fim em 2016), CFLO, CNEE, EDEVP e EEB (2017), CPFL Leste Paulista, CPFL Mococa e CPFL Sul Paulista (2018),
+RGE Sul (2019), ENF e EBO (2023).
+
+Exemplos:
+
+| Município | Tarifa mostrada hoje | Tarifa da sucessora | Diferença |
+| --- | --- | --- | --- |
+| Alegrete (RS) | RGE Sul, de 2019: R$ 0,54732 | RGE: R$ 0,94461 | conta mostrada 42% menor |
+| Assis (SP) | EDEVP, de 2017: R$ 0,44471 | ESS (Energisa Sul-Sudeste): R$ 0,81424 | conta mostrada 45% menor |
+
+A faixa rígida não pega isso, porque o valor é plausível, só que velho. Por isso:
+- **Veto:** o número está errado e chega à família.
+- **Proposta para uma história nova:**
+  - (1) A rotina descarta a tarifa cuja `fimVigencia` acabou há mais de 12 meses, porque o reajuste é anual.
+  - (2) Uma tabela de sucessoras troca a empresa incorporada pela atual.
+
+Sucessoras prováveis, porque o fim de uma vigência e o começo da outra caem em dias seguidos:
+- RGE Sul → RGE;
+- EDEVP, CNEE, EEB e CFLO → ESS;
+- as 3 CPFL → CPFL Santa Cruz, que tem o mesmo CNPJ da CPFL Jaguari;
+- ENF → EMR;
+- EBO → EPB;
+- CERR → Âmbar Roraima.
+
+**Ainda não confirmei isso no cadastro de agentes da ANEEL.** Confirmar antes de implementar.
+
 ## Perguntas abertas
 
 - [x] `[para: ux-acessibilidade]` Texto do aviso quando parte dos dados salvos foi descartada.
@@ -1041,13 +991,22 @@ Riscos: (1) relógio que "dá a volta" (99.999 → 00.012) hoje cai em "leitura 
 
   **Resposta (seguranca, 2026-10-30):** as quatro confirmadas; (a) com as condições R4c e R4d; (d) com a regra exata
   escrita no R4. O a2 está liberado. Ver a nota na "Conversa da equipe".
-- [ ] `[para: dominio-energia]` **P-tl-2** (bloqueia o a3). Faixa rígida dos arquivos da ANEEL. Proposta:
+- [x] `[para: dominio-energia]` **P-tl-2** (bloqueia o a3). Faixa rígida dos arquivos da ANEEL. Proposta:
   - `tarifaKwh` > 0 e ≤ R$ 3,00 (a tarifa sem impostos fica abaixo do teto com impostos que vocês citaram);
   - `teKwh`/`tusdKwh` entre 0 e 3;
   - `adicionalKwh` da bandeira entre 0 e R$ 1,00 (a maior já cobrada foi 0,142).
 
   Confirmar ou corrigir, com a fonte.
-- [ ] `[para: scrum-master]` **P-tl-3**. Quebrar em HIS-003a e HIS-003b, como está no D9?
+  **Resposta (dominio-energia, 2026-10-30):** confirmado, com dois ajustes: piso da tarifa > 0,05 (não > 0) e
+  duas regras de coerência (TE + TUSD = tarifa; verde = 0 e as outras > 0). Ver "Faixas dos arquivos públicos (P-tl-2)"
+  em "Regras de negócio e fontes". O a3 está liberado.
+- [ ] `[para: tech-lead]` `[para: scrum-master]` **P-de-1** (não bloqueia a HIS-003, mas é número errado chegando à
+  família hoje). Tarifas vencidas há anos estão no ar. Ver "Achado: tarifas vencidas" em "Regras de negócio e fontes".
+  Peço uma história própria, com prioridade alta.
+- [x] `[para: scrum-master]` **P-tl-3**. Quebrar em HIS-003a e HIS-003b, como está no D9?
+  **Resposta (scrum-master, 2026-10-30):** sim, como no D9. 003a = critérios 1, 2, 3, 4, 6, 7 e o 5 só no domínio
+  (este arquivo); 003b = critério 5 nas telas e o critério 8 novo (T6), em `HIS-003b-campos-com-limite.md`. Ordem:
+  002a → 003a ‖ 002b → 003b. Ver a nota na "Conversa da equipe".
 - `[para: ux-acessibilidade]` (não bloqueia; para o frontend saber o que fazer):
   - o T2b também entra no `TrocarCidade` dos ajustes, com a frase "Sua casa continua salva.";
   - o T1b leva para `/casa/ajustes`, que passa a abrir sem cidade (D5).
@@ -1207,6 +1166,38 @@ critério de formato (`packages/dados` não importa de `apps/web`).
 - **dominio-energia:** responder a P-tl-2.
 - **scrum-master:** decidir a P-tl-3.
 - **Depois:** etapa 4 (backend a1–a3 e a6, frontend a4–a5, qa a7), quando a 002a estiver no `main`.
+
+### [scrum-master] 2026-10-30 — P-tl-3 respondida: quebra em 003a/003b aceita
+- O que fiz: retitulei este arquivo como HIS-003a (nome e branch mantidos) e criei a
+  [HIS-003b](HIS-003b-campos-com-limite.md), movendo T5, T6, o bloco "T5 e T6" do D5, o `campos.spec.ts` e b1–b3, com
+  remissões. O critério 5 daqui ficou só na parte do domínio, verificável pelo `limites.test.ts`. Na 003b escrevi o
+  critério 8 (T6), que faltava.
+- Decisões e porquê: 3,75 dias não cabem em M. A 003a vem primeiro: tem as três ameaças altas (A1, A2, A7: site preso,
+  conta errada, tela branca). **003a e 002b em paralelo**, em branches separadas, porque o lockfile não muda e o
+  conflito é uma linha do `ci.yml` mais o `useArquivo`/`casa.ts` (D4). Regra: integra uma de cada vez; quem chega
+  depois faz o rebase e passa no lint e no e2e da outra. Se a 002b entrar antes, o `useArquivo` segue a nota do D4.
+  **003b depois da 003a no `main`**: usa o a1 e mexe nas mesmas telas do T2. As três ficam na Sprint 0.
+- Arquivos alterados: este arquivo, `HIS-003b-campos-com-limite.md` (novo), `docs/planejamento.md`,
+  `docs/equipe/quadro.md`.
+- Para o próximo: **seguranca** responde a P-tl-1 (bloqueia o a2) e **dominio-energia** a P-tl-2 (bloqueia o a3), em
+  paralelo. A etapa 4 da 003a (backend a1 e a6, frontend T3/T4 e D6 adiantados) começa quando a 002a estiver no `main`.
+
+### [dominio-energia] 2026-10-30 — P-tl-2 respondida; achado de tarifas vencidas (P-de-1)
+- **O que fiz:**
+  - Conferi as faixas no `tarifas.json` de 29/10/2026 (114 distribuidoras e 142 meses de bandeira) e nas páginas da ANEEL.
+  - Escrevi "Faixas dos arquivos públicos (P-tl-2)", com a tabela, os casos P1–P7 e as fontes.
+- **Decisões:**
+  - A proposta do tech-lead fica, com dois ajustes:
+    - o piso da tarifa passa a ser > 0,05, para pegar a divisão por 1.000 feita duas vezes;
+    - entram duas coerências: TE + TUSD = tarifa (tolerância de 0,00001) e verde = 0, com as outras bandeiras > 0.
+  - O arquivo de hoje passa inteiro. O a3 está liberado.
+- **`[para: backend]`:**
+  - O corte da `tarifas.ts` passa a usar `LIMITES.tarifaKwh`.
+  - Pôr um alerta de variação para bandeira acima de 0,15, por causa do risco do `divisorDaUnidade`.
+- **`[para: tech-lead]` `[para: scrum-master]` P-de-1 (veto):** cerca de 200 municípios usam tarifas vencidas entre 2016
+  e 2023. Ex.: Alegrete (RS) mostra uma conta 42% menor; Assis (SP), 45% menor. Peço uma história própria, com
+  prioridade alta. Ver "Achado: tarifas vencidas".
+- **Próximo:** backend no a3 com P1–P7; qa usa P1–P7 no `arquivos-publicos.test.ts`.
 
 ### [seguranca] 2026-10-30 — P-tl-1 respondida: leitores à mão aprovados com 2 condições
 
