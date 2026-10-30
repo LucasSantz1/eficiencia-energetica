@@ -13,6 +13,7 @@
     "typecheck": "pnpm camadas && pnpm -r --if-present typecheck",
     "test:e2e": "pnpm --filter @ee/web test:e2e",
     "dados:atualizar": "pnpm --filter @ee/dados atualizar",
-    "dados:exemplo": "pnpm --filter @ee/dados exemplo"
+    "dados:exemplo": "pnpm --filter @ee/dados exemplo",
+    "dados:diagnosticar": "pnpm --filter @ee/dados diagnosticar"
   }
 }

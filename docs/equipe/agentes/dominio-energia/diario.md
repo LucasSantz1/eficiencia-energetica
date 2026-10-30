@@ -10,49 +10,25 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
-## 2026-10-30 · HIS-111 · sucessões das 11 distribuidoras vencidas com ato oficial
-- O que fiz:
-  - Busquei os atos (REA ANEEL e DOU) das sucessões e preenchi "Regras de negócio e fontes" da HIS-111.
-  - Respondi o limite do D4 e a média da `/`.
-- Decisões e porquê:
-  - Descarte depois de 6 meses: manter uma tarifa velha mostra um número errado; descartar leva a "use a conta", que é honesto.
-  - Criei o V7: depois de um agrupamento, o preço pode ser diferente em cada área (a ENF teve tabela própria em 2023).
-  - CERR aprovada com o despacho do MME, porque não há REA localizada.
-- Arquivos: `docs/equipe/historias/HIS-111-tarifas-vencidas.md`, `contexto.md` e este diário.
-- Próximos passos:
-  - revisar o `sucessoes.json` no PR;
-  - completar o número do ato da CERR;
-  - conferir a data da REA 6.318;
-  - trocar as cópias pelo cedoc.
+## 2026-10-30 · HIS-111 · linha 12 (RGE antiga → RGE): confirmada, REA sem número
+- O que fiz: confirmei a linha 12 do `sucessoes.json`. Procurei o número da REA de dez/2018 (IstoÉ, Brasil Energia,
+  fato relevante da RGE Sul, busca no cedoc): o site da ANEEL não abre daqui e nenhuma fonte aberta traz o número.
+- Decisões e porquê: `ato` não mudou (sem fonte oficial verificável, não invento número). `desde` 2019-01-01 ok: a CPFL
+  comunicou aprovação em 04/12/2018 e agrupamento em 31/12/2018 (imprensa; corrobora). Pus essa fonte na `observacao`.
+  Aceito mergear sem o número, como na CERR.
+- Arquivos: `packages/dados/base/sucessoes.json`, `docs/equipe/historias/HIS-111-tarifas-vencidas.md`, minha pasta.
+- Próximos passos: quem tiver acesso ao cedoc/DOU acha a REA de dez/2018 e troca o `ato`.
 
-## 2026-10-30 · HIS-003 · P-tl-2 (faixas de tarifa e bandeira) e achado de tarifas vencidas
-- O que fiz:
-  - Medi o menor e o maior valor de tarifa, TE, TUSD e bandeira no `tarifas.json` de 29/10/2026.
-  - Conferi os valores das bandeiras e a escassez hídrica nas páginas da ANEEL.
-  - Respondi a P-tl-2 com a tabela, os casos P1–P7 e as fontes.
-  - Achei tarifas vencidas usadas por cerca de 200 municípios (P-de-1).
-- Decisões e porquê:
-  - Piso da tarifa > 0,05: pega a divisão por 1.000 feita duas vezes e é o mesmo corte que a rotina já faz.
-  - Coerência TE + TUSD = tarifa e verde = 0: pegam valor alterado que a faixa sozinha deixa passar.
-  - Teto de 1,9 a 7 vezes o maior valor, para não recusar dado verdadeiro.
-  - Veto no achado: valor plausível mas velho, até 45% abaixo do certo.
-- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md`, `contexto.md` e este diário.
-- Próximos passos:
-  - Confirmar as sucessoras no cadastro de agentes da ANEEL quando a história da P-de-1 for aberta.
-  - Revisar o `limites.ts` e o `arquivos-publicos.ts`.
-
-## 2026-10-30 · HIS-003 · faixas de entrada com fonte e casos de borda
-- O que fiz: respondi `[para: dominio-energia]` com a tabela rígido/alerta de potência, minutos, dias, banho, quantidade,
-  fator de ciclo, etiqueta, conta (kWh, R$, preço implícito), relógio, pessoas e cômodos; 23 casos de teste; riscos.
-  Conferi contra `catalogo.ts` e os limites das telas (`EditorAparelho`, `TempoUso`, `Cadastro`, `LinhaAparelho`).
-- Decisões e porquê: teto físico de 75 kW do grupo B (REN 1.000/2021, art. 23, I, "a") → 75.000 W, 54.000 kWh/mês,
-  1.800 kWh/dia; alertas pela média EPE (178,2 kWh/mês) e pela faixa do catálogo; preço da conta R$ 0,30–3,00/kWh pelas
-  tarifas B1 do `tarifas.json` (0,353–1,569) + bandeira máx. 0,142 + impostos (estimativa). Potência na tela 30.000 → 75.000; pessoas 15 → 20.
-- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md` (seção "Regras de negócio e fontes", perguntas, nota).
-- Pedido da ux: tabela "Limites prontos para as mensagens do T5" com `{min}`/`{max}` já com unidade (1 W a 75.000 W confirmado,
-  sem o corte de 30.000); conta tem `min` diferente na calibração (1 kWh / R$ 0,01) e no acompanhamento (0); tempo por dia com
-  texto fixo, porque `formatarTempo(1440)` = "o dia todo".
-- Próximos passos: revisar `limites.ts` e testes; link oficial da EPE; texto do alerta com ux.
+## 2026-10-30 · HIS-111 · passo 0: CPFL Santa Cruz antiga entra, Equatorial PI é falso positivo, nomes do aviso
+- O que fiz: confirmei, nas demonstrações da Cia. Jaguari, que a antiga CPFL Santa Cruz está na REA 6.723/2017.
+  Acrescentei a linha 11 no `sucessoes.json`. Confirmei que a Equatorial PI é a antiga Cepisa, a mesma pessoa
+  jurídica (só houve troca de controle em 2018). Achei os nomes das empresas antigas para o aviso F1.
+- Decisões e porquê: endossei o D3 novo do backend (extinto só sem tarifa publicada), porque o arquivo de conjuntos
+  para em 2014. Deixei a CNEE sem nome, porque "Nacional" sozinho não se entende e não achei fonte da marca. Mostrei
+  que o "45" do critério 2 é falso positivo: o id `cpfl-santa-cruz` vencido é igual ao vigente.
+- Arquivos: `packages/dados/base/sucessoes.json`, `docs/equipe/historias/HIS-111-tarifas-vencidas.md`, minha pasta.
+- Próximos passos: o backend ajusta o `test/sucessoes.test.ts` para 11 linhas. Nova Santa Rita (PI) com `certaja`
+  vai para uma história própria.
 
 ## 2026-10-29 · criação da equipe
 - O que fiz: Regras em uso documentadas no contexto (consumo mínimo, Tarifa Social da Lei 15.235/2025, fator de ciclo).

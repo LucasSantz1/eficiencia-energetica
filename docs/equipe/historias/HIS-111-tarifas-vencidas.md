@@ -6,7 +6,7 @@
 | Sprint | **Sprint 0, prioridade 1** (scrum-master, 2026-10-30): defeito com número errado no ar, não função nova |
 | Tamanho | M (≈ 3 dias: 2,25 backend, 0,25 frontend, 0,5 qa; T4) |
 | Papéis principais | backend, dominio-energia, qa; tech-lead (contrato do `tarifas.json`) e ux (um texto) |
-| Status | Preparada (h0 depois da revisão da seguranca no workflow do T3 e no V8) |
+| Status | Em andamento: h0–h5 feitos pelo backend em 30/10; falta o resultado do passo 0 (push da branch), o h6 (frontend), o h7 (qa) e o h8 |
 | Branch | `his-111-tarifas-vencidas` |
 
 > **Origem:** achado P-de-1 do dominio-energia na HIS-003 ("Achado: tarifas vencidas", 2026-10-30). Investigação e
@@ -266,6 +266,7 @@ alguns links são cópias do documento oficial. Quem tiver acesso troca pelo lin
 | --- | --- | --- | --- | --- |
 | EDEVP, CNEE, EEB, CFLO → ESS (07282377000120) | 2017-06-30 | REA ANEEL nº 6.318/2017, "de 25 de março de 2017": aprova o agrupamento, com incorporação pela Caiuá, e forma a Energisa Sul Sudeste | Nota Técnica nº 150/2021-SGT/ANEEL, § 6, [cópia no RI da Energisa](https://api.mziq.com/mzfilemanager/v2/d/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/1f1a9406-2219-1c70-8239-1b42746c5de4?origin=2). A data de 30/06/2017 vem do [Relatório Anual Energisa 2017](https://mz-filemanager.s3.amazonaws.com/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/relatorios-anuais/9cb421b1892cf4fe509f85138356e1ed84175be536450bdec59e6ec2f2de8819/relatorio_anual_2017.pdf) | **Aprovada.** Conferir a data no DOU: 25/03/2017 caiu num sábado |
 | CPFL Leste Paulista, CPFL Mococa, CPFL Sul Paulista → CPFL Santa Cruz (53859112000169, Cia. Jaguari) | 2018-01-01 | REA ANEEL nº 6.723, de 21/11/2017. A incorporação foi feita em 31/12/2017 | [cedoc rea20176723ti.pdf](https://www2.aneel.gov.br/cedoc/rea20176723ti.pdf) e [demonstrações da Cia. Jaguari (RI CPFL)](https://ri.cpfl.com.br/Download.aspx?Arquivo=ppJOuVjC1xAIdBWbJYeeZA%3D%3D) | **Aprovada** |
+| Antiga CPFL Santa Cruz (Companhia Luz e Força Santa Cruz, 61116265000144) → CPFL Santa Cruz (53859112000169, Cia. Jaguari) | 2018-01-01 | **A mesma REA ANEEL nº 6.723/2017.** As demonstrações da Cia. Jaguari listam as quatro incorporadas: Santa Cruz, Leste Paulista, Sul Paulista e Mococa. A Jaguari passou a usar o nome CPFL Santa Cruz | As mesmas duas fontes da linha acima | **Aprovada** (30/10, depois do passo 0). Nome igual, empresa diferente (raiz do CNPJ diferente) |
 | ENF → EMR (19527639000158, ex-Energisa Minas Gerais) | 2023-06-22 | REA ANEEL nº 12.177, de 13/09/2022 (DOU de 21/09/2022, processo 48500.005211/2021-67): agrupa as áreas e aprova a incorporação da ENF pela EMG | [DOU de 21/09/2022 (cópia abrapch)](https://abrapch.org.br/2022/09/diario-oficial-da-uniao-21-09-2022/). Nova Friburgo está na área da EMR: [A Voz da Serra, reajuste de 22/06/2025](https://avozdaserra.com.br/noticias/contas-de-luz-em-friburgo-sobem-361-em-media-no-domingo) | **Aprovada, com a condição V7** (abaixo) |
 | EBO → EPB (09095183000140) | 2023-08-28 | REA ANEEL nº 12.687, de 13/09/2022 (DOU de 21/09/2022, processo 48500.005212/2021-10): agrupa as áreas e aprova a incorporação da EBO pela EPB. As tarifas da EBO foram prorrogadas até 27/08/2023 | DOU (mesma cópia) e [CanalEnergia, 24/01/2023](https://www.canalenergia.com.br/noticias/53236466/tarifas-da-energisa-borborema-serao-prorrogadas-ate-agosto) | **Aprovada, com a condição V7** |
 | CERR → Roraima Energia, hoje "Âmbar Roraima" (02341470000144, ex-Boa Vista Energia) | 2017-01-01 | **Não achei ato da ANEEL com número.** Há um despacho do MME (DOU de 12/08/2016, número não localizado): a Boa Vista Energia assume todo o interior. A Roraima Energia tem o Contrato de Concessão nº 04/2018-ANEEL | [MME: prazo de transição CERR → Boa Vista Energia](https://www.gov.br/mme/pt-br/assuntos/noticias/mme-define-prazo-de-transicao-de-prestacao-de-servico-da-cerr-para-a-boa-vista-energia) e [voto ANEEL de 09/12/2025 (cópia Poder360)](https://static.poder360.com.br/2025/12/roraima-sin-aneel.pdf) | **Aprovada com o ato do MME**: `ato` = "Despacho MME, DOU 12/08/2016". O número entra quando alguém abrir o DOU. Roraima tem uma só distribuidora, a do contrato 04/2018. Se o leitor exigir número, a CERR fica de fora: as 14 cidades mostram "Não achamos a sua distribuidora. Use o valor da sua conta de luz" |
@@ -443,6 +444,11 @@ normal (que passa pelos leitores da 003a quando eles existirem). Os e2e `casa-v1
 - Entrada que quebra o V8 sai e conta em `descartados` (na rotina, isso para a gravação, como todo descarte).
 - Casos novos no `arquivos-publicos.test.ts` (P8): ausente; `{"rge-sul": "rge"}` fica; valor que não existe sai; chave
   que é id publicado sai; chave `"__proto__"` sai e o protótipo continua o normal; cadeia `a → b` + `b → c` sai.
+- _(backend, 30/10, R7 da seguranca: contrato para quem implementar o a3)_ O leitor monta o resultado com
+  `Object.fromEntries` **depois** de validar cada chave, e as regras do V8 olham o objeto original inteiro (não o que
+  sobrou depois de cada descarte). Mais de **500** entradas = `ErroDeFormato` (a rotina usa o mesmo limite,
+  `MAXIMO_DE_SUBSTITUIDAS` em `packages/dados/src/montar.ts`, e nunca publica mais que isso). Falta só o caso de 501
+  entradas no P8. O formato do id é o mesmo da rotina e do core: `^[a-z0-9]+(-[a-z0-9]+)*$`, até 64 caracteres.
 
 ### T2. Ajustes ao D1–D6 (decisões técnicas)
 
@@ -460,7 +466,13 @@ normal (que passa pelos leitores da 003a quando eles existirem). Os e2e `casa-v1
 - **Ordem no `acharTarifa`:** (1) segue a cadeia de sucessão pelo CNPJ do vínculo (pela sigla compacta só quando o
   vínculo não tem CNPJ); (2) procura a tarifa pelo CNPJ final no índice do D1; (3) só então pela sigla. Toda sigla
   trocada em (1) ou pelo D1 entra em `substituidas`.
-- **D3 com a regra segura:** o vínculo extinto (`ano < anoMaisRecente − 1`) **sai só se a cidade tiver outro vínculo
+  _(Revisto em 30/10, depois do passo 0, ADR-005 item 2.)_ Em (3), a sigla só liga com a **mesma raiz de CNPJ** (8
+  dígitos) ou quando um dos lados não tem CNPJ; o recusado fica sem tarifa (V5) e vai para `ligacoesPelaSiglaRecusadas`.
+  Vínculo sem CNPJ com a sigla de uma empresa publicada é ela mesma: não segue linha de sucessão. Para o V9 e o V10, o
+  `resumirAgentes` agrupa por **sigla + CNPJ** ("RGE" tem dois CNPJs).
+- **D3 com a regra segura:** _(revisto em 30/10: o arquivo de conjuntos para em 2014, e o ano sozinho marcava empresa
+  vigente, como a Equatorial PI. **Só conta como extinto o vínculo que não chega a nenhuma tarifa publicada**, nem
+  direto, nem pelo D1, nem pelo D2.)_ O vínculo extinto (`ano < anoMaisRecente − 1`) **sai só se a cidade tiver outro vínculo
   não extinto**. Se for o único, fica e entra em `vinculosExtintosMantidos` (aviso). Motivo: o D2 + D4 + V5 já pegam a
   empresa que acabou (a tarifa dela vence, sai, e a rotina para). O D3 sozinho tiraria o único preço de uma cidade em que
   o IndQual não liga o conjunto novo, e esse preço é de uma empresa com tarifa vigente. O passo 0 diz quantos casos são.
@@ -620,6 +632,147 @@ estranho vindo da ANEEL, um `tarifas.json` antigo ou malformado no cache do nave
 
 _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` da HIS-003a.
 
+## Resultado do passo 0
+
+_(quem orquestra, 30/10: execução **41095055344**, verde, no commit `f88cfcd`. O log e o `$GITHUB_STEP_SUMMARY` dão 403
+daqui; o resumo abaixo foi lido pelas anotações do job, que entraram nos commits `402367a` e `f88cfcd`. Colado como
+veio, só com os títulos um nível abaixo.)_
+
+### Diagnóstico dos dados (HIS-111), 2026-10-30
+
+Nada foi gravado: este job só lê.
+
+#### Portão do passo 0
+
+- (a) C2: 12 empresas vencidas (CNPJ só delas) ainda são donas de conjunto; reportaram em 2013 ou depois: CERR (2013), CFLO (2014), CNEE (2014), CPFL LESTE PAULI (2014), CPFL MOCOCA (2014), CPFL SANTA CRUZ (2014), CPFL SUL PAULIST (2014), EBO (2014), EDEVP (2014), EEB (2014), ENF (2014), RGE SUL (2014). **C2 não confirmada para essas: o backend revê o D3.**
+- (b) V7: 5 sucessoras no sucessoes.json; todas com um só valor B1 na vigência. **As linhas ENF e EBO entram.**
+- (c) CNPJs com mais de uma sigla: 53859112000169 (CPFL JAGUARI, CPFL Santa Cruz).
+- (d) D3: 228 cidades em que o vínculo extinto é o único (fica, com aviso): EQUATORIAL PI (222), ELETROCAR (3), RGE (2), Neoenergia PE (1); 63 vínculos extintos saem porque a cidade tem outro recente.
+
+#### Empresas com tarifa vencida
+
+| Sigla | CNPJ | Fim da vigência | Mesmo CNPJ de vigente | Conjuntos (dona) | Último ano (máx. 2014) | Municípios | Com conjunto recente de outra |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| CERR | 05938444000196 | 2016-12-31 | não | 14 | 2013 | 14 | 0 |
+| CFLO | 77882504000107 | 2017-07-11 | não | 4 | 2014 | 1 | 1 |
+| CNEE | 61416244000144 | 2017-07-11 | não | 19 | 2014 | 16 | 11 |
+| CPFL JAGUARI | 53859112000169 | 2018-03-21 | sim | 2 | 2014 | 2 | 0 |
+| CPFL LESTE PAULI | 61015582000174 | 2018-03-21 | não | 5 | 2014 | 7 | 0 |
+| CPFL MOCOCA | 52503802000118 | 2018-03-21 | não | 2 | 2014 | 4 | 0 |
+| CPFL SANTA CRUZ | 61116265000144 | 2018-03-21 | não | 49 | 2014 | 27 | 6 |
+| CPFL SUL PAULIST | 60855608000120 | 2018-03-21 | não | 8 | 2014 | 5 | 0 |
+| EBO | 08826596000195 | 2023-08-27 | não | 14 | 2014 | 9 | 9 |
+| EDEVP | 07297359000111 | 2017-07-11 | não | 25 | 2014 | 27 | 0 |
+| EEB | 60942281000123 | 2017-07-11 | não | 22 | 2014 | 16 | 1 |
+| ENF | 33249046000106 | 2023-06-21 | não | 11 | 2014 | 1 | 1 |
+| RGE SUL | 02016440000162 | 2019-06-18 | não | 189 | 2014 | 127 | 53 |
+
+#### CNPJ com mais de uma sigla
+
+| CNPJ | Sigla | Última vigência | Vigente hoje |
+| --- | --- | --- | --- |
+| 53859112000169 | CPFL JAGUARI | 2017-03-22 a 2018-03-21 | não |
+| 53859112000169 | CPFL Santa Cruz | 2026-04-22 a 2027-04-21 | sim |
+
+#### Mais de um valor B1 na vigência (V7)
+
+| Sigla | CNPJ | Valores | Sucessora no sucessoes.json |
+| --- | --- | --- | --- |
+| nenhuma |  |  |  |
+
+#### Montagem da branch
+
+- Distribuidoras: 102; municípios sem distribuidora: 10; agentes sem tarifa: nenhum.
+- Renomeações por CNPJ (D1): cpfl-jaguari → cpfl-santa-cruz (2), rge-sul → rge (127).
+- Sucessões aplicadas (D2): EDEVP → ESS (27), CNEE → ESS (16), EEB → ESS (16), CERR → Âmbar Roraima (14), EBO → EPB (9), CPFL LESTE PAULI → CPFL Santa Cruz (7), CPFL SUL PAULIST → CPFL Santa Cruz (5), CPFL MOCOCA → CPFL Santa Cruz (4), CFLO → ESS (1), ENF → EMR (1).
+- Vínculos extintos descartados (D3): RGE (20), ELETROCAR (16), CERRP (13), CEMIG-D (3), CEPRAG (3), Neoenergia PE (2), CERTEL ENERGIA (1), COELBA (1), EMR (1), ENEL RJ (1), EQUATORIAL PI (1), PACTO ENERGIA PR (1).
+- Tarifas descartadas por vencimento (D4): CERR (2016-12-31), CFLO (2017-07-11), CNEE (2017-07-11), CPFL JAGUARI (2018-03-21), CPFL LESTE PAULI (2018-03-21), CPFL MOCOCA (2018-03-21), CPFL SANTA CRUZ (2018-03-21), CPFL SUL PAULIST (2018-03-21), EBO (2023-08-27), EDEVP (2017-07-11), EEB (2017-07-11), ENF (2023-06-21), RGE SUL (2019-06-18).
+- Tarifas vencidas em uso, até 6 meses (aviso): nenhuma.
+- Sucessoras candidatas (só informação): CPFL SANTA CRUZ → CPFL Santa Cruz.
+- substituidas: cerr → ambar-roraima, cflo → ess, cnee → ess, cpfl-jaguari → cpfl-santa-cruz, cpfl-leste-pauli → cpfl-santa-cruz, cpfl-mococa → cpfl-santa-cruz, cpfl-sul-paulist → cpfl-santa-cruz, ebo → epb, edevp → ess, eeb → ess, enf → emr, rge-sul → rge.
+- **Coerência (não passa com --forcar; critério 3):** ok
+- Validação (passa com --forcar): ok
+
+#### Comparação com os arquivos publicados
+
+- Municípios lidos: 5571; mudam: **285** (BA 2, GO 1, MG 15, PB 11, PI 1, PR 4, RJ 1, RR 14, RS 161, SC 3, SP 72).
+- Critério 2: 256 municípios tinham empresa vencida; ainda com uma: **45**; ficam sem distribuidora: **0**.
+
+| Cidade | Esperada em 1º | Antes | Depois | Confere |
+| --- | --- | --- | --- | --- |
+| Alegrete (RS) | rge | rge-sul | rge | sim |
+| Assis (SP) | ess | edevp | ess | sim |
+| Bragança Paulista (SP) | ess | eeb | ess | sim |
+| Mococa (SP) | cpfl-santa-cruz | cpfl-mococa | cpfl-santa-cruz | sim |
+| Itapetininga (SP) | cpfl-santa-cruz | cpfl-sul-paulist | cpfl-santa-cruz | sim |
+| Caracaraí (RR) | ambar-roraima | cerr | ambar-roraima | sim |
+| Guarapuava (PR) | — | copel-dis, cflo | copel-dis, ess | ver ordem |
+| Nova Friburgo (RJ) | — | enel-rj, enf | emr, enel-rj | ver ordem |
+| Campina Grande (PB) | — | epb, ebo | epb | ver ordem |
+
+### Análise do backend (30/10), com o código e as fixtures
+
+| Ponto | O que é | O que fiz |
+| --- | --- | --- |
+| Portão (a), "C2 não confirmada" | O ano máximo do arquivo de conjuntos é **2014**: o arquivo de atributos para ali, e a ANEEL escreve a sigla de hoje até nas linhas antigas (dominio-energia). O dono de cada conjunto é o de 2014. A C2 existe, mas não como "conjunto que parou de reportar": todo conjunto parou em 2014. Quem troca a empresa que acabou é o D1/D2; se faltar uma linha, o D4 + V5 param a rotina | O resumo passa a mostrar a coluna do ano, as linhas por ano e os conjuntos pelo último ano, e avisa quando o arquivo é velho (`cc51fcb`) |
+| Portão (d), EQUATORIAL PI (222) e mais 63 vínculos tirados | **Defeito de regra.** O D3 olhava só o ano do conjunto e marcava como extinta uma empresa **vigente** (Equatorial PI = antiga Cepisa, mesmo CNPJ 06840748000189). Na mesma conta, tirava 63 vínculos de ELETROCAR, RGE, CERRP, CEMIG-D, COELBA, ENEL RJ e outras, mudando cidades certas (daí 285 em vez de ~227) | D3 só vale para vínculo que **não chega a nenhuma tarifa publicada** (`8e0d990`). Teste: conjunto antigo da CEMIG-D em Uberaba e Uberlândia; ela fica e não entra no aviso |
+| Critério 2, "ainda com uma: 45" | **Falso positivo do diagnóstico.** A sigla vencida "CPFL SANTA CRUZ" (61116265000144) dá o id `cpfl-santa-cruz`, o mesmo da CPFL Santa Cruz de hoje (53859112000169). As cidades da sucessora contavam como "com vencida": 27 + 7 + 5 + 4 + 2 = 45. O total de 256 = 227 + 29 pelo mesmo motivo | A conta ignora o id vencido que a montagem publica e lista o caso à parte (`cc51fcb`) |
+| A antiga CPFL SANTA CRUZ | **Defeito de regra.** Ela chegava à CPFL Santa Cruz de hoje só pelo nome: o `acharTarifa` caía na sigla sem conferir o CNPJ. A troca estava certa, mas sem ato, contra o ADR-005 (item 2) | A sigla só liga com a mesma raiz de CNPJ ou sem CNPJ; o recusado fica sem tarifa (V5) e entra em `ligacoesPelaSiglaRecusadas` (`2804a5c`). A linha 11 do `sucessoes.json`, confirmada pelo dominio-energia (REA 6.723/2017), põe as 27 cidades de volta pela sucessão (`3d916ce`). Sem CNPJ, a sigla de uma empresa publicada não segue sucessão (`0e8167b`) |
+| CERR | Ato melhor (dominio-energia) | `ato` = Despacho MME s/n, de 23/09/2016, com a fonte da ANEEL na Câmara (`3d916ce`) |
+| "Ver ordem" | Campina Grande: `epb` uma vez só, certo. Nova Friburgo: `emr` antes de `enel-rj`, certo (a cidade era da ENF). **Guarapuava: `copel-dis` antes de `ess`**, mas a cidade era da CFLO (hoje ESS). A ordem vem de "quem atende mais cidades", e a Copel ganha | Não mexi: é risco aceito pelo dominio-energia, não veto. O qa anota no h7; pergunta abaixo |
+| Nova Santa Rita (PI) com `certaja` | Parece código IBGE trocado no IndQual (a Certaja é do RS) | Fora desta história; pergunta ao scrum-master abaixo |
+
+**O diagnóstico precisa rodar de novo** (o push da branch roda). Esperado com o código de agora: portão (d) com 0
+cidades e 0 vínculos tirados (no resumo de 30/10, toda ligação chegou a uma tarifa: "agentes sem tarifa: nenhum");
+sucessões aplicadas com a linha nova "CPFL SANTA CRUZ → CPFL Santa Cruz (27)"; "mesma sigla, outro CNPJ: nenhuma";
+critério 2 com 227 e "ainda com uma: **0**"; "mudam" perto de 227, sem a mudança do PI; coerência e validação "ok".
+Se aparecer uma ligação recusada ou um agente sem tarifa, é uma sucessão que falta: a sigla vai para o dominio-energia.
+
+### Segunda execução (41130096649, commit `de76af4`): RGE antiga
+
+_(backend, 30/10.)_ Resumo em `diag-resumo2.md` no scratchpad de quem orquestra. Bom: (d) = 0, critério 2 "ainda com
+uma" = 0, coerência "ok", CPFL SANTA CRUZ → CPFL Santa Cruz (27). **Regressão do `2804a5c`:** "RGE (02016439000138) ≠
+RGE (02016440000162): 263", V5 (RGE sem tarifa), V6 com 131 cidades sem distribuidora, e 507 cidades mudam (RS 407).
+É a **RGE antiga** (Rio Grande Energia), incorporada pela RGE Sul, que passou a se chamar RGE: nome igual, CNPJ de
+outra raiz. Antes, ela chegava à RGE de hoje só pelo nome. **Correção:** linha 12 do `sucessoes.json`, com os dados
+que o dominio-energia já tinha aprovado na tabela "Sucessões" (agrupamento aprovado em 04/12/2018, sem número de REA,
+fonte: formulário de referência da CPFL). Como na CERR, o `ato` vai sem número. V9 passa (o CNPJ antigo não tem
+tarifa); V10 passa (sigla "RGE" nos conjuntos e na tarifa). O id é o mesmo, então o `substituidas` não muda. Os 22
+vínculos "RGE" que o D3 tirava voltam a chegar a uma tarifa. **O diagnóstico precisa rodar de novo.** Esperado:
+"agentes sem tarifa: nenhum", "mesma sigla, outro CNPJ: nenhuma", sucessão "RGE → RGE (263)", cerca de 10 cidades
+sem distribuidora e "mudam" perto de 227.
+
+### Terceira execução (commit `8e66fe2`)
+
+_(backend, 30/10.)_ Mudam 227 cidades, 10 ficam sem distribuidora, nenhuma ligação recusada, critério 2 ok. Mas a
+**coerência reprovou** a linha 12, a da RGE, no V9 e no V10. **Causa:** o `resumirAgentes` juntava as linhas da tarifa
+pela sigla e guardava o CNPJ da primeira. A sigla "RGE" tem dois CNPJs: o da RGE antiga, até 2019, e o da RGE de hoje.
+Com isso, o CNPJ antigo "ganhava" a vigência de 2026. **Correção:** um agente por sigla + CNPJ; o V9 e o V10 ficam como
+estavam. Testes: a linha da RGE passa, e o V9 (CNPJ antigo vigente) e o V10 (sigla errada) continuam reprovando.
+O mesmo defeito escondia o par `02016440000162 (RGE, RGE SUL)` no portão (c), que agora deve aparecer. O resumo também
+passa a listar a RGE antiga entre as vencidas. **O diagnóstico precisa rodar de novo.** Esperado: coerência "ok" e o
+resto igual.
+
+**O que conferir no resumo do job** (vale para cada nova execução):
+
+1. O job termina verde, e o passo "Nada mudou no repositório" passa (nada foi gravado).
+2. **Portão (a):** a linha diz "**C2 confirmada.**". Se disser "não confirmada para essas", a lista mostra quais
+   empresas reportaram em `ano máximo − 1` ou depois: o backend revê o D3 para elas.
+3. **Portão (b):** "todas com um só valor B1 na vigência". Se EMR ou EPB aparecerem "com problema", as linhas ENF ou
+   EBO saem do `sucessoes.json` (sem isso o V7 para a rotina). Se aparecer "sem tarifa", a sigla da sucessora no
+   `sucessoes.json` não é a da ANEEL: o V10 também acusa.
+4. **Portão (c):** só `02016440000162 (RGE, RGE SUL)` e `53859112000169 (CPFL JAGUARI, CPFL Santa Cruz)`. Outro par,
+   com as duas siglas vigentes, faz o V2 parar a rotina.
+5. **Portão (d):** quantas cidades ficam com um vínculo extinto por ser o único (aviso, não para).
+6. **Coerência (critério 3):** "ok". Qualquer V1–V4, V7–V10 aqui para a rotina do h8, mesmo com `--forcar`.
+7. **Validação:** o esperado é "ok". Se aparecer V5 (agente sem tarifa) ou V6 (mais de 30 cidades sem distribuidora),
+   há uma sucessão que ainda não está na tabela: anotar a sigla para o dominio-energia.
+8. **Comparação (critérios 1, 2 e 10):** na tabela das cidades, "Confere" = "sim" nas 6 primeiras; "ainda com uma"
+   = **0** e "ficam sem distribuidora" = **0**; "mudam" perto de 227 (mais o que o D3 tirar), com RS, SP, RR, MG,
+   PB, PR e RJ. Guarapuava, Nova Friburgo e Campina Grande: anotar a ordem para o qa (h7).
+9. Sucessões aplicadas (D2) com as 10 linhas, e renomeações (D1) com `rge-sul → rge` e `cpfl-jaguari →
+   cpfl-santa-cruz`.
+
 ## Perguntas abertas
 
 - [x] `[para: dominio-energia]` _(respondida em 30/10: ver "Regras de negócio e fontes"; CERR sem número de ato da ANEEL)_ Confirmar no cadastro de agentes ou nas resoluções autorizativas da ANEEL, com o
@@ -645,19 +798,53 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   "Fluxo e textos", F1)_ Quando a casa salva troca de `rge-sul` para `rge` (ou de EDEVP para Energisa
   Sul-Sudeste), mostramos um aviso, como "Sua distribuidora agora se chama RGE. O preço foi atualizado.", ou a troca
   fica sem aviso?
-- [ ] `[para: tech-lead]` (não bloqueia o h0–h5) F1: (1) como o site acha o nome comercial de um id que já saiu do
+- [ ] `[para: tech-lead]` _(frontend, h6: resolvido assim, para revisar: (1) `nomeComercialDoId` no core, pelo mesmo `slug` da rotina; (2) o par fica num `useState` do `useDistribuidoraAtualizada`; (3) `Aviso` com `anunciar={false}`)_ (não bloqueia o h0–h5) F1: (1) como o site acha o nome comercial de um id que já saiu do
   `tarifas.json` (ex.: uma função no core, de id para nome, ou o nome junto do `substituidas`)? (2) O `{ de, para }`
   precisa ficar guardado durante a visita, depois da regravação. (3) O `Aviso` pode ganhar uma opção para não pôr o
   próprio `role`, para entrar numa região `status` que já existe?
-- [ ] `[para: dominio-energia]` (não bloqueia) Qual é o nome comercial, com fonte, de EDEVP, CNEE, EEB, CFLO e CERR,
+- [x] `[para: dominio-energia]` _(respondida em 30/10: 4 nomes com fonte, CNEE sem nome; ver a nota do dominio-energia de 30/10, "passo 0")_ Qual é o nome comercial, com fonte, de EDEVP, CNEE, EEB, CFLO e CERR,
   para entrar em `nomeDaDistribuidora`? Sem isso, o aviso usa o texto sem o nome antigo.
 - [ ] `[para: scrum-master]` (não bloqueia) Com `preco.origem === "indisponivel"`, os cômodos e aparelhos do painel
   também mostram R$ 0,00. O F2 corrige só o cartão de cima. O resto fica para uma história própria? Também falta um
   caminho "A minha não está aqui" no passo "distribuidora" do cadastro (princípio 3).
+- [x] `[para: tech-lead]` _(respondida em 30/10: **confirmado**, V4 = "sucessora final publicada"; o V1 já limita a
+  6 meses, e o estrito pararia a rotina a cada atraso da ANEEL)_ (não bloqueia) **V4, sentido de "vigente":** implementei o V4 como "a sucessora final está
+  publicada"; junto com o V1, isso quer dizer "vigente ou vencida há até 6 meses (D4)". Com "vigente" estrito
+  (`fimVigencia ≥ hoje`), a rotina pararia todo dia em que a ANEEL atrasa o reajuste de ESS, CPFL Santa Cruz, EMR, EPB
+  ou Âmbar Roraima, o que contradiz o aviso desde o 1º dia do dominio-energia. Confirmar ou pedir o estrito.
+- [ ] `[para: dominio-energia]` (não bloqueia) No `base/sucessoes.json`, cada linha tem um link só em `fonte`; os
+  outros links e as ressalvas (data da REA 6.318 num sábado, número do despacho do MME) foram para o campo opcional
+  `observacao`. Revisar as 10 linhas no PR (R4) e trocar a `fonte` pelo link do cedoc ou do DOU quando tiver acesso.
+- [x] `[para: frontend]` _(feito no h6, 30/10)_ (h6) O core ganhou `trocaDeDistribuidora(arquivo, id)`, que devolve `{ de, para }` só quando
+  `de` não está publicado e `para` está (R6). O `useDistribuidoraAtualizada` pode usar direto, guardando o par só na
+  visita (F1).
 - [x] `[para: scrum-master]` _(respondida em 30/10: Sprint 0, prioridade 1, **um corte só**, antes do a3; o passo 0
   roda na Action pelo `push` da branch, que quem orquestra faz. Ver a nota do scrum-master)_ Prioridade e sprint. O pedido do dominio-energia é prioridade alta. Fazer um corte só ou
   dois (ver "Corte possível")? E lembrar que a rede do ambiente de nuvem não alcança a ANEEL: o passo 0 precisa da
   Action ou de uma máquina com acesso.
+
+- [ ] `[para: scrum-master]` (não bloqueia; do passo 0) Criar uma história futura: **cidade com distribuidora de
+  outra UF**. Nova Santa Rita (PI, 2207959) aparece com `certaja`, cooperativa do RS; parece código IBGE trocado no
+  IndQual com Nova Santa Rita (RS). Proposta: a rotina tira (e conta no relatório) a distribuidora que não atende a UF
+  da cidade. Fica fora da HIS-111.
+- [ ] `[para: dominio-energia]` (não bloqueia; risco já aceito) **Guarapuava (PR):** a lista fica `copel-dis, ess`. A
+  ordem é "quem atende mais cidades", e a cidade era da CFLO (hoje ESS). A família vê a Copel marcada primeiro no
+  cadastro. Basta o qa anotar no h7, ou vale uma regra (por exemplo, a sucessora da empresa que tinha a sede na cidade)
+  numa história própria?
+- [x] `[para: tech-lead]` _(feito em 30/10: T2 e ADR-005, item 2)_ (para ciência) O D3 do T2 mudou depois do passo 0: o vínculo "extinto" só conta quando **não
+  chega a nenhuma tarifa publicada**. Motivo: o arquivo de conjuntos para em 2014, e o ano sozinho marcava empresas
+  vigentes (Equatorial PI). A regra segura continua. A sigla também não liga mais CNPJs de raiz diferente (ADR-005,
+  item 2). Se concordar, o T2 e o ADR-005 ganham uma linha cada.
+
+- [x] `[para: dominio-energia]` _(respondida em 30/10, abaixo)_ (não bloqueia a nova execução; bloqueia o merge) **Linha 12 do `sucessoes.json`,
+  RGE antiga (02016439000138) → RGE (02016440000162), `desde` 2019-01-01.** Pus com o que você aprovou na tabela
+  (agrupamento de 04/12/2018, sem número de REA, formulário de referência da CPFL). Confirme a linha e, se achar, o
+  número da REA e o link do cedoc. O `desde` está certo? A tarifa da RGE Sul vai até 18/06/2019.
+  - _(dominio-energia, 30/10)_ **Linha 12 confirmada** (CNPJs, siglas, empresa). **Número da REA: não achei** (o cedoc
+    da ANEEL não abre daqui e nenhuma fonte aberta traz o número); o `ato` fica como está, sem inventar.
+    `desde` 2019-01-01 **ok**: a CPFL disse à CVM que a ANEEL aprovou em 04/12/2018 e que o agrupamento foi em 31/12/2018
+    ([IstoÉ](https://istoe.com.br/cpfl-energia-agrupa-concessoes-das-distribuidoras-rge-sul-e-rge/), imprensa: só corrobora).
+    Só a `observacao` mudou. Quem abrir o cedoc procura a REA de dez/2018. Aceito mergear sem o número, como na CERR.
 
 ## Conversa da equipe
 
@@ -797,3 +984,189 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   "R$ 0,00" ou "Tarifa da :" vazio no cartão de cima; os dois corpos do F1 (com e sem o nome antigo).
 - **Próximo:** tech-lead (3 pontos do F1, não bloqueiam o h0–h5); dominio-energia (5 nomes); depois o frontend no h6.
   Eu reviso as capturas do qa (390 e 1280 px) no h7.
+
+### [backend] 2026-10-30 — h0 a h5 implementados; passo 0 pronto para o push
+- **O que fiz** (branch `his-111-tarifas-vencidas`, um commit por passo):
+  - **h0** `76aee18`: `fontes.ts` (a leitura saiu do `atualizar.ts`), `diagnostico.ts` + `diagnosticar.ts`
+    (`pnpm dados:diagnosticar`), `anotacoes.ts` (R2) e `.github/workflows/diagnosticar-dados.yml` com os `paths` do R1.
+  - **h1** `81e1f89`: `base/sucessoes.json` com as 10 linhas do dominio-energia e `sucessoes.ts` (leitor que lança com a
+    linha; V9 e V10 do R3; aviso do `desde`).
+  - **h2** `175d74d`: D4 com 6 meses e V7 em `tarifas.ts`; `subtrairMeses` preso ao fim do mês.
+  - **h3** `db01535`: D1, D2 e D3 em `montar.ts` e `municipios.ts`; `substituidas`; campos do D6; `rotina.ts`.
+  - **h4** `64b2dd8`: `conferirCoerencia` (V1–V4, V7–V10, sem `--forcar`); V5 e V6 no `validar`; `executarAtualizacao`
+    testável; `::notice`/`::warning` do D6.
+  - **h5** `92e1a0a`: core com `substituidas?`, `acharDistribuidora`, `distribuidorasDaCidade` e
+    `trocaDeDistribuidora` (R5, R6).
+- **Decisões e porquê:**
+  - **D3 com a regra segura:** um vínculo extinto que leva a uma sucessora (D1 ou D2) vale; os outros só saem quando a
+    cidade tem outro vínculo recente. Assim o D3 nunca tira o único preço de uma cidade.
+  - **D1 também olha as vencidas descartadas pelo D4.** Sem isso, a RGE SUL (2019) sairia pelo D4 e `rge-sul` nunca
+    entraria em `substituidas`.
+  - **`substituidas` leva também ids sem cidade hoje** (`cflo`, `cnee`, `eeb`, `cpfl-jaguari`), porque uma casa salva
+    ainda pode ter o id antigo.
+  - **V4 = sucessora publicada**, e "vigente" vem do V1 (até 6 meses). Pergunta aberta ao tech-lead.
+  - **Assinatura nova:** `conferirCoerencia(montagem, contexto)` recebe também os agentes da tarifa e as siglas dos
+    conjuntos, porque o V9 e o V10 precisam do que a ANEEL diz de cada CNPJ, e isso não está no `tarifas.json`.
+  - A rotina lê o `sucessoes.json` **antes** de baixar: uma linha errada para tudo sem gastar o download.
+  - A rotina continua gravando só em `apps/web/public/dados`; nenhum código escreve em `packages/dados/base/` (R4).
+  - A fixture antiga da LIGHT SESA passou a vencer em 2026-05-14, e não mais em 2026-03-14. Os valores não mudaram, e o
+    teste continua provando "usa a mais recente que já começou", agora dentro dos 6 meses.
+- **Condicionado ao passo 0** (ver "Resultado do passo 0"):
+  - (a) a folga do D3;
+  - (b) as linhas ENF e EBO (V7);
+  - (c) nenhum outro par de CNPJ com as duas siglas vigentes (V2);
+  - V5, V6 e V10 com os dados reais. As siglas do `sucessoes.json` foram copiadas do `tarifas.json` publicado, e o
+    V10 também aceita a sigla dos conjuntos.
+  - Os critérios 1, 2 e 10 só se provam com os CSVs reais.
+- **Ameaças:** a seção "Ameaças" (R1–R9) e as notas da conversa desta cópia são idênticas às da `his-002-qualidade`;
+  não faltava nada. Situação de cada uma:
+  - R1: feito nos `paths`.
+  - R2: `anotacao`/`umaLinha`/`celulaMarkdown`/`limitarResumo`, com teste da sigla `"X\n::add-mask::a"`.
+  - R3: V9 e V10, com uma fixture para cada caso.
+  - R4: nada escreve em `base/`.
+  - R5 e R6: no core.
+  - R7: contrato registrado no T1, para o a3.
+- **Arquivos:**
+  - `packages/dados/src/`: `anotacoes.ts`, `fontes.ts`, `diagnostico.ts`, `diagnosticar.ts`, `sucessoes.ts` e
+    `rotina.ts` (novos); `atualizar.ts`, `montar.ts`, `util.ts`, `exemplo.ts`, `aneel/tarifas.ts` e
+    `aneel/municipios.ts`.
+  - `packages/dados/base/sucessoes.json`.
+  - `packages/dados/fixtures/sucessao/` (CSVs, `tarifas-v7.csv`, os 6 `sucessoes*.json` e `publicados/`) e
+    `fixtures/tarifas.csv` (datas da LIGHT).
+  - `packages/dados/test/`: `anotacoes`, `diagnostico`, `sucessoes`, `vencimento`, `montagem-sucessao`, `coerencia` e
+    `rotina` (novos); `dados.test.ts`.
+  - `packages/core/src/tipos.ts` e `distribuidoras.ts`; `packages/core/test/distribuidoras.test.ts`.
+  - `.github/workflows/diagnosticar-dados.yml`, `package.json` e `packages/dados/package.json`.
+  - `apps/web/public/dados/` não foi tocado.
+- **Como verifiquei:**
+  - `pnpm typecheck` e `pnpm test` verdes em cada passo (dados: de 11 para 72 testes; core: de 37 para 48).
+  - `pnpm build` verde no h5.
+  - Rodei `pnpm dados:diagnosticar --sem-baixar` com as fixtures copiadas para o `.cache`, comparando com os arquivos
+    publicados de verdade. Alegrete e Assis passam a `rge` e `ess`. O `git status` continuou limpo.
+  - Não rodei com os CSVs reais: a ANEEL dá 403 daqui.
+- **Para o próximo:**
+  - **Quem orquestra:** fazer o push da branch (roda o passo 0) e colar o resumo em "Resultado do passo 0". O que
+    conferir está lá.
+  - **Backend:** ajustar o D3 ou o `sucessoes.json` se o portão reprovar.
+  - **Frontend (h6):** `acharDistribuidora` no `useResumo`; `distribuidorasDaCidade` no `Cadastro` e na
+    `TelaAjustes`; `trocaDeDistribuidora` no `useDistribuidoraAtualizada`.
+  - **Seguranca (etapa 6):** R1–R7 nos arquivos acima. O V9 e o V10 estão em `sucessoes.ts`; as fixtures, em
+    `fixtures/sucessao/sucessoes-v9.json` e `sucessoes-v10.json`; os testes, em `test/rotina.test.ts`, com `--forcar`.
+  - **qa (h7):**
+    - critérios 4 a 7, 9 e 12 nos testes de `packages/dados/test/`;
+    - critério 8 na unidade, em `packages/core/test/distribuidoras.test.ts`;
+    - critérios 1, 2 e 10 pelo resumo do job.
+  - **dominio-energia:** revisar o `sucessoes.json` no PR.
+
+### [dominio-energia] 2026-10-30 — passo 0: CPFL Santa Cruz antiga entra; Equatorial PI é falso positivo; nomes
+- **Antiga CPFL SANTA CRUZ (61116265000144): entra.** Ela está na mesma REA nº 6.723/2017. As demonstrações da
+  Cia. Jaguari (RI CPFL) citam a Companhia Luz e Força Santa Cruz entre as quatro incorporadas em 31/12/2017. Pus a
+  linha 11 no `base/sucessoes.json` (→ `cpfl-santa-cruz`). V9 passa: a tarifa dela acabou em 21/03/2018. V10 passa: a
+  sigla é a da ANEEL. O `substituidas` não ganha chave, porque o id é o mesmo da sucessora.
+  - **[para: backend]** O `test/sucessoes.test.ts` espera 10 linhas: ele precisa passar a esperar 11, com
+    `"CPFL SANTA CRUZ→CPFL Santa Cruz"` depois da Sul Paulista.
+  - **[para: backend]** A forma compacta da `siglaAntiga` é igual à da sucessora. Um vínculo **sem CNPJ** com o
+    nome "CPFL Santa Cruz" entra por esta linha. O resultado é o mesmo, mas a contagem de `sucessoesAplicadas` sobe.
+- **Equatorial PI: a empresa é a certa; o "extinto" é falso positivo.** Ela é a antiga Cepisa (Companhia Energética
+  do Piauí). Em 2018 houve só troca de controle: leilão nº 2/2018, Despacho ANEEL nº 2.018/2018 e contrato de
+  17/10/2018 ([demonstrações de 30/09/2018](https://api.mziq.com/mzfilemanager/v2/d/abb77a17-3348-4bc7-849a-154998e06ca3/12cf1585-8372-48ec-ad4f-6c9cfa303e2f?origin=1)).
+  É a mesma pessoa jurídica, e o CNPJ da tarifa vigente é o mesmo (06840748000189). O que está velho é o **conjunto**,
+  não a empresa: o arquivo de atributos para em **2014**, e a ANEEL escreve a sigla de hoje até nas linhas antigas.
+  Concordo com a regra nova do D3 que o backend pôs em `montar.ts`: o vínculo só é extinto quando não chega a nenhuma
+  tarifa publicada. Ela também salva os 63 vínculos de empresas vigentes.
+  - **Dado real, a conferir [para: backend/qa]:** Nova Santa Rita (PI, 2207959) aparece com `certaja`, uma
+    cooperativa do RS. Parece código IBGE trocado com Nova Santa Rita (RS) no IndQual. Com a regra antiga, essa cidade
+    provavelmente ficava **só** com a Certaja (é a minha leitura do "PI 1" da comparação; não abri o `.cache`). Com a regra nova, a Equatorial volta, mas a Certaja
+    continua na lista. Sugiro tirar a distribuidora que não atende a UF da cidade, numa história própria.
+  - **Falso positivo no critério 2:** o "ainda com uma: 45" vem do id `cpfl-santa-cruz`. A sigla vencida
+    "CPFL SANTA CRUZ" vira o mesmo id da vigente. As contas: 27 + 7 + 5 + 4 + 2 (Jaguari) = 45. O diagnóstico deve
+    ignorar o id vencido que também é id publicado.
+- **CERR, ato melhor [para: backend]** (não bloqueia): segundo a [ANEEL, na Câmara em 29/11/2017](https://www2.camara.leg.br/atividade-legislativa/comissoes/comissoes-permanentes/cme/apresentacoes-em-eventos/2017/29-11-2017-discutir-o-constante-aumento-de-tarifa-de-energia-eletrica-em-roraima/Aneel%20-Roraima_SGT_Camara.pdf),
+  o ato é o "Despacho MME s/n, de 23/09/2016", que põe a Boa Vista no interior, e o Despacho ANEEL nº 580/2016
+  recomenda unificar as áreas. O despacho de 12/08/2016 só adiou a extinção da concessão da CERR. Pode trocar o `ato`
+  quando mexer no teste.
+- **Nomes para o aviso do F1** (em `nomeDaDistribuidora`; fonte: [Relatório Anual Energisa 2017](https://mz-filemanager.s3.amazonaws.com/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/relatorios-anuais/9cb421b1892cf4fe509f85138356e1ed84175be536450bdec59e6ec2f2de8819/relatorio_anual_2017.pdf)
+  e a apresentação da ANEEL acima):
+
+  | Sigla (id) | Nome | Fonte |
+  | --- | --- | --- |
+  | EDEVP (`edevp`) | Vale Paranapanema | Relatório Anual Energisa 2017 |
+  | EEB (`eeb`) | Bragantina | Relatório Anual Energisa 2017 |
+  | CFLO (`cflo`) | Força e Luz do Oeste | Relatório Anual Energisa 2017 |
+  | CERR (`cerr`) | Companhia Energética de Roraima | ANEEL, 29/11/2017 |
+  | CNEE (`cnee`) | **sem nome**: usar o corpo sem o nome antigo | O relatório só diz "Nacional", que não se entende sozinho |
+
+  Não pus "Energisa" na frente: não achei fonte oficial da marca usada na conta entre 2014 e 2017.
+- **Próximo:** backend (teste de 11 linhas e o diagnóstico do critério 2), depois o qa.
+
+### [backend] 2026-10-30 — passo 0 analisado: duas regras corrigidas, o diagnóstico conta certo, precisa rodar de novo
+- **O que fiz:** colei o resumo da execução 41095055344 em "Resultado do passo 0" e analisei cada ponto com o código
+  e as fixtures (tabela lá). Conferi os commits `402367a` e `f88cfcd` das anotações: o texto sai em linhas inteiras,
+  escapado (R2), até 9 anotações de 3.500 caracteres; o resumo de hoje coube.
+- **Correções, um commit cada (branch `his-111-tarifas-vencidas`, sem push):**
+  - `8e0d990` D3: empresa com tarifa publicada nunca é extinta. Era o "EQUATORIAL PI (222)" e os 63 vínculos tirados.
+  - `2804a5c` D2: a sigla não liga um vínculo a uma tarifa de outro CNPJ (raiz diferente). Campo novo
+    `ligacoesPelaSiglaRecusadas` no relatório e aviso no log.
+  - `cc51fcb` diagnóstico: o critério 2 ignora o id vencido que a montagem publica (era o "45"). O portão (a) mostra
+    a coluna e os anos do arquivo de conjuntos.
+  - `3d916ce` linha 11 do `sucessoes.json` (antiga CPFL SANTA CRUZ) e o ato novo da CERR, do dominio-energia; o
+    teste espera 11 linhas. Os arquivos do dominio-energia foram no mesmo commit.
+  - `0e8167b` D2: sem CNPJ, a sigla de uma empresa publicada não segue linha de sucessão (aviso do dominio-energia).
+- **Decisões e porquê:**
+  - O D3 não pode usar só o ano: o arquivo para em 2014. Ele fica para o vínculo sem tarifa, com a regra segura.
+  - "Mesma empresa" pela sigla exige a mesma raiz de CNPJ (8 dígitos = mesma pessoa jurídica). Na dúvida, a rotina
+    para (V5), como diz o ADR-005.
+  - Guarapuava e Nova Santa Rita ficam fora: perguntas abertas.
+- **Como verifiquei:** `pnpm typecheck`, `pnpm test` (dados: 74 → 81; core: 48) e `pnpm build` verdes. Os testes novos
+  são CEMIG-D vigente com conjunto antigo, a CPFL SANTA CRUZ com e sem linha, a filial com a mesma raiz e o critério 2
+  com id repetido. Sem os CSVs reais: a ANEEL dá 403 daqui.
+- **Variáveis de ambiente:** nenhuma nova.
+- **Para o próximo:**
+  - **Quem orquestra:** push da branch. O diagnóstico **precisa rodar de novo**; o esperado está em "Resultado do
+    passo 0".
+  - **qa (h7):** Guarapuava na ordem `copel-dis, ess`; o critério 2 com 0.
+  - **seguranca:** o R3 ficou mais forte. A sigla igual com CNPJ de outra raiz não troca mais de empresa.
+  - **tech-lead:** a mudança do D3 no T2 e no ADR-005.
+
+### [backend] 2026-10-30 — segunda execução: RGE antiga entra no sucessoes.json
+- **O que fiz:** a regressão das 263 cidades veio da regra nova da sigla (`2804a5c`): a RGE antiga tem outro CNPJ. Pus
+  a linha 12 no `sucessoes.json` com os dados que o dominio-energia já tinha aprovado. A fixture agora tem uma RGE
+  antiga em Caxias do Sul, testada com e sem a linha. Detalhes em "Segunda execução".
+- **Como verifiquei:** `pnpm typecheck` e `pnpm test` (dados 83, core 48) verdes.
+- **Para o próximo:** quem orquestra roda o diagnóstico de novo; o dominio-energia confirma a linha 12 (pergunta aberta).
+
+### [backend] 2026-10-30 — terceira execução: V9/V10 com o CNPJ certo de cada sigla
+- **O que fiz:** o `resumirAgentes` passou a agrupar por sigla + CNPJ. A fixture tem a tarifa da RGE antiga antes da
+  de hoje; sem a correção, 12 testes reprovam. Testes novos provam que o V9 e o V10 continuam reprovando os casos
+  errados. `pnpm typecheck` e `pnpm test` (dados 87, core 48) verdes. Detalhes em "Terceira execução".
+- **Para o próximo:** quem orquestra roda o diagnóstico de novo. O dominio-energia ainda confirma a linha 12.
+
+### [tech-lead] 2026-10-30 — code review do backend em `packages/dados` (h0–h5 e correções do passo 0): aprovado
+- **Aprovado**, sem devolver. Diagnóstico 4 (`fcb4462`) com todos os portões; typecheck, test (core 48, dados 87) e build verdes numa cópia (`dc30f99`). Camadas, sem `any`/`as` novos, coerência fora do `--forcar` com teste. T2 e ADR-005 (item 2) registram o D3 novo, a sigla só com a mesma raiz de CNPJ e o agrupamento sigla + CNPJ; V4 confirmado (perguntas abertas).
+- Itens, nenhum bloqueia:
+  1. `selecionarTarifasVigentes` ainda agrupa só pela sigla. A RGE passa porque a vigência mais nova é a de hoje. No h8, comentar isso e testar a mesma sigla com dois CNPJs no mesmo início de vigência (hoje entraria como "mais de um valor", V7, sem dizer que são duas empresas).
+  2. Comentários velhos: `MAXIMO_DE_LINHAS` diz "hoje são 10" (são 12); `VinculoMunicipio.ano` ainda fala em "conjunto que parou de reportar".
+  3. h8: trocar o `push` do `diagnosticar-dados.yml` por `pull_request` e ligar o teste dos publicados.
+- **Próximo:** frontend (h6), depois qa (h7).
+
+### [frontend] 2026-10-30 — h6: troca de id nas telas e aviso do D7 na Casca
+- **Fiz:** `useResumo` com `acharDistribuidora`; `Cadastro` e `TelaAjustes` com `distribuidorasDaCidade` (salvam o id de hoje mesmo com `municipios/{UF}.json` antigo); `useDistribuidoraAtualizada` em `aplicacao/casa.ts` (regrava uma vez por par, R6); aviso F1 em `casca/AvisoTrocaDistribuidora.tsx`, dentro de um `status` sempre presente, só com `origem === "aneel"`; "Entendi" leva o foco ao `h1`.
+- **Core:** nomes de EDEVP, EEB, CFLO e CERR (dominio-energia), `nomeComercialDoId` e `descreverTroca`, com 5 testes novos (core 53). `Aviso` ganhou `anunciar`.
+- **Não fiz:** o F2 (cidade sem preço), que mexe no `PainelAcompanhamento` da 002a; fica para outra etapa.
+- **Verifiquei:** typecheck, test e build verdes. Playwright (porta 3161, cópia própria, `tarifas.json` de teste com `substituidas`): 52 conferências em 390 e 1280 px, console limpo. Capturas e script em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/frontend-h6/`.
+- **Próximo:** qa (h7, critério 8: `rge-sul` sem conta → aviso, uma gravação, Ajustes com RGE; `cnee` → corpo sem nome; com conta → sem aviso); ux revisa as capturas.
+
+
+### [tech-lead] 2026-10-30 — code review do h6 (`10166f5`): aprovado
+- **Aprovado.** Camadas certas: o core é puro (`nomeComercialDoId` com `Map`, `descreverTroca`), a `aplicacao/casa.ts` é a única porta, a `Casca` e o aviso só usam `aplicacao/` e `ui/`, e o `Aviso` ganhou `anunciar` sem regra. A casa é regravada uma vez só e sem laço: o `trocaDeDistribuidora` só devolve troca para um id publicado (R6), o par fica num `ref`, e depois do `set` o id salvo é o de hoje. A `Casca` mora no `casa/layout`, então o aviso não some ao trocar de aba. typecheck, test (core 53, dados 87) e build verdes numa cópia. F2 fora, como combinado.
+- Itens, nenhum bloqueia:
+  1. `idDaSigla` (core) repete o `slug` da rotina. No h8, o `slug` de `packages/dados` passa a usar a função exportada do core (uma regra só).
+  2. O `setState` dentro do efeito entra na dívida da HIS-109 (`set-state-in-effect`).
+  3. qa (h7): e2e com a casa salva com `rge-sul` (regrava para `rge`, aviso uma vez, sem aviso com conta de luz, foco no `h1` ao tocar em "Entendi") e capturas em 390 e 1280 px.
+
+### [qa] 2026-10-30 — h7: **devolvido para frontend** (1 defeito; o resto aprovado)
+- **Dados (diagnóstico 4):** crit. 1 (6 cidades "sim"), 2 (227, 0 com vencida, 0 sem distribuidora), 9 (pelo resumo: 12 sucessões, 0 extintos, 13 descartadas) e 10 (mudam 227: RS 127, SP 62, RR 14, MG 13, PB 9, PR 1, RJ 1) ok. Guarapuava `copel-dis, ess` (risco aceito), Nova Friburgo `emr, enel-rj`, Campina Grande `epb`.
+- **Crit. 8 (h6):** `apps/web/e2e/troca-distribuidora.spec.ts` (7 testes × 390/1280; fixtures novas `casa-v2-rge-sul.json` e `substituidas-his111.json`; casa-v1/v2 intactas): RGE R$ 0,94 desde o 1º quadro, 1 gravação só com o id, aviso só sem conta e só na visita, "Entendi" → foco no `h1`, `cnee` sem nome, `cerr` com acento, arquivo sem `substituidas`, laço/malformado (R5, R6), cadastro com `municipios` antigo. Axe, teclado, zoom 200% e movimento reduzido ok. Roda depois de a 002a entrar (usa `e2e/apoio`).
+- **E2e da 002a**, na junção 111 + `his-002-qualidade` (`merge-tree`, só docs em conflito): 120 passam, 6 `fixme` antigos, console limpo, typecheck/test (53 + 87)/build verdes.
+- **D1 (média), peso de JS:** o `peso-js.spec.ts` reprova: 11a +1 135 B em `/casa`, +1 179 `/casa/comodos`, +1 151 `/casa/dicas`, +1 134 `/casa/ajustes` (limite +1 024). A 002a sozinha passa. Frontend reduz (ex.: aviso carregado só quando há troca) ou o tech-lead aceita e atualiza o `peso-js.json` de propósito (Aa13).
+- Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-capturas/` (+ `resultado.txt`) e `…/scratchpad/qa-his111-e2e-completo.txt`.

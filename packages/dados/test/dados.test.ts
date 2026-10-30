@@ -5,7 +5,7 @@ import { criarLeitorConjuntos, lerVinculos, mapearColunasConjuntos, mapearColuna
 import { ehTarifaResidencialB1, mapearColunasTarifas, selecionarTarifasVigentes, type ColunasTarifas } from "../src/aneel/tarifas";
 import { lerCSV } from "../src/csv";
 import { montarArquivos, validar } from "../src/montar";
-import { acharColuna, dataISO, numeroBR, slug } from "../src/util";
+import { acharColuna, dataISO, diaSeguinte, numeroBR, slug, subtrairMeses } from "../src/util";
 
 const fixture = (nome: string) => fileURLToPath(new URL(`../fixtures/${nome}`, import.meta.url));
 
@@ -29,6 +29,16 @@ describe("utilidades", () => {
   it("acha colunas sem depender de maiúsculas e acentos", () => {
     expect(acharColuna(["SIGAGENTE", "Vlr TE"], "SigAgente")).toBe("SIGAGENTE");
     expect(acharColuna(["Código IBGE do Município"], /ibge/)).toBe("Código IBGE do Município");
+  });
+
+  it("volta meses presa ao fim do mês (D4 da HIS-111)", () => {
+    expect(subtrairMeses("2026-10-30", 6)).toBe("2026-04-30");
+    expect(subtrairMeses("2026-08-31", 6)).toBe("2026-02-28");
+    expect(subtrairMeses("2024-08-31", 6)).toBe("2024-02-29"); // ano bissexto
+    expect(subtrairMeses("2026-03-31", 1)).toBe("2026-02-28");
+    expect(subtrairMeses("2026-01-15", 6)).toBe("2025-07-15"); // vira o ano
+    expect(diaSeguinte("2024-02-28")).toBe("2024-02-29");
+    expect(diaSeguinte("2026-12-31")).toBe("2027-01-01");
   });
 
   it("gera ids estáveis", () => {
@@ -56,13 +66,15 @@ describe("tarifas da ANEEL", () => {
 
   it("escolhe a vigência atual, soma TE + TUSD e converte de R$/MWh para R$/kWh", async () => {
     const { lido, colunas } = await ler();
-    const { tarifas, descartadas } = selecionarTarifasVigentes(lido.linhas, colunas, "2026-10-29");
+    const { tarifas, descartadas, vencidasEmUso } = selecionarTarifasVigentes(lido.linhas, colunas, "2026-10-29");
+    expect(vencidasEmUso).toEqual([{ sigla: "LIGHT SESA", cnpj: "60444437000146", fimVigencia: "2026-05-14" }]);
     const ess = tarifas.find((t) => t.sigla === "ESS");
     expect(ess).toMatchObject({ inicioVigencia: "2026-07-12", resolucao: "REH 3.300/2026", cnpj: "07282377000120" });
     expect(ess!.teKwh + ess!.tusdKwh).toBeCloseTo(0.7708, 6);
     expect(tarifas.find((t) => t.sigla === "CEMIG-D")!.tusdKwh).toBeCloseTo(0.52075, 6);
-    // LIGHT: vigência terminou e não há outra publicada — usa a mais recente que já começou
-    expect(tarifas.find((t) => t.sigla === "LIGHT SESA")?.inicioVigencia).toBe("2025-03-15");
+    // LIGHT: vigência terminou há 5 meses e meio e não há outra publicada — usa a mais recente que já começou,
+    // com aviso (D4 da HIS-111: até 6 meses vencida). A fixture mudou de 2025-03-15 para 2025-05-15 por causa do D4.
+    expect(tarifas.find((t) => t.sigla === "LIGHT SESA")?.inicioVigencia).toBe("2025-05-15");
     // Cooperativa com vigência só no futuro fica de fora
     expect(tarifas.find((t) => t.sigla === "COOPERATIVA X")).toBeUndefined();
     expect(descartadas.some((d) => d.startsWith("COOPERATIVA X"))).toBe(true);
@@ -128,6 +140,7 @@ describe("montagem dos arquivos", () => {
           { ibge: 3550308, nome: "São Paulo", uf: "SP" },
         ],
       },
+      hoje: "2026-10-29",
       geradoEm: "2026-10-29T12:00:00Z",
       origem: "aneel",
       fontes: [],

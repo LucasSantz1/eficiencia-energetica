@@ -1,0 +1,14 @@
+{
+  "sobre": "Critério 7: linha sem ato.",
+  "sucessoes": [
+    {
+      "cnpjAntigo": "07297359000111",
+      "siglaAntiga": "EDEVP",
+      "cnpjSucessor": "07282377000120",
+      "siglaSucessora": "ESS",
+      "desde": "2017-06-30",
+      "fonte": "https://api.mziq.com/mzfilemanager/v2/d/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/1f1a9406-2219-1c70-8239-1b42746c5de4?origin=2",
+      "consultadoEm": "2026-10-30"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { agregarAparelhos, COMODOS_PADRAO, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
+import { agregarAparelhos, COMODOS_PADRAO, distribuidorasDaCidade, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
 import { ArrowLeft, ChevronDown, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
@@ -63,18 +63,21 @@ export function Cadastro() {
   const tituloRef = useRef<HTMLHeadingElement>(null);
 
   const municipios = useMunicipios(uf);
-  const distribuidorasPorId = useMemo(() => new Map((tarifas.dados?.distribuidoras ?? []).map((d) => [d.id, d])), [tarifas.dados]);
+  // distribuidorasDaCidade troca o id de uma empresa que saiu do arquivo pelo de hoje (HIS-111): serve também para um
+  // municipios/{UF}.json antigo no cache, que ainda traga rge-sul.
+  const daCidade: Distribuidora[] = useMemo(
+    () => (tarifas.dados && municipio ? distribuidorasDaCidade(tarifas.dados, municipio.distribuidoras) : []),
+    [tarifas.dados, municipio],
+  );
 
   const opcoesDistribuidora: Distribuidora[] = useMemo(() => {
     if (!tarifas.dados) return [];
-    const daCidade = (municipio?.distribuidoras ?? []).map((id) => distribuidorasPorId.get(id)).filter((d): d is Distribuidora => Boolean(d));
     if (daCidade.length > 0) return daCidade;
-    const doEstado = tarifas.dados.estados.find((e) => e.uf === uf)?.distribuidoras ?? [];
-    const lista = doEstado.map((id) => distribuidorasPorId.get(id)).filter((d): d is Distribuidora => Boolean(d));
-    return lista.length > 0 ? lista : tarifas.dados.distribuidoras;
-  }, [tarifas.dados, municipio, uf, distribuidorasPorId]);
+    const doEstado = distribuidorasDaCidade(tarifas.dados, tarifas.dados.estados.find((e) => e.uf === uf)?.distribuidoras ?? []);
+    return doEstado.length > 0 ? doEstado : tarifas.dados.distribuidoras;
+  }, [tarifas.dados, daCidade, uf]);
 
-  const pulaDistribuidora = municipio !== undefined && municipio.distribuidoras.filter((id) => distribuidorasPorId.has(id)).length === 1;
+  const pulaDistribuidora = daCidade.length === 1;
   const passos: Passo[] = [
     "estado",
     "cidade",
@@ -112,9 +115,10 @@ export function Cadastro() {
 
   const escolherMunicipio = (m: Municipio) => {
     setMunicipio(m);
-    const validas = m.distribuidoras.filter((id) => distribuidorasPorId.has(id));
-    if (validas.length === 1) {
-      setDistribuidoraId(validas[0]);
+    const validas = tarifas.dados ? distribuidorasDaCidade(tarifas.dados, m.distribuidoras) : [];
+    const [unica] = validas;
+    if (validas.length === 1 && unica) {
+      setDistribuidoraId(unica.id);
       irPara("beneficio");
     } else {
       setDistribuidoraId(undefined);
@@ -277,7 +281,7 @@ export function Cadastro() {
           <Titulo
             ref={tituloRef}
             subtitulo={
-              (municipio?.distribuidoras.length ?? 0) > 1
+              daCidade.length > 1
                 ? `Mais de uma empresa atende ${municipio?.nome}. Veja o nome no topo da sua conta de luz.`
                 : `Não sabemos qual empresa atende ${municipio?.nome}. Veja o nome no topo da sua conta de luz.`
             }

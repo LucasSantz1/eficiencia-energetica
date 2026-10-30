@@ -35,8 +35,10 @@
   - Depende só da 002a no `main`.
   - Protótipo do `persist` em `scratchpad/tl-his003/persist/`; medição do zod em `scratchpad/tl-his003/zod/`.
 - **HIS-111 (tarifas vencidas, número errado no ar em 227 cidades):** desenho técnico pronto (T1–T7, 2026-10-30) e
-  ADR-005 proposto. Passos h0–h8, cerca de 3 dias. Recomendei que ela venha **antes do a3** da 003a, em paralelo com o
-  fim da 002a. Aguarda o scrum-master (sprint, critérios do T5), a seguranca (workflow do T3 e V8) e a ux (aviso do D7).
+  ADR-005 aceito. Passos h0–h8. **Code review do backend (h0–h5 + correções do passo 0) aprovado em 2026-10-30**,
+  com o diagnóstico 4 (`fcb4462`) passando todos os portões (227 cidades mudam, 10 sem distribuidora, (d)=0). Itens
+  não bloqueantes para o h8: seleção de tarifa ainda agrupa só pela sigla (comentar + teste de dois CNPJs no mesmo
+  início), 2 comentários velhos, `push` → `pull_request` no `diagnosticar-dados.yml`. **h6 (frontend, `10166f5`) aprovado em 2026-10-30**; itens: `idDaSigla` do core vira o `slug` da rotina no h8, `setState` no efeito vai para a HIS-109. Próximo: qa (h7).
 - CI: `ci.yml` da HIS-002a escrito no A6 (2026-10-30, branch `his-002-qualidade`). São dois checks em paralelo:
   "Lint, tipos e testes" e "Navegador (e2e, axe e peso)". Esses nomes valem para a proteção do `main` e a 002b não
   pode mudá-los. No runner (PR #3, 2026-10-30): job `e2e` ~2,8 min (Chromium 24 s, e2e ~1,9 min, 107 passam e 6
@@ -110,6 +112,10 @@
   - id guardado é resolvido pelo core (`acharDistribuidora`, `distribuidorasDaCidade`) e regravado uma vez pelo
     `aplicacao/`, nunca pelo leitor da casa salva;
   - barreiras de número errado ou de contrato não passam com `--forcar`; as de cobertura passam.
+  - _(revisto depois do passo 0)_ nome igual não é a mesma empresa: a sigla só liga com a mesma raiz de CNPJ (8
+    dígitos) ou sem CNPJ; a empresa da tarifa é sigla + CNPJ; o ano do conjunto (arquivo parou em 2014) só tira
+    vínculo que não chega a tarifa publicada, e só se a cidade tiver outro;
+  - V4 = sucessora final publicada (com o V1, até 6 meses vencida), não "vigente" estrito.
 - **Diagnóstico da rotina na Action:** a ANEEL dá 403 daqui. Para ler os CSVs, usar um workflow só de leitura
   (`contents: read`, `persist-credentials: false`, sem gravar, último passo "nada mudou"). O `workflow_dispatch` só
   aparece com o arquivo no `main`; numa branch, usar um gatilho `push` limitado à branch.
@@ -125,8 +131,9 @@
   - o peso até cerca de +3 kB por rota (acima de +4 kB, conversar antes).
 - HIS-111: no code review, conferir que `lerCasaSalva` não conhece `substituidas`, que `Object.hasOwn` está no
   `acharDistribuidora`, que V1–V4 e V7–V10 ignoram o `--forcar`, que o h8 tirou o gatilho `push` do
-  `diagnosticar-dados.yml` e ligou o teste dos publicados. A branch `his-111-tarifas-vencidas` tem a cópia antiga do
-  ADR-005: no rebase, vale a versão aceita (a da `his-002-qualidade`).
+  `diagnosticar-dados.yml` e ligou o teste dos publicados. ~~Cópia antiga do ADR-005 na branch~~ trazida a versão
+  aceita (da `his-002-qualidade`; o `origin/main` ainda tem a proposta, porque o 4e58b5b não entrou no PR #3) e
+  revista em 2026-10-30. Pergunta F1 resolvida pelo h6 (nome no core, par só na memória, `anunciar` no `Aviso`).
 - HIS-003: no code review, conferir também que o leitor garante o cômodo de cada aparelho (sem ele, o `aria-label` do
   "Quem mais gasta" diria "em undefined").
 - Dívida T2 (e2e): `seletorDoNo` e `TelaAxe` exportados sem uso de fora (`e2e/apoio/axe.ts`).

@@ -63,6 +63,13 @@ export interface ArquivoTarifas {
   distribuidoras: Distribuidora[];
   bandeiras: BandeiraMes[];
   estados: Estado[];
+  /**
+   * Id que saiu do arquivo → id que ficou no lugar (empresa renomeada ou incorporada; HIS-111, ADR-005). Sempre o
+   * id final. Ausente = nenhuma troca (arquivo antigo no cache, `dados:exemplo` de antes da HIS-111).
+   * A rotina grava sempre, com as chaves em ordem. Antes do leitor da HIS-003a o site lê sem validar: use
+   * `acharDistribuidora` e `distribuidorasDaCidade`, que não confiam no formato.
+   */
+  substituidas?: Readonly<Record<string, string>>;
 }
 
 /** Arquivo /dados/municipios/{UF}.json gerado pela rotina de dados. */

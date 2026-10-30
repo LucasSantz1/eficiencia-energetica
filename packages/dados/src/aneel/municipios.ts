@@ -20,6 +20,8 @@ export interface VinculoMunicipio {
   /** Sigla do agente como aparece no conjunto. */
   agente?: string;
   cnpj?: string;
+  /** Último `AnoIndice` do conjunto em que esse dono apareceu (HIS-111, D3: conjunto que parou de reportar). */
+  ano?: number;
 }
 
 export interface DonoConjunto {
@@ -44,15 +46,32 @@ export function mapearColunasConjuntos(cabecalho: string[]) {
  */
 export function criarLeitorConjuntos(c: ReturnType<typeof mapearColunasConjuntos>) {
   const donos = new Map<string, DonoConjunto>();
+  /** CNPJ → todas as siglas com que ele aparece, em qualquer ano (V10 da HIS-111). */
+  const siglasPorCnpj = new Map<string, Set<string>>();
+  /** Linhas por `AnoIndice`: mostra no diagnóstico até que ano o arquivo vai de verdade (passo 0: parou em 2014). */
+  const linhasPorAno = new Map<number, number>();
+  let anoMaisRecente = 0;
   return {
     donos,
+    siglasPorCnpj,
+    linhasPorAno,
+    /** Nome da coluna usada como ano (o diagnóstico mostra, para conferir que é mesmo o `AnoIndice`). */
+    colunaDoAno: c.ano,
+    /** Maior `AnoIndice` do arquivo (0 sem a coluna). Um conjunto que parou antes disso deixou de reportar (HIS-111, D3). */
+    get anoMaisRecente() {
+      return anoMaisRecente;
+    },
     ler(linha: Linha) {
       const conjunto = soDigitos(linha[c.conjunto]);
       const agente = linha[c.agente]?.trim();
       if (!conjunto || !agente) return;
       const ano = c.ano ? Number(soDigitos(linha[c.ano]).slice(0, 4)) || 0 : 0;
+      if (ano > anoMaisRecente) anoMaisRecente = ano;
+      linhasPorAno.set(ano, (linhasPorAno.get(ano) ?? 0) + 1);
+      const cnpj = c.cnpj ? soDigitos(linha[c.cnpj]) || undefined : undefined;
+      if (cnpj) siglasPorCnpj.set(cnpj, (siglasPorCnpj.get(cnpj) ?? new Set<string>()).add(agente));
       const atual = donos.get(conjunto);
-      if (!atual || ano > atual.ano) donos.set(conjunto, { agente, cnpj: c.cnpj ? soDigitos(linha[c.cnpj]) || undefined : undefined, ano });
+      if (!atual || ano > atual.ano) donos.set(conjunto, { agente, cnpj, ano });
     },
   };
 }
@@ -80,7 +99,10 @@ export function lerVinculos(linhas: Linha[], c: ReturnType<typeof mapearColunasM
     }
     const ibge = Number(digitos);
     const lista = vinculos.get(ibge) ?? [];
-    if (!lista.some((v) => normalizar(v.agente) === normalizar(dono.agente))) lista.push({ ibge, agente: dono.agente, cnpj: dono.cnpj });
+    const mesmo = lista.find((v) => normalizar(v.agente) === normalizar(dono.agente));
+    // O mesmo dono em dois conjuntos da cidade: vale o conjunto mais recente (um deles pode ter parado de reportar).
+    if (!mesmo) lista.push({ ibge, agente: dono.agente, cnpj: dono.cnpj, ano: dono.ano });
+    else if (dono.ano > (mesmo.ano ?? 0)) mesmo.ano = dono.ano;
     vinculos.set(ibge, lista);
   }
   return { vinculos, conjuntosSemDono: semDono.size };

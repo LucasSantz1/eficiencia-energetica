@@ -20,18 +20,18 @@
 | Bandeira | adicional do mês; unidade detectada pela grandeza (R$/MWh ou R$/kWh) | ANEEL dados abertos |
 | Calibração pela conta | valor ÷ kWh; com Tarifa Social, divide por (kWh − 80) e ignora se der menos de 10 kWh | conta da família |
 
-| Faixas dos arquivos públicos (HIS-003, P-tl-2) | tarifa > 0,05 e ≤ 3,00 R$/kWh; TE e TUSD 0–3,00; TE + TUSD = tarifa (±0,00001); bandeira 0–1,00, verde = 0, as outras > 0 | `tarifas.json` de 29/10/2026 (0,353–1,569; bandeira máx. 0,142); ANEEL, bandeiras e FAQ da escassez hídrica |
-| Limites de entrada (HIS-003) | rígido derivado de 75 kW (grupo B): potência ≤ 75.000 W, conta ≤ 54.000 kWh, ≤ 1.800 kWh/dia; alertas: > 10.000 W, > 2.000 kWh, > R$ 3.000, preço fora de R$ 0,30–3,00/kWh | REN ANEEL 1.000/2021 art. 23, I, "a"; EPE (178,2 kWh/mês, jun/2025); IBGE Censo 2022 (2,79 moradores) |
+## Decisões em vigor (HIS-111, 30/10/2026)
 
-## Decisões em vigor
-
-- Limites em dois níveis: **rígido** (impossível → não salva / descarta) e **alerta** (raro → pergunta e salva). Alerta nunca descarta.
-- Alerta de preço da conta é estimativa; não se aplica à Tarifa Social nem a contas com menos de 30 kWh.
-- Tarifa vencida (HIS-111):
-  - aviso no relatório desde o 1º dia;
-  - descarte e V1 depois de 6 meses;
-  - troca de distribuidora só com um ato oficial no `sucessoes.json`, ou pelo mesmo CNPJ.
-- Tabela completa e 23 casos de borda em `docs/equipe/historias/HIS-003-base-de-seguranca.md`, seção "Regras de negócio e fontes".
+- Sucessões no `packages/dados/base/sucessoes.json` só com ato oficial e link. São 11 linhas: ESS (4), CPFL Santa
+  Cruz (4, incluindo a antiga CPFL SANTA CRUZ, 61116265000144), EMR, EPB e Âmbar Roraima. A CERR entra com despacho do MME.
+- Linha 12 (RGE antiga 02016439000138 → RGE 02016440000162) confirmada, `desde` 2019-01-01 ok (aprovação 04/12/2018,
+  agrupamento 31/12/2018, segundo a CPFL). Número da REA não localizado; `ato` sem número, aceito para o merge.
+- Tarifa vencida: aviso desde o 1º dia; descarte depois de 6 meses.
+- O arquivo de atributos dos conjuntos (IndQual) para em 2014. A sigla é a de hoje. "Conjunto velho" não quer dizer
+  "empresa extinta": o D3 só vale para o vínculo sem tarifa publicada (Equatorial PI foi falso positivo).
+- Equatorial Piauí = antiga Cepisa, a mesma pessoa jurídica (CNPJ 06840748000189). Em 2018 só mudou o controle.
+- Nomes antigos para o aviso: Vale Paranapanema, Bragantina, Força e Luz do Oeste, Companhia Energética de Roraima;
+  CNEE sem nome (sem fonte).
 
 ## Pendências
 
@@ -52,6 +52,10 @@
   - acompanhar o V7, que trata o preço diferente em cada área depois de um agrupamento.
 - Pesquisar ICMS residencial por estado e PIS/COFINS por distribuidora (HIS-202).
 - Percentual do Desconto Social por distribuidora (HIS-203).
+- HIS-111: achar o número da REA de dez/2018 (RGE) no cedoc/DOU. Trocar as fontes de cópia pelo cedoc/DOU quando houver
+  acesso. Ato da CERR melhor: Despacho MME s/n de
+  23/09/2016 e Despacho ANEEL nº 580/2016. Nova Santa Rita (PI) com `certaja` (RS): parece erro de código IBGE no
+  IndQual, para uma história própria.
 
 ## Orientações do responsável
 
