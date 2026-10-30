@@ -10,6 +10,22 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-003 · P-tl-2 (faixas de tarifa e bandeira) e achado de tarifas vencidas
+- O que fiz:
+  - Medi o menor e o maior valor de tarifa, TE, TUSD e bandeira no `tarifas.json` de 29/10/2026.
+  - Conferi os valores das bandeiras e a escassez hídrica nas páginas da ANEEL.
+  - Respondi a P-tl-2 com a tabela, os casos P1–P7 e as fontes.
+  - Achei tarifas vencidas usadas por cerca de 200 municípios (P-de-1).
+- Decisões e porquê:
+  - Piso da tarifa > 0,05: pega a divisão por 1.000 feita duas vezes e é o mesmo corte que a rotina já faz.
+  - Coerência TE + TUSD = tarifa e verde = 0: pegam valor alterado que a faixa sozinha deixa passar.
+  - Teto de 1,9 a 7 vezes o maior valor, para não recusar dado verdadeiro.
+  - Veto no achado: valor plausível mas velho, até 45% abaixo do certo.
+- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md`, `contexto.md` e este diário.
+- Próximos passos:
+  - Confirmar as sucessoras no cadastro de agentes da ANEEL quando a história da P-de-1 for aberta.
+  - Revisar o `limites.ts` e o `arquivos-publicos.ts`.
+
 ## 2026-10-30 · HIS-003 · faixas de entrada com fonte e casos de borda
 - O que fiz: respondi `[para: dominio-energia]` com a tabela rígido/alerta de potência, minutos, dias, banho, quantidade,
   fator de ciclo, etiqueta, conta (kWh, R$, preço implícito), relógio, pessoas e cômodos; 23 casos de teste; riscos.

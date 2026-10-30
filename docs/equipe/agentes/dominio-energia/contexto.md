@@ -20,6 +20,7 @@
 | Bandeira | adicional do mês; unidade detectada pela grandeza (R$/MWh ou R$/kWh) | ANEEL dados abertos |
 | Calibração pela conta | valor ÷ kWh; com Tarifa Social, divide por (kWh − 80) e ignora se der menos de 10 kWh | conta da família |
 
+| Faixas dos arquivos públicos (HIS-003, P-tl-2) | tarifa > 0,05 e ≤ 3,00 R$/kWh; TE e TUSD 0–3,00; TE + TUSD = tarifa (±0,00001); bandeira 0–1,00, verde = 0, as outras > 0 | `tarifas.json` de 29/10/2026 (0,353–1,569; bandeira máx. 0,142); ANEEL, bandeiras e FAQ da escassez hídrica |
 | Limites de entrada (HIS-003) | rígido derivado de 75 kW (grupo B): potência ≤ 75.000 W, conta ≤ 54.000 kWh, ≤ 1.800 kWh/dia; alertas: > 10.000 W, > 2.000 kWh, > R$ 3.000, preço fora de R$ 0,30–3,00/kWh | REN ANEEL 1.000/2021 art. 23, I, "a"; EPE (178,2 kWh/mês, jun/2025); IBGE Censo 2022 (2,79 moradores) |
 
 ## Decisões em vigor
@@ -30,7 +31,10 @@
 
 ## Pendências
 
-- HIS-003: revisar o `limites.ts` e os testes quando o backend/tech-lead escrever; trocar o link da EPE (hoje cópia da eixos) pelo oficial.
+- HIS-003: revisar o `limites.ts`, o `arquivos-publicos.ts` (P1–P7) e os testes quando o backend escrever; trocar o
+  link da EPE (hoje cópia da eixos) pelo oficial.
+- **P-de-1 (veto, alta):** 11 distribuidoras com tarifa vencida (2016–2023), usadas por cerca de 200 municípios em
+  RS, SP, MG, RR, PB, PR e RJ. Aguarda uma história nova. Confirmar as sucessoras no cadastro de agentes da ANEEL.
 - Pesquisar ICMS residencial por estado e PIS/COFINS por distribuidora (HIS-202).
 - Percentual do Desconto Social por distribuidora (HIS-203).
 
