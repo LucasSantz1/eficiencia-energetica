@@ -48,6 +48,8 @@ export function lerFixture(nome: "casa-v1.json" | "casa-v2.json"): CasaGuardada 
 export async function semearCasa(contexto: BrowserContext, casa: CasaGuardada): Promise<void> {
   await contexto.addInitScript(
     ({ chave, valor }) => {
+      // A página em branco inicial (about:blank) também roda o script, e lá o armazenamento é proibido.
+      if (!location.protocol.startsWith("http")) return;
       if (sessionStorage.getItem("e2e:semeado")) return;
       localStorage.setItem(chave, valor);
       sessionStorage.setItem("e2e:semeado", "1");

@@ -2,10 +2,13 @@
  * Negativos permanentes: cada barreira do e2e precisa reprovar o que deve (plano de testes do qa, N1–N8; D16 P-qa-6).
  * Cada negativo usa `test.fail()`: se a barreira deixar de reprovar, o teste vira "Expected to fail, but passed" e a
  * execução fica vermelha. Cada um tem um controle, que prova que a falha vem da barreira e não da página de ensaio.
- * Não usam o site: `page.setContent` com uma página mínima (só no projeto celular).
+ * Usam `page.setContent` com uma página mínima, menos o N7, que precisa das transições do site (só no projeto celular).
  */
 import { analisarAcessibilidade, descreverViolacoes, violacoesQueReprovam } from "./apoio/axe";
+import { lerFixture, semearCasa } from "./apoio/casa";
+import { aba } from "./apoio/telas";
 import { expect, pedidoPermitido, test } from "./apoio/teste";
+import { contarTransicoes, duracoesDasTransicoes } from "./apoio/transicoes";
 
 const PAGINA_LIMPA = `<!doctype html><html lang="pt-BR"><head><title>Ensaio</title></head>
 <body><main><h1>Ensaio das barreiras</h1><button type="button">Salvar conta</button></main></body></html>`;
@@ -48,6 +51,22 @@ test.describe("axe (N3)", () => {
     await page.setContent(PAGINA_LIMPA.replace(">Salvar conta</button>", "></button>"));
     const resultado = await analisarAcessibilidade(page);
     expect(descreverViolacoes(violacoesQueReprovam(resultado.violations))).toEqual([]);
+  });
+});
+
+test.describe("movimento reduzido (N7, controle invertido)", () => {
+  // O transicoes.spec.ts afirma "duração 0 com reduce". Isso só prova algo se, sem reduce, a mesma medida achar
+  // animação de verdade — senão um invólucro quebrado (que nunca lê nada, ou lê sempre 0) passaria.
+  test.use({ reducedMotion: "no-preference" });
+
+  test("N7 · sem movimento reduzido, a troca de aba anima por mais de 1 ms", async ({ page, context }) => {
+    await semearCasa(context, lerFixture("casa-v2.json"));
+    await contarTransicoes(context);
+    await page.goto("/casa");
+    await aba(page, "Cômodos").click();
+    await expect(page).toHaveURL(/\/casa\/comodos$/);
+    await expect.poll(async () => (await duracoesDasTransicoes(page)).length).toBe(1);
+    expect(Math.max(...(await duracoesDasTransicoes(page)).flat())).toBeGreaterThan(1);
   });
 });
 
