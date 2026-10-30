@@ -70,3 +70,6 @@ Detalhes e medições: HIS-002, "Desenho técnico definitivo" (D1–D15). Desde 
 - Usar um serviço de terceiro no site (ex.: análise de uso) passa a exigir mudar a fixture de rede de propósito, com a
   seguranca e o consentimento da pessoa — nunca entra por engano.
 - Desligar uma regra do ESLint numa linha exige mudar a C10 do script, revisada pela seguranca.
+- O `apps/web/e2e-base/` (comparador antes × depois da HIS-001) saiu no commit `020db92` (A7 da HIS-002a), quando o
+  `apps/web/e2e/` passou a cobrir o que ele cobria. Para uma próxima reorganização "sem mudar nada", ele volta do
+  histórico: `git show 020db92^:apps/web/e2e-base/linha-de-base.cjs` (e as fixtures, já iguais às de `apps/web/e2e/fixtures/`).

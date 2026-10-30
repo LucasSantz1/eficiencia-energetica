@@ -848,6 +848,81 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
 9. Olhei as capturas de falha e o trace de pelo menos um teste de cada arquivo (o relatório precisa servir para quem
    investiga, não só para dizer "vermelho").
 
+### Resultado da etapa 5 (qa, 2026-10-30)
+
+Código: `020db92` (A7) com o `apps/web/src` do `92e9fd9`, numa cópia própria (`scratchpad/h2a/copia`, porta 3141) e as
+mutações numa segunda cópia (`scratchpad/h2a/mut`, porta 3142), restaurada do repositório antes de cada caso. Nada
+plantado no repositório.
+
+**Rodadas sem mutação:** `pnpm test:e2e` → 107 passam (12 delas são os negativos com `test.fail()`), 6 pendentes
+(3 `fixme` × 2 projetos), 0 falha, 6,2 min. `--repeat-each=3` → **321 passam, 18 pendentes, 0 falha** (12,9 min,
+`retries: 0`). `pnpm test:e2e --list` igual com e sem `GITHUB_ACTIONS=true` (113 testes em 11 arquivos). Peso dentro do
+limite: o máximo foi +36 B no 11a (`/casa`) e +80 B no 11b (as 4 rotas da casa e `/casa` com casa), contra +1 024/+2 048.
+
+**Cobertura 1–21 → teste no relatório (todos verdes nas 3 rodadas):**
+
+| # | Teste (`arquivo › nome`) |
+| --- | --- |
+| 1 | `fluxo-principal › fluxo principal: cadastro → acompanhamento → cômodos → dicas → minha casa → sobre → início` (2 projetos) |
+| 2 | o mesmo + `aparelhos › salvar o editor sem mudar nada mantém ids e quantidades (acompanhamento e cômodos)` |
+| 3 | `aparelhos › remover o aparelho que está no plano tira o aparelho e as dicas dele` |
+| 4 | `migracao › casa da versão 2 abre, mostra os 6 cômodos e volta idêntica depois de recarregar` e `› casa da versão 1 vira versão 2 com contas, leituras e plano vazios e o resto igual` |
+| 5 | `migracao › /comecar com casa mostra "Você já cadastrou a sua casa" e não muda a casa guardada` |
+| 6 | `ajustes › apagar todos os meus dados esvazia a casa e volta para o início` |
+| 7 | `rotas › /casa/aparelhos é página estática que redireciona para /casa/comodos (como no main)` e `› com casa, o navegador termina em /casa/comodos ao abrir /casa/aparelhos` |
+| 8 | `rotas › as 8 rotas respondem 200` e `› as 8 rotas continuam pré-renderizadas e a / revalida a cada 86400 s (1 dia)` |
+| 9 | `rotas › as 8 rotas continuam pré-renderizadas e a / revalida a cada 86400 s (1 dia)` |
+| 10 | `fluxo-principal` (contador antes × depois de cada ação; mensagem "transições depois de: …") |
+| 11 | `transicoes › topo e navegação têm nome de view transition próprio` (2 projetos) |
+| 12 | `transicoes › com movimento reduzido › cada troca de aba dispara 1 transição, sem animação` (2 projetos) |
+| 13 | fixture automática de `apoio/teste.ts` em todo teste + `sanidade › N1`, `N2`, `N8` (falha esperada) |
+| 14 | `peso-js › medir <rota>` (7) e `› peso de JS dentro do limite da referência` |
+| 15 | `peso-js › medir /casa (com casa)` |
+| 16 | `teclado › cadastro só com teclado: o foco vai para o título de cada passo e o contorno aparece` (2 projetos) |
+| 17 | `teclado › com a casa salva › folhas com teclado: editor (acompanhamento e cômodos) e "Anotar conta"` (2 projetos) |
+| 18 | `teclado › com a casa salva › abas com teclado: Enter troca de aba e o contorno aparece` (2 projetos) |
+| 19 | `acessibilidade › axe › axe · <página> · <estado>` (24 telas × 2 projetos = 48) |
+| 20 | `comodos › pelo link do acompanhamento, o cômodo abre expandido e na tela` e `› direto pelo endereço, …` (2 projetos) |
+| 21 | `comodos › ?visao=geral abre no "Painel geral"` (2 projetos) |
+
+Linhas 22–23 aparecem como pendentes (`HIS-107 · …`, `HIS-108 · P1 …`, `HIS-108 · P3 …`), nos 2 projetos.
+
+**Mutações (uma por vez; cada uma desfeita antes da próxima):**
+
+| # | Mutação plantada | Resultado | Mensagem que a falha dá |
+| --- | --- | --- | --- |
+| M1 | `migrate` sem `plano: []` | **sobrevive — mutante equivalente** | — (ver abaixo) |
+| M1b | `migrate` sem nenhum padrão (`salvo` como veio) | sobrevive — equivalente | — |
+| M1c | ninguém cria o `plano` (nem o `migrate` nem o estado inicial) | morta pelo `pnpm build` | prerender de `/casa`: `Cannot read properties of undefined (reading 'filter')` |
+| M1d | `migrate` perde os aparelhos da v1 | `migracao` (v1) vermelho | "Sua conta estimada por mês" não aparece |
+| M2 | portão do `/comecar` desligado | `migracao` (portão) vermelho | Expected "Você já cadastrou a sua casa", Received "Em qual estado você mora?" |
+| M3 | `atualizarAparelho` grava `novoId()` | `aparelhos` + `fluxo-principal` (2 projetos) vermelhos | `salvar pelo "Quem mais gasta" sem mudar nada` / `pelo "Quem mais gasta"` com o id diferente |
+| M4 | `removerAparelho` sem limpar o `plano` | `aparelhos` vermelho | `dicas de Chuveiro elétrico no plano` |
+| M5 | "Apagar tudo" deixa as `leituras` | `ajustes` vermelho | `casa depois de apagar`: `"leituras": 2` (ver ajuste abaixo) |
+| M6 | casca sem `<ViewTransition>` (tela, traço e pílula) | `fluxo-principal` e `transicoes` (2 projetos) vermelhos | `transições depois de: aba Cômodos` 14 × 15; `uma transição por aba` 0 × 4 |
+| M7 | sem o bloco `prefers-reduced-motion` das view transitions | `transicoes` (2 projetos) vermelho | `durações das animações: [[250,250,150,380,…]]` |
+| M8 | `console.error` na `TelaDicas` | `fluxo-principal` (2 projetos) vermelho | `console.error em http://127.0.0.1:3142/casa/dicas: M8 plantado…` |
+| M9 | `/casa/aparelhos` → `/casa` | `rotas` (2 testes) vermelho | Expected "/casa/comodos", Received "/casa" |
+| M10 | `revalidate` da `/` = 3600 | `rotas` vermelho | Expected 86400, Received 3600 |
+| M11 | `aria-label` da casa ilustrada volta ao antigo | `acessibilidade` (`/` sem e com casa) e o teste dos nomes, 2 projetos (6) | `label-content-name-mismatch (serious): button[aria-label="Quarto: R$ 21,74 por mês"] …` |
+| M12 | a folha tira o foco ao fechar (Esc e Salvar) | `teclado` (folhas, 2 projetos) vermelho | `o foco volta para quem abriu a folha` |
+| M13 | `#comodo-<id>` não expande | `comodos` (link e endereço, 2 projetos) vermelho | `aria-expanded` Expected "true", Received "false" |
+| M14 | ~3 KB que não comprimem num componente de cliente só da `/sobre` | `peso-js` vermelho, com a tabela | `/sobre · jsDoHtml: 143074 B, 3500 B acima da referência (limite +1024 B)`; 11b +3 515 |
+| M15 | `GITHUB_ACTIONS=true ATUALIZAR_PESO_JS=1` | `peso-js` vermelho; `peso-js.json` com o mesmo sha256 antes e depois | `ATUALIZAR_PESO_JS no CI: a referência só muda num PR…` |
+| M16 | `test.only` no `rotas`, com `GITHUB_ACTIONS=true` | a execução para antes de rodar | `item focused with '.only' is not allowed due to the 'forbidOnly' option` |
+
+- **M1 é equivalente, não lacuna do teste.** O `persist` do zustand junta o que estava salvo **por cima do estado
+  inicial** (`merge` padrão: `{ ...inicial, ...salvo }`), e o estado inicial já tem `contas`, `leituras` e `plano`
+  vazios. Para uma casa v1 (que nunca teve `plano`), tirar o `plano: []` do `migrate` — ou todos os padrões (M1b) — dá
+  a mesma casa, byte a byte, e nenhum teste pode (nem deve) notar. O que quebraria quem já usa de verdade é ninguém
+  criar o plano (M1c, que o build já pega) ou a migração perder dados (M1d, pego pelo `migracao`). Os padrões do
+  `migrate` ficam como defesa se um dia o `merge` mudar; não peço mudança.
+- **Ajuste no `ajustes.spec.ts`** (único teste mudado na etapa 5): a primeira rodada do M5 falhava com
+  `listas: [0, 0, 0, 2, 0]`, sem dizer que lista sobrou. A conferência agora tem o nome de cada lista
+  (`"leituras": 2`); verde 3 de 3 depois da troca.
+- Saídas: `scratchpad/h2a/saida-a5c.txt` (rodada única), `saida-repeat3.txt`, `mutacoes/M*.txt` e `M*.diff` (o que foi
+  plantado), `lista-local.txt`/`lista-ci.txt`. Roteiro: `scratchpad/h2a/mutacoes.sh`.
+
 ## Perguntas abertas
 
 - [x] `[para: tech-lead]` O e2e roda em todo push ou só em pull request e no `main`? (custo de tempo do CI)
@@ -1266,3 +1341,36 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
 - Para o próximo: **quem orquestra**: empurrar depois do seletor do qa, conferir os 2 checks verdes, o artefato e o
   peso do runner × local (D14). Depois, o commit descartável com teste falhando (critério 4, Ra9) e a reversão.
   **seguranca**: Ra9 com o artefato. **qa**: A7.
+
+### [qa] 2026-10-30 — A5 fechado, A7 feito, etapa 5 aprovada (pendentes: revisão da ux e as conferências do A6 no CI)
+- O que fiz: (1) **A5** — `d5a4940`: o `aparelhos.spec.ts` procura o chuveiro pelo nome do D-A5-1
+  (`^(\d+ × )?<aparelho> em <cômodo>, .*Toque para ajustar\.$`, aparelho e cômodo da fixture, sem `.first()`).
+  (2) **A7** — `020db92`: `git rm -r apps/web/e2e-base`; dois comentários do `e2e/` que citavam a pasta agora citam a
+  linha de base da HIS-001; o commit ficou no ADR-003 (consequências) e no meu `contexto.md`. (3) **Etapa 5** — M1–M16
+  e o `--repeat-each=3`, resultado em "Plano de testes" → "Resultado da etapa 5".
+- Decisões e porquê:
+  - **M1 sobrevive por ser equivalente** (o `merge` do `persist` já põe `plano: []` do estado inicial); acrescentei
+    M1b–M1d para separar equivalência de lacuna: o defeito real (ninguém cria o plano; migração perde dados) é pego
+    pelo build e pelo `migracao`. Nenhuma mudança pedida no site.
+  - `ajustes.spec.ts` passa a nomear cada lista na conferência: a falha do M5 dizia `[0, 0, 0, 2, 0]`; agora diz
+    `"leituras": 2`. Mesmo teste, mensagem melhor.
+  - M14 plantou ~3,5 KB gzip (não 2 KB) para passar dos dois limites de uma vez; a fronteira exata (+1 024/+1 025) é o
+    N6, com a função pura.
+- Arquivos alterados: `apps/web/e2e/aparelhos.spec.ts`, `apps/web/e2e/ajustes.spec.ts`, `apps/web/e2e/migracao.spec.ts`,
+  `apps/web/e2e/peso-js.spec.ts`, `apps/web/e2e-base/**` (removido), esta história, ADR-003 (1 linha nas
+  consequências), `docs/equipe/agentes/qa/{contexto,diario}.md`.
+- Como verifiquei: cópia própria com o `src` do `92e9fd9` (porta 3141) e outra para as mutações (porta 3142).
+  `pnpm typecheck` (cobre o `e2e/`), `pnpm test` (48), `pnpm build` e `pnpm audit --audit-level high` ("No known
+  vulnerabilities found") verdes. e2e: 107 passam, 6 pendentes, 0 falha; `--repeat-each=3`: 321 passam, 18 pendentes,
+  0 falha; nenhum erro de console (a fixture reprova sozinha, e o M8 mostrou que ela pega). axe: 0 sério/crítico fora
+  das 8 exceções `color-contrast` da `/` (HIS-110) nos 2 projetos. Peso: no máximo +36 B (11a) e +80 B (11b).
+  `grep -rn "e2e-base" apps scripts .github` vazio (só `CHANGELOG.md` e `docs/` citam, como histórico).
+  `--list` igual com e sem `GITHUB_ACTIONS=true` (113 testes). Linhas 1–21 da "Cobertura" com o nome do teste e verdes.
+- Defeitos: **nenhum** novo.
+- **Decisão: aprovado pelo qa** (A1–A5 e A7, critérios 2, 3, 6 e 9 conferidos aqui). Ficam, sem ser defeito:
+  **[para: ux-acessibilidade]** revisar `apps/web/e2e/excecoes-axe.ts` (8 entradas `color-contrast`, todas HIS-110) —
+  critério de verde do A5 e 5º critério de aprovação, ainda não feito; e, no CI (A6, depois do push): peso do runner ×
+  local (D14), o artefato do commit descartável (critério 4, Ra9) e a mesma lista no runner (critério 6). Se o peso do
+  runner diferir, a referência passa a ser a do CI (D14) e eu confiro de novo.
+- Para o próximo: **ux-acessibilidade** — revisar `excecoes-axe.ts`. **quem orquestra** — empurrar e conferir os 2
+  checks, o peso no resumo do job e o artefato. **seguranca** e **tech-lead** — etapas 6 e 7 em paralelo.

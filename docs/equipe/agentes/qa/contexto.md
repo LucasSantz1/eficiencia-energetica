@@ -4,7 +4,8 @@
 
 - Testes de unidade: `packages/core/test/` (37) e `packages/dados/test/` (11, com fixtures em `packages/dados/fixtures/`).
 - Testes no navegador: `apps/web/e2e/` (Playwright 1.63.0 + axe 4.14.0; HIS-002a). `pnpm build && PORTA_E2E=31xx
-  pnpm test:e2e` numa cópia própria. O `apps/web/e2e-base/` sai no A7.
+  pnpm test:e2e` numa cópia própria. O `apps/web/e2e-base/` saiu no A7 (`020db92`); o comparador antes × depois volta
+  do histórico: `git show 020db92^:apps/web/e2e-base/linha-de-base.cjs` (também no ADR-003).
 
 ## Estado atual
 
@@ -29,6 +30,9 @@
   defeitos D-A5-1 (`label-content-name-mismatch` no "Quem mais gasta", `/casa` com casa) e D-A5-2
   (`scrollable-region-focusable` no painel geral, 390 px) — devolvidos ao frontend/ux. Cópia em
   `…/scratchpad/h2a/copia` (porta 3141), `sincronizar.sh` copia só os meus caminhos.
+- **HIS-002a, A5 fechado / A7 / etapa 5 (2026-10-30): aprovado.** `d5a4940` (seletor do D-A5-1), `020db92` (A7).
+  e2e 107 passam / 6 pendentes / 0 falha; `--repeat-each=3` 321 / 18 / 0; M1–M16 na história (M1 equivalente, com
+  M1b–M1d). Roteiro `…/scratchpad/h2a/mutacoes.sh` (cópia `h2a/mut`, porta 3142, restaura do repositório a cada caso).
 - Peso: referência `peso-js.json` com o lockfile novo (11a `/` 164 215 … 11b `/casa` com casa 212 282). O spec no build
   do `main` dá a HIS-001 byte a byte; o lockfile muda −5…+23 B (caminho `next@…_@playwright+test@1.63.0` embutido).
 - Como subir o site para testar: `pnpm build && pnpm --filter @ee/web start -p 3100` (em segundo plano);
@@ -60,6 +64,9 @@
   `isMobile`/`hasTouch` (referência do 11b); axe só depois de conferir a tela certa e com `passes > 0`.
 - Toda barreira tem negativo permanente com `test.fail()` (medido no Playwright 1.63: barreira quebrada → "Expected to
   fail, but passed", código 1). Mutações plantadas da etapa 5 têm o resultado escrito na história, não no scratchpad.
+- Mutação que sobrevive: antes de chamar de lacuna, provar se é equivalente (ex.: o `merge` do `persist` do zustand
+  põe o estado inicial por baixo do salvo, então padrões do `migrate` são redundantes) e plantar a variante que muda o
+  comportamento. Mensagem de falha tem que dizer o que quebrou (nomear campos, não posições de lista).
 - Movimento reduzido nas view transitions: ler as durações no `transition.ready` (0 com `reduce`, 250 ms sem), sem espera fixa.
 - `eslint-config-next`: `jsx-a11y` é **aviso**; só o `--max-warnings 0` barra (medido com `--stdin`).
 
@@ -78,9 +85,9 @@
 
 ## Pendências
 
-- HIS-002a: A5 fecha quando o frontend corrigir D-A5-1/D-A5-2 (rodar `pnpm test:e2e` verde nos 2 projetos). Depois,
-  etapa 5 (M1–M16, `--repeat-each=3`) e o A7 (tirar o `e2e-base`) com as linhas 1–21 da "Cobertura" verdes. Registrar no ADR-003 e aqui o commit do A7 (o comparador
-  fica no histórico: `git show <commit>^:apps/web/e2e-base/linha-de-base.cjs`).
+- HIS-002a: a ux ainda não revisou `excecoes-axe.ts` (8 `color-contrast` da `/`, HIS-110). Depois do push (A6):
+  conferir peso do runner × local (D14; se diferir, referência = CI e rodar de novo), artefato do commit descartável
+  (critério 4) e `--list` no runner (critério 6).
 - HIS-002b, etapa 5: V1–V8 e os ids obrigatórios (inclusive `seguranca-01…21` quando a lista existir).
 - Backlog (pré-existentes, HIS-001 P1–P4): foco no passo "cidade" pula da busca para o título (ux/frontend); zoom 200%
   com rolagem horizontal em `/`, `/casa`, `/casa/dicas` (ux); âncora não alinha ao topo pelo link **nem** direto numa página nova (371/491 px; frontend, HIS-108).

@@ -10,6 +10,17 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002a · A5 fechado, A7 (tira o e2e-base) e etapa 5 aprovada
+- O que fiz: seletor do `aparelhos.spec.ts` pelo nome do D-A5-1 (`d5a4940`); `git rm -r apps/web/e2e-base` e 2
+  comentários do `e2e/` (`020db92`); e2e completo e `--repeat-each=3` numa cópia própria; M1–M16 plantadas numa
+  segunda cópia (mais M1b–M1d); `--list` local × `GITHUB_ACTIONS=true`; `pnpm audit`.
+- Decisões e porquê: M1 é mutante equivalente (`merge` do `persist`), provado com M1b e separado do defeito real
+  (M1c/M1d); `ajustes.spec.ts` nomeia as listas para a falha dizer qual sobrou; M14 com ~3,5 KB para passar dos 2 limites.
+  Aprovado com pendências que não são defeito: revisão da ux em `excecoes-axe.ts` e as conferências do A6 no CI.
+- Arquivos: `apps/web/e2e/{aparelhos,ajustes,migracao,peso-js}.spec.ts`, `apps/web/e2e-base/**` (removido), a história,
+  ADR-003 (consequências), `contexto.md`, este diário.
+- Próximos passos: depois do push, peso do runner × local e artefato (critério 4); HIS-002b, etapa 5 (V1–V8).
+
 ## 2026-10-30 · HIS-002a · etapa 4: A1–A5 implementados; A5 devolvido ao frontend com 2 defeitos
 - O que fiz: Playwright/axe com versão exata, `playwright.config.ts`, fixture de console/página/rede, `rotas`,
   `sanidade` (N1–N8), `fluxo-principal` com transição por passo, `migracao`, `aparelhos`, `ajustes`, `transicoes`,

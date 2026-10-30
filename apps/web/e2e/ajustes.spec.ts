@@ -14,15 +14,21 @@ test("apagar todos os meus dados esvazia a casa e volta para o início", async (
 
   const casaVazia = async () => {
     const estado = (await casaSalva(page))?.state;
+    // Com o nome de cada lista, a falha diz qual sobrou (ex.: "leituras": 2), não só a posição.
     return {
       residencia: estado?.residencia ?? null,
-      listas: [estado?.comodos, estado?.aparelhos, estado?.contas, estado?.leituras, estado?.plano].map((l) => l?.length ?? 0),
+      comodos: estado?.comodos.length ?? 0,
+      aparelhos: estado?.aparelhos.length ?? 0,
+      contas: estado?.contas.length ?? 0,
+      leituras: estado?.leituras.length ?? 0,
+      plano: estado?.plano.length ?? 0,
     };
   };
-  await expect.poll(casaVazia).toEqual({ residencia: null, listas: [0, 0, 0, 0, 0] });
+  const VAZIA = { residencia: null, comodos: 0, aparelhos: 0, contas: 0, leituras: 0, plano: 0 };
+  await expect.poll(casaVazia, { message: "casa depois de apagar" }).toEqual(VAZIA);
 
   await page.reload();
-  expect(await casaVazia(), "depois de recarregar").toEqual({ residencia: null, listas: [0, 0, 0, 0, 0] });
+  expect(await casaVazia(), "depois de recarregar").toEqual(VAZIA);
 
   await page.goto("/comecar");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Em qual estado você mora?");
