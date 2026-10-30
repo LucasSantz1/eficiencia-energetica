@@ -1214,3 +1214,28 @@ scratchpad).** Cada linha precisa deixar o teste indicado vermelho, com mensagem
   1,6:1 sobre o branco e 1,4:1 sobre o fundo (WCAG 1.4.11 pede 3:1). Vale para o site todo e muda a tela, então
   proponho uma história própria (ex.: contorno duplo tinta + faísca).
 - Para o próximo: **frontend** aplica os dois (commit em `apps/web/src`); **qa** roda o A5 de novo.
+
+### [frontend] 2026-10-30 — D-A5-1 e D-A5-2 corrigidos sem mudança visível; A5 verde, 1 seletor do qa a ajustar
+- O que fiz: commit `92e9fd9`, só em `apps/web/src`. **D-A5-1** (`PainelAcompanhamento.tsx`): `aria-label` igual ao
+  modelo da ux, com as mesmas variáveis (`quantidade`, `nomeComodo`, `porcentagem`, `uso`, `valor`) para a tela e o nome,
+  e `{" "}` entre os blocos do botão (o axe junta o texto dos filhos sem espaço; entre itens de bloco ou flex o espaço
+  não aparece). **D-A5-2** (`TelaComodos.tsx`): `role="region"`, `aria-label="Tabela com todos os aparelhos da casa"` e
+  `tabIndex={0}` no `div.overflow-x-auto`, com o contorno padrão do `:focus-visible`.
+- **[para: ux-acessibilidade]** tela e nome sempre vieram da mesma renderização. A diferença no relatório (41% e
+  R$ 45,12 na tela, 42% e R$ 44,26 no nome) deve ser de rodadas diferentes, com outro relógio e outra bandeira. Hoje, sem
+  relógio fixo, os 6 nomes e o texto visível dão os mesmos números (ex.: "Chuveiro elétrico em Banheiro, 42%, 4 banhos
+  de 8 min por dia, R$ 44,26 por mês. É 42% da conta. Toque para ajustar.").
+- Como verifiquei (cópias próprias `scratchpad/fe-a5/{antes,depois}`, portas 3151/3152/3153, liberadas):
+  - `/casa` e `/casa/comodos?visao=geral` com a casa v2, em 390 e 1280 px: **0 pixel diferente** nas 4 capturas de
+    página inteira e o mesmo texto visível. Antes rodei o controle (antes × antes), que deu 0 px e mostrou os 2 defeitos.
+  - axe 4.14.0: `label-content-name-mismatch` foi de 6 nós para 0 (6 passam) e `scrollable-region-focusable` foi de 1
+    para 0 (1 passa). Console sem erro.
+  - Teclado em 390 px: o Tab chega à região, o contorno aparece (3 px faísca) e a → rola 40 px por toque até o fim
+    (186 px), mostrando "R$/mês". Captura em `scratchpad/fe-a5/telas/depois-celular-geral-setas.png`.
+  - `pnpm typecheck` e `pnpm test` verdes. e2e completo (`PORTA_E2E=3153`): **106 passam, 6 pendentes (os 3 `fixme`
+    × 2 projetos), 1 falha**. O axe de `/casa` com casa e o de `?visao=geral` passam **nos 2 projetos**.
+- **[para: qa]** a falha é `aparelhos.spec.ts:43`, cujo seletor procura o nome antigo (`^${aparelho.nome}: `). O nome
+  agora começa por "`<nome> em <cômodo>,`" (e por "`N × `" quando há mais de um aparelho igual). Com
+  ``new RegExp(`^${aparelho.nome} em .*Toque para ajustar\\.$`)``, só na minha cópia, o arquivo passa (2 de 2). Não
+  mudei `e2e/` porque o arquivo é seu.
+- Para o próximo: **qa**: ajustar o seletor e rodar o A5 de novo para fechar.

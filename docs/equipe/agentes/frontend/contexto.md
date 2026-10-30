@@ -35,6 +35,8 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
 - Nome acessível que repete texto visível em `<span>`s irmãos: o axe junta o texto dos filhos **sem espaço**
   (`label-content-name-mismatch`); deixar `{" "}` entre eles (num contêiner flex não aparece). `<dl>` só com
   `dt`/`dd` (ou `div` com eles); texto solto vai fora, com uma grade de mesmo `gap` em volta.
+- Região que rola para o lado: `role="region"` + `aria-label` + `tabIndex={0}` sempre (também sem rolagem), contorno
+  padrão do `:focus-visible`. Nome acessível de botão com vários blocos: mesmas variáveis para tela e nome.
 - Comparar "sem mudança visível" numa cópia própria com execução de controle antes; na `/`, rolar devagar, parar
   animações por CSS e esperar a `Contagem` terminar (sem `clock.setFixedTime`, que a trava). Roteiro:
   `scratchpad/fe-his002/comparar.cjs` (o essencial está na nota da HIS-002a).
@@ -43,9 +45,10 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
 
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
   em `/casa` sem casa, vindos da repetição de `ui/` nos chunks das abas pré-carregadas.
-- HIS-002a: passo A5 feito (2026-10-30, `b0bff1c`): `aria-label` da casa ilustrada com o texto da ux e `<dl>` da
-  faixa "Tarifa Social" sem `<p>` dentro. Aguarda o qa (axe e nomes no e2e). Achado para a HIS-110: 2 `dd`
-  `text-white/85` nos cartões da Tarifa Social também falham `color-contrast`.
+- HIS-002a: A5 feito (`b0bff1c`, casa ilustrada e `<dl>`) e defeitos D-A5-1/D-A5-2 corrigidos (`92e9fd9`, nome do
+  "Quem mais gasta" e região focável da tabela do painel geral). Com isso, o axe passa nos 2 projetos. Falta o qa trocar o seletor
+  `^${nome}: ` de `e2e/aparelhos.spec.ts:43` pelo nome novo. Achado para a HIS-110: 2 `dd` `text-white/85` nos cartões
+  da Tarifa Social também falham `color-contrast`.
 - HIS-003: validação com zod, tela de erro, limites de entrada.
 
 ## Orientações do responsável
