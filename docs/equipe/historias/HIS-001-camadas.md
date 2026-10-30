@@ -6,7 +6,7 @@
 | Sprint | 0 |
 | Tamanho | M |
 | Papéis principais | tech-lead, frontend |
-| Status | Preparada |
+| Status | Pronto (2026-10-29) |
 | Branch | `his-001-camadas` |
 
 ## Problema e valor
@@ -1041,3 +1041,42 @@ visual; registrados para o backlog):
   `mmdc` renderizou o diagrama novo; `grep` de `components/|lib/` nos documentos vivos só acha as duas menções intencionais
   (pastas que não existem mais). Nenhuma menção a instituição de ensino ou a parceiros.
 - Para o próximo: **scrum-master** — a história está pronta para conferir a Definição de Pronto (etapa 9).
+
+### [scrum-master] 2026-10-29 — etapa 9: Definição de Pronto cumprida; HIS-001 em "Pronto"
+- O que fiz: li a história inteira e conferi cada item da Definição de Pronto (`docs/equipe/processo.md`) contra a
+  evidência das notas; abri as evidências no scratchpad do qa para confirmar que existem (84 capturas em
+  `…/his001/depois-qa/capturas/{390,1280,migracao-v1,migracao-v2,reduzido,remover-do-plano,apagar}/`,
+  `saida-comparar.txt` → "Comparação: nada mudou", `typecheck.log`, `test.log`, `build.log`, `js-do-html.json`) e olhei
+  `390/16-acompanhamento.png` e `1280/21-comodos.png`.
+
+  | Item da Definição de Pronto | Evidência | Situação |
+  | --- | --- | --- |
+  | Critérios de aceite 1–6 atendidos e demonstrados, com capturas 390 e 1280 | qa, "Resultado da etapa 5": 1–3 por `pnpm camadas` no typecheck (64 arquivos) + 36/36 casos do frontend e 21 da seguranca; 4 por migração v2/v1; 5 por 84/84 capturas e 98/98 textos/DOM/casas iguais ao `main`, 21 transições por largura; 6 pelas barreiras | ok |
+  | `pnpm typecheck`, `pnpm test`, `pnpm build` sem erro; testes novos para regra nova | verdes no repositório e em 3 cópias próprias (qa, seguranca, tech-lead). Não há regra de negócio nova; o verificador de camadas foi testado com 34 negativos + 21 extras (automatizar esses casos no CI é o critério 7 da HIS-002) | ok |
+  | Sem erro no console | 0 erros em todas as sessões do qa e na fumaça do tech-lead (9 entradas × 2 larguras) | ok |
+  | Acessibilidade (teclado, leitor de tela, contraste, movimento reduzido) | qa, manual: teclado no cadastro, folhas e abas; árvore de acessibilidade de 8 rotas idêntica ao `main` (nomes acessíveis); movimento reduzido (`.surgir` 1e-05s); contraste: pixels iguais ao `main` (nenhuma cor mudou). Achados P1–P4 são **pré-existentes** e foram para o backlog | ok |
+  | Revisão de `seguranca` aprovada | etapa 6: aprovado com ressalvas baixas (S1, S2), nada crítico/alto materializado | ok |
+  | Revisão de `tech-lead` aprovada | etapa 7 (seção 12): aprovado; T1–T3 sem bloqueio | ok |
+  | Documentação e changelog | documentacao, etapa 8: arquitetura, site, desenvolvimento, diagramas, roteiro, glossário, agente de UX; `CHANGELOG.md` com "Código do site organizado em camadas (HIS-001)" | ok |
+  | Nada quebra quem já usa (localStorage, `version` + `migrate`) | store byte a byte (R2), casa v2 guardada = fixture, v1 → v2 com listas vazias, portão de hidratação, editor, remover do plano e apagar tudo iguais | ok |
+
+- Decisões e porquê: **HIS-001 movida para "Pronto".** Nenhum item falta. O que ficou para depois foi registrado, e
+  nenhum item afeta a família hoje (tudo é igual ao `main`):
+  - **HIS-002:** S1 e S2 (seguranca), T1 e T3 (tech-lead) — critérios 7–9 e "Notas do tech-lead vindas da HIS-001".
+  - **Dívida do tech-lead** (no `contexto.md` dele): T2 (exports sem uso), regras de negócio que ainda moram no site,
+    dividir `Cadastro.tsx`/`TelaComodos.tsx`.
+  - **HIS-003:** A16 (links externos sem `rel`) e os `as` na fronteira (validação com zod).
+  - **Backlog E1:** HIS-107 (P2, zoom 200% com rolagem para o lado — médio) e HIS-108 (P1, P3, P4 — baixos). Prioridade:
+    **HIS-107 entra na Sprint 1, antes da HIS-102**, porque "letra maior" agrava o mesmo problema de texto que não cabe
+    na tela e o objetivo é WCAG 2.2 AA (1.4.10); **HIS-108 vai para a Sprint 4, antes do teste com famílias (HIS-106)**,
+    para o foco que pula não atrapalhar quem usa leitor de tela no teste. Para caber, a HIS-105 (compartilhar) passa da
+    Sprint 1 para a Sprint 4. Roteiro atualizado em `docs/planejamento.md`.
+  - **Dono do projeto:** a nota "Estado atual" do `CLAUDE.md` ainda diz que a reorganização "é a HIS-001"; o texto novo
+    foi proposto pela documentacao e depende dele (nenhum agente edita o `CLAUDE.md`).
+- Arquivos alterados: esta história (status e esta nota); `docs/equipe/quadro.md`; `docs/planejamento.md` (roteiro de
+  sprints); `docs/equipe/retros.md` (Sprint 0, aprendizados da HIS-001); `docs/equipe/historias/HIS-002-qualidade-automatica.md`
+  (preparação); minha pasta (`contexto.md`, `diario.md`).
+- Como verifiquei: leitura das notas e das tabelas de resultado; existência e conteúdo das evidências citadas.
+- Para o próximo: **quem orquestra** — commitar estes documentos e integrar a `his-001-camadas` ao `main` antes de abrir
+  a `his-002-qualidade` (a HIS-002 parte das pastas novas); levar ao dono do projeto o texto da nota "Estado atual" do
+  `CLAUDE.md`. **tech-lead** — desenho técnico definitivo da HIS-002 (ver a nota do scrum-master lá).

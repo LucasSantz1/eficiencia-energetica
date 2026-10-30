@@ -64,7 +64,7 @@ Os papéis listados são os principais; QA, segurança, tech lead e documentaç�
 
 | ID | História | Papéis | Tam. |
 | --- | --- | --- | --- |
-| HIS-001 | Reorganizar o site em camadas (`funcionalidades/`, `ui/`, `aplicacao/`, `infraestrutura/`) sem mudar nada para quem usa | tech-lead, frontend | M |
+| HIS-001 | ✅ Reorganizar o site em camadas (`funcionalidades/`, `ui/`, `aplicacao/`, `infraestrutura/`) sem mudar nada para quem usa | tech-lead, frontend | M |
 | HIS-002 | Qualidade automática: ESLint (config do Next 16), testes de ponta a ponta com Playwright e verificação de acessibilidade com axe no CI | qa, tech-lead | M |
 | HIS-003 | Base de segurança: cabeçalhos HTTP (CSP, HSTS...), validação com zod do localStorage e dos JSON públicos, tela de erro amigável, `pnpm audit` e Dependabot no CI, `.env.example` | seguranca, frontend | M |
 | HIS-004 | ✅ Retirar menção a instituição de ensino e reservar espaços para parceiros (desligados) | — | P |
@@ -168,10 +168,10 @@ atualizada, consentimento para qualquer rastreamento e revisão de `seguranca` e
 | Sprint | Foco | Histórias |
 | --- | --- | --- |
 | 0 | Fundação | HIS-001, HIS-002, HIS-003 |
-| 1 | Inclusão I | HIS-102, HIS-103, HIS-105 |
+| 1 | Inclusão I | HIS-107, HIS-102, HIS-103 |
 | 2 | Precisão I | HIS-201, HIS-205, HIS-104 |
 | 3 | Offline | HIS-301, HIS-302, HIS-303 |
-| 4 | Inclusão II | HIS-101, HIS-106 |
+| 4 | Inclusão II | HIS-108, HIS-101, HIS-105, HIS-106 |
 | 5 | Precisão II | HIS-202, HIS-203 |
 | 6–7 | Plataforma | HIS-401 a HIS-406 |
 | 8 | Câmera | HIS-501, HIS-502 |
@@ -180,6 +180,12 @@ atualizada, consentimento para qualquer rastreamento e revisão de `seguranca` e
 | depois | E8, E9, E10, E11, HIS-204 | conforme prioridade |
 
 A ordem pode mudar depois de cada retrospectiva; a Sprint 0 vem sempre primeiro.
+
+_Revisão de 2026-10-29 (fim da HIS-001):_ a **HIS-107** (zoom de 200%, médio, WCAG 1.4.10) entra na Sprint 1 **antes**
+da HIS-102, porque letra maior agrava o mesmo problema de conteúdo que não cabe na tela. A **HIS-108** (foco e rolagem,
+baixo) vai para a Sprint 4, **antes** do teste com famílias (HIS-106), para o foco que pula não atrapalhar quem usa
+leitor de tela. A HIS-105 (compartilhar) sai da Sprint 1 para a Sprint 4; se a Sprint 4 não couber, ela é a primeira a
+passar para a seguinte (menor impacto na conta que as outras).
 
 ## 6. Riscos
 
