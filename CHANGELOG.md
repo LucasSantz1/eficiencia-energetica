@@ -1,5 +1,16 @@
 # Registro de mudanças
 
+## 2026-10-30 · Rolagem suave nos links da página inicial
+
+**Para quem usa**
+- Os links do topo da página inicial ("Como funciona", "Tarifa Social" e "Perguntas") agora deslizam até a seção em vez
+  de pular de uma vez. Quem pede menos movimento no celular continua com o salto direto.
+
+**Técnico**
+- `scroll-behavior: smooth` no `html` dentro de `prefers-reduced-motion: no-preference` (`globals.css`) e
+  `data-scroll-behavior="smooth"` no `<html>` (`app/layout.tsx`), para o Next 16 não aplicar a rolagem suave nas trocas
+  de página, que já têm a transição própria.
+
 ## 2026-10-29 · Código do site organizado em camadas (HIS-001)
 
 **Para quem usa**
