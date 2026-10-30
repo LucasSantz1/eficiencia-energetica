@@ -10,6 +10,13 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · segunda execução: RGE antiga (outro CNPJ) entra no sucessoes.json
+- O que fiz: corrigi a regressão do `2804a5c` (263 cidades da RGE antiga sem tarifa) com a linha 12. A fixture ganhou
+  Caxias do Sul. `pnpm typecheck` e `pnpm test` (dados 83) verdes.
+- Lição: antes de endurecer uma regra de ligação, contar no diagnóstico quantos vínculos ela recusa. Só a execução real
+  mostrou a RGE antiga, porque ela não tem tarifa nem aparece como vencida.
+- Próximos passos: nova execução; confirmação da linha 12 pelo dominio-energia.
+
 ## 2026-10-30 · HIS-111 · passo 0: D3 e sigla corrigidos, critério 2 do diagnóstico, linha da CPFL SANTA CRUZ
 - O que fiz:
   - Colei o resumo da execução 41095055344 na história e analisei cada ponto.

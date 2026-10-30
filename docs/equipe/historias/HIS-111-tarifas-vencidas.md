@@ -722,6 +722,20 @@ sucessões aplicadas com a linha nova "CPFL SANTA CRUZ → CPFL Santa Cruz (27)"
 critério 2 com 227 e "ainda com uma: **0**"; "mudam" perto de 227, sem a mudança do PI; coerência e validação "ok".
 Se aparecer uma ligação recusada ou um agente sem tarifa, é uma sucessão que falta: a sigla vai para o dominio-energia.
 
+### Segunda execução (41130096649, commit `de76af4`): RGE antiga
+
+_(backend, 30/10.)_ Resumo em `diag-resumo2.md` no scratchpad de quem orquestra. Bom: (d) = 0, critério 2 "ainda com
+uma" = 0, coerência "ok", CPFL SANTA CRUZ → CPFL Santa Cruz (27). **Regressão do `2804a5c`:** "RGE (02016439000138) ≠
+RGE (02016440000162): 263", V5 (RGE sem tarifa), V6 com 131 cidades sem distribuidora, e 507 cidades mudam (RS 407).
+É a **RGE antiga** (Rio Grande Energia), incorporada pela RGE Sul, que passou a se chamar RGE: nome igual, CNPJ de
+outra raiz. Antes, ela chegava à RGE de hoje só pelo nome. **Correção:** linha 12 do `sucessoes.json`, com os dados
+que o dominio-energia já tinha aprovado na tabela "Sucessões" (agrupamento aprovado em 04/12/2018, sem número de REA,
+fonte: formulário de referência da CPFL). Como na CERR, o `ato` vai sem número. V9 passa (o CNPJ antigo não tem
+tarifa); V10 passa (sigla "RGE" nos conjuntos e na tarifa). O id é o mesmo, então o `substituidas` não muda. Os 22
+vínculos "RGE" que o D3 tirava voltam a chegar a uma tarifa. **O diagnóstico precisa rodar de novo.** Esperado:
+"agentes sem tarifa: nenhum", "mesma sigla, outro CNPJ: nenhuma", sucessão "RGE → RGE (263)", cerca de 10 cidades
+sem distribuidora e "mudam" perto de 227.
+
 **O que conferir no resumo do job** (vale para cada nova execução):
 
 1. O job termina verde, e o passo "Nada mudou no repositório" passa (nada foi gravado).
@@ -803,6 +817,11 @@ Se aparecer uma ligação recusada ou um agente sem tarifa, é uma sucessão que
   chega a nenhuma tarifa publicada**. Motivo: o arquivo de conjuntos para em 2014, e o ano sozinho marcava empresas
   vigentes (Equatorial PI). A regra segura continua. A sigla também não liga mais CNPJs de raiz diferente (ADR-005,
   item 2). Se concordar, o T2 e o ADR-005 ganham uma linha cada.
+
+- [ ] `[para: dominio-energia]` (não bloqueia a nova execução; bloqueia o merge) **Linha 12 do `sucessoes.json`,
+  RGE antiga (02016439000138) → RGE (02016440000162), `desde` 2019-01-01.** Pus com o que você aprovou na tabela
+  (agrupamento de 04/12/2018, sem número de REA, formulário de referência da CPFL). Confirme a linha e, se achar, o
+  número da REA e o link do cedoc. O `desde` está certo? A tarifa da RGE Sul vai até 18/06/2019.
 
 ## Conversa da equipe
 
@@ -1085,3 +1104,10 @@ Se aparecer uma ligação recusada ou um agente sem tarifa, é uma sucessão que
   - **qa (h7):** Guarapuava na ordem `copel-dis, ess`; o critério 2 com 0.
   - **seguranca:** o R3 ficou mais forte. A sigla igual com CNPJ de outra raiz não troca mais de empresa.
   - **tech-lead:** a mudança do D3 no T2 e no ADR-005.
+
+### [backend] 2026-10-30 — segunda execução: RGE antiga entra no sucessoes.json
+- **O que fiz:** a regressão das 263 cidades veio da regra nova da sigla (`2804a5c`): a RGE antiga tem outro CNPJ. Pus
+  a linha 12 no `sucessoes.json` com os dados que o dominio-energia já tinha aprovado. A fixture agora tem uma RGE
+  antiga em Caxias do Sul, testada com e sem a linha. Detalhes em "Segunda execução".
+- **Como verifiquei:** `pnpm typecheck` e `pnpm test` (dados 83, core 48) verdes.
+- **Para o próximo:** quem orquestra roda o diagnóstico de novo; o dominio-energia confirma a linha 12 (pergunta aberta).

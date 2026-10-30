@@ -28,6 +28,9 @@
     dele: D3 só para vínculo sem tarifa publicada; a sigla não liga CNPJs de raiz diferente
     (`ligacoesPelaSiglaRecusadas`); linha 11 do `sucessoes.json` (antiga CPFL SANTA CRUZ); critério 2 do diagnóstico
     sem o falso positivo do id `cpfl-santa-cruz`. Commits `8e0d990`, `2804a5c`, `cc51fcb`, `3d916ce`, `0e8167b`.
+  - **Segunda execução (41130096649):** a regra da sigla recusou a RGE antiga (02016439000138, 263 cidades). Entrou
+    a linha 12 no `sucessoes.json` (RGE antiga → RGE), que o dominio-energia ainda precisa confirmar. O diagnóstico
+    roda de novo.
 - A rede do ambiente de nuvem **não alcança** `dadosabertos.aneel.gov.br` (o proxy devolve 403). Para usar os CSVs
   brutos, só pela Action ou numa máquina com acesso.
 
