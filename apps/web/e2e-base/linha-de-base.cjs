@@ -6,6 +6,7 @@
  * Uso (com o site rodando: pnpm build && pnpm --filter @ee/web start -p 3100):
  *   node apps/web/e2e-base/linha-de-base.cjs capturar <pasta-de-evidencias> [--url=http://localhost:3100] [--gerar-fixtures]
  *   node apps/web/e2e-base/linha-de-base.cjs comparar <pasta-antes> <pasta-depois>
+ *   node apps/web/e2e-base/linha-de-base.cjs medir-js-html <pasta> [--url=…]   (só o item 11a, grava js-do-html.json)
  *
  * "capturar" percorre o fluxo inteiro em 390×844 e 1280×900, guarda capturas, textos visíveis, a casa salva,
  * o DOM com movimento reduzido, bytes de JavaScript e contagem de transições. Sai com código 1 se houver erro
@@ -30,7 +31,15 @@ const PASTA_SCRIPT = __dirname;
 const PASTA_FIXTURES = path.join(PASTA_SCRIPT, "fixtures");
 const PASTA_WEB = path.resolve(PASTA_SCRIPT, "..");
 const ROTAS = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/casa/aparelhos", "/sobre"];
-const LIMITE_CRESCIMENTO_JS = 1024; // bytes (desenho técnico, seção 10, item 6)
+// Critério do item 11, revisto pelo tech-lead em 2026-10-29 (HIS-001, commit da2a3c4):
+// 11a (principal) — JS que o HTML de cada rota referencia (o que a página precisa para abrir): até +1 024 B;
+// 11b — total baixado depois do prefetch dos <Link> (encodedBodySize de todo .js): até +2 048 B.
+const LIMITE_CRESCIMENTO_JS_HTML = 1024;
+const LIMITE_CRESCIMENTO_JS = 2048;
+const ROTAS_JS_HTML = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/sobre"];
+const ARQUIVO_JS_HTML = "js-do-html.json";
+// Logs que guardamos junto com as evidências: não são o site, então o "comparar" não os compara.
+const eLogDeEvidencia = (f) => f.endsWith(".log") || path.basename(f).startsWith("saida-") || path.basename(f) === "controle-comparacao.txt";
 // Diferença por canal (0–255) abaixo da qual o pixel conta como ruído de rasterização, não mudança.
 // Medido em 2026-10-29: duas execuções do mesmo build diferem até 10/255 na borda de pílulas dentro do <dialog>.
 const TOLERANCIA_CANAL = 16;
@@ -549,6 +558,61 @@ async function bytesDeJs(navegador, base, problemas) {
   return medidas;
 }
 
+/** Baixa um caminho do site; com `gzip`, pede o corpo comprimido como o navegador (mesmo número do encodedBodySize). */
+function baixar(base, caminho, gzip) {
+  return new Promise((ok, erro) => {
+    const pedido = require("node:http").get(new URL(caminho, base), { headers: gzip ? { "accept-encoding": "gzip" } : {} }, (r) => {
+      const partes = [];
+      r.on("data", (p) => partes.push(p));
+      r.on("end", () => ok(Buffer.concat(partes)));
+    });
+    pedido.on("error", erro);
+  });
+}
+
+/**
+ * Item 11a: JS que o HTML de cada rota referencia (<script src> e <link rel="preload" as="script">), sem o prefetch.
+ * Mesma regra do js-do-html.mjs do tech-lead: scripts noModule ficam de fora (navegador moderno não baixa).
+ */
+async function jsDoHtml(base) {
+  const tamanhos = new Map();
+  const medir = async (s) => {
+    if (!tamanhos.has(s)) tamanhos.set(s, [(await baixar(base, s, true)).length, (await baixar(base, s, false)).length]);
+    return tamanhos.get(s);
+  };
+  const rotas = {};
+  const todos = new Set();
+  for (const rota of ROTAS_JS_HTML) {
+    const html = (await baixar(base, rota, false)).toString("utf8");
+    const scripts = new Set();
+    for (const m of html.matchAll(/<script[^>]*\ssrc="([^"]+\.js)"[^>]*>/g)) if (!/noModule/i.test(m[0])) scripts.add(m[1]);
+    for (const m of html.matchAll(/<link[^>]*>/g)) {
+      if (!/rel="preload"/.test(m[0]) || !/as="script"/.test(m[0])) continue;
+      const href = m[0].match(/href="([^"]+)"/)?.[1];
+      if (href) scripts.add(href);
+    }
+    let comprimidos = 0;
+    let brutos = 0;
+    for (const s of scripts) {
+      const [c, b] = await medir(s);
+      comprimidos += c;
+      brutos += b;
+      todos.add(s);
+    }
+    rotas[rota] = { arquivos: scripts.size, bytesComprimidos: comprimidos, bytesBrutos: brutos };
+  }
+  const uniao = [...todos].reduce((t, s) => t + tamanhos.get(s)[0], 0);
+  return { rotas, uniao: { arquivos: todos.size, bytesComprimidos: uniao } };
+}
+
+async function medirJsHtml(saida, opcoes) {
+  const medida = await jsDoHtml(opcoes.url ?? "http://localhost:3100");
+  escrever(path.join(path.resolve(saida), ARQUIVO_JS_HTML), json(medida));
+  for (const [r, m] of Object.entries(medida.rotas)) console.log(`  JS do HTML ${r}: ${m.bytesComprimidos} B comprimidos em ${m.arquivos} arquivos`);
+  console.log(`  união das ${ROTAS_JS_HTML.length} rotas: ${medida.uniao.bytesComprimidos} B em ${medida.uniao.arquivos} arquivos`);
+  return medida;
+}
+
 /** Status HTTP de cada rota e o redirecionamento de /casa/aparelhos embutido na página estática. */
 async function rotasHttp(base) {
   const saida = {};
@@ -632,6 +696,7 @@ async function capturar(saida, opcoes) {
   } finally {
     await navegador.close();
   }
+  await medirJsHtml(saida, opcoes);
 
   resumo.problemas = problemas;
   escrever(path.join(saida, "resumo.json"), json(resumo));
@@ -659,7 +724,7 @@ function listar(pasta) {
   return fs
     .readdirSync(pasta, { recursive: true })
     .map(String)
-    .filter((f) => fs.statSync(path.join(pasta, f)).isFile() && !f.startsWith("diferencas"))
+    .filter((f) => fs.statSync(path.join(pasta, f)).isFile() && !f.startsWith("diferencas") && !eLogDeEvidencia(f))
     .sort();
 }
 
@@ -715,7 +780,7 @@ async function comparar(antes, depois) {
   for (const f of arquivosA.filter((x) => arquivosB.has(x))) {
     const a = path.join(antes, f);
     const b = path.join(depois, f);
-    if (f === "resumo.json" || f === "prerender-manifest.json") continue;
+    if (f === "resumo.json" || f === "prerender-manifest.json" || f === ARQUIVO_JS_HTML) continue;
     if (f.endsWith(".png")) {
       if (fs.readFileSync(a).equals(fs.readFileSync(b))) {
         imagensIguais++;
@@ -757,12 +822,26 @@ async function comparar(antes, depois) {
   if (rb.prerender?.inicio.initialRevalidateSeconds !== 86400) falhas.push("prerender: a / não revalida mais a cada 86400 s");
   const html = [ra.prerender?.inicio.htmlSize, rb.prerender?.inicio.htmlSize];
   if (html[0] && html[1] && Math.abs(html[1] - html[0]) / html[0] > 0.02) avisos.push(`htmlSize da / mudou mais de 2%: ${html[0]} → ${html[1]}`);
-  console.log("Bytes de JavaScript (comprimidos), antes → depois:");
+  const sinal = (n) => `${n >= 0 ? "+" : ""}${n}`;
+  const lerJsHtml = (p) => (fs.existsSync(path.join(p, ARQUIVO_JS_HTML)) ? JSON.parse(fs.readFileSync(path.join(p, ARQUIVO_JS_HTML), "utf8")) : null);
+  const [ja, jb] = [lerJsHtml(antes), lerJsHtml(depois)];
+  if (!ja || !jb) falhas.push(`item 11a sem medida: falta ${ARQUIVO_JS_HTML} em ${!ja ? "antes" : "depois"} (rode o modo medir-js-html)`);
+  else {
+    console.log(`11a · JS referenciado pelo HTML (comprimido), antes → depois (limite +${LIMITE_CRESCIMENTO_JS_HTML}):`);
+    for (const rota of ROTAS_JS_HTML) {
+      const a = ja.rotas[rota]?.bytesComprimidos;
+      const b = jb.rotas[rota]?.bytesComprimidos;
+      console.log(`  ${rota}: ${a} → ${b} (${sinal(b - a)})`);
+      if (!(b - a <= LIMITE_CRESCIMENTO_JS_HTML)) falhas.push(`11a: JS do HTML de ${rota} cresceu ${b - a} bytes (limite ${LIMITE_CRESCIMENTO_JS_HTML})`);
+    }
+    console.log(`  união das rotas: ${ja.uniao.bytesComprimidos} → ${jb.uniao.bytesComprimidos} (${sinal(jb.uniao.bytesComprimidos - ja.uniao.bytesComprimidos)})`);
+  }
+  console.log(`11b · JS total com prefetch (comprimido), antes → depois (limite +${LIMITE_CRESCIMENTO_JS}):`);
   for (const rota of Object.keys(ra.bytesJs ?? {})) {
     const a = ra.bytesJs[rota].bytesJsComprimidos;
     const b = rb.bytesJs?.[rota]?.bytesJsComprimidos;
-    console.log(`  ${rota}: ${a} → ${b} (${b - a >= 0 ? "+" : ""}${b - a})`);
-    if (!(b - a <= LIMITE_CRESCIMENTO_JS)) falhas.push(`JS de ${rota} cresceu ${b - a} bytes (limite ${LIMITE_CRESCIMENTO_JS})`);
+    console.log(`  ${rota}: ${a} → ${b} (${sinal(b - a)})`);
+    if (!(b - a <= LIMITE_CRESCIMENTO_JS)) falhas.push(`11b: JS total de ${rota} cresceu ${b - a} bytes (limite ${LIMITE_CRESCIMENTO_JS})`);
   }
   console.log(`htmlSize da /: ${html[0]} → ${html[1]}`);
   console.log(`Capturas iguais: ${imagensIguais}; textos/DOM/casas iguais: ${textosIguais}`);
@@ -781,7 +860,10 @@ async function comparar(antes, depois) {
   const { modo, posicionais, opcoes } = argumentos();
   if (modo === "capturar" && posicionais[0]) return capturar(posicionais[0], opcoes);
   if (modo === "comparar" && posicionais[1]) return comparar(posicionais[0], posicionais[1]);
-  console.error("Uso:\n  node apps/web/e2e-base/linha-de-base.cjs capturar <pasta> [--url=http://localhost:3100] [--gerar-fixtures]\n  node apps/web/e2e-base/linha-de-base.cjs comparar <antes> <depois>");
+  if (modo === "medir-js-html" && posicionais[0]) return medirJsHtml(posicionais[0], opcoes);
+  console.error(
+    "Uso:\n  node apps/web/e2e-base/linha-de-base.cjs capturar <pasta> [--url=http://localhost:3100] [--gerar-fixtures]\n  node apps/web/e2e-base/linha-de-base.cjs comparar <antes> <depois>\n  node apps/web/e2e-base/linha-de-base.cjs medir-js-html <pasta> [--url=http://localhost:3100]",
+  );
   process.exitCode = 2;
 })().catch((e) => {
   console.error(e);

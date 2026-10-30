@@ -593,7 +593,8 @@ pré-renderizada muda — rodar antes e depois no mesmo mês.
 | 8 | **Apagar todos os meus dados (A5)** | Casa v2 → `/casa/ajustes` → "Apagar todos os meus dados" → "Sim, apagar" | volta para `/`; `state` sem `residencia` e as 5 listas vazias | idem |
 | 9 | **Transições** | `document.startViewTransition` contado por `addInitScript`, acumulado por passo; `view-transition-name` do topo e da navegação | **21** por largura, mesma sequência nas duas (1 por passo do cadastro, exceto a troca "Por cômodo/Tudo junto"; 1 por troca de aba e por link; 0 nos diálogos e nas entradas por endereço, exceto `/casa/aparelhos`, cujo redirecionamento no navegador conta 1); topo `topo`, navegação de baixo `navegacao` | mesma contagem **em cada passo**, mesmos nomes |
 | 10 | **Movimento reduzido** | `reducedMotion: "reduce"`; duração de `.surgir`; 4 trocas de aba | `.surgir` dura `1e-05s` (0,01 ms do `globals.css`); 4 transições em 4 trocas (o React continua chamando a API, o CSS zera a animação) | igual |
-| 11 | **Bytes de JavaScript** | Chromium sem cache, 390 px, depois de `networkidle` + 1 s; soma de `encodedBodySize` de todo recurso `.js` (o Next pré-carrega parte dos chunks por `<link rel="preload">`, que não aparece como `initiatorType: "script"`; esse número também fica no `resumo.json`) | `/` **185 227 B** (10 arquivos; 602 122 B sem compressão) · `/comecar` **185 227 B** (10) · `/casa` sem casa **231 010 B** (15) · `/casa` com casa **211 700 B** (13). Só `initiatorType: "script"`: 183 254 / 183 254 / 229 037 / 209 727 | cada rota cresce no máximo 1 024 B |
+| 11a | **JS para abrir a página** (principal; critério do tech-lead, 2026-10-29) | `medir-js-html` (também roda no fim do `capturar`; grava `js-do-html.json`): `<script src>` sem `noModule` + `<link rel="preload" as="script">` do HTML de 7 rotas, corpo com gzip como o servidor manda. Mesma regra do `js-do-html.mjs` do tech-lead (números batem byte a byte) | medido no `main` `57700ab` em 2026-10-29 (build próprio do qa): `/` **165 917** · `/comecar` **173 594** · `/casa` **176 681** · `/casa/comodos` **173 387** · `/casa/dicas` **167 401** · `/casa/ajustes` **164 464** · `/sobre` **139 573** B; união das 7: 235 128 B | cada rota cresce no máximo 1 024 B |
+| 11b | **JS total com prefetch** | Chromium sem cache, 390 px, depois de `networkidle` + 1 s; soma de `encodedBodySize` de todo recurso `.js` (o Next pré-carrega parte dos chunks por `<link rel="preload">`, que não aparece como `initiatorType: "script"`; esse número também fica no `resumo.json`) | `/` **185 227 B** (10 arquivos; 602 122 B sem compressão) · `/comecar` **185 227 B** (10) · `/casa` sem casa **231 010 B** (15) · `/casa` com casa **211 700 B** (13). Só `initiatorType: "script"`: 183 254 / 183 254 / 229 037 / 209 727 | cada rota cresce no máximo 2 048 B (era 1 024 até a decisão do tech-lead) |
 | 12 | **Rotas e cache** | `fetch` de cada rota; manifesto de prerender copiado para as evidências | as 8 rotas respondem 200; `/casa/aparelhos` é estática: responde **200** com `NEXT_REDIRECT;replace;/casa/comodos;307` no conteúdo e o navegador termina em `/casa/comodos`; prerender com 12 entradas, `/` com `initialRevalidateSeconds` **86400** e `htmlSize` **66 350** | mesmas rotas e status, mesmo redirecionamento, 86400; `htmlSize` com variação > 2 % vira aviso para olhar |
 | 13 | **Console** | `pageerror` e `console.error` em todas as sessões (fluxo, migração, reduzido, remover, apagar, bytes) | **0** | 0 |
 
@@ -606,7 +607,61 @@ E as barreiras da história: `pnpm camadas`, `pnpm typecheck`, `pnpm test`, `pnp
 
 **Limites conhecidos do script:** em 390 px a captura de página inteira mostra a navegação fixa de baixo por cima de uma
 faixa do conteúdo (na altura de 844 px), igual nos dois lados; o que fica coberto é conferido pelo texto (item 2).
-O `#comodo-<id>` (rolar até o cômodo) não é capturado: o fluxo chega aos cômodos pela aba.
+O `#comodo-<id>` (rolar até o cômodo) não é capturado: o fluxo chega aos cômodos pela aba (coberto no manual da etapa 5).
+
+### Resultado da etapa 5 (qa, 2026-10-29)
+
+**Ambiente.** Cópia isolada do repositório em `182f355` no scratchpad do qa (`…/his001/copia-qa/`, `git status` limpo),
+porque outro agente rodou `pnpm build` no `.next` do repositório no meio do meu teste (às 21:31, o `next start` caiu com
+"Could not find a production build"). Build `_qVAe_v1GjC4-rgfRKeiq`; `public/dados` com os mesmos sha256 da linha de base.
+Para o 11a e para o manual lado a lado, segunda cópia em `57700ab` (build `2bhg1cNnVmkuk6NmfVjUU`). Os commits
+`da2a3c4` e `28b9a29` só têm documentos (`git diff --stat 182f355 HEAD -- apps scripts package.json` vazio).
+Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his001/depois-qa/` (comparação),
+`…/his001/manual-qa-depois/` e `…/his001/manual-qa-main/` (manual), roteiro `…/his001/manual-qa.cjs`.
+
+| # | Resultado | Números do "depois" |
+| --- | --- | --- |
+| barreiras | ok | `pnpm typecheck` (`Camadas: tudo certo (64 arquivos)`), `pnpm test` 37 + 11, `pnpm build` verdes; tabela de rotas igual ao `antes/build.log` |
+| 1 | ok | 84 de 84 capturas iguais; ruído ≤ 16/255 em 3 (5, 50 e 107 pixels, diálogo e cômodos), como no controle |
+| 2, 3, 4 | ok | 98 de 98 textos, fotos do DOM e casas salvas iguais byte a byte |
+| 5 | ok | v2: guardado = fixture; v1 → `version: 2` com as 3 listas vazias e o resto igual |
+| 6 | ok | `/comecar` com casa v2 → "Você já cadastrou"; casa intacta |
+| 7 | ok | salvar pelo "Quem mais gasta" e pelos cômodos mantém ids; remover o chuveiro: 14 → 13, `plano` → `[]` |
+| 8 | ok | volta para `/`, `state` sem `residencia` e 5 listas vazias |
+| 9 | ok | 21 transições por largura, mesma sequência por passo; nomes `topo` e `navegacao` |
+| 10 | ok | `.surgir` 1e-05s; 4 transições em 4 trocas de aba |
+| 11a | **ok** | `/` 164 212 (−1 705) · `/comecar` 172 561 (−1 033) · `/casa` 175 053 (−1 628) · `/casa/comodos` 172 950 (−437) · `/casa/dicas` 166 026 (−1 375) · `/casa/ajustes` 163 965 (−499) · `/sobre` 139 573 (0); união 236 577 (+1 449) |
+| 11b | **ok** | `/` 184 404 (−823) · `/comecar` 184 404 (−823) · `/casa` sem casa 232 459 (**+1 449**, limite 2 048) · com casa 212 267 (+567) |
+| 12 | ok | 8 rotas 200; `/casa/aparelhos` 200 com `NEXT_REDIRECT` para `/casa/comodos`; prerender 12 entradas, `/` 86400 e `htmlSize` 66 350 |
+| 13 | ok | 0 erros de console/página em todas as sessões (fluxo, migração, reduzido, remover, apagar, bytes e manual) |
+
+`comparar antes depois-qa` → **"Comparação: nada mudou"** (código 0). O script agora ignora logs de evidência (`*.log`,
+`saida-*.txt`, `controle-comparacao.txt`), que antes viravam falsa diferença. Teste negativo dos critérios novos: +1 050 B
+no JS do HTML de `/casa/dicas` e +2 049 B no total da `/` → as duas acusadas, código 1.
+
+**Manual (roteiro `manual-qa.cjs`, rodado igual no `main` e no "depois"; relatório e as 18 árvores de acessibilidade
+idênticos nos dois; capturas iguais ou com ruído ≤ 3/255):**
+
+| O quê | Resultado |
+| --- | --- |
+| Cadastro só com teclado (390 px; Tab, Enter, Espaço; `<select>` por digitação) | ok — do estado até `/casa`, 6 cômodos; ao entrar em cada passo o foco vai para o `h1` do passo; contorno de foco visível (3 px amarelo) em campo, botões e opções |
+| Folhas com teclado (editor pelo "Quem mais gasta", editor pelos cômodos, "Anotar conta"; 390 e 1280) | ok — Enter abre, o foco vai para "Fechar" dentro do diálogo, `Esc` fecha e o foco volta para o botão que abriu |
+| Abas com teclado (Cômodos → Dicas → Minha casa → Acompanhar) | ok — Enter navega, contorno visível, 4 transições em 4 trocas |
+| Nomes acessíveis (8 rotas + diálogo do editor, 390 e 1280) | ok — nenhum botão, link, campo, rádio ou contador sem nome; "Quem mais gasta" lido como "Chuveiro elétrico: R$ 44,26 por mês, 42% da conta. Toque para ajustar."; contadores "Aumentar/Diminuir quantidade de …" com `status` |
+| Movimento reduzido | ok — `.surgir` 1e-05s e opacidade 1 já aos 300 ms; nenhuma animação de view transition em andamento 120 ms depois da troca de aba |
+| `/casa/aparelhos` | ok — termina em `/casa/comodos` (390 e 1280) |
+| `#comodo-<id>` pelo link do acompanhamento (Quarto 2) | ok — 6 links; abre `/casa/comodos#comodo-…45`, Quarto 2 expandido e visível (390: 371 px do topo; 1280: 491 px), 1 transição. Direto pelo endereço: expandido, a 112 px (`scroll-mt-28`) |
+| Zoom 200% em 390 px (195 px CSS) | igual ao `main` — ver P2 |
+
+**Achados pré-existentes** (iguais no `main`; não são regressão e não cabem aqui, porque a história proíbe mudança
+visual; registrados para o backlog):
+
+| # | Achado | Gravidade | Para |
+| --- | --- | --- | --- |
+| P1 | No passo "cidade" do cadastro o foco começa na busca (`autoFocus`) e passa para o título entre 300 e 600 ms (8 de 8 vezes, nos dois builds): quem começa a digitar logo perde o foco no meio, e o leitor de tela anuncia duas coisas | baixo | ux-acessibilidade / frontend |
+| P2 | Zoom 200% em 390 px: rolagem horizontal em `/` (254 px de conteúdo em 195), `/casa` e `/casa/dicas` (211 px); no `/casa` os números e nomes quebram palavra a palavra (`…/manual-qa-depois/capturas/zoom200-_casa.png`) | médio | ux-acessibilidade (história de reflow) |
+| P3 | Pelo link do acompanhamento o cômodo abre e fica visível, mas não alinhado ao topo como na entrada direta (371 px × 112 px); causa não investigada (suspeita: a rolagem do `useEffect` disputa com a da navegação/transição) | baixo | frontend |
+| P4 | Com o diálogo aberto, 1 de 25 Tabs deixa o foco fora do diálogo (`activeElement` fora do `<dialog>`; no `<dialog>` modal nativo do Chromium o ciclo de Tab passa pela interface do navegador) | baixo (informativo) | — |
 
 ## Perguntas abertas
 
@@ -848,3 +903,32 @@ O `#comodo-<id>` (rolar até o cômodo) não é capturado: o fluxo chega aos cô
 - Para o próximo: **tech-lead** — etapa 7 liberada pela segurança; levar S1 e S2 para a HIS-002 (correções na tabela de
   achados). **qa** — nada novo da minha parte. **documentacao** — R9: a expectativa certa é 200 com `NEXT_REDIRECT` no
   conteúdo, não 307.
+
+### [qa] 2026-10-29 — etapa 5: aprovado
+- O que fiz: rodei a comparação antes × depois de forma independente, com build próprio de `182f355` numa cópia isolada
+  (outro agente reconstruiu o `.next` do repositório no meio do meu teste); medi o 11a no `main` `57700ab` numa segunda
+  cópia; incorporei 11a/11b ao `linha-de-base.cjs` (modo `medir-js-html`, chamado também no fim do `capturar`) e ao
+  "Plano de testes"; escrevi e rodei o roteiro manual (`manual-qa.cjs`) igual contra o `main` e o "depois": teclado no
+  cadastro, nas folhas e nas abas, nomes acessíveis (árvore de acessibilidade do Playwright), movimento reduzido, zoom
+  200% em 390 px, `/casa/aparelhos` e `#comodo-<id>` pelo link do acompanhamento e direto. Olhei 9 capturas novas
+  (390: `07-cadastro-comodo-1`, `23-comodos-editor-aparelho` — a de maior ruído —, `26-dicas`, `ancora-pelo-link-390`,
+  `zoom200-_casa`; 1280: `01-inicio`, `16-acompanhamento`, `29-minha-casa`, `folha-comodos-teclado-1280`).
+- Decisões e porquê: **aprovado.** Todos os critérios de aceite verificados: 1–3 (camadas: `pnpm camadas` verde no
+  typecheck), 4 (casa v2 e v1 abrem iguais), 5 (84 capturas, 98 textos/DOM/casas, 21 transições por largura, 0 erros no
+  console, iguais ao `main`), 6 (barreiras verdes). Item 11 aprovado com o critério novo do tech-lead: 11a caiu em todas
+  as rotas (−437 a −1 705 B, `/sobre` 0) e 11b +1 449 B no pior caso (limite 2 048). Teclado, nomes acessíveis, movimento
+  reduzido e a âncora funcionam e saem idênticos ao `main`. Os 4 achados (P1–P4) são **pré-existentes** (iguais no
+  `main`) e ficam fora desta história, que proíbe mudança visual.
+- Arquivos alterados: `apps/web/e2e-base/linha-de-base.cjs` (11a/11b, `medir-js-html`, logs ignorados no `comparar`);
+  esta história (só "Plano de testes" — item 11 em 11a/11b e "Resultado da etapa 5" — e esta nota);
+  `docs/equipe/agentes/qa/contexto.md` e `diario.md`. Nenhum código de `apps/web/src`.
+- Como verifiquei: `comparar antes depois-qa` → "nada mudou", código 0; teste negativo do 11a/11b (as duas acusadas);
+  números do 11a batem byte a byte com o `js-do-html.mjs` do tech-lead. Evidências em
+  `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his001/depois-qa/` (`saida-comparar.txt`,
+  `js-do-html.json`, `resumo.json`, `typecheck.log`, `test.log`, `build.log`, `foco-cidade-*.txt`),
+  `…/his001/manual-qa-depois/` e `…/his001/manual-qa-main/` (`manual.json`, `aria/`, `capturas/`); o 11a do `main` foi
+  gravado em `…/his001/antes/js-do-html.json`. Defeitos da HIS-001: **nenhum**.
+- Para o próximo: **tech-lead** — etapa 7 liberada pelo qa. **ux-acessibilidade** — P1 (foco no passo "cidade") e P2
+  (zoom 200%: rolagem horizontal em `/`, `/casa`, `/casa/dicas`) para o backlog. **frontend** — P3 (âncora pelo link não
+  alinha ao topo) para o backlog. **quem orquestra** — builds em paralelo no mesmo `apps/web/.next` derrubam o servidor de
+  quem está testando: cada papel deve compilar numa cópia própria (ou combinar a vez).

@@ -14,6 +14,10 @@
 - Números da linha de base: 84 capturas (34 por largura no fluxo), 21 transições por largura, 0 erros de console;
   JS `/` 185 227 B, `/comecar` 185 227 B, `/casa` 231 010 B sem casa e 211 700 B com casa; `/` revalida em 86400 s,
   `htmlSize` 66 350. Detalhes e critérios no "Plano de testes" da HIS-001.
+- **HIS-001, etapa 5 feita (2026-10-29): aprovado.** `comparar antes depois-qa` → "nada mudou"; 11a (JS do HTML) caiu em
+  todas as rotas, 11b +1 449 B em `/casa` sem casa (limite 2 048). Manual (teclado, folhas, abas, nomes acessíveis,
+  reduzido, zoom 200%, `/casa/aparelhos`, `#comodo-<id>`) idêntico ao `main`. Achados pré-existentes P1–P4 na história.
+  Evidências: `…/scratchpad/his001/depois-qa/`, `manual-qa-depois/`, `manual-qa-main/`; roteiro `…/his001/manual-qa.cjs`.
 - Como subir o site para testar: `pnpm build && pnpm --filter @ee/web start -p 3100` (em segundo plano);
   liberar a porta com `fuser -k 3100/tcp` (não usar `pkill -f "next start"`).
 - O Chromium já está instalado no ambiente de nuvem: `require('playwright')` (1.63, via NODE_PATH global), sem `playwright install`.
@@ -23,8 +27,14 @@
 - Comparação antes × depois só vale com relógio fixo (`context.clock.setFixedTime`), fuso `America/Sao_Paulo`, `pt-BR`
   e `crypto.randomUUID` trocado por contador (`addInitScript`). Assim texto, DOM e casa salva batem byte a byte.
 - Capturas: tolerância de 16/255 por canal (ruído medido de até 10/255 em diálogos); textos, DOM e JSON: exatos.
-- Bytes de JS: soma de `encodedBodySize` de todo recurso `.js` (o Next pré-carrega chunks com `<link rel=preload>`).
-  O relógio falso do Playwright troca o `performance`: medir bytes **sem** `clock`.
+- Bytes de JS (decisão do tech-lead, 2026-10-29): **11a** (principal) JS referenciado pelo HTML de 7 rotas
+  (`<script src>` sem `noModule` + `<link rel="preload" as="script">`, corpo gzip), até +1 024 B por rota — modo
+  `medir-js-html`, grava `js-do-html.json`; **11b** soma de `encodedBodySize` de todo `.js` depois do prefetch, até
+  +2 048 B. O relógio falso do Playwright troca o `performance`: medir bytes **sem** `clock`.
+- Testar sempre num **build próprio numa cópia isolada** (tar do repositório sem `.next` no scratchpad; o `node_modules`
+  vai junto, com links relativos): outros papéis rodam `pnpm build` no mesmo `apps/web/.next` e derrubam o `next start`.
+- `comparar` ignora logs (`*.log`, `saida-*.txt`, `controle-comparacao.txt`); deixar resultados extras (ex.: manual) fora
+  da pasta comparada.
 - Fixtures geradas uma vez, a partir da casa salva pelo próprio fluxo; o "depois" usa as mesmas (sem `--gerar-fixtures`).
 
 ## Seletores e comportamentos (cuidado nos scripts)
@@ -36,12 +46,16 @@
 - A `/` não tem `<main>` (texto pelo `<body>`). `/casa/aparelhos` é estática: HTTP 200 com o redirecionamento no conteúdo.
 - O zustand regrava a casa ao hidratar só quando a versão muda (v1 → v2).
 - Em 390 px a captura de página inteira mostra a navegação fixa no meio da imagem (altura 844 px).
+- Com a casa da fixture o botão é "Anotar outra conta" (já há contas). A Cozinha abre expandida em `/casa/comodos`:
+  Enter no cabeçalho a fecha. O nome do aparelho (ex.: "Geladeira de 1 porta") é o botão que abre o editor.
+- Zoom 200% em 390 px = viewport 195×422 com `deviceScaleFactor: 2`.
 
 ## Pendências
 
-- HIS-001 etapa 5: rodar `capturar …/depois` + `comparar`, e o manual (teclado, zoom 200%, nomes acessíveis).
 - HIS-002: transformar o fluxo em testes Playwright no CI, com axe; aposentar `apps/web/e2e-base/`.
-- Não coberto pela linha de base: abrir `/casa/comodos#comodo-<id>` pelo link do acompanhamento.
+- HIS-002: levar o `manual-qa.cjs` (teclado, folhas, nomes acessíveis, zoom, âncora) para `apps/web/e2e/`, com axe.
+- Backlog (pré-existentes, HIS-001 P1–P4): foco no passo "cidade" pula da busca para o título (ux/frontend); zoom 200%
+  com rolagem horizontal em `/`, `/casa`, `/casa/dicas` (ux); âncora pelo link não alinha ao topo (frontend).
 
 ## Orientações do responsável
 
