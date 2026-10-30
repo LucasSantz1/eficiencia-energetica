@@ -1421,3 +1421,9 @@ Linhas 22–23 aparecem como pendentes (`HIS-107 · …`, `HIS-108 · P1 …`, `
 - **Revisado pela ux.** As 8 entradas são `color-contrast` da `/` (4 sem casa, 4 com casa), cada uma com seletor de 1 elemento (pílulas de Quarto e Cozinha; o 2º `<dd>` de cada cartão) e todas com `historia: "HIS-110"`. Nada a mudar no `.ts`.
 - Falta na linha da HIS-110 em `docs/planejamento.md` a correção dos dois `<dd>` (hoje só tem a das pílulas: `text-tinta`, 5,50:1). Medi: `text-white/85` sobre `bg-white/10` em `bg-energia` (#0a7356) dá 3,92:1 (não passa). **Correção:** trocar por `text-white` nos dois `<dd>`, que dá 4,77:1 (passa AA); os `<p>` com `text-white/85` direto no verde (4,69:1) ficam como estão.
 - [para: scrum-master] acrescentar essa correção na linha da HIS-110. Próximo: fechamento (documentacao + scrum-master).
+
+### [documentacao] 2026-10-30 — fechamento (etapa 8): documentos atualizados para a 002a
+- Mudaram: `docs/sistema/desenvolvimento.md` (seção "Testes no navegador": `PORTA_E2E=3105 pnpm --filter @ee/web test:e2e`, arquivos de `e2e/`, exceções do axe, peso; CI com os 2 checks; `e2e-base` fora da estrutura), `docs/sistema/privacidade-e-seguranca.md` ("nada sai do aparelho" conferido sozinho; CI só leitura), `docs/arquitetura.md` (ESLint aponta para a HIS-002b; não citava o `e2e-base`), `CHANGELOG.md`.
+- Changelog: "Para quem usa" — o leitor de tela lê melhor a casa ilustrada, o "Quem mais gasta" e a tabela do painel geral (agora no Tab). "Técnico" — e2e, axe com 8 exceções da HIS-110, peso de JS, CI em 2 jobs, actions por SHA, ADR-003/004/005 aceitos.
+- Conferido no código e rodado aqui (porta 3171): `--list` dá 113 testes; `rotas` + `sanidade` com 24 passando. Índice de ADRs já tinha o 003, 004 e 005.
+- **[para: scrum-master]** pronta para a conferência da Definição de Pronto.
