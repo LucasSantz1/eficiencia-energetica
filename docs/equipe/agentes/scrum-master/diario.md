@@ -10,6 +10,17 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · Sprint 0, prioridade 1, um corte só; T5 aceito
+- O que fiz: respondi a pergunta de prioridade e sprint; apliquei o T5 do tech-lead nos critérios 1, 3, 5, 6 e 8; criei
+  os critérios 12 (V7 e `--forcar`) e 13 (Pronto depois do h8); pus o caso (h) no `casa-salva.spec.ts` da a7 da 003a;
+  atualizei quadro e planejamento (HIS-111 no E2 e na Sprint 0).
+- Decisões e porquê: o número errado no ar (11% a 55% a menos em 227 cidades) passa na frente; é defeito e o backend
+  está livre. O a3 vem depois, mas não espera se a HIS-111 travar. Um corte só, porque as sucessões estão confirmadas
+  e uma falha do V7 em ENF ou EBO não deixa nenhuma cidade sem distribuidora ("Só ela" = 0).
+- Arquivos: `docs/equipe/historias/HIS-111-tarifas-vencidas.md`, `docs/equipe/historias/HIS-003-base-de-seguranca.md`,
+  `docs/equipe/quadro.md`, `docs/planejamento.md`, `contexto.md`, este diário.
+- Próximos passos: seguranca (T3, V8) ‖ ux (D7); backend h0 a h5; quem orquestra faz o push e cola o resumo do passo 0.
+
 ## 2026-10-30 · HIS-003 · quebra em 003a/003b aceita (P-tl-3)
 - O que fiz: retitulei a HIS-003 como HIS-003a (mesmo arquivo e branch), com o critério 5 só no domínio; criei a
   HIS-003b a partir do modelo, movendo T5, T6, o bloco "T5 e T6" do D5, o `campos.spec.ts` e b1–b3, com remissões;

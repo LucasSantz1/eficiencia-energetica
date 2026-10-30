@@ -3,6 +3,7 @@
 ## Sprint 0 · Fundação
 
 **Objetivo:** deixar o código organizado em camadas, testado automaticamente e protegido, sem mudar nada para quem usa.
+A única mudança visível de propósito é a correção da HIS-111 (conta errada em 227 cidades).
 
 | História | Status | Etapa atual | Próximo papel |
 | --- | --- | --- | --- |
@@ -12,9 +13,13 @@
 | [HIS-003a · Dados quebrados não travam o site](historias/HIS-003-base-de-seguranca.md) | Preparada | desenho técnico pronto (D1–D9): sem zod, leitores no `@ee/core` (ADR-004 proposto); quebra aceita (P-tl-3, 2026-10-30); ≈ 3 dias | seguranca (P-tl-1, bloqueia a2) ‖ dominio-energia (P-tl-2, bloqueia a3); etapa 4 (backend a1–a3, a6; frontend a4–a5; qa a7) depois da 002a no `main`, **em paralelo com a 002b** |
 | [HIS-003b · Campos com limite e "Confere?"](historias/HIS-003b-campos-com-limite.md) | Preparada | textos (T5, T6) e desenho prontos; critério 8 (T6) novo; ≈ 1,5 dia | qa ("Plano de testes"); etapa 4 (frontend b1–b2, qa b3) **só depois** da 003a no `main` |
 | HIS-004 · Sem menção a instituição; espaços reservados | Pronto | — | — |
-| [HIS-111 · Tarifas vencidas (número errado no ar)](historias/HIS-111-tarifas-vencidas.md) | Preparando | regras do dominio-energia e desenho técnico prontos (T1–T7, 2026-10-30); ≈ 3 dias; proposta do tech-lead: **antes do a3 da 003a**, em paralelo com o fim da 002a | **scrum-master** (sprint, prioridade, critérios do T5) ‖ seguranca (workflow do T3, V8) ‖ ux (aviso do D7); depois backend h0 (passo 0 na Action) |
+| [HIS-111 · Tarifas vencidas (número errado no ar)](historias/HIS-111-tarifas-vencidas.md) | Preparada · **prioridade 1** | regras e desenho prontos (T1–T7); critérios do T5 aplicados, mais o 12 (V7) e o 13 (Pronto depois do h8); um corte só; ≈ 3 dias; branch própria saindo do `main`, **já**, em paralelo com o fim da 002a | **seguranca** (workflow do T3, V8; bloqueia o h0) ‖ ux (aviso do D7; bloqueia só o h6) → backend h0–h5 (o 1º push roda o passo 0; quem orquestra cola o resumo) → frontend h6 → qa h7 → etapas 6–9 → h8 (quem orquestra + backend + qa) |
 
-Ordem (scrum-master, 2026-10-30): HIS-001 → **HIS-002a** → **HIS-003a ‖ HIS-002b** → **HIS-003b**.
+Ordem (scrum-master, 2026-10-30): HIS-001 → **HIS-002a ‖ HIS-111** → **HIS-003a ‖ HIS-002b** → **HIS-003b**.
+- **HIS-111 primeiro na prioridade** (revisão de 2026-10-30): número errado no ar em 227 cidades. É correção de
+  defeito e usa o backend, que está livre; não depende da 002a. O a3 da 003a vem depois dela, mas **não espera** se
+  ela travar no passo 0: quem chegar depois faz o rebase (≈ 30 min, T7). Se ficar pronta junto com outra, entra
+  primeiro no `main`.
 - 002a primeiro: a 002b e a 003a usam o e2e, a fixture e o `ci.yml` dela.
 - 003a e 002b em paralelo, em branches separadas: a 003a não muda o lockfile, e o conflito é uma linha do `ci.yml`
   mais o `useArquivo`/`casa.ts` (D4 da 003a). Integra uma de cada vez; quem chega depois faz o rebase e passa no lint
@@ -54,6 +59,7 @@ scratchpad e porta própria (retro da HIS-001). A implementação (etapa 4) **n�
 - 2026-10-30 — HIS-003: desenho técnico pronto (tech-lead, D1–D9). Leitores escritos à mão no `@ee/core` em vez do zod (gzip: zod 93 kB, zod/mini 8,2 kB, à mão 1,3 kB; o zod testa `new Function`, que a CSP bloqueia); `storage` próprio + `merge` que valida, protótipo com o zustand 5.0.16 em 9 casos; formato salvo inalterado; `atualizar-dados.yml` em dois jobs com SHA; ≈ 3,75 dias → proposta 003a/003b; ADR-004 proposto. Próximo: seguranca (P-tl-1), dominio-energia (P-tl-2) e scrum-master (P-tl-3).
 - 2026-10-30 — HIS-003: **quebra aceita** (scrum-master, P-tl-3): HIS-003a (arquivo antigo, retitulado; critérios 1–4, 6, 7 e o 5 no domínio, passos a1–a7) e HIS-003b (novo; critério 5 nas telas e critério 8 novo do T6, passos b1–b3). Ordem 002a → 003a ‖ 002b → 003b. Próximo: seguranca (P-tl-1) ‖ dominio-energia (P-tl-2) ‖ qa (plano da 003b).
 - 2026-10-30 — HIS-111: desenho técnico (tech-lead, T1–T7) e ADR-005 proposto. D7 aprovado: `substituidas` opcional no `tarifas.json`; a troca fica no core, na leitura, e no `aplicacao/`, na regravação, não no leitor da casa; formato salvo igual. Passo 0 em `diagnosticar-dados.yml`, só leitura, roda no `push` da branch. Barreiras V1–V4, V7 e V8 sem `--forcar`. Recomendação: **HIS-111 antes do a3** (cerca de 30 min de rebase na 003a, contra dias de conta errada). Próximo: scrum-master.
+- 2026-10-30 — HIS-111: **Sprint 0, prioridade 1, um corte só** (scrum-master). Começa já, em branch própria saindo do `main`, em paralelo com o fim da 002a; o a3 da 003a vem depois, mas não espera se ela travar. T5 aplicado (6 meses; V5 no critério 6; critério 5 com três casos; e2e do 8 no caso (h) do `casa-salva.spec.ts` da a7; teste dos publicados no h8). Critérios novos: 12 (V7, `--forcar`) e 13 (Pronto só depois do h8). Próximo: seguranca (bloqueia o h0) ‖ ux (D7).
 
 ## Próximas (backlog priorizado)
 

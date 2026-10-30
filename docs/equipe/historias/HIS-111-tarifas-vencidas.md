@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 | --- | --- |
-| Épico | E2 · Precisão da conta (número dado por quem orquestra; o scrum-master confirma o épico) |
-| Sprint | a definir pelo scrum-master (pedido do dominio-energia: prioridade alta, P-de-1 da HIS-003) |
-| Tamanho | M (≈ 2 dias de backend + 0,5 dia de qa, depois das respostas do dominio-energia) |
+| Épico | E2 · Precisão da conta (confirmado pelo scrum-master) |
+| Sprint | **Sprint 0, prioridade 1** (scrum-master, 2026-10-30): defeito com número errado no ar, não função nova |
+| Tamanho | M (≈ 3 dias: 2,25 backend, 0,25 frontend, 0,5 qa; T4) |
 | Papéis principais | backend, dominio-energia, qa; tech-lead (contrato do `tarifas.json`) e ux (um texto) |
-| Status | Preparando |
+| Status | Preparada (h0 depois da revisão da seguranca no workflow do T3 e no V8) |
 | Branch | `his-111-tarifas-vencidas` |
 
 > **Origem:** achado P-de-1 do dominio-energia na HIS-003 ("Achado: tarifas vencidas", 2026-10-30). Investigação e
@@ -185,6 +185,7 @@ D5 e D6 na barreira e no relatório. O D7 é a ponte para quem já salvou a casa
 - Mas o V1 só passa se as outras 10 empresas vencidas saírem do arquivo. Sem o D2, isso deixa 81 cidades **sem
   distribuidora**: o site pede a conta de luz ou mostra "indisponível". Isso é honesto, mas pior para a família.
 - **Recomendação:** um corte só, assim que as sucessões forem confirmadas. O scrum-master decide.
+  _(scrum-master, 30/10: **um corte só**. Se o V7 reprovar ENF ou EBO, só essas linhas ficam fora.)_
 
 **Arquivos tocados:**
 - `packages/dados/src/aneel/tarifas.ts`, `aneel/municipios.ts`, `montar.ts`, `atualizar.ts` (relatório);
@@ -202,31 +203,48 @@ depois de o a3 entrar no `main`.~~ _(tech-lead, 30/10: a HIS-111 vem antes; ver 
 
 1. **Dado** o arquivo novo, **quando** procuro Alegrete (4300406), Assis (3504008), Bragança Paulista (3507605), Mococa
    (3530508), Itapetininga (3522307) e Caracaraí (1400209), **então** a primeira distribuidora de cada uma é,
-   respectivamente, `rge`, `ess`, `ess`, `cpfl-santa-cruz`, `cpfl-santa-cruz` e `ambar-roraima`. Isso vale se o
-   dominio-energia confirmar as sucessões.
+   respectivamente, `rge`, `ess`, `ess`, `cpfl-santa-cruz`, `cpfl-santa-cruz` e `ambar-roraima`. _(Sucessões
+   confirmadas pelo dominio-energia em 30/10; nenhuma das seis depende do V7.)_
 2. **Dado** o arquivo novo, **quando** confiro os 227 municípios da tabela de evidência, **então** nenhum deles tem
    `rge-sul`, `edevp`, `cnee`, `eeb`, `cflo`, `cpfl-leste-pauli`, `cpfl-mococa`, `cpfl-sul-paulist`, `enf`, `ebo` ou
    `cerr`, e todos têm ao menos uma distribuidora.
-3. **Dado** o `tarifas.json` novo, **quando** o `arquivos-publicos.test.ts` roda, **então** nenhuma distribuidora tem
-   `fimVigencia` anterior a `geradoEm − 12 meses` (V1), e nenhum CNPJ se repete (V2).
+3. **Dado** o `tarifas.json` montado pela branch, **quando** o diagnóstico roda `conferirCoerencia` sobre a montagem
+   real (PR), e depois o teste dos arquivos publicados roda no `main` (ligado no h8), **então** nenhuma distribuidora
+   tem `fimVigencia` anterior a `geradoEm − 6 meses` (V1), nenhum CNPJ se repete (V2), nenhum município lista uma
+   chave de `substituidas` (V3) e `substituidas` cumpre o V8. _(scrum-master, 30/10: T5 do tech-lead, 12 → 6 meses.)_
 4. **Dado** uma fixture com RGE (2026) e RGE SUL (2019) com o mesmo CNPJ, e um conjunto com `SigAgente` = "RGE SUL",
    **quando** a montagem roda, **então** o município fica com `rge`, e `substituidas` tem `"rge-sul": "rge"`.
 5. **Dado** uma fixture com um conjunto que parou de reportar 3 anos antes do ano máximo e é de uma empresa que está
-   no `sucessoes.json`, **quando** a montagem roda, **então** o município fica com a sucessora. **Dado** o mesmo
-   conjunto sem linha de sucessão, **então** o vínculo sai e aparece em `vinculosExtintosDescartados`.
-6. **Dado** uma fixture com uma tarifa vencida há 13 meses e sem sucessora, **quando** `pnpm dados:atualizar` roda,
-   **então** a rotina sai com código 1, lista V1 ou V5 na mensagem e **não grava nada** (a assinatura não muda).
+   no `sucessoes.json`, **quando** a montagem roda, **então** o município fica com a sucessora.
+   **Dado** o mesmo conjunto sem linha de sucessão, num município que tem outro vínculo recente, **então** o vínculo
+   extinto sai e aparece em `vinculosExtintosDescartados`.
+   **Dado** o mesmo conjunto sem linha de sucessão, sendo o único vínculo do município, **então** o vínculo fica e
+   aparece em `vinculosExtintosMantidos` (aviso). _(Duas fixtures; regra segura do D3, T2.)_
+6. **Dado** uma fixture com uma tarifa vencida há 7 meses e sem sucessora, **quando** `pnpm dados:atualizar` roda sem
+   `--forcar`, **então** a tarifa vai para `descartadas` com "vencida desde AAAA-MM-DD", a rotina sai com código 1, a
+   mensagem cita o **V5** (agente sem tarifa) e **não grava nada** (a assinatura não muda).
+   **Dado** a mesma tarifa vencida há 5 meses, **então** ela é publicada e aparece em `tarifasVencidasEmUso` (aviso).
+   _(scrum-master, 30/10: T5, 12 → 6 meses; bordas exatas nos testes do h2.)_
 7. **Dado** uma linha do `sucessoes.json` sem `ato` ou sem `fonte`, ou uma cadeia com ciclo, **quando** a rotina
    roda, **então** ela para com um erro que diz qual linha está errada.
-8. **Dado** uma casa salva no aparelho com `distribuidoraId: "rge-sul"` e sem conta de luz, **quando** a pessoa abre
-   `/casa`, **então** o preço do kWh é o da RGE (`origem: "aneel"`, R$ 0,94461 mais a bandeira), e a casa é regravada
-   com `"rge"`. Teste de unidade no leitor e e2e com o `localStorage` preparado.
+8. **Dado** uma casa salva no aparelho com `distribuidoraId: "rge-sul"` e sem conta de luz, e um `tarifas.json` com
+   `substituidas: {"rge-sul": "rge"}`, **quando** a pessoa abre `/casa`, **então** o preço do kWh é o da RGE desde a
+   primeira tela (`origem: "aneel"`, R$ 0,94461 mais a bandeira), a casa é regravada **uma vez** com `"rge"` e os
+   Ajustes marcam a RGE. Prova na HIS-111: teste de unidade de `acharDistribuidora` e `distribuidorasDaCidade` (h5,
+   com `"constructor"` e `"__proto__"` sem achar nada) e conferência do qa no Playwright em 390 e 1280 px (h7). O e2e
+   automático entra no `casa-salva.spec.ts`, caso (h), da a7 da HIS-003a. _(scrum-master, 30/10: T5.)_
 9. **Dado** a execução na Action, **quando** termina, **então** a anotação `::notice` mostra `sucessoesAplicadas`,
    `vinculosExtintosDescartados` e `tarifasDescartadasPorVencimento`, e o qa confere os números com esta história.
 10. O diff de `apps/web/public/dados/municipios/*.json` só muda os municípios esperados. O qa anexa a contagem: perto
     de 227, mais o que o D3 tirar de vínculo extinto em cidades que já estavam certas.
 11. `pnpm typecheck`, `pnpm test` e `pnpm build` passam. O simulador da `/` passa a usar a média sem as vencidas
     (R$ 0,837, contra 0,801 hoje, com os dados de 29/10).
+12. _(scrum-master, 30/10: o V7 e as barreiras do T2 não tinham critério.)_ **Dado** uma fixture em que uma sucessora
+    do `sucessoes.json` tem dois valores B1 diferentes na mesma vigência, **quando** `pnpm dados:atualizar --forcar`
+    roda, **então** a rotina sai com código 1, a mensagem cita o **V7** e a sigla, e não grava nada. O `--forcar` não
+    pula V1–V4, V7 e V8.
+13. **Pronto só depois do h8:** os critérios 1 e 2 conferidos pelo qa nos arquivos **publicados** pela rotina no
+    `main`, e o teste dos publicados ligado e verde no CI.
 
 ## Fora do escopo
 
@@ -523,7 +541,8 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
 - [ ] `[para: ux-acessibilidade]` Quando a casa salva troca de `rge-sul` para `rge` (ou de EDEVP para Energisa
   Sul-Sudeste), mostramos um aviso, como "Sua distribuidora agora se chama RGE. O preço foi atualizado.", ou a troca
   fica sem aviso?
-- [ ] `[para: scrum-master]` Prioridade e sprint. O pedido do dominio-energia é prioridade alta. Fazer um corte só ou
+- [x] `[para: scrum-master]` _(respondida em 30/10: Sprint 0, prioridade 1, **um corte só**, antes do a3; o passo 0
+  roda na Action pelo `push` da branch, que quem orquestra faz. Ver a nota do scrum-master)_ Prioridade e sprint. O pedido do dominio-energia é prioridade alta. Fazer um corte só ou
   dois (ver "Corte possível")? E lembrar que a rede do ambiente de nuvem não alcança a ANEEL: o passo 0 precisa da
   Action ou de uma máquina com acesso.
 
@@ -605,3 +624,30 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   - **ux:** o aviso do D7 (sim ou não). Não bloqueia o h0–h5.
   - **seguranca:** olhar o workflow do T3 e o V8 antes do h0.
   - **backend:** h0 a h5. O primeiro push roda o passo 0. O h3 só começa depois do portão.
+
+### [scrum-master] 2026-10-30 — Sprint 0, prioridade 1, um corte só; critérios do T5 aceitos
+- **O que fiz:** decidi prioridade, sprint e corte; apliquei o T5 nos critérios 1, 3, 5, 6 e 8; criei os critérios 12
+  (V7 e `--forcar`) e 13 (Pronto só depois do h8); pus o caso (h) no `casa-salva.spec.ts` da a7 da HIS-003a.
+- **Decisões e porquê:**
+  - **Sprint 0, prioridade 1, já.** É número errado no ar: 227 cidades veem uma conta de 11% a 55% menor, e a família
+    pode planejar o mês com esse valor. É correção de defeito (decisão em vigor: entra na Sprint 0 se houver gente
+    livre), e o backend está livre (a 002a está com qa e frontend). A Sprint 0 passa a fechar com seis histórias.
+  - **Antes do a3, sem esperar nada:** branch `his-111-tarifas-vencidas` saindo do `main`, em paralelo com o fim da
+    002a. Se a 003a chegar ao a3 e a HIS-111 ainda não estiver no `main` (ex.: passo 0 sem resultado), o a3 **não
+    espera**: quem chegar depois faz o rebase. Pronta junto com outra, a HIS-111 entra primeiro no `main`.
+  - **Um corte só.** As sucessões já estão confirmadas, então o corte parcial perde a razão: ele deixaria 81 cidades
+    sem distribuidora. Se o portão (b) reprovar ENF ou EBO pelo V7, só essas linhas ficam fora. Nenhuma cidade perde a
+    distribuidora, porque nas 10 cidades delas outra empresa já está na lista ("Só ela" = 0). A história segue sem
+    esperar.
+  - **T5 aceito como veio** (6 meses; V5 no critério 6; critério 5 com três casos; e2e do 8 na a7; teste dos publicados
+    no h8). O V7 ganhou critério próprio (12) porque é veto do dominio-energia e não tinha critério verificável.
+- **Arquivos alterados:** este arquivo (cabeçalho, critérios, pergunta, nota); `HIS-003-base-de-seguranca.md` (caso h
+  do `casa-salva.spec.ts`); `docs/equipe/quadro.md`; `docs/planejamento.md`; minha pasta.
+- **Como verifiquei:** conferi "Só ela" de ENF (0) e EBO (0) na tabela de evidência; conferi no T4 que nenhum passo
+  depende da 002a; conferi que as seis cidades do critério 1 não são de ENF ou EBO.
+- **Para o próximo:**
+  - **seguranca:** workflow do T3 e V8. Isso bloqueia o h0.
+  - **ux:** o aviso do D7. Bloqueia só o h6.
+  - **backend:** h0 a h5, depois da seguranca.
+  - **quem orquestra:** fazer o push da branch, que roda o passo 0, e colar o resumo do job em "Resultado do passo 0".
+    No h8, rodar o `atualizar-dados.yml` à mão.

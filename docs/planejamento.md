@@ -97,6 +97,7 @@ Critérios gerais da E0: nenhuma mudança visível para quem usa (exceto a tela 
 | HIS-203 | Percentual do Desconto Social por distribuidora (quando a ANEEL publicar) | dominio-energia, backend | M |
 | HIS-204 | Comparar com a Tarifa Branca: mostrar se compensaria pelo horário de uso dos aparelhos | dominio-energia, backend, frontend | G |
 | HIS-205 | Mais nomes comerciais de distribuidoras e permissionárias | backend | P |
+| HIS-111 | Tarifas vencidas: em 227 cidades o site usa o preço de uma distribuidora que já não existe, e a conta sai de 11% a 55% menor. Índice por CNPJ, tabela de sucessões com ato oficial, conjunto extinto, tarifa vencida há mais de 6 meses fora, barreiras na rotina e `substituidas` para quem já salvou a casa (ADR-005). **Defeito: entra na Sprint 0, prioridade 1** | backend, dominio-energia, qa | M |
 
 ### E3 · Funciona sem internet
 
@@ -171,7 +172,7 @@ atualizada, consentimento para qualquer rastreamento e revisão de `seguranca` e
 
 | Sprint | Foco | Histórias |
 | --- | --- | --- |
-| 0 | Fundação | HIS-001, HIS-002a, HIS-002b, HIS-003a, HIS-003b |
+| 0 | Fundação | HIS-001, HIS-111 (defeito, prioridade 1), HIS-002a, HIS-002b, HIS-003a, HIS-003b |
 | 1 | Inclusão I | HIS-110, HIS-107, HIS-102, HIS-103 |
 | 2 | Precisão I | HIS-201, HIS-205, HIS-104 |
 | 3 | Offline | HIS-109, HIS-301, HIS-302, HIS-303 |
@@ -206,6 +207,12 @@ Sprint 0: HIS-002a → HIS-003a e HIS-002b em paralelo (branches separadas, inte
 prontas juntas, a 003a entra antes) → HIS-003b. A Sprint 0 só fecha com as cinco; a 003b não sai da Sprint 0 porque o
 corte escondido em 30.000 W e o "135.90" lido como R$ 13.590 dão conta errada para a família. O aviso "não deu para
 salvar" (memória do navegador cheia, risco 6 do D9 da 003a) fica no backlog, sem sprint.
+
+_Revisão de 2026-10-30 (HIS-111):_ a **HIS-111** (tarifas vencidas, épico E2) entra na **Sprint 0 com prioridade 1**.
+Em 227 cidades a conta mostrada sai de 11% a 55% menor do que a real. Ela é correção de defeito, não função nova, e usa
+o backend, que está livre. Começa já, em paralelo com o fim da 002a. O a3 da 003a vem depois dela, mas não espera se ela
+travar no passo 0 (o rebase custa ≈ 30 min). É um corte só, porque as sucessões já estão confirmadas. A Sprint 0 fecha
+com seis histórias; se passar de uma semana, a Sprint 1 começa depois.
 
 ## 6. Riscos
 
