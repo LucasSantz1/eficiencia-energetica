@@ -81,6 +81,8 @@ Critérios gerais da E0: nenhuma mudança visível para quem usa (exceto a tela 
 | HIS-104 | Meta de gasto: "quero pagar até R$ X" e o painel mostra o quanto falta e quais dicas chegam lá | dominio-energia, frontend | M |
 | HIS-105 | Compartilhar e imprimir o resumo (Web Share, página de impressão leve), sem enviar dado a servidor | ux, frontend | P |
 | HIS-106 | Teste com pessoas reais (5 famílias): roteiro, observação, ajustes de texto | ux, scrum-master | M |
+| HIS-107 | Zoom de 200% sem rolagem para o lado (WCAG 1.4.10): em 390 px, `/` (254 px de conteúdo em 195), `/casa` e `/casa/dicas` (211 px) rolam na horizontal e, no `/casa`, números e nomes quebram palavra a palavra (achado P2 do qa na HIS-001, médio, igual antes da HIS-001) | ux, frontend | M |
+| HIS-108 | Foco e rolagem: (P1) no passo "cidade" do cadastro o foco começa na busca e pula para o título entre 300 e 600 ms — quem digita logo perde o foco e o leitor de tela anuncia duas coisas; (P3) pelo link do acompanhamento o cômodo abre, mas não fica alinhado ao topo como na entrada direta (`#comodo-<id>`); (P4, conferir) com o diálogo aberto, 1 em 25 Tabs leva o foco para fora do `<dialog>` (achados do qa na HIS-001, baixos, iguais antes da HIS-001) | ux, frontend | P |
 
 ### E2 · Precisão da conta — chegar mais perto do valor real
 

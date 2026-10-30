@@ -407,6 +407,57 @@ O QA compara **antes (main `57700ab`) × depois**, com o mesmo `tarifas.json` de
 - Dividir `Cadastro.tsx` (554 linhas) e `TelaComodos.tsx` (415) em componentes menores.
 - Validação na fronteira (`as` em `arquivos.servidor.ts`, `navegador.ts` e no `migrate`): HIS-003, em `infraestrutura/validacao/`.
 
+### 12. Code review (etapa 7)
+
+_(tech-lead, 2026-10-29 — `main` × `1f7fffb` (código igual ao `182f355`; os commits depois dele só têm docs e o
+`e2e-base` do qa). Revisado arquivo a arquivo com `git diff -M -C --find-copies-harder main...HEAD -- apps/web/src`,
+mais `scripts/verificar-camadas.mjs` e `package.json`. Build numa cópia própria
+(`…/scratchpad/tl-revisao/copia`, `git archive HEAD` + `pnpm install --offline`), sem tocar o `.next` do repositório.)_
+
+**Barreiras:** no repositório, `pnpm typecheck` (`Camadas: tudo certo (64 arquivos)`) e `pnpm test` (37 + 11) verdes; na
+cópia, `pnpm typecheck` e `pnpm build` verdes, tabela de rotas com as mesmas 8 rotas estáticas e `/` com revalidate de
+1 dia; prerender da `/` com `86400` e `htmlSize` 66 350; chave da casa em 1 arquivo de `.next/static`; nada de
+`readFile`/`process.cwd`/`node:fs`/`relatorio.json` no `.next/static`. **Fumaça própria** (Playwright, casa v2 do qa,
+`next start` na porta 3108, depois `fuser -k`): as 8 rotas + `?visao=geral` em 390 e 1280 px → 200, `/casa/aparelhos`
+termina em `/casa/comodos`, **0 erros** de console/página. As capturas 390/1280 e o fluxo completo são os do qa (84 iguais).
+
+| O que conferi | Resultado |
+| --- | --- |
+| Camadas (ADR-001) | ok — cada import bate com a matriz da seção 6; nenhuma funcionalidade importa outra; `ui/` só `ui`/`config`/`@ee/core`; telas só chegam à casa por `aplicacao/` |
+| `"use client"` por arquivo | ok — a 1ª linha dos 55 `.ts/.tsx` bate com a tabela da seção 3; rotas finas e `PaginaInicial` **sem** diretiva |
+| `revalidate` | ok — só em `app/page.tsx`, com o comentário do porquê |
+| Store | ok — um só `create` (`infraestrutura/armazenamento/casa.ts:52`); `aplicacao/casa.ts` só reexporta (nomeado) e define `useEdicaoDeAparelho` |
+| Contratos 4.1–4.4 | ok — iguais ao desenho; `EditorAparelho` sem store, `aoSalvar(limpo, id)` → `aoFechar()`; `carregarNumerosDoInicio` mantém o `try/catch → undefined` |
+| Código movido | ok — corpos iguais (só imports e o nome da função exportada); a divisão de `ui.tsx` e `Comodo.tsx` não mudou nenhuma linha de lógica |
+| Tipos | ok — nenhum `any`, `@ts-ignore` ou `eslint-disable` novo; os únicos `as` em linhas novas são os 2 de `arquivos.servidor.ts`, que vieram da página (previstos, HIS-003) |
+| Código morto | ok — o `export type { LeituraRelogio }` e o import dele saíram; nenhum export novo sem uso (`EdicaoDeAparelho` e `RelatorioDados` são o tipo de retorno de funções exportadas) |
+| Nomes e comentários | ok — português, sem abreviação; os comentários novos explicam o porquê (porta única, reexportação nomeada, `server-only`, `process.cwd()` na chamada, ação do store no remover) |
+| Script de camadas | ok — legível, sem dependência, sem `try/catch`, só leitura; regex do `import(` do frontend correta (melhor que a do desenho); `import.meta.dirname` exige Node ≥ 20.11 e o projeto pede ≥ 22 (`engines`, CI) |
+| Dependências / configuração | ok — lockfile, `apps/web/package.json`, `next.config.ts` e CI iguais; raiz só ganhou `camadas` e o `typecheck` encadeado |
+| Peso no celular | ok — critério 11a/11b (JS para abrir caiu em todas as rotas; +1 449 B só no prefetch) |
+
+**Observações que não bloqueiam** (nenhuma é regressão desta história):
+
+| # | Observação | Para onde |
+| --- | --- | --- |
+| T1 | Ordem dos imports varia de arquivo para arquivo (ex.: `./rascunho` entre dois `@/aplicacao/…` no `Cadastro`) | HIS-002: `import/order` do ESLint com correção automática, num commit só de formatação |
+| T2 | Exports usados só dentro do próprio arquivo, **iguais no `main`**: `Faixa`, `DESCRICAO_FAIXA` (`ui/Etiqueta`), `Simbolo` (`ui/Marca`), `prefereMenosMovimento`, `useValorAnimado`, `useVisivel` (`ui/Movimento`), `novoComodoRascunho` (`rascunho`) | dívida no meu `contexto.md`: tirar o `export` quando o arquivo for mexido |
+| T3 | Além do `VOLTAR` da `/sobre` (S2), `funcionalidades/cadastro/rascunho.ts` (sem diretiva) importa o **valor** `novoId` de `aplicacao/casa.ts` (`"use client"`). Inofensivo (só o `Cadastro`, cliente, usa o rascunho; igual no `main`, que importava de `lib/store`), mas a regra proposta na S2 o acusaria | HIS-002, junto com a S2 (ver lá) |
+
+**Decisão sobre S2 (seguranca): fica para a HIS-002, não volta para o frontend agora.** Motivos: (1) é pré-existente e
+funciona — o `VOLTAR` só é repassado a um componente de cliente (`<Link>`), e nenhuma família vê diferença; (2) a correção
+mexe em 5 arquivos (`ui/Movimento.tsx`, que hoje está byte a byte igual ao `main`, mais `sobre`, `Casca`, `Cadastro` e
+`BotaoComecar`) e muda o payload RSC da `/sobre`: anularia a comparação byte a byte do qa e a revisão da segurança feitas
+sobre `182f355`, e teríamos de refazer as duas por um ganho zero para quem usa; (3) a correção só fica de pé junto com a
+regra automática que impede a volta do problema, e essa regra é o assunto da HIS-002. Lá entram juntas: constantes de
+transição em `ui/tiposDeTransicao.ts` (sem diretiva), `novoId` vindo de um arquivo sem diretiva (T3) e a regra
+"arquivo sem diretiva só importa componentes de módulo `use client`".
+
+**Decisão da etapa 7: aprovado.** Camadas, diretivas, contratos, store único, `revalidate`, tipos e comentários estão
+como o desenho pede; as três barreiras passam; nada muda para a família (qa) e nada novo sai do aparelho (seguranca).
+S1, S2 e T1/T3 foram para a HIS-002 (`docs/equipe/historias/HIS-002-qualidade-automatica.md`, "Notas do tech-lead
+vindas da HIS-001"); P1–P4 do qa foram para o backlog (`docs/planejamento.md`, E1, HIS-107 e HIS-108).
+
 ## Ameaças
 
 _(seguranca, 2026-10-29 — análise de ameaças da etapa 3, feita contra o desenho técnico e o código de `57700ab`/`e49a14f`.)_
@@ -932,3 +983,29 @@ visual; registrados para o backlog):
   (zoom 200%: rolagem horizontal em `/`, `/casa`, `/casa/dicas`) para o backlog. **frontend** — P3 (âncora pelo link não
   alinha ao topo) para o backlog. **quem orquestra** — builds em paralelo no mesmo `apps/web/.next` derrubam o servidor de
   quem está testando: cada papel deve compilar numa cópia própria (ou combinar a vez).
+
+### [tech-lead] 2026-10-29 — code review final (etapa 7): aprovado; S1/S2 para a HIS-002, P1–P4 no backlog
+- O que fiz: revisei o diff `main...HEAD` arquivo a arquivo contra o desenho (seção 12 do "Desenho técnico"): camadas,
+  diretiva de cada um dos 55 arquivos, rotas finas, `PaginaInicial` sem diretiva, `revalidate` na rota, um só `create`,
+  contratos 4.1–4.4, tipos, código morto, nomes, comentários e o `verificar-camadas.mjs`. Rodei as barreiras e uma fumaça
+  de console em 390/1280 px numa cópia própria.
+- Decisões e porquê: **aprovado** — tudo como o desenho pede e as barreiras verdes. **S2 vai para a HIS-002** (não peço
+  ao frontend agora): é pré-existente e inofensivo, a correção mexe em 5 arquivos e no payload da `/sobre` e anularia a
+  comparação byte a byte do qa e a revisão da segurança por ganho zero para a família; e só faz sentido junto com a regra
+  automática, que é o tema da HIS-002. **ESLint × script** (pendência minha): os dois convivem, sem regra repetida — o
+  ESLint fica com as regras que dependem só do próprio arquivo (matriz de camadas, `require`, `import()` não literal,
+  `"use server"`, pacotes por camada), lendo a árvore de sintaxe, o que fecha a maior parte da S1; o script fica com o
+  que exige olhar outro arquivo ou a estrutura (diretiva do destino, contrato `.servidor`/`server-only`, pastas antigas,
+  0 arquivos, link simbólico = erro). Detalhes e critérios de aceite na HIS-002. Três observações sem bloqueio (T1–T3).
+- Arquivos alterados: esta história (seção 12 do desenho e esta nota); `docs/equipe/historias/HIS-002-qualidade-automatica.md`
+  (critérios 7–9 e "Notas do tech-lead vindas da HIS-001"); `docs/planejamento.md` (HIS-107 e HIS-108 na E1, com P1–P4);
+  `docs/equipe/quadro.md`; meu `contexto.md` e `diario.md`. Nenhum código.
+- Como verifiquei: repositório — `pnpm typecheck` (`Camadas: tudo certo (64 arquivos)`) e `pnpm test` (37 + 11) verdes;
+  cópia em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/tl-revisao/` — `pnpm typecheck` e
+  `pnpm build` verdes (`build.log`), prerender da `/` `86400`/66 350, chave da casa em 1 arquivo, `fumaca.cjs` com as 9
+  entradas × 2 larguras → 200 e 0 erros; `grep` de diretivas, `create(`, `revalidate`, `any`/`as`/`@ts-` em linhas novas
+  e de exports sem uso (comparado com o `main`).
+- Para o próximo: **documentacao** (etapa 8) — atualizar os caminhos em `docs/arquitetura.md`, `docs/roteiro.md`,
+  `docs/sistema/site.md` e `.claude/agents/ux-acessibilidade.md`, e propor ao dono do projeto o texto novo da nota
+  "Estado atual" do `CLAUDE.md`; registrar o `scripts/verificar-camadas.mjs` (`pnpm camadas`) e a convenção `*.servidor.ts`; R9 com 200 + `NEXT_REDIRECT`.
+  **scrum-master** (etapa 9) — Definição de Pronto e priorizar HIS-107/HIS-108.

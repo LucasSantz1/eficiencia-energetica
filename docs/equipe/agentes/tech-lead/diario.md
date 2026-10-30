@@ -10,6 +10,19 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-29 · HIS-001 · code review final (etapa 7) aprovado; S1/S2 para a HIS-002, P1–P4 no backlog
+- O que fiz: revisei `git diff -M -C --find-copies-harder main...HEAD` arquivo a arquivo (camadas, diretiva dos 55
+  arquivos, rotas finas, `PaginaInicial` sem diretiva, `revalidate`, um só `create`, contratos 4.1–4.4, tipos, código
+  morto, comentários, script de camadas). Barreiras: typecheck/test no repositório; typecheck/build numa cópia em
+  `scratchpad/tl-revisao/copia`; fumaça Playwright (`tl-revisao/fumaca.cjs`, porta 3108) em 9 entradas × 390/1280 → 0 erros.
+- Decisões e porquê: **aprovado**. S2 fica para a HIS-002 (pré-existente, inofensivo; corrigir agora anularia a
+  comparação byte a byte do qa e a revisão da segurança por ganho zero, e a correção precisa vir com a regra automática).
+  ESLint × script: convivem sem regra repetida (ESLint = regras do próprio arquivo; script = destino/estrutura).
+  Observações T1 (ordem de imports → `import/order`), T2 (exports só internos, dívida), T3 (`rascunho` → `novoId`, junto da S2).
+- Arquivos: `docs/equipe/historias/HIS-001-camadas.md` (seção 12 e nota), `docs/equipe/historias/HIS-002-qualidade-automatica.md`
+  (critérios 7–9 e notas), `docs/planejamento.md` (HIS-107, HIS-108), `docs/equipe/quadro.md`, `contexto.md`, este diário.
+- Próximos passos: documentacao (etapa 8); depois, desenho definitivo da HIS-002.
+
 ## 2026-10-29 · HIS-001 · peso do JS aceito; critério do item 11 dividido em 11a/11b
 - O que fiz: respondi a pergunta do frontend sobre +1 449 B na `/casa` sem casa. Build de `57700ab` e `182f355` numa cópia
   no scratchpad (`tl-peso/copia`, porta 3102) e medição do JS referenciado pelo HTML das 7 rotas (`tl-scripts/js-do-html.mjs`).
