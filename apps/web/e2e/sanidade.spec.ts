@@ -6,6 +6,7 @@
  */
 import { analisarAcessibilidade, descreverViolacoes, violacoesQueReprovam } from "./apoio/axe";
 import { lerFixture, semearCasa } from "./apoio/casa";
+import { compararPeso, LIMITE_JS_DO_HTML, LIMITE_TOTAL_COM_PREFETCH } from "./apoio/peso";
 import { aba } from "./apoio/telas";
 import { expect, pedidoPermitido, test } from "./apoio/teste";
 import { contarTransicoes, duracoesDasTransicoes } from "./apoio/transicoes";
@@ -51,6 +52,39 @@ test.describe("axe (N3)", () => {
     await page.setContent(PAGINA_LIMPA.replace(">Salvar conta</button>", "></button>"));
     const resultado = await analisarAcessibilidade(page);
     expect(descreverViolacoes(violacoesQueReprovam(resultado.violations))).toEqual([]);
+  });
+});
+
+test.describe("peso de JS (N6, função pura compararPeso)", () => {
+  const REFERENCIA = { "/sobre": { jsDoHtml: 100_000, totalComPrefetch: 200_000 } };
+  const medir = (jsDoHtml: number, totalComPrefetch: number) => ({ "/sobre": { jsDoHtml, totalComPrefetch } });
+
+  test("controle: exatamente no limite passa; muito abaixo vira anotação, não erro", () => {
+    const noLimite = compararPeso(REFERENCIA, medir(100_000 + LIMITE_JS_DO_HTML, 200_000 + LIMITE_TOTAL_COM_PREFETCH));
+    expect(noLimite.erros).toEqual([]);
+    const maisLeve = compararPeso(REFERENCIA, medir(100_000 - 1025, 200_000));
+    expect(maisLeve.erros).toEqual([]);
+    expect(maisLeve.anotacoes).toHaveLength(1);
+  });
+
+  test("N6 · negativo: JS do HTML 1 B acima do limite (+1 025) reprova", () => {
+    test.fail(true, "compararPeso precisa reprovar o 11a acima do limite");
+    expect(compararPeso(REFERENCIA, medir(100_000 + 1025, 200_000)).erros).toEqual([]);
+  });
+
+  test("N6 · negativo: total com prefetch 1 B acima do limite (+2 049) reprova", () => {
+    test.fail(true, "compararPeso precisa reprovar o 11b acima do limite");
+    expect(compararPeso(REFERENCIA, medir(100_000, 200_000 + 2049)).erros).toEqual([]);
+  });
+
+  test("N6 · negativo: rota medida sem referência reprova", () => {
+    test.fail(true, "compararPeso precisa reprovar rota sem referência");
+    expect(compararPeso({}, medir(100_000, 200_000)).erros).toEqual([]);
+  });
+
+  test("N6 · negativo: referência sem medida reprova", () => {
+    test.fail(true, "compararPeso precisa reprovar número no JSON que ninguém confere");
+    expect(compararPeso({ ...REFERENCIA, "/velha": { jsDoHtml: 1 } }, medir(100_000, 200_000)).erros).toEqual([]);
   });
 });
 

@@ -1,0 +1,36 @@
+{
+  "medidoNoCommit": "06be352",
+  "rotas": {
+    "/": {
+      "jsDoHtml": 164215,
+      "totalComPrefetch": 184415
+    },
+    "/comecar": {
+      "jsDoHtml": 172560,
+      "totalComPrefetch": 184415
+    },
+    "/casa": {
+      "jsDoHtml": 175055,
+      "totalComPrefetch": 232482
+    },
+    "/casa/comodos": {
+      "jsDoHtml": 172949,
+      "totalComPrefetch": 232482
+    },
+    "/casa/dicas": {
+      "jsDoHtml": 166021,
+      "totalComPrefetch": 232482
+    },
+    "/casa/ajustes": {
+      "jsDoHtml": 163963,
+      "totalComPrefetch": 232482
+    },
+    "/sobre": {
+      "jsDoHtml": 139574,
+      "totalComPrefetch": 168342
+    },
+    "/casa (com casa)": {
+      "totalComPrefetch": 212282
+    }
+  }
+}
