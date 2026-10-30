@@ -10,6 +10,96 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002 · A6: `ci.yml` com os dois jobs, actions por SHA reconferidas, simulação numa cópia
+- **O que fiz:** reescrevi o `ci.yml` pelo D11/D16 e reconferi os 4 SHA com `git ls-remote --tags` (iguais e ainda os
+  últimos). Validei o YAML com `yaml.safe_load`, conferi a estrutura por script e rodei os `grep` da Ra6, Ra7 e Ra13.
+  Simulei o job `e2e` numa cópia com `git init` (`scratchpad/tl-a6/copia`, porta 3161): só falhou o seletor conhecido
+  do qa, o resumo saiu e o "nada mudou" ficou limpo.
+- **Decisões e porquê:**
+  - `--only-shell`, porque o headless usa o headless shell 1243.
+  - Artefato em toda execução não cancelada.
+  - Um passo `if: failure()` diz no resumo onde está o artefato.
+  - O `actionlint` não foi usado: o download foi bloqueado.
+- **Arquivos:** `.github/workflows/ci.yml`, `HIS-002-qualidade-automatica.md` (nota), `contexto.md` e este diário.
+- **Próximos passos:** quem orquestra empurra e confere os 2 checks, o artefato e o peso do runner; depois, o commit
+  descartável (critério 4, Ra9). Eu faço o code review na etapa 7.
+
+## 2026-10-30 · HIS-111 · D7 aprovado com ajustes, desenho h0–h8, passo 0 na Action, HIS-111 antes do a3
+- **O que fiz:** li a história, as notas do backend e do dominio-energia, o D2–D4 da HIS-003a e o código da rotina,
+  do core, do `useResumo`, do store da casa, do `Cadastro`, da `TelaAjustes` e dos workflows. Escrevi o "Desenho
+  técnico" (T1–T7), o ADR-005 e o contrato do `substituidas` no D2 da HIS-003a.
+- **Decisões e porquê:**
+  - `substituidas` é opcional e guarda sempre o id final, porque há arquivo antigo no cache e o site ainda não tem
+    leitor.
+  - A troca fica no core e no `aplicacao/`, não no leitor da casa: ele roda antes das tarifas e não corrige valor.
+  - O D3 usa a regra segura: o vínculo extinto só sai se a cidade tiver outro.
+  - As barreiras de número errado ignoram o `--forcar`.
+  - O passo 0 é um workflow só de leitura, com `push` na branch.
+  - A HIS-111 vem antes do a3: uns 30 minutos de rebase contra dias de conta errada.
+- **Arquivos:** `HIS-111-tarifas-vencidas.md`, `HIS-003-base-de-seguranca.md` (D2), `ADR-005-…md` (novo),
+  `decisoes/README.md`, `quadro.md`, `contexto.md` e este diário.
+- **Próximos passos:** scrum-master (sprint e critérios do T5), seguranca (T3 e V8), ux (aviso), backend h0. Code
+  review com a lista do contexto.
+
+## 2026-10-30 · HIS-003 · desenho técnico definitivo (D1–D9), sem zod, ADR-004 proposto, quebra 003a/003b
+- **O que fiz:**
+  - Li a história inteira, os ADRs 001 e 003, a retro e o código de `infraestrutura/`, `aplicacao/`, `ui/Campo`,
+    `Entrada` e `Aviso`, das telas com campos, do `next.config.ts` e dos dois workflows.
+  - Medi `zod`, `zod/mini` e leitores escritos à mão com esbuild + gzip (`scratchpad/tl-his003/zod/`).
+  - Prototipei o storage e o `merge` com o zustand 5.0.16 e conferi com `tsc` e `tsx`, em 9 casos
+    (`scratchpad/tl-his003/persist/`).
+  - Conferi o SHA do `download-artifact` v8.0.2.
+  - Escrevi o D1–D9, o ADR-004, as perguntas P-tl-1 a P-tl-3, a nota, o quadro e o contexto.
+- **Decisões e porquê:**
+  - Sem zod, porque o peso medido foi 93 kB / 8,2 kB / 1,3 kB e o zod testa `new Function`, que a CSP bloqueia.
+  - Os leitores ficam no core, para o site, a rotina e o app usarem os mesmos. A rotina é estrita, mesmo com `--forcar`.
+  - O `merge` sempre valida.
+  - O T1b vai para os ajustes sem cidade, para não apagar os aparelhos.
+  - Data no futuro não é descartada.
+  - O build falha com dados ruins.
+  - Cerca de 3,75 dias, por isso a proposta de 003a e 003b. A 003 não depende da 002b.
+- **Arquivos:**
+  - `docs/equipe/historias/HIS-003-base-de-seguranca.md`
+  - `docs/equipe/decisoes/ADR-004-leitura-segura-de-dados.md`
+  - `docs/equipe/decisoes/README.md`
+  - `docs/equipe/quadro.md`
+  - `contexto.md` e este diário
+- **Próximos passos:**
+  - Respostas da seguranca (P-tl-1), do dominio-energia (P-tl-2) e do scrum-master (P-tl-3).
+  - Etapa 4 depois da 002a no `main`.
+  - No a6, reconferir os SHA.
+
+## 2026-10-30 · HIS-002 · revisões de seguranca, qa e ux decididas (D16); ADR-003 aceito; 002a liberada
+- O que fiz: reli as duas histórias, o ADR-003 e a minha pasta; decidi P-qa-1 a 8, P-qa-b1 a b3, Aa9, os pontos de
+  desenho da seguranca, Ra1–Ra13, Ab3–Ab14 e o pedido da ux; escrevi o D16 nas duas e levei para D9, D10, D11, D12,
+  D13, D14 (002a) e D4, D5, D6, D13 (002b). Conferi os SHA das 4 actions por `git ls-remote` + clone raso; validei o
+  `eslint.config.mjs` revisto na minha cópia (64 arquivos, `ui/out/` passa a ser lido, 0 achados novos).
+- Decisões e porquê: tudo aceito; P-qa-7 unida à Aa14 (exceção = um elemento, sem `nos`); P-qa-b3 na forma estrita
+  (C10 no script, fora do alcance da configuração do ESLint); actions por SHA já no A6 (o `ci.yml` é reescrito e vira o
+  portão do `main`); A5 mantém o `reais()` local (U+00A0) para o nome bater com o que se vê. Estimativa: 002a ≈ 2,75,
+  002b ≈ 2–2,5 dias. ADR-003 aceito (a essência não mudou).
+- Arquivos: `docs/equipe/historias/HIS-002-qualidade-automatica.md`, `docs/equipe/historias/HIS-002b-lint-e-camadas.md`,
+  `docs/equipe/decisoes/ADR-003-qualidade-automatica.md`, `docs/equipe/decisoes/README.md`, `docs/planejamento.md`
+  (HIS-110), `docs/equipe/quadro.md`, `contexto.md`, este diário.
+- Próximos passos: etapa 4 da 002a (qa + frontend); eu no A6 (SHA, peso do runner, passo "nada mudou") e no code
+  review (etapa 7). Scrum-master decide `corDaParte` × `faixaDoPeso` antes da HIS-110.
+
+## 2026-10-29 · HIS-002 · desenho técnico definitivo (etapa 3), pergunta do e2e respondida, quebra proposta
+- O que fiz: li a história, ADR-001, retro, script de camadas, `linha-de-base.cjs`, `ci.yml`, `apps/web/src` e a doc
+  do Next 16 sobre ESLint. Numa cópia própria (`scratchpad/tl-his002/copia`, porta 3111): instalei e rodei ESLint 10 com
+  a configuração completa (82 arquivos; 42 casos de ensaio em `scratchpad/tl-his002/ensaio-casos.mjs`), testei
+  `import/order`, `simple-import-sort` e `import-x/order`, Playwright 1.63.0 + axe nas 7 páginas, build, `pnpm audit`, e
+  prototipei a regra S2 (`scratchpad/tl-his002/prototipo-s2.mjs`). Escrevi D1–D15 na história, ADR-003 e a frase no ADR-001.
+- Decisões e porquê: ESLint 10 (a 9 só em manutenção; regras ligadas rodam); `import-x` (o `import/order` quebra no
+  ESLint 10 e o `simple-import-sort` cola vírgulas sem Prettier); Playwright 1.63.0 (casa com o Chromium 1243 do
+  ambiente, sem download possível); parser do `typescript` no script (S2 precisa dos nomes); `import()` proibido
+  (o ESLint não o confere); e2e em PR e `main`, sem cache do navegador; `e2e-base` sai inteiro; ≈ 4 dias → 002a/002b.
+- Arquivos: `docs/equipe/historias/HIS-002-qualidade-automatica.md`, `docs/equipe/decisoes/ADR-003-qualidade-automatica.md`,
+  `docs/equipe/decisoes/ADR-001-camadas.md`, `docs/equipe/decisoes/README.md`, `docs/equipe/quadro.md`, `contexto.md`,
+  este diário.
+- Próximos passos: scrum-master decide a quebra e o HIS-109; seguranca (ameaças + 21 casos) e qa (D6, D9, D10) revisam;
+  eu ajusto o desenho se pedirem e faço o code review na etapa 7.
+
 ## 2026-10-29 · HIS-001 · code review final (etapa 7) aprovado; S1/S2 para a HIS-002, P1–P4 no backlog
 - O que fiz: revisei `git diff -M -C --find-copies-harder main...HEAD` arquivo a arquivo (camadas, diretiva dos 55
   arquivos, rotas finas, `PaginaInicial` sem diretiva, `revalidate`, um só `create`, contratos 4.1–4.4, tipos, código

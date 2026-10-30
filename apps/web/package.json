@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p e2e",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ee/core": "workspace:*",
@@ -20,6 +21,8 @@
     "zustand": "5.0.16"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.20.5",
     "@types/react": "19.3.0",

@@ -36,6 +36,8 @@ Regras:
 
 As regras são verificadas pelo script `scripts/verificar-camadas.mjs`, que roda dentro do `pnpm typecheck` (e, por isso,
 no CI) desde a HIS-001. Na HIS-002 decide-se se o `no-restricted-imports` do ESLint substitui o script ou convive com ele.
+_(Decidido em 2026-10-29, desenho da HIS-002: **convivem**, cada regra num lugar só — a matriz vai para o ESLint, o
+script fica com o que depende de outro arquivo ou da estrutura. Ver ADR-003.)_
 
 ## Alternativas consideradas
 

@@ -156,25 +156,36 @@ export function PainelAcompanhamento() {
           <LegendaEtiqueta />
         </div>
         <ul className="mt-5 space-y-5">
-          {resumo.aparelhos.slice(0, 6).map(({ aparelho, kwhMes, valorMes, participacao }, indice) => (
-            <li key={aparelho.id} className="surgir" style={{ animationDelay: `${300 + indice * 80}ms` }}>
-              <button type="button" onClick={() => setEditando(aparelho)} className="block w-full rounded-xl text-left" aria-label={`${aparelho.nome}: ${formatarReais(valorMes)} por mês, ${formatarPorcentagem(participacao)} da conta. Toque para ajustar.`}>
-                <span className="flex items-center gap-2">
-                  <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-5 text-tinta-suave" />
-                  <span className="flex-1 truncate font-bold">
-                    {aparelho.quantidade > 1 && <span className="numeros">{aparelho.quantidade} × </span>}
-                    {aparelho.nome}
-                    <span className="font-normal text-tinta-suave"> em {comodos.find((c) => c.id === aparelho.comodoId)?.nome}</span>
-                  </span>
-                  <span className="numeros text-[0.95rem] text-tinta-suave">{formatarPorcentagem(participacao)}</span>
-                </span>
-                <span className="mb-1.5 block pl-7 text-[0.92rem] text-tinta-suave">{descreverUso(aparelho)}</span>
-                <BarraEtiqueta relativo={maior > 0 ? kwhMes / maior : 0} participacao={participacao} atraso={450 + indice * 80}>
-                  {formatarReais(valorMes)}
-                </BarraEtiqueta>
-              </button>
-            </li>
-          ))}
+          {resumo.aparelhos.slice(0, 6).map(({ aparelho, kwhMes, valorMes, participacao }, indice) => {
+            // O nome acessível repete o texto visível na mesma ordem (WCAG 2.5.3, texto da ux no D-A5-1);
+            // por isso tela e nome saem das mesmas variáveis.
+            const quantidade = aparelho.quantidade > 1 ? `${aparelho.quantidade} × ` : "";
+            const nomeComodo = comodos.find((c) => c.id === aparelho.comodoId)?.nome;
+            const porcentagem = formatarPorcentagem(participacao);
+            const uso = descreverUso(aparelho);
+            const valor = formatarReais(valorMes);
+            return (
+              <li key={aparelho.id} className="surgir" style={{ animationDelay: `${300 + indice * 80}ms` }}>
+                <button type="button" onClick={() => setEditando(aparelho)} className="block w-full rounded-xl text-left" aria-label={`${quantidade}${aparelho.nome} em ${nomeComodo}, ${porcentagem}, ${uso}, ${valor} por mês. É ${porcentagem} da conta. Toque para ajustar.`}>
+                  {/* Os {" "} entre blocos não aparecem na tela (itens flex/bloco), mas separam as palavras no texto
+                      visível que o axe junta sem espaço; sem eles, "Banheiro" e "41%" viram uma palavra só. */}
+                  <span className="flex items-center gap-2">
+                    <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-5 text-tinta-suave" />
+                    <span className="flex-1 truncate font-bold">
+                      {aparelho.quantidade > 1 && <span className="numeros">{quantidade}</span>}
+                      {aparelho.nome}
+                      <span className="font-normal text-tinta-suave"> em {nomeComodo}</span>
+                    </span>{" "}
+                    <span className="numeros text-[0.95rem] text-tinta-suave">{porcentagem}</span>
+                  </span>{" "}
+                  <span className="mb-1.5 block pl-7 text-[0.92rem] text-tinta-suave">{uso}</span>{" "}
+                  <BarraEtiqueta relativo={maior > 0 ? kwhMes / maior : 0} participacao={participacao} atraso={450 + indice * 80}>
+                    {valor}
+                  </BarraEtiqueta>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
