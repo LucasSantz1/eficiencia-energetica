@@ -23,6 +23,7 @@
 | HTML a partir de texto fora da lista (`setHTMLUnsafe`, `createContextualFragment`, `srcdoc`/`srcDoc`) | baixo; 3 seletores propostos | HIS-002b (Ab6) |
 | CI: `ci.yml` sem `permissions`, actions por etiqueta, `persist-credentials` padrão; artefato público 14 dias | médio; mitigação no D11 + Aa6/Aa9/Aa10 | HIS-002a / HIS-003 |
 | Site chamando terceiro sem a pessoa saber: sem barreira automática | médio; fixture "nada sai do aparelho" (Aa11, A1) | HIS-002a |
+| Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | médio; análise aprovada, V9/V10 no h1/h3; workflow de diagnóstico só leitura aprovado | HIS-111 |
 | Server Actions (`"use server"`): cada uma vira endpoint POST público; nenhuma existe | regra a definir antes do E4 | E4 |
 | SQL injection | não se aplica ainda (sem banco); regra já vale para o E4 | E4 |
 | XSS | React escapa texto; não há `dangerouslySetInnerHTML`, `innerHTML`, `eval` nem `new Function` | — |
@@ -62,6 +63,13 @@
   os campos do tipo, com checagem no `typecheck` e a fixture `casa-completa`; nada de `trim` nem conserto no valor
   devolvido; o leitor nunca lança (um `merge` que lança traz o P1 de volta); só propriedade própria; data conferida por
   UTC; data no futuro não é descartada.
+- Distribuidora só muda de dona por mesmo CNPJ (com a antiga vencida) ou por linha do `sucessoes.json` com ato e
+  fonte, antiga **sem** tarifa vigente e siglas que batem com o CNPJ (V9/V10, sem `--forcar`). A rotina diária nunca
+  escreve em `packages/dados/base/` (ADR-005, HIS-111).
+- Texto de dado externo que vai para log do Actions (`::notice::`/`::warning::`) passa por escape de `%`, `\r`, `\n`;
+  no `$GITHUB_STEP_SUMMARY`, sem `|`/`<`/crase e com tamanho limitado.
+- Funções do core que leem dado de rede (ex.: `substituidas`) são totais por conta própria; não dependem de o leitor
+  da fronteira já existir.
 - Lint: o único `eslint-disable` aceito no site e no domínio é o da HIS-109; ignores do ESLint só com caminho ancorado;
   arquivos lidos pelo ESLint = `git ls-files`.
 
@@ -83,6 +91,10 @@
 - **HIS-003a (etapa 6):** R1–R13 + R4b, R4c, R4d da história; rodar `scratchpad/seg-his003/prova-hidratacao.mjs`
   contra o storage novo (se sumir: P1/P2 na história explicam o caso). Conferir que o ADR-004 passou para aceito.
   A HIS-003 foi dividida: T5/T6 e `campos.spec.ts` estão na `HIS-003b-campos-com-limite.md` (revisar lá também).
+- **HIS-111 (etapa 6):** R1–R9 da história. Conferir: `paths` do diagnóstico com `core` e lockfile; escape do log
+  com o teste `"X\n::add-mask::a"`; V9/V10 com fixture e sem `--forcar`; core total com os 5 formatos de
+  `substituidas`; regravação só com `de` fora e `para` dentro; `Object.fromEntries` + limite de 500 no leitor da a3;
+  h8 sem `--forcar` e gatilho `push` trocado por `pull_request`. Conferir que o ADR-005 passou para aceito com o R3.
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

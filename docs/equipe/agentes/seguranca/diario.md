@@ -10,6 +10,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · análise de ameaças: aprovado para o h0; ADR-005 pode virar aceito
+- O que fiz: li o T1–T7 e o ADR-005; conferi o `diagnosticar-dados.yml` proposto (permissões, credencial, gatilho,
+  SHA contra a HIS-002/003), o `.gitignore` (o `.cache` fica fora do "Nada mudou"), o `onlyBuiltDependencies` e os
+  `console.log` do `atualizar.ts` (texto da ANEEL vai cru para o log). Escrevi R1–R9.
+- Decisões e porquê: workflow aprovado; só os `paths` mudam (o `core` muda a montagem). R3 médio: nada impedia uma
+  linha de sucessão de mover cidades de uma empresa vigente (CNPJ digitado errado passa nas V1–V7), por isso entram o
+  V9 (antiga sem tarifa vigente) e o V10 (siglas batem com o CNPJ), sem `--forcar`. Antes da a3 não há V8 no navegador,
+  por isso o core fica total (R5) e a regravação fica protegida contra laço (R6). R2: escape do log do runner. Depois do
+  h8, `pull_request` no lugar do `push`, para mostrar o diff de toda sucessão nova.
+- Arquivos: `docs/equipe/historias/HIS-111-tarifas-vencidas.md` ("Ameaças" e nota), `contexto.md`, `diario.md`.
+- Próximos passos: etapa 6 da HIS-111; o tech-lead acrescenta o R3 ao ADR-005 e o passa para aceito.
+
 ## 2026-10-30 · HIS-003 · P-tl-1: leitores à mão aprovados com R4c/R4d
 - O que fiz: li o D1–D9 e o ADR-004; conferi as medidas do tech-lead (`scratchpad/tl-his003/zod/`: 93 098 / 8 173 /
   1 284 B em gzip) e o `hydrate` do zustand 5.0.16 (o `merge` que lança cai no `catch` sem `hasHydrated`; versão

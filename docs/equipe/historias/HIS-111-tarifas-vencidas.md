@@ -506,12 +506,22 @@ critério 8 vai para a a7. Pode ser implementada já, em paralelo com o fim da 0
 
 ## Ameaças
 
-_(seguranca)_
+_(seguranca, 2026-10-30. Li o T1–T7, o ADR-005, `atualizar-dados.yml`, `ci.yml`, `.gitignore`, `pnpm-workspace.yaml`
+e os `console.log` do `atualizar.ts`. Ativo principal: **o número certo na tela**; não há dado pessoal nem segredo
+nesta história. Quem pode errar ou atacar: uma linha errada no `sucessoes.json` (digitação, CNPJ trocado), texto
+estranho vindo da ANEEL, um `tarifas.json` antigo ou malformado no cache do navegador.)_
 
-| Ameaça | Gravidade | Mitigação |
-| --- | --- | --- |
-| A tabela de sucessões é editada à mão e alguém troca a empresa de uma cidade sem ato oficial | média | Linha sem `ato` ou sem `fonte` é recusada (critério 7); a revisão do dominio-energia é obrigatória no PR; o diff dos municípios é anexado (critério 10) |
-| `substituidas` aponta para um id que não existe e a casa salva fica sem preço | média | V4 e um teste que todo valor de `substituidas` existe em `distribuidoras` |
+| R | Ameaça | Grav. | Mitigação (onde) |
+| --- | --- | --- | --- |
+| R1 | Workflow do T3 escrever, vazar token ou rodar código de fora | baixo | **Aprovado como está:** `permissions: {}` + `contents: read`, `persist-credentials: false`, sem segredo, sem `${{ github.event.* }}` em `run:`, SHA = HIS-002/HIS-003, `push` só na branch (só quem tem escrita dispara; push de fork não roda aqui), nada de `pull_request_target`/`workflow_run`, scripts de instalação só `esbuild`/`sharp`. Ajuste (h0): `paths` inclui também `packages/core/**` e `pnpm-lock.yaml`. Sem isso, o h5 muda a montagem e o critério 10 fica com diagnóstico velho. O "Nada mudou" não vê o que o `.gitignore` esconde (`.cache`, `*.log`, `dist/`); isso é aceito, porque o token só lê e nada sai do job |
+| R2 | Texto da ANEEL (sigla, nome, `DscDetalhe`) com `\n` ou `%` vira comando do runner (`::add-mask::`, `::stop-commands::`) ou quebra o resumo | baixo | (h0/h4) Uma função só para tudo que vai para `::notice::`/`::warning::`: `%`→`%25`, `\r`→`%0D`, `\n`→`%0A`, como o passo "Publicar resumo" já faz. No `$GITHUB_STEP_SUMMARY`: tirar `\|`, `<` e a crase, cortar cada campo em 80 caracteres e o resumo em 64 KiB. Teste com a sigla `"X\n::add-mask::a"` |
+| R3 | **Troca errada de distribuidora** (número errado sem a rotina parar): uma linha com CNPJ digitado errado, ou que aponta para uma empresa **ainda vigente**, muda cidades de dona. As regras V1–V7 passam, porque a sucessora existe e está vigente | **médio** | (h1/h3, em `conferirCoerencia`, sem `--forcar`) **V9:** a linha só vale se a `cnpjAntigo` não tem tarifa vigente no CSV da ANEEL; se tiver, a rotina para e diz o índice e a `siglaAntiga`. **V10:** a `siglaAntiga` e a `siglaSucessora` batem (forma compacta) com a sigla que a ANEEL usa para aquele CNPJ, nas tarifas ou nos conjuntos. Isso pega dígito trocado. Aviso no relatório, sem parar: `desde` a mais de 12 meses do `fimVigencia` da antiga. Hoje as 10 linhas passam (a maior diferença é de 79 dias, nas CPFL). Uma fixture para cada caso em `fixtures/sucessao/` |
+| R4 | Quem muda o `sucessoes.json` | baixo | Só por PR, com revisão do dominio-energia e com o resumo do diagnóstico (cidades que mudam por UF) anexado. A rotina diária **nunca** escreve em `packages/dados/base/`: hoje ela faz `git add apps/web/public/dados`, e a a6 da 003a mantém isso. `ato` e `fonte` são só registro: a rotina não abre a `fonte` (nenhum pedido além de ANEEL e IBGE), e nenhum dos dois vai para `/dados`. No h8, o gatilho `push` vira `pull_request` com `paths: [packages/dados/**]` (não `pull_request_target`; o token só lê). Assim, toda sucessão nova mostra o diff sozinha |
+| R5 | Antes da a3 o site lê o `tarifas.json` sem leitor, então o V8 do navegador ainda não existe. `substituidas` com `null`, lista ou valor que não é texto faz o `Object.hasOwn` lançar no render, e sem `app/error.tsx` isso dá tela branca | baixo | (h5) `acharDistribuidora` e `distribuidorasDaCidade` funcionam sozinhas, sem depender de leitor: se `substituidas` não é objeto simples, ela é ignorada; o valor só vale se for texto e id publicado no mesmo arquivo; as funções nunca lançam. Teste com ausente, `null`, `[]`, `1` e `{"a": 2}` |
+| R6 | A regravação (`useDistribuidoraAtualizada`) entra em laço com `a → a` ou `a → b` + `b → a` (arquivo sem o V8, antes da a3) | baixo | (h6) Só regrava quando `de` **não** é id publicado **e** `para` **é**, uma vez para cada par `de`/`para`. Tudo fica no aparelho: nenhum pedido novo e nada vai ao servidor. O id da distribuidora não é dado pessoal. Mostrar ou não o aviso é decisão da ux; não bloqueia |
+| R7 | V8 no leitor da a3: protótipo e resultado que depende da ordem | baixo | (a3) Montar o resultado com `Object.fromEntries` **depois** de validar cada chave. As regras olham o objeto original inteiro, não o que sobrou depois de cada descarte. Mais de 500 entradas = `ErroDeFormato`. `"__proto__"` cai no formato do id; `"constructor"` é id válido, e o `Object.hasOwn` protege. Os casos do T1 bastam; falta só o de 501 entradas |
+| R8 | Número errado no ar no h8 | médio residual, aceito | V1–V4 e V7–V10 sem `--forcar` (critério 12 ganha o V9 e o V10). O h8 roda o `atualizar-dados.yml` **sem** `--forcar`. O qa confere as 6 cidades e mais Guarapuava, Nova Friburgo e Campina Grande nos arquivos publicados. Na tela, o nome da distribuidora aparece e pode ser trocado em Ajustes, e a conta de luz informada sempre vence |
+| R9 | O h8 roda o `atualizar-dados.yml` de hoje: token de escrita durante o `pnpm install` e actions por etiqueta | médio, já existia | Já está na a6 da HIS-003. A HIS-111 não piora isso, porque é o mesmo job do cron diário. Não bloqueia; se a a6 entrar antes do h8, melhor |
 
 ## Plano de testes
 
@@ -651,3 +661,21 @@ _(qa)_ Critérios 1 a 11, com as fixtures novas e o `arquivos-publicos.test.ts` 
   - **backend:** h0 a h5, depois da seguranca.
   - **quem orquestra:** fazer o push da branch, que roda o passo 0, e colar o resumo do job em "Resultado do passo 0".
     No h8, rodar o `atualizar-dados.yml` à mão.
+
+### [seguranca] 2026-10-30 — análise de ameaças: aprovado para o h0; ADR-005 pode virar aceito
+- **O que fiz:** li o T1–T7, o ADR-005, os dois workflows, o `.gitignore`, o `pnpm-workspace.yaml` e as saídas de log
+  do `atualizar.ts`. Conferi os 3 SHA do T3 contra a HIS-002 e a HIS-003. Preenchi "Ameaças" (R1–R9).
+- **Resultado:** **aprovado**. Nada crítico ou alto.
+  - O workflow do T3 está certo como está. Único ajuste: os `paths` (R1).
+  - O V8 está certo. O que faltava era o lado do site antes da a3 (R5, R6) e a montagem do resultado (R7).
+- **Achado principal, médio (R3):** nenhuma regra impede uma linha do `sucessoes.json` de tirar uma cidade de uma
+  empresa **vigente**. Entram o **V9** (a antiga não pode estar vigente) e o **V10** (as siglas batem com o CNPJ na
+  ANEEL), sem `--forcar`, no h1/h3. Na etapa 6, eu confiro que eles existem e têm fixture.
+- **ADR-005:** pode virar **aceito**. O tech-lead acrescenta ao item 2: "a linha só vale para empresa sem tarifa
+  vigente, e as siglas batem com o CNPJ". E acrescenta ao item 5: "sucessão para empresa vigente".
+- **Para o próximo:**
+  - **backend:** R1, R2 e R3 (h0–h4); R5 (h5).
+  - **frontend:** R6 (h6).
+  - **scrum-master:** V9 e V10 no critério 12.
+  - **quem implementar a a3:** R7.
+  - **qa:** R8 no h7/h8.
