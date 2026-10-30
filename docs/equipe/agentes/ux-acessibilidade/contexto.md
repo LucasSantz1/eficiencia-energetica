@@ -24,7 +24,8 @@
 - Região que rola para o lado: `role="region"` + `aria-label` curto + `tabIndex={0}` sempre, com o foco padrão
   (Painel geral: "Tabela com todos os aparelhos da casa", HIS-002a).
 - Texto sobre cor de faixa da etiqueta: A e E com branco (4,72 e 5,21:1); B, C e D com tinta (5,80, 8,45 e 5,50:1).
-  Nunca branco em B, C ou D (HIS-110).
+  Nunca branco em B, C ou D (HIS-110). Texto de apoio nos cartões `bg-white/10` sobre `bg-energia`: `text-white`
+  (4,77:1), nunca `text-white/85` (3,92:1); `text-white/85` direto no verde passa (4,69:1) (HIS-110).
 - Erros e avisos (HIS-003):
   - Dado descartado usa `Aviso tom="faisca"` (status), não `alerta`.
   - Região `role="status"`/`aria-live` sempre presente e vazia antes do texto.
@@ -55,11 +56,10 @@
 - HIS-003: revisar as capturas de T1 a T5 quando o frontend implementar. Conferir com o dominio-energia o formato de
   `{min}` e `{max}`.
 - Roteiro do teste com famílias (HIS-106), com o Scrum Master.
-- HIS-002a: revisar `excecoes-axe.ts` quando o qa montar; conferir no A5 os 5 nomes da casa ilustrada, os 6 do
-  "Quem mais gasta" (D-A5-1) e a região da tabela (D-A5-2).
 - Contorno de foco faísca com contraste baixo (cerca de 1,6:1 no branco, 1,4:1 no fundo; WCAG 1.4.11 pede 3:1):
   proposto ao scrum-master como história própria (muda a tela do site todo).
-- HIS-110: aprovar a cor nas capturas 390/1280 px (proposta: faixa D com `text-tinta`).
+- HIS-110: aprovar a cor nas capturas 390/1280 px (faixa D com `text-tinta`; os 2 `<dd>` dos cartões da Tarifa Social
+  com `text-white`). Conferir se o scrum-master pôs a correção dos `<dd>` na linha da HIS-110 do planejamento.
 - Observação para depois (sem história): passar o mouse num cômodo troca a legenda `aria-live` e o leitor de tela
   anuncia sem a pessoa pedir; avaliar com o teste de famílias (HIS-106) antes de mudar.
 

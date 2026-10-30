@@ -10,6 +10,13 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002 · `excecoes-axe.ts` revisado pela ux
+- O que fiz: conferi as 8 exceções `color-contrast` da `/` (4 por estado): 1 elemento cada, todas da HIS-110.
+- Decisões e porquê: os 2 `<dd>` dos cartões da Tarifa Social passam a `text-white` (3,92:1 → 4,77:1); faltava essa
+  correção na linha da HIS-110 do planejamento; pedi ao scrum-master que a ponha lá.
+- Arquivos: `docs/equipe/historias/HIS-002-qualidade-automatica.md` (nota), `contexto.md`, este diário.
+- Próximos passos: aprovar as cores da HIS-110 nas capturas 390/1280 px.
+
 ## 2026-10-30 · HIS-111 · aviso do D7 (empresa de luz mudou) e textos do D4 (cidade sem preço)
 - O que fiz: escrevi o F1 (aviso, quando, onde, por quanto tempo, textos, acessibilidade) e o F2 (cadastro, cartão do
   painel e Minha casa sem preço). Respondi a pergunta da ux e abri 3 novas (tech-lead, dominio-energia, scrum-master).
