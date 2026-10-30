@@ -6,7 +6,7 @@
 
 | História | Status | Etapa atual | Próximo papel |
 | --- | --- | --- | --- |
-| [HIS-001 · Camadas](historias/HIS-001-camadas.md) | Em revisão | code review aprovado (etapa 7) | documentacao |
+| [HIS-001 · Camadas](historias/HIS-001-camadas.md) | Em revisão | documentada (etapa 8) | scrum-master |
 | [HIS-002 · Qualidade automática](historias/HIS-002-qualidade-automatica.md) | Preparada | refinada | qa + tech-lead |
 | [HIS-003 · Base de segurança](historias/HIS-003-base-de-seguranca.md) | Preparada | refinada | seguranca + dominio-energia + ux |
 | HIS-004 · Sem menção a instituição; espaços reservados | Pronto | — | — |
@@ -19,6 +19,7 @@ Ordem: HIS-001 → HIS-002 → HIS-003 (a 002 e a 003 usam as pastas novas).
 - 2026-10-29 — HIS-001: desenho técnico pronto (tech-lead), pergunta aberta respondida, ADR-001 revisado; próximo: seguranca.
 - 2026-10-29 — HIS-001: implementada (frontend), 8 commits; comparação do QA igual em tela, texto, DOM e casa salva; JS de `/casa` sem casa +1,4 KB em pergunta ao tech-lead; próximo: qa.
 - 2026-10-29 — HIS-001: qa aprovou (etapa 5), seguranca aprovou com ressalvas baixas (etapa 6, S1/S2), tech-lead aprovou o code review (etapa 7); S1/S2 foram para a HIS-002 e P1–P4 do qa para o backlog (HIS-107, HIS-108); próximo: documentacao.
+- 2026-10-29 — HIS-001: documentada (etapa 8): arquitetura, site, desenvolvimento, diagramas, roteiro, agente de UX e CHANGELOG com as camadas novas e o `pnpm camadas`; texto novo da nota "Estado atual" do `CLAUDE.md` proposto ao dono do projeto; próximo: scrum-master.
 
 ## Próximas (backlog priorizado)
 

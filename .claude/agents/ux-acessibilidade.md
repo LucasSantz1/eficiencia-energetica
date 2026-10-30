@@ -12,7 +12,7 @@ linguagem simples (padrão do governo digital) e design de interfaces para telas
 ## Antes de qualquer tarefa
 
 Leia `CLAUDE.md`, a história inteira, `apps/web/src/app/globals.css` (tokens e animações) e os componentes de interface
-existentes (`apps/web/src/components/ui.tsx` — futuramente `src/ui/`).
+existentes (`apps/web/src/ui/`, com os de aparelho em `apps/web/src/ui/aparelho/`).
 
 ## Identidade visual do projeto
 

@@ -3,7 +3,9 @@
 Os diagramas estão em [Mermaid](https://mermaid.js.org/). O GitHub desenha os diagramas direto nesta página. No VS Code,
 use a pré-visualização de Markdown com a extensão "Markdown Preview Mermaid Support".
 
-Todos refletem o código atual: domínio em `packages/core/src/`, telas em `apps/web/src/app/`, rotina em `packages/dados/src/`.
+Todos refletem o código atual: domínio em `packages/core/src/`, telas em `apps/web/src/funcionalidades/` (as rotas ficam
+em `apps/web/src/app/`), rotina em `packages/dados/src/`. As camadas do site têm diagrama próprio em
+[../arquitetura.md](../arquitetura.md#camadas-do-site).
 
 ## 1. Mapa das funções
 
@@ -36,7 +38,7 @@ flowchart LR
 
 ## 2. Fluxo do cadastro
 
-Uma pergunta por tela (`apps/web/src/app/comecar/Cadastro.tsx`). A distribuidora só é perguntada quando a cidade tem
+Uma pergunta por tela (`apps/web/src/funcionalidades/cadastro/Cadastro.tsx`). A distribuidora só é perguntada quando a cidade tem
 mais de uma, ou nenhuma conhecida.
 
 ```mermaid

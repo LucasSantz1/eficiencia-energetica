@@ -26,6 +26,7 @@ Requer Node 22 e pnpm 10.
 pnpm install
 pnpm dev            # site em http://localhost:3000
 pnpm test           # testes dos cálculos e da leitura dos dados da ANEEL
+pnpm typecheck      # organização em camadas e tipos
 pnpm build          # build de produção
 ```
 
@@ -36,7 +37,11 @@ apps/web          Site em Next.js 16 (React 19, Tailwind 4). Instalável no celu
 packages/core     Regras de negócio em TypeScript puro: cálculos, catálogo de aparelhos, dicas.
                   O mesmo pacote será usado pelo app de celular.
 packages/dados    Rotina que baixa os dados da ANEEL e gera os arquivos em apps/web/public/dados.
+scripts           verificar-camadas.mjs: confere a organização do código do site (pnpm camadas).
 ```
+
+O código do site é organizado em camadas (rotas, telas, componentes, casos de uso e acesso a dados), descritas em
+[docs/arquitetura.md](docs/arquitetura.md#camadas-do-site).
 
 ### Os cálculos
 

@@ -1,5 +1,30 @@
 # Registro de mudanças
 
+## 2026-10-29 · Código do site organizado em camadas (HIS-001)
+
+**Para quem usa**
+- Nada muda. As telas, os textos, as animações e a casa guardada no celular continuam iguais. Quem já tinha a casa
+  cadastrada abre o site e encontra tudo como deixou.
+
+**Técnico**
+- `apps/web/src` reorganizado nas camadas do ADR-001: `app/` (rotas finas, sem `"use client"`), `funcionalidades/`
+  (`inicio`, `cadastro`, `casca`, `acompanhamento`, `comodos`, `dicas`, `ajustes`), `ui/` (um arquivo por componente;
+  `ui.tsx` foi dividido), `ui/aparelho/` (componentes de aparelho usados por mais de uma tela), `aplicacao/` e
+  `infraestrutura/`. As pastas `components/` e `lib/` não existem mais.
+- `aplicacao/` passa a ser a única porta das telas para `infraestrutura/`; novo hook `useEdicaoDeAparelho()`. O
+  `EditorAparelho` não lê mais o store: recebe `comodos`, `aoSalvar` e `aoRemover`.
+- Store da casa em `infraestrutura/armazenamento/casa.ts` (um só `create`), sem mudar o formato salvo: chave
+  `eficiencia-energetica:casa`, versão 2, mesma migração. `novoId` em `infraestrutura/identificador.ts`.
+- Página inicial separada em rota fina (`app/page.tsx`, com `revalidate = 86400`), tela (`funcionalidades/inicio/PaginaInicial.tsx`)
+  e leitura de disco em arquivos `*.servidor.ts` com `import "server-only"` (o build falha se chegarem ao navegador).
+- Verificador de camadas `scripts/verificar-camadas.mjs` (Node puro, sem dependência): `pnpm camadas`, e roda dentro do
+  `pnpm typecheck` e, por isso, no CI.
+- ADR-001 revisado: `ui/` pode chamar funções puras do `@ee/core`; componentes de domínio compartilhados em `ui/<assunto>/`;
+  arquivos só de servidor em `*.servidor.ts`; sem `index.ts` que junta exportações.
+- Comparação "antes × depois" do qa em `apps/web/e2e-base/` (provisória): 84 capturas em 390 e 1280 px, textos, DOM e casa
+  salva iguais ao código anterior. O JavaScript para abrir cada página ficou igual ou menor (até 1,7 kB a menos).
+- Nenhuma dependência, configuração do Next ou do CI mudou.
+
 ## 2026-10-29 · Equipe, planejamento e documentação
 
 **Para quem usa**

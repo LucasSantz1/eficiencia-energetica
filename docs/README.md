@@ -8,13 +8,13 @@
 | [Especificação funcional](sistema/funcionalidades.md) | cada tela, campo e regra do site |
 | [Diagramas das funções](sistema/diagramas.md) | mapa das funções, cadastro, cálculo, dicas, acompanhamento, rotina de dados, modelo de dados |
 | [Referência do domínio](sistema/referencia-do-dominio.md) | módulos, funções, catálogo completo de aparelhos, cômodos e dicas |
-| [O site por dentro](sistema/site.md) | rotas, componentes, estado, armazenamento, aparência e movimento |
+| [O site por dentro](sistema/site.md) | rotas, telas, componentes, casos de uso, estado, armazenamento, aparência e movimento |
 | [Desenvolvimento](sistema/desenvolvimento.md) | instalar, rodar, testar, CI e publicar na Vercel |
 | [Glossário](sistema/glossario.md) | termos de energia, regulação e tecnologia |
 | [Cálculos e fontes](sistema/calculos-e-fontes.md) | quem quer conferir como cada número é calculado |
 | [Dados](sistema/dados.md) | quem mantém a rotina de dados da ANEEL |
 | [Privacidade e segurança](sistema/privacidade-e-seguranca.md) | quem avalia LGPD e segurança |
-| [Arquitetura](arquitetura.md) | desenvolvedores |
+| [Arquitetura](arquitetura.md) | desenvolvedores: pacotes, camadas do site e verificador de camadas, fluxo de dados |
 | [Registro de mudanças](../CHANGELOG.md) | todos |
 
 ## Planejamento e equipe

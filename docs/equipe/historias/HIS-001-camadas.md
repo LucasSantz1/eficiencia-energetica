@@ -1009,3 +1009,35 @@ visual; registrados para o backlog):
   `docs/sistema/site.md` e `.claude/agents/ux-acessibilidade.md`, e propor ao dono do projeto o texto novo da nota
   "Estado atual" do `CLAUDE.md`; registrar o `scripts/verificar-camadas.mjs` (`pnpm camadas`) e a convenção `*.servidor.ts`; R9 com 200 + `NEXT_REDIRECT`.
   **scrum-master** (etapa 9) — Definição de Pronto e priorizar HIS-107/HIS-108.
+
+### [documentacao] 2026-10-29 — etapa 8: documentação atualizada para as camadas; pronta para a Definição de Pronto
+- O que fiz: li a história inteira e conferi cada caminho no código (`find apps/web/src`, 1ª linha de cada arquivo,
+  exports, `scripts/verificar-camadas.mjs`, `package.json`). Troquei tudo o que citava `components/` e `lib/` nos
+  documentos vivos e descrevi a estrutura real.
+- Documentos que mudaram:
+  - `docs/arquitetura.md` — sem a nota "a migração é a HIS-001"; árvore real de `apps/web/src`, diagrama Mermaid de quem
+    importa quem (validado com `mmdc`), tabela de regras do ADR-001 revisado, decisões (porta única `aplicacao/`, um só
+    store, `ui/` sem estado, `*.servidor.ts` + `server-only`, sem `index.ts`, rotas finas sem `"use client"`) e a seção
+    "Verificador de camadas" (o que acusa, saída, limites que ficam para a HIS-002).
+  - `docs/sistema/site.md` — rotas finas (com o tipo de cada uma; `/casa/aparelhos` = 200 com `NEXT_REDIRECT`, como pediu a
+    seguranca no R9), tabelas novas de telas (`funcionalidades/`), componentes (`ui/` e `ui/aparelho/`), casos de uso
+    (`aplicacao/`) e estado e armazenamento (`infraestrutura/`).
+  - `docs/sistema/desenvolvimento.md` — `pnpm camadas`, verificador dentro do `pnpm typecheck` e do CI, exemplo de saída,
+    `scripts/` e `apps/web/e2e-base/` na estrutura, tabela "onde colocar um arquivo novo".
+  - `docs/sistema/diagramas.md` — caminho do `Cadastro.tsx` e das telas (nenhum diagrama mudou).
+  - `docs/roteiro.md` (só o caminho de `DadosCasa`), `.claude/agents/ux-acessibilidade.md` (componentes em `src/ui/`),
+    `docs/sistema/glossario.md` (termo "Camadas"), `docs/equipe/decisoes/README.md`, `docs/README.md`, `README.md`.
+    `.claude/agents/frontend.md` não citava caminho antigo: não mudou.
+  - `CHANGELOG.md` — entrada "Código do site organizado em camadas (HIS-001)".
+- Resumo do changelog: **Para quem usa** — nada muda; telas, textos, animações e a casa guardada continuam iguais.
+  **Técnico** — `apps/web/src` em `app/`, `funcionalidades/`, `ui/`, `ui/aparelho/`, `aplicacao/`, `infraestrutura/`,
+  `config/`; `components/` e `lib/` removidas; `aplicacao/` como porta única e `useEdicaoDeAparelho`; store no mesmo
+  formato (versão 2); página inicial com `*.servidor.ts` + `server-only`; verificador `pnpm camadas` no `typecheck`/CI;
+  ADR-001 revisado; nenhuma dependência nova.
+- Não mudei: `CLAUDE.md` (o texto proposto para a nota "Estado atual" foi entregue a quem orquestra, para o dono do
+  projeto decidir); notas antigas de histórias e o "Contexto" do ADR-001, que citam `lib/` como registro histórico.
+- Como verifiquei: `pnpm camadas` → `Camadas: tudo certo (64 arquivos)`, código 0, também rodado de `/tmp`; `pnpm typecheck`
+  verde; numa cópia no meu scratchpad, um `ui/` importando `@/aplicacao/casa` deu exatamente a mensagem documentada e código 1;
+  `mmdc` renderizou o diagrama novo; `grep` de `components/|lib/` nos documentos vivos só acha as duas menções intencionais
+  (pastas que não existem mais). Nenhuma menção a instituição de ensino ou a parceiros.
+- Para o próximo: **scrum-master** — a história está pronta para conferir a Definição de Pronto (etapa 9).
