@@ -22,6 +22,7 @@ describe("diagnóstico da HIS-111 (passo 0)", () => {
       hoje: HOJE,
       baixar: false,
       pastaPublicada: pasta("publicados"),
+      caminhoSucessoes: pasta("sucessoes.json"),
       registrar: (l) => registro.push(l),
     });
     return { ...resultado, registro };
@@ -47,6 +48,13 @@ describe("diagnóstico da HIS-111 (passo 0)", () => {
   it("lista os CNPJs com mais de uma sigla", async () => {
     const { dados } = await rodar();
     expect(dados.cnpjsComVariasSiglas.map((g) => [g.cnpj, g.agentes.map((a) => a.sigla)])).toEqual([["02016440000162", ["RGE", "RGE SUL"]]]);
+  });
+
+  it("portão (b): a sucessora do sucessoes.json tem um só valor na vigência", async () => {
+    const { dados, markdown } = await rodar();
+    expect(dados.sucessoras).toEqual([{ sigla: "ESS", cnpj: "07282377000120", valores: 1 }]);
+    expect(dados.comMaisDeUmValor).toEqual([]);
+    expect(markdown).toContain("**As linhas ENF e EBO entram.**");
   });
 
   it("compara com os arquivos publicados e escreve o resumo do portão", async () => {

@@ -49,6 +49,25 @@ export function dataExiste(texto: string): boolean {
   return d.getUTCFullYear() === ano && d.getUTCMonth() === mes - 1 && d.getUTCDate() === dia;
 }
 
+/**
+ * Volta `meses` meses a partir de uma data AAAA-MM-DD, presa ao fim do mês: 31/08 menos 6 meses = 28/02 (ou 29/02
+ * em ano bissexto), e não 03/03.
+ */
+export function subtrairMeses(data: string, meses: number): string {
+  const partes = data.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!partes) throw new Error(`Data inválida: ${data}`);
+  const [ano, mes, dia] = [Number(partes[1]), Number(partes[2]), Number(partes[3])];
+  const primeiroDoMes = new Date(Date.UTC(ano, mes - 1 - meses, 1));
+  const ultimoDia = new Date(Date.UTC(primeiroDoMes.getUTCFullYear(), primeiroDoMes.getUTCMonth() + 1, 0)).getUTCDate();
+  primeiroDoMes.setUTCDate(Math.min(dia, ultimoDia));
+  return primeiroDoMes.toISOString().slice(0, 10);
+}
+
+/** O dia seguinte a uma data AAAA-MM-DD. */
+export function diaSeguinte(data: string): string {
+  return new Date(Date.parse(`${data}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+}
+
 /** Dias de `de` até `ate` (datas AAAA-MM-DD, em UTC); negativo quando `ate` vem antes. */
 export function diasEntre(de: string, ate: string): number {
   return Math.round((Date.parse(`${ate}T00:00:00Z`) - Date.parse(`${de}T00:00:00Z`)) / 86_400_000);

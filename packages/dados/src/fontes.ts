@@ -18,7 +18,7 @@ import {
   URL_CONJUNTOS_MUNICIPIOS,
   type VinculoMunicipio,
 } from "./aneel/municipios";
-import { ehTarifaResidencialB1, mapearColunasTarifas, selecionarTarifasVigentes, URL_TARIFAS, type ColunasTarifas } from "./aneel/tarifas";
+import { ehTarifaResidencialB1, mapearColunasTarifas, resumirAgentes, selecionarTarifasVigentes, URL_TARIFAS, type AgenteDaTarifa, type ColunasTarifas, type SelecaoDeTarifas } from "./aneel/tarifas";
 import { baixar, lerCSV } from "./csv";
 import { carregarLocalidades } from "./ibge";
 import type { Localidades } from "./montar";
@@ -48,7 +48,14 @@ export type LeitorConjuntos = ReturnType<typeof criarLeitorConjuntos>;
 export type ColunasMunicipios = ReturnType<typeof mapearColunasMunicipios>;
 
 export interface Fontes {
-  tarifas: { colunas: ColunasTarifas; linhasB1: Linha[]; totalDeLinhas: number; selecao: ReturnType<typeof selecionarTarifasVigentes> };
+  tarifas: {
+    colunas: ColunasTarifas;
+    linhasB1: Linha[];
+    totalDeLinhas: number;
+    selecao: SelecaoDeTarifas;
+    /** Todas as siglas B1 do CSV, vigentes ou não (diagnóstico, V9 e V10). */
+    agentes: AgenteDaTarifa[];
+  };
   bandeiras: BandeiraMes[];
   conjuntos: LeitorConjuntos;
   /** Linhas do IndQual Município (conjunto → município), guardadas para o diagnóstico. */
@@ -118,9 +125,11 @@ export async function lerFontes(opcoes: OpcoesDeLeitura): Promise<Fontes> {
     const selecao = selecionarTarifasVigentes(lido.linhas, c, hoje);
     registrar(`  ${selecao.tarifas.length} distribuidoras com tarifa vigente`);
     for (const d of selecao.descartadas) registrar(`  descartada — ${d}`);
+    for (const v of selecao.vencidasEmUso) registrar(`  aviso — ${v.sigla}: vencida desde ${v.fimVigencia}, ainda dentro dos 6 meses (D4)`);
+    for (const v of selecao.comMaisDeUmValor) registrar(`  aviso — ${v.sigla}: ${v.valores} valores diferentes na vigência (V7)`);
     const amostra = selecao.tarifas.slice(0, 5).map((t) => `${t.sigla}: R$ ${(t.teKwh + t.tusdKwh).toFixed(4)}/kWh desde ${t.inicioVigencia}`);
     registrar(`  amostra: ${amostra.join("; ")}`);
-    return { colunas: c, linhasB1: lido.linhas, totalDeLinhas: lido.total, selecao };
+    return { colunas: c, linhasB1: lido.linhas, totalDeLinhas: lido.total, selecao, agentes: resumirAgentes(lido.linhas, c, hoje) };
   });
 
   const bandeiras = await etapa("Lendo bandeiras", async () => {

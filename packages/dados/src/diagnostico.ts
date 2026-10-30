@@ -11,10 +11,10 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { celulaMarkdown } from "./anotacoes";
-import type { AgenteDaTarifa } from "./aneel/tarifas";
-import { resumirAgentes } from "./aneel/tarifas";
+import type { AgenteDaTarifa, SelecaoDeTarifas } from "./aneel/tarifas";
 import { descreverFontes, lerFontes, type ArquivosDasFontes, type Fontes } from "./fontes";
 import { montarArquivos, validar, type Montagem, type Relatorio } from "./montar";
+import { CAMINHO_SUCESSOES, carregarSucessoes, type Sucessao } from "./sucessoes";
 import { normalizar, slug } from "./util";
 
 /** As 6 cidades do critério 1 e as 3 de risco de ordem da lista (Guarapuava, Nova Friburgo, Campina Grande). */
@@ -65,6 +65,10 @@ export interface DadosDoDiagnostico {
   anoMaisRecenteDosConjuntos: number;
   vencidas: VencidaNoDiagnostico[];
   cnpjsComVariasSiglas: { cnpj: string; agentes: AgenteDaTarifa[] }[];
+  /** V7: todas as siglas com mais de um valor na vigência, e se cada uma é sucessora em `sucessoes.json`. */
+  comMaisDeUmValor: (SelecaoDeTarifas["comMaisDeUmValor"][number] & { ehSucessora: boolean })[];
+  /** Portão (b): cada sucessora do `sucessoes.json` e quantos valores ela tem na vigência (0 = sem tarifa). */
+  sucessoras: { sigla: string; cnpj: string; valores: number }[];
   errosDaValidacao: string[];
   relatorio: Relatorio;
   comparacao: ComparacaoComPublicados;
@@ -76,6 +80,7 @@ export interface OpcoesDoDiagnostico {
   baixar: boolean;
   /** Pasta dos arquivos publicados (`apps/web/public/dados`), só lida. */
   pastaPublicada: string;
+  caminhoSucessoes?: string;
   usarApiIbge?: boolean;
   registrar?: (linha: string) => void;
 }
@@ -99,7 +104,8 @@ export async function diagnosticar(opcoes: OpcoesDoDiagnostico): Promise<{ dados
     origem: "aneel",
     fontes: descreverFontes(fontes.fonteIbge),
   });
-  const agentes = resumirAgentes(fontes.tarifas.linhasB1, fontes.tarifas.colunas, opcoes.hoje);
+  const sucessoes = await carregarSucessoes(opcoes.caminhoSucessoes ?? CAMINHO_SUCESSOES);
+  const { agentes, selecao } = fontes.tarifas;
   const vencidas = agentes.filter((a) => !a.vigente);
   const publicados = await lerMunicipiosPublicados(opcoes.pastaPublicada);
 
@@ -108,6 +114,7 @@ export async function diagnosticar(opcoes: OpcoesDoDiagnostico): Promise<{ dados
     anoMaisRecenteDosConjuntos: fontes.conjuntos.anoMaisRecente,
     vencidas: analisarVencidas(vencidas, agentes, fontes),
     cnpjsComVariasSiglas: agruparPorCnpj(agentes),
+    ...conferirValores(selecao, sucessoes),
     errosDaValidacao: validar(montagem, opcoes.hoje),
     relatorio: montagem.relatorio,
     comparacao: comparar(publicados, montagem, new Set(vencidas.map((v) => slug(v.sigla)))),
@@ -154,6 +161,20 @@ function analisarVencidas(vencidas: AgenteDaTarifa[], agentes: AgenteDaTarifa[],
       municipiosComConjuntoRecenteDeOutra: comOutraRecente,
     };
   });
+}
+
+/** V7 e portão (b): sucessora com mais de um valor na vigência não pode receber as cidades da antiga. */
+function conferirValores(selecao: SelecaoDeTarifas, sucessoes: readonly Sucessao[]): Pick<DadosDoDiagnostico, "comMaisDeUmValor" | "sucessoras"> {
+  const cnpjsSucessores = new Set(sucessoes.map((s) => s.cnpjSucessor));
+  const sucessoras = [...new Map(sucessoes.map((s) => [s.cnpjSucessor, s.siglaSucessora]))].map(([cnpj, sigla]) => {
+    const varios = selecao.comMaisDeUmValor.find((v) => v.cnpj === cnpj);
+    const publicada = selecao.tarifas.some((t) => t.cnpj === cnpj);
+    return { sigla, cnpj, valores: varios?.valores ?? (publicada ? 1 : 0) };
+  });
+  return {
+    comMaisDeUmValor: selecao.comMaisDeUmValor.map((v) => ({ ...v, ehSucessora: v.cnpj !== undefined && cnpjsSucessores.has(v.cnpj) })),
+    sucessoras,
+  };
 }
 
 function agruparPorCnpj(agentes: AgenteDaTarifa[]): { cnpj: string; agentes: AgenteDaTarifa[] }[] {
@@ -234,6 +255,14 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
         : `reportaram em ${anoMaximo - 1} ou depois: ${celulaMarkdown(recentes.map((v) => `${v.sigla} (${v.ultimoAnoDosConjuntos})`).join(", "))}. ` +
           "**C2 não confirmada para essas: o backend revê o D3.**"),
   );
+  const sucessorasRuins = d.sucessoras.filter((s) => s.valores !== 1);
+  saida.push(
+    `- (b) V7: ${d.sucessoras.length} sucessoras no sucessoes.json; ` +
+      (sucessorasRuins.length === 0
+        ? "todas com um só valor B1 na vigência. **As linhas ENF e EBO entram.**"
+        : `com problema: ${celulaMarkdown(sucessorasRuins.map((s) => `${s.sigla} (${s.valores === 0 ? "sem tarifa" : `${s.valores} valores`})`).join(", "))}. ` +
+          "**Essas linhas saem do sucessoes.json e voltam ao dominio-energia.**"),
+  );
   saida.push(`- (c) CNPJs com mais de uma sigla: ${d.cnpjsComVariasSiglas.map((g) => celulaMarkdown(`${g.cnpj} (${g.agentes.map((a) => a.sigla).join(", ")})`)).join("; ") || "nenhum"}.`);
   saida.push("");
 
@@ -247,6 +276,13 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
   saida.push(linhaDeTabela(["CNPJ", "Sigla", "Última vigência", "Vigente hoje"]));
   saida.push("| --- | --- | --- | --- |");
   for (const g of d.cnpjsComVariasSiglas) for (const a of g.agentes) saida.push(linhaDeTabela([g.cnpj, a.sigla, `${a.ultimoInicio} a ${a.ultimoFim ?? "?"}`, a.vigente ? "sim" : "não"]));
+  saida.push("");
+
+  saida.push("### Mais de um valor B1 na vigência (V7)", "");
+  saida.push(linhaDeTabela(["Sigla", "CNPJ", "Valores", "Sucessora no sucessoes.json"]));
+  saida.push("| --- | --- | --- | --- |");
+  for (const v of d.comMaisDeUmValor) saida.push(linhaDeTabela([v.sigla, v.cnpj, v.valores, v.ehSucessora ? "**sim**" : "não"]));
+  if (d.comMaisDeUmValor.length === 0) saida.push(linhaDeTabela(["nenhuma", "", "", ""]));
   saida.push("");
 
   saida.push("### Montagem da branch", "");
