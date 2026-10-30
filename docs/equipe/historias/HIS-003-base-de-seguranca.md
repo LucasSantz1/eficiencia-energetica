@@ -804,7 +804,7 @@ console), arquivo público quebrado (rotina com bug, deploy), dependência ou ac
 | --- | --- | --- | --- |
 | A1 | P1: JSON ilegível prende o site no carregamento | alta | `storage` próprio com `try/catch` no `JSON.parse`; falhou → casa vazia + aviso T1c |
 | A2 | P2: item fora do formato (negativo, `NaN`, texto no lugar de número) passa sem `migrate` → conta errada ou exceção de render | alta | validar no `merge` (roda sempre), item por item; `migrate` só traduz versão e devolve para o mesmo validador |
-| A3 | Campo extra / `__proto__` / spread do bruto (`...(salvo as Partial<DadosCasa>)`, `casa.ts` l. 125) | baixa | `z.object` padrão (tira o que não conhece); sem `looseObject`, `passthrough`, `z.record` nem spread do bruto |
+| A3 | Campo extra / `__proto__` / spread do bruto (`...(salvo as Partial<DadosCasa>)`, `casa.ts` l. 125) | baixa | leitor à mão (ADR-004) monta objeto literal novo campo a campo, só com propriedade própria (`Object.hasOwn`); chave de `variantes` pela expressão do D2 (barra `__proto__`); sem spread, `Object.assign` nem `for…in` do bruto |
 | A4 | Texto ou lista gigante (localStorage ou campo) trava celular fraco | média | limites do `limites.ts` em texto e número **e** máximo de itens por lista |
 | A5 | `tarifas.json`/`municipios/{UF}.json` fora do formato → tela quebrada ou número errado | média | mesmo esquema no navegador e no servidor; nunca corrigir valor (ver regras) |
 | A6 | `uf` lido do localStorage monta o caminho do `fetch` (`navegador.ts` l. 52): `../x` vira URL qualquer da mesma origem | baixa | só montar o caminho se `uf` estiver na lista das 27 UFs |
@@ -899,8 +899,8 @@ história própria. Sem `X-XSS-Protection`. `poweredByHeader: false` fica.
 igual ao máximo do esquema; todo número com mínimo, máximo e `Number.isFinite`; máximo de itens por lista. A leitura de
 número rejeita `Infinity`, `NaN`, `1e309`, `0x10` e texto colado gigante.
 
-**zod**: 4.6.7 (`npm view`: mantenedor colinhacks, sem dependência nem script de instalação), versão exata. `zod/mini`
-é bem mais leve; a escolha entre os dois é do tech-lead/frontend, segurança aceita qualquer um.
+~~**zod**: 4.6.7 … segurança aceita qualquer um.~~ Substituído (P-tl-1, 2026-10-30): leitores à mão no `@ee/core`
+(ADR-004), com as condições R4c e R4d abaixo. Sem dependência nova; o lockfile não muda.
 
 ### CI e dependências
 
@@ -921,7 +921,9 @@ número rejeita `Infinity`, `NaN`, `1e309`, `0x10` e texto colado gigante.
 | R1 | `curl -sI` em `pnpm start`: `/`, `/casa`, `/sobre`, `/dados/tarifas.json`, um `/_next/static/…js`, uma rota 404 | os 7 cabeçalhos com o valor exato acima; CSP sem `unsafe-eval` e sem domínio externo; e2e confere o mesmo |
 | R2 | e2e em 390 e 1280 px com a CSP ligada, todas as rotas e as transições | zero `securitypolicyviolation` e zero "Refused to" no console |
 | R3 | saída do `next build` antes × depois | nenhuma rota muda de estática/ISR para dinâmica; não existe `proxy.ts` |
-| R4 | casos do localStorage (unidade + 1 e2e): JSON quebrado, `null`, `[]`, texto, `version` 1/2/99, potência `-5`/`"100"`/acima do máximo, nome com 10 000 caracteres, id repetido, `comodoId` inexistente, `__proto__` e chave extra, 10 000 aparelhos | site abre, só o inválido sai, versão limpa gravada, aviso uma vez, o válido igual byte a byte; `prova-hidratacao.mjs` contra o storage novo dá `hasHydrated: true` |
+| R4 | casos do localStorage (unidade + 1 e2e): JSON quebrado, `null`, `[]`, texto, `version` 1/2/99, potência `-5`/`"100"`/acima do máximo, nome com 10 000 caracteres, id repetido, `comodoId` inexistente, `__proto__` e chave extra, 10 000 aparelhos | site abre, só o inválido sai, versão limpa gravada, aviso uma vez; `prova-hidratacao.mjs` contra o storage novo dá `hasHydrated: true`. **"Igual" (P-tl-1 d):** `version` 2 sem aviso (inclui consertos, `pessoas` tirado e chave extra) → texto da chave **idêntico byte a byte** depois de hidratar (prova que não regrava à toa); com descarte → regravado com `version` 2 e cada item que ficou `toEqual` ao seu original do bruto; `version` 1 e 99 → o próprio `persist` regrava (`if (migrated) return setItem()`, `middleware.mjs` do zustand 5.0.16), conteúdo `toEqual`, sem aviso se tudo é válido |
+| R4c | leitores completos (risco novo do leitor à mão) | em cada leitor, lista de campos com checagem de tipo `Exclude<keyof T, (typeof CAMPOS)[number]>` = `never` (campo novo no tipo sem leitor quebra o `typecheck`); fixture `casa-completa` com **todo** opcional preenchido (`contaReferencia`, `pessoas`, `catalogoId`, `banho`, `fatorCiclo`, `variantes`, `kwhMesInformado`) passa `toEqual` em `lerCasaSalva` e num ciclo hidratar → ação → salvar; texto devolvido **sem `trim`** (confere `trim().length > 0`, devolve o original) |
+| R4d | leitor total (nunca lança) | se o `merge` lança, o `persist` cai no `catch` e não marca `hasHydrated` (P1 de volta); teste com os casos do R4 + 1.000 valores JSON gerados com semente fixa, sem biblioteca: nenhum lança; `merge` com `try/catch` que, se lançar, deixa a casa vazia em memória com T1c **sem regravar**; data conferida por componentes UTC (`Date.UTC` + comparar ano/mês/dia), nunca `Date.parse`/`new Date(texto)`; tamanho conferido antes de qualquer expressão regular |
 | R4b | retorno do validador nos mesmos casos + alerta (potência 10.001) e os 2 consertos | contagem certa por tipo, `residenciaDescartada`/`ilegivel` certos, T1a/T1b/T1c certos; alerta e conserto **não** contam; retorno fora do localStorage e só com números/`boolean` |
 | R5 | `infraestrutura/` | nenhum `as` sobre dado de fora; `migrate` sem spread do bruto |
 | R6 | `/dados` ruim via `page.route` (vazio, HTML, estrutura errada, tarifa `-1`/texto) e leitor do servidor em teste | T2 com "Tentar de novo" que funciona depois de restaurar; leitor do servidor lança |
@@ -929,7 +931,7 @@ número rejeita `Infinity`, `NaN`, `1e309`, `0x10` e texto colado gigante.
 | R8 | componente que lança (só em teste) em página e no layout | T3 sem texto do erro; `retry` chamado; "Voltar ao início" leva a `/`; nenhum pedido novo de rede |
 | R9 | `limites.ts` | único lugar; `maxLength` = máximo do esquema; testes de borda (limite, limite + 1, vazio, gigante) |
 | R10 | `ci.yml`, `dependabot.yml`, `atualizar-dados.yml` | como em "CI e dependências"; nenhuma action por etiqueta |
-| R11 | `pnpm audit`, `pnpm-lock.yaml` | limpo; diff do lockfile só com o zod; nenhum script de instalação novo |
+| R11 | `pnpm audit`, `pnpm-lock.yaml` | limpo; `pnpm-lock.yaml` **sem mudança** (sem zod, ADR-004); nenhum script de instalação novo |
 | R12 | `grep -rn 'href="http' apps/web/src` | todos com `rel="noopener noreferrer"` |
 | R13 | `.env.example`, `git log -p` por padrões de chave | sem valor; sem achado |
 
@@ -1031,11 +1033,14 @@ Riscos: (1) relógio que "dá a volta" (99.999 → 00.012) hoje cai em "leitura 
   **Resposta (ux, 2026-10-30):** ver "Fluxo e textos", T6: o texto de cada campo, "Sim, está certo" / "Corrigir",
   salvar só depois de confirmar, foco e leitor de tela. No T5 entraram o `{min}` da conta por tela e o texto fixo do
   tempo por dia.
-- [ ] `[para: seguranca]` **P-tl-1** (bloqueia o a2). Preciso da confirmação de quatro decisões:
+- [x] `[para: seguranca]` **P-tl-1** (bloqueia o a2). Preciso da confirmação de quatro decisões:
   - (a) leitores escritos à mão no core no lugar do zod (D1; A3 garantido pela construção campo a campo);
   - (b) `contaReferencia` inválida sai sozinha e conta em `contas`, e `pessoas` inválido sai sem aviso;
   - (c) o leitor não descarta data no futuro (relógio do celular errado);
   - (d) "igual" no R4 é igualdade de conteúdo depois de regravar; byte a byte só quando nada sai.
+
+  **Resposta (seguranca, 2026-10-30):** as quatro confirmadas; (a) com as condições R4c e R4d; (d) com a regra exata
+  escrita no R4. O a2 está liberado. Ver a nota na "Conversa da equipe".
 - [ ] `[para: dominio-energia]` **P-tl-2** (bloqueia o a3). Faixa rígida dos arquivos da ANEEL. Proposta:
   - `tarifaKwh` > 0 e ≤ R$ 3,00 (a tarifa sem impostos fica abaixo do teto com impostos que vocês citaram);
   - `teKwh`/`tusdKwh` entre 0 e 3;
@@ -1202,3 +1207,28 @@ critério de formato (`packages/dados` não importa de `apps/web`).
 - **dominio-energia:** responder a P-tl-2.
 - **scrum-master:** decidir a P-tl-3.
 - **Depois:** etapa 4 (backend a1–a3 e a6, frontend a4–a5, qa a7), quando a 002a estiver no `main`.
+
+### [seguranca] 2026-10-30 — P-tl-1 respondida: leitores à mão aprovados com 2 condições
+
+**Decisão: aprovado.** O a2 pode começar.
+
+- **(a) Leitores à mão: sim.** Para segurança são até melhores: sem `eval`, sem dependência nova, lockfile igual.
+  Conferi as medidas no `scratchpad/tl-his003/zod/` (gzip -9: 93 098 / 8 173 / 1 284 B).
+  - O risco novo é **esquecer um campo opcional**. No protótipo de medida (`mao.ts`), o `lerResidencia` não lê o
+    `contaReferencia` e o `lerAparelho` não lê o `kwhMesInformado`. Num leitor de verdade isso apagaria, sem aviso e
+    na primeira ação salva, a conta e a etiqueta de todas as famílias. Seria **alto**.
+  - O protótipo também faz `trim` no texto devolvido. Isso corrige o valor e quebra o "igual".
+  - Por isso entram o **R4c** (lista de campos checada pelo `typecheck`, fixture `casa-completa`, sem `trim`) e o
+    **R4d** (o leitor nunca lança, porque um `merge` que lança traz o P1 de volta; data por UTC, já que o V8 aceita
+    `2026-02-30` e o transforma em 2 de março).
+  - A3: leitura só de propriedade própria (`Object.hasOwn`).
+- **(b) Sim.** `contaReferencia` sai sozinha, a `residencia` fica e a conta entra em `contas`. `pessoas` sai sem aviso:
+  só aparece em `tipos.ts`, e o cadastro usa o próprio `useState(3)`. Sem aviso não há regravação, mas o `merge` limpa
+  a cada abertura e a próxima ação já grava limpo.
+- **(c) Sim.** Data no futuro não faz mal à conta (`periodosDeLeitura` ignora `dias <= 0`). Descartar seria perda sem
+  volta por causa de um relógio errado. O leitor confere só se a data existe no calendário (competência com mês de 01 a 12).
+- **(d) Sim, com a regra exata no R4:** byte a byte quando a versão é 2 e não há aviso; `toEqual` item por item quando
+  algo sai. As versões 1 e 99 o próprio `persist` regrava.
+
+Também troquei A3, R11 e o parágrafo do zod em "Regras de validação". **Para o tech-lead:** passar o ADR-004 para
+aceito, com R4c e R4d nas consequências.

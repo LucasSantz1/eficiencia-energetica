@@ -58,6 +58,10 @@
   = tudo dinâmico; hash não cobre o `__next_f` inline).
 - Validação de dado de fora: só o rígido do domínio descarta; nunca corrigir número (exceto os 2 consertos do
   domínio na HIS-003); retorno do validador só com contagens/`boolean`, em memória.
+- Leitores escritos à mão no `@ee/core`, sem zod (ADR-004, P-tl-1 de 2026-10-30). Condições: todo leitor cobre todos
+  os campos do tipo, com checagem no `typecheck` e a fixture `casa-completa`; nada de `trim` nem conserto no valor
+  devolvido; o leitor nunca lança (um `merge` que lança traz o P1 de volta); só propriedade própria; data conferida por
+  UTC; data no futuro não é descartada.
 - Lint: o único `eslint-disable` aceito no site e no domínio é o da HIS-109; ignores do ESLint só com caminho ancorado;
   arquivos lidos pelo ESLint = `git ls-files`.
 
@@ -76,9 +80,9 @@
 - **HIS-002b (etapa 6):** Rb1–Rb9; rodar de novo os 21 + 9 casos numa cópia própria (roteiros em
   `scratchpad/seg-his002/casos-eslint.mjs` e `propostas.mjs`; se sumirem, as tabelas estão na história) esperando 0
   diferente; conferir C10 (Ab3) e ignores ancorados (Ab4).
-- **HIS-003 (etapa 6):** R1–R13 + R4b da história; rodar `scratchpad/seg-his003/prova-hidratacao.mjs` contra o storage
-  novo (se sumir: P1/P2 na história explicam o caso). Resposta do tech-lead: `zod` × `zod/mini` e critério de formato
-  da rotina de dados.
+- **HIS-003a (etapa 6):** R1–R13 + R4b, R4c, R4d da história; rodar `scratchpad/seg-his003/prova-hidratacao.mjs`
+  contra o storage novo (se sumir: P1/P2 na história explicam o caso). Conferir que o ADR-004 passou para aceito.
+  A HIS-003 foi dividida: T5/T6 e `campos.spec.ts` estão na `HIS-003b-campos-com-limite.md` (revisar lá também).
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

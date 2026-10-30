@@ -10,6 +10,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-003 · P-tl-1: leitores à mão aprovados com R4c/R4d
+- O que fiz: li o D1–D9 e o ADR-004; conferi as medidas do tech-lead (`scratchpad/tl-his003/zod/`: 93 098 / 8 173 /
+  1 284 B em gzip) e o `hydrate` do zustand 5.0.16 (o `merge` que lança cai no `catch` sem `hasHydrated`; versão
+  diferente regrava sozinha). No protótipo `mao.ts` faltam o `contaReferencia` e o `kwhMesInformado`, e o texto sai com
+  `trim`. O V8 aceita `2026-02-30` e o transforma em 2 de março. `pessoas` só aparece em `tipos.ts`.
+- Decisões e porquê: (a)–(d) confirmadas. Criei o R4c (campos completos com checagem no `typecheck`, fixture
+  `casa-completa`, sem `trim`), porque esquecer um campo apagaria dado de todas as famílias sem aviso. Criei o R4d
+  (leitor total, `try/catch` no `merge` sem regravar, data por UTC). O "igual" do R4 ficou exato. Troquei A3, R11 e o
+  parágrafo do zod.
+- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md`, `contexto.md`, `diario.md`.
+- Próximos passos: etapa 6 da 003a; o tech-lead passa o ADR-004 para aceito.
+
 ## 2026-10-30 · HIS-003 · análise de ameaças: aprovado para implementar
 - O que fiz: li o guia de CSP do Next 16, o HTML do build (`__next_f` inline em toda página, `style=` do React), o
   `persist` do zustand 5.0.16 e `infraestrutura/`. Provei P1 (JSON quebrado: `hasHydrated` nunca fica true, telas
