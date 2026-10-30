@@ -50,6 +50,18 @@ leva perguntas de um para o outro e não deixa a história avançar com pergunta
 
 Se qualquer etapa encontra problema, a história **volta** para quem precisa corrigir, com a nota explicando o quê.
 
+**Ritmo acelerado (decidido pelo dono do projeto em 2026-10-30):**
+
+- As etapas 6 (`seguranca`) e 7 (`tech-lead`) rodam **em paralelo**, depois da aprovação do `qa`. Cada um escreve na sua
+  seção; o veto da segurança continua valendo.
+- As etapas 8 (`documentacao`) e 9 (`scrum-master`) viram **uma etapa de fechamento**: a documentação atualiza os
+  documentos e, em seguida, o scrum-master confere a Definição de Pronto na mesma rodada.
+- A preparação da história seguinte (regras, textos e ameaças) começa enquanto a atual é implementada.
+- Quem orquestra junta a PR ao `main` sem pedir de novo ao dono quando `qa`, `seguranca` e `tech-lead` aprovaram e o
+  CI está verde, e avisa depois.
+- Cada agente trabalha **na medida do risco**: profundidade total para dados da família, segurança e números; verificação
+  objetiva e enxuta para mudanças de baixo risco.
+
 ## Como os agentes conversam
 
 1. **Antes de começar**, o agente lê: `CLAUDE.md`, a sua pasta `docs/equipe/agentes/<papel>/` (`contexto.md` e `diario.md`),
