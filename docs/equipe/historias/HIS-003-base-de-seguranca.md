@@ -306,6 +306,487 @@ Se o T6 da potência já apareceu e a pessoa confirmou, esse aviso da casa tamb�
   em `node_modules/next/dist/docs/` sobre CSP e scripts inline.
 - Limites em `packages/core/src/limites.ts` (domínio), usados pela interface e pela validação.
 
+_(Proposta substituída pelo desenho definitivo abaixo: sem zod; ver D1.)_
+
+## Desenho técnico definitivo
+
+_(tech-lead, 2026-10-30. Medições em `scratchpad/tl-his003/`: tamanho do zod e protótipo do `persist`. O que outra
+história precisa está escrito aqui.)_
+
+### D1. Decisões que respondem às perguntas
+
+1. **Sem zod. Os leitores são escritos à mão no `@ee/core`**, sem dependência nova (ADR-004). Medi o mesmo conjunto de
+   esquemas (aparelho, cômodo, conta, leitura e residência), compilado com esbuild e comprimido com gzip:
+   - `zod` 4.6.7: 93 098 B. Ele também testa `new Function`, que a nossa CSP sem `unsafe-eval` bloqueia, e isso gera
+     "Refused to evaluate" no console. A fixture do e2e reprova esse erro.
+   - `zod/mini`: 8 173 B, sem `eval`.
+   - Funções escritas à mão: 1 284 B.
+
+   Os leitores vão para quase todas as rotas, porque o store lê a casa em `/`, `/comecar` e `/casa/*`. E o zod cobriria
+   só a conferência de cada campo. A parte que exige cuidado é nossa de qualquer jeito: descartar item por item com
+   contagem, ids repetidos, `comodoId`, limite por lista e os dois consertos. Assim o domínio continua sem
+   dependência, e o site, a rotina e o app futuro usam o mesmo código. A3 continua garantido: o leitor monta um objeto
+   novo, campo por campo, e nunca espalha o bruto.
+2. **De onde a rotina tira a regra de formato:** do próprio `@ee/core`, que ela já importa. A função
+   `lerArquivoTarifas`/`lerArquivoMunicipios` é a mesma no navegador, no servidor do site e na rotina. Na rotina vale a
+   forma estrita: qualquer entrada descartada ou estrutura errada faz o processo sair com código 1, **mesmo com
+   `--forcar`**. O `--forcar` continua valendo só para o `validar()` de variação que já existe (faixa R$ 0,30–2,00,
+   contagens).
+3. **`Campo` ganha `erro?: string` e `alerta?: AlertaDoCampo`**, com o contrato do T6. O `Campo` passa `id`,
+   `aria-invalid` e `aria-describedby` para a `Entrada` por contexto do React (`CampoContexto`), sem `cloneElement`.
+   Assim as telas só acrescentam `erro`/`alerta`. Quando os dois existem, o `erro` ganha.
+4. **Formato salvo inalterado:** chave `eficiencia-energetica:casa`, `{ state: { residencia, comodos, aparelhos,
+   contas, leituras, plano }, version: 2 }`. A versão não sobe. Os e2e de migração da 002a (`casa-v1.json` e
+   `casa-v2.json`) continuam passando **sem aviso**: são a rede contra falso positivo.
+
+### D2. Domínio (`packages/core/src`, arquivos planos, imports só com `./`, tudo exportado no `index.ts`)
+
+```ts
+// limites.ts: cada número com a fonte do dominio-energia em comentário ("Regras de negócio e fontes")
+export interface Faixa {
+  min: number; max: number;
+  inteiro?: boolean;          // só número inteiro
+  casas?: number;             // máximo de casas decimais (dinheiro: 2)
+  minExclusivo?: boolean;     // fatorCiclo: > 0
+  tolerancia?: number;        // diasPorSemana: 0,001 (fração 7/30)
+  alerta?: number;            // acima disto: "Confere?" (nunca descarta)
+}
+export const LIMITES = {
+  potenciaW, minutosPorDia, diasPorSemana, banhosPorDia, minutosPorBanho, quantidade, fatorCiclo, kwhMesInformado,
+  contaKwhCalibracao, contaKwhAcompanhamento, contaValorCalibracao, contaValorAcompanhamento,
+  leituraKwh, pessoas, municipioIbge, tarifaKwh, componenteDaTarifaKwh, adicionalDaBandeiraKwh,
+} as const satisfies Record<string, Faixa>;
+export const LIMITES_DE_TEXTO = { nomeComodo: 40, nomeAparelho: 60, nomeMunicipio: 80, id: 64, idDoPlano: 120, variante: 40 } as const;
+export const LIMITES_DE_LISTA = { comodos: 80, aparelhos: 500, contas: 240, leituras: 1_000, plano: 500, variantes: 10 } as const;
+export const KWH_POR_DIA_ENTRE_LEITURAS = { alerta: 100, maximo: 1_800 } as const;
+export const PRECO_DA_CONTA_POR_KWH = { min: 0.3, max: 3, kwhMinimo: 30 } as const;  // estimativa
+export const CONSUMO_DA_CASA_ALERTA_KWH_MES = 2_000;
+export const MEDIA_BRASIL_KWH_MES = 178.2;            // EPE, Boletim nº 22 (o texto diz "perto de 180")
+export type ResultadoDaFaixa = "ok" | "alerta" | "fora";
+export function validarFaixa(faixa: Faixa, valor: number): ResultadoDaFaixa;          // não finito → "fora"
+export function precoDaContaForaDoComum(conta: ContaReferencia, beneficio: Beneficio): number | undefined; // preço/kWh se pedir "Confere?"
+export function alertaDaLeitura(anterior: LeituraRelogio, nova: LeituraRelogio): { kwhPorDia: number } | undefined;
+export function consumoDaCasaForaDoComum(kwhMes: number): boolean;
+```
+
+- Os números de referência do T6 (7.800 W do chuveiro, 115 kWh da geladeira) saem do catálogo, por função em
+  `limites.ts`. Não são escritos de novo na tela.
+- `LIMITES_DE_LISTA` e os limites de texto de id, município e variante são **limites técnicos** (não são regra do
+  setor). Ficam com o comentário dizendo isso.
+- `tarifaKwh`, `componenteDaTarifaKwh` e `adicionalDaBandeiraKwh` dependem da P-tl-2, que vai para o dominio-energia.
+- `acompanhamento.ts`: em `periodosDeLeitura`, um período com mais de 1.800 kWh por dia vai para `ignoradas` (caso 21).
+
+```ts
+// entrada.ts: número digitado no formato brasileiro (troca os 4 `Number(t.replace(...))` das telas)
+export type NumeroDigitado = { tipo: "vazio" } | { tipo: "mal-escrito" } | { tipo: "numero"; valor: number };
+export function lerNumeroDigitado(texto: string, casas: 0 | 2): NumeroDigitado;
+```
+
+Como `lerNumeroDigitado` lê o texto:
+
+- Tira os espaços das pontas. Com mais de 15 caracteres, é "mal-escrito".
+- Com vírgula: a vírgula separa os centavos, e os pontos são de milhar, em grupos de 3.
+- Sem vírgula: ponto seguido de 1 ou 2 dígitos no fim é decimal ("135.90" = 135,9; hoje o `conta-valor` lê 13.590).
+  Ponto seguido de 3 dígitos é milhar ("1.500" = 1.500).
+- Recusa `1,2,5`, `0x10`, `1e309`, `Infinity`, sinal e mais casas do que `casas`.
+
+```ts
+// estados.ts: as 27 UFs com o nome por extenso (IBGE). Serve para o T2b e para o A6.
+export const ESTADOS: Readonly<Record<Uf, string>>; export type Uf = "AC" | … | "TO"; export function ehUf(v: unknown): v is Uf;
+
+// casa-salva.ts. DadosCasa sai de infraestrutura/armazenamento/casa.ts e vai para tipos.ts (o tipo é o mesmo).
+export interface ContagemDeDescartes { aparelhos: number; comodos: number; contas: number; leituras: number; plano: number }
+export interface CasaLida { casa: DadosCasa; descartados: ContagemDeDescartes; residenciaDescartada: boolean; ilegivel: boolean }
+export function lerCasaSalva(bruto: unknown): CasaLida;   // undefined = nada salvo (casa vazia, sem aviso)
+export type AvisoDaCasaSalva = { tipo: "nada-aproveitavel" } | { tipo: "sem-residencia" } | { tipo: "parte"; descartados: ContagemDeDescartes };
+export function avisoDaCasaSalva(lida: CasaLida): AvisoDaCasaSalva | undefined;      // ordem: nada > sem-residencia > parte
+export function lerAparelho(bruto: unknown): Aparelho | undefined;   // e lerComodo, lerConta, lerLeitura, lerResidencia, lerIdDoPlano
+```
+
+Regras do `lerCasaSalva`, além das da segurança em "Regras de validação":
+
+- Raiz que não é objeto simples: `ilegivel`.
+- Lista que falta: `[]` (versão 1).
+- Lista que existe mas não é array: conta 1 descarte daquele tipo.
+- Ids repetidos: fica o primeiro. Na conta, também conta como repetida outra com a mesma `competencia`; na leitura,
+  outra com a mesma `data` (igual a `salvarConta`/`salvarLeitura`).
+- Chaves de `variantes` precisam casar com `^[a-z][a-z0-9-]{0,39}$`. Isso barra `__proto__`. As chaves de hoje
+  (`modelo`, `tipo`, `tamanho`, `potencia`, `tecnologia`, `idade`) passam.
+- **Datas:** o leitor confere só se a data existe no calendário, **não se está no futuro**. Um relógio do celular
+  atrasado apagaria anotações verdadeiras para sempre, porque a versão limpa é regravada. A tela continua barrando
+  data no futuro.
+- `contaReferencia` inválida: sai só ela e conta em `contas` (o T1a diz "1 conta de luz").
+- `pessoas` inválido: sai só o campo, sem aviso, porque só serve de sugestão no cadastro.
+- "nada-aproveitavel" = `ilegivel`, ou houve descarte e a casa ficou sem `residencia`, sem cômodos e sem aparelhos.
+
+```ts
+// arquivos-publicos.ts: mesmos leitores no navegador, no servidor e na rotina
+export class ErroDeFormato extends Error {}
+export function lerArquivoTarifas(bruto: unknown): { arquivo: ArquivoTarifas; descartados: number };
+export function lerArquivoMunicipios(bruto: unknown, uf: Uf): { arquivo: ArquivoMunicipios; descartados: number }; // `uf` do arquivo ≠ pedida → lança
+export function lerRelatorioDosDados(bruto: unknown): { municipios: number; municipiosSemDistribuidora: number };
+```
+
+- Quando lançam `ErroDeFormato`: estrutura errada, lista que falta, `origem` desconhecida ou `uf` diferente da pedida.
+- Entrada inválida sai e conta em `descartados`, sem correção de valor.
+- As funções de apoio (`ehObjeto`, `numeroNaFaixa`, `textoLimitado`, `umaDas`) ficam em `leitura-segura.ts` e não são
+  exportadas no `index.ts`.
+
+### D3. Casa salva (`infraestrutura/armazenamento/`)
+
+Testado no protótipo `scratchpad/tl-his003/persist/prototipo.ts` com o zustand 5.0.16 do lockfile: 9 casos, sempre
+`hasHydrated: true`, o válido sem mudança e o inválido regravado limpo.
+
+```ts
+// armazenamento-local.ts (novo)
+export function criarArmazenamentoSeguro(versaoAtual: number): PersistStorage<unknown>;
+```
+
+Como o armazenamento funciona:
+
+- **`getItem`:**
+  - Sem `window` (servidor): `null`.
+  - `localStorage` bloqueado lança `SecurityError`: `try/catch` devolve `null`.
+  - Sem texto salvo: `null`.
+  - `JSON.parse` falha, ou o envelope não é objeto com `state`: `{ state: null, version: versaoAtual }`. Isso resolve
+    o **P1**: o `merge` recebe `null` e marca `ilegivel`.
+  - No resto: `{ state, version }`. Se `version` não for número, vale `versaoAtual`.
+- **`setItem` e `removeItem`:** com `try/catch`, para que a memória cheia não derrube a tela. O aviso de "não deu para
+  salvar" vai para o backlog (risco 6).
+
+```ts
+// casa.ts (store): mesmas chave e versão
+storage: criarArmazenamentoSeguro(VERSAO_DA_CASA),
+partialize: (estado): unknown => dadosSalvaveis(estado),
+migrate: (salvo) => salvo,   // da v1 para a v2 só entraram listas; o lerCasaSalva aceita as duas. Validar é no merge.
+merge: (salvo, atual) => { const lida = lerCasaSalva(salvo); return { ...atual, ...lida.casa, avisoDaCasaSalva: avisoDaCasaSalva(lida) }; },
+onRehydrateStorage: () => (estado) => { if (estado?.avisoDaCasaSalva) armazenamento.setItem(NOME, { state: dadosSalvaveis(estado), version: VERSAO_DA_CASA }); },
+```
+
+- O **`merge` roda sempre** (P2). O `migrate` só repassa.
+- Existe aviso exatamente quando houve descarte. Por isso o aviso também decide se a versão limpa é regravada. Depois
+  disso o aviso não volta, como pede o T1.
+- `avisoDaCasaSalva` fica no estado, fora do `partialize`. Ele só tem números e o tipo do aviso. Ação nova:
+  `dispensarAvisoDaCasaSalva()`.
+- **As ações passam pelos mesmos leitores** antes do `set`:
+  - `adicionarAparelho` (`comodoId` precisa existir e a lista tem limite) e `atualizarAparelho` (junta, depois lê).
+    Os dois passam a devolver `Aparelho | undefined`.
+  - `adicionarComodo` e `renomearComodo` (texto ≤ 40; nome vazio mantém o anterior).
+  - `salvarConta`, `salvarLeitura`, `alternarNoPlano`, `definirResidencia`/`atualizarResidencia`.
+  - `criarCasa` passa por `lerCasaSalva`.
+  - O que o leitor recusar não muda o estado. Nada vai para o `console`.
+- `aplicacao/casa.ts` ganha `useAvisoDaCasaSalva(): { aviso?: AvisoDaCasaSalva; dispensar(): void }`. Ele devolve
+  `undefined` até o `useCasaCarregada()` ficar `true`. Assim o `role="status"` nasce vazio no HTML e o texto chega
+  depois (T1).
+
+### D4. Dados públicos
+
+- `navegador.ts`:
+  - `carregar<T>(caminho, ler: (bruto: unknown) => T, recarregar: boolean)`. O `as` sai.
+  - Na nova tentativa usa `fetch(caminho, { cache: "no-cache" })`. Senão o cache HTTP de 1 h devolveria o mesmo arquivo
+    ruim.
+  - Estado que o hook devolve:
+    `ArquivoPublico<T> = { dados?: T; carregando: boolean; falhasSeguidas: number; semInternet: boolean; tentarDeNovo(): void }`.
+    - O `erro` (texto técnico) deixa de existir.
+    - `falhasSeguidas` volta a 0 quando dá certo e não zera durante uma nova tentativa.
+    - `semInternet` = `navigator.onLine === false` no momento da falha.
+    - `tentarDeNovo` não faz nada enquanto `carregando`.
+- `useMunicipios(uf)` só monta o caminho se `ehUf(uf)` (**A6**).
+- `useResumo` troca `erro` por `falhasSeguidas`, `semInternet`, `carregando` e `tentarDeNovo` (os das tarifas).
+- Se a 002b já estiver no `main`, reescrever o `useArquivo` sem `setState` dentro do efeito, ou manter ali a exceção na
+  forma da HIS-109.
+- **Servidor** (`arquivos.servidor.ts`): `lerArquivoTarifas(JSON.parse(texto)).arquivo` e `lerRelatorioDosDados`.
+  - `carregarNumerosDoInicio` **perde o `try/catch`**. Arquivo ruim faz o build falhar, e na revalidação o Next segue
+    servindo a última versão boa, como pede a segurança.
+  - Para rodar localmente sem dados, usar `pnpm dados:exemplo`.
+
+### D5. Telas
+
+**T1, aviso da casa salva**
+
+- Componente `ui/AvisoDaCasaSalva.tsx`, com props `{ aviso?: AvisoDaCasaSalva; aoEntender(): void }`. A lista com
+  plural e "e" mora nele.
+- Aparece em três lugares: `Casca`, `PaginaInicial` (`/`) e `Cadastro` (`/comecar`). Na `/`, o `BotaoComecar` lê a
+  casa. Se a pessoa entrar por ali e o aviso não aparecer, ela nunca o vê, porque a versão limpa já foi regravada.
+
+**T1b, a cidade saiu e os aparelhos ficaram**
+
+- A `Casca` deixa abrir `/casa/ajustes` sem `residencia` quando há cômodos ou aparelhos.
+- A `TelaAjustes` sem `residencia` mostra só "Onde você mora", com "Escolher minha cidade" abrindo o `TrocarCidade`.
+  A escolha chama `definirResidencia({ …, beneficio: "nao-sei", ligacao: "nao-sei" })`.
+- Mandar para o `/comecar` faria o `criarCasa` apagar os aparelhos.
+
+**T2, falha ao carregar**
+
+- Componente `ui/AvisoFalhaDeCarga.tsx`, com as props `assunto` (preços, ou cidades de {estado}), `fraseDeSeguranca`,
+  `falhasSeguidas`, `semInternet`, `carregando` e `aoTentarDeNovo`. Cuida também do foco quando volta a dar certo.
+- Usado no `Cadastro`, no `PainelAcompanhamento` e também no `TrocarCidade`, que hoje fica em branco quando as cidades
+  falham.
+- O nome do estado vem de `ESTADOS`.
+
+**Foco**
+
+- `ui/foco.ts`: `focarTitulo()` põe o foco no `main h1`, com `tabIndex=-1`. Vale para o T1, o T2 e o T3.
+
+**T3 e T4, erro geral e página não encontrada**
+
+- `ui/TelaDeErro.tsx`, usada por `app/error.tsx` e `app/global-error.tsx`. Não usa store nem `error`.
+- `global-error.tsx` tem `<html lang="pt-BR">`, importa `globals.css` e usa um `<a href="/">`.
+- `app/not-found.tsx` mostra o T4.
+- A frase da 2ª falha: o frontend confere se o estado do componente sobrevive a um `retry()` que falha. Se não
+  sobreviver, guarda num módulo o instante do último toque: uma falha nova em até 10 s conta como a 2ª.
+
+**T5 e T6, campos fora do limite e "Confere?" (003b)**
+
+- `ui/Campo.tsx`:
+  - `id` passa a ser obrigatório; todos os usos já têm.
+  - Ganha `erro` e `alerta: { titulo; texto; aoConfirmar; aoCorrigir }`.
+  - Região `aria-live` sempre na página, com os ids `{id}-erro`, `{id}-alerta` e `{id}-ajuda`.
+  - Os botões do alerta ficam fora da região.
+  - No "Corrigir", o foco vai para a entrada com o texto selecionado; no "Sim", só o foco. A `Entrada` se registra pelo
+    contexto.
+- `ui/Entrada.tsx`: lê o contexto (`aria-invalid`, `aria-describedby`, junto com o que vier por prop, e `border-alerta`).
+- `ui/campos/useCampoNumerico.ts`:
+  - Guarda o texto, se o campo já foi tocado e qual valor a pessoa confirmou.
+  - Mostra a mensagem ao sair do campo e no `conferir()`. Depois disso, confere a cada tecla.
+  - `valorValido` é o que pode ser salvo.
+- `ui/campos/mensagens.ts`: textos do T5 e do T6 a partir de `LIMITES` e dos `formatar*`.
+- `ui/conta/CamposDaConta.tsx`: kWh, valor e o alerta de preço, para `uso: "calibracao" | "acompanhamento"`. Substitui
+  as três cópias de hoje (cadastro, ajustes e acompanhamento).
+- Telas:
+  - `EditorAparelho`: o `Math.min(30000)` sai.
+  - `TelaComodos`: nome do cômodo.
+  - Leitura do relógio: `maxLength={6}` e alerta ao salvar.
+  - `ui/AvisoConsumoAlto.tsx`: aviso do consumo estimado da casa.
+  - Pessoas até 20.
+
+**Links (A15)**
+
+- `rel="noopener noreferrer"` nos 4 links externos.
+
+### D6. Cabeçalhos (`apps/web/next.config.ts`)
+
+- Lista `CABECALHOS_DE_SEGURANCA` com os 7 da tabela da segurança, na regra `source: "/:caminho*"`. A CSP é escrita
+  como lista de diretivas unidas por `"; "`.
+- `'unsafe-eval'` só com `process.env.NODE_ENV === "development"`.
+- A regra do `Cache-Control` de `/dados/:caminho*` vem depois. As chaves são diferentes, então o Next aplica as duas:
+  "same header key → last overrides", conforme `docs/01-app/03-api-reference/05-config/01-next-config-js/headers.md`.
+- Sem `proxy.ts` e sem nonce. Nenhuma rota muda de estática para dinâmica (R3).
+
+### D7. CI, dependências e ambiente
+
+- **`ci.yml`** (o que a 002a reescreveu no A6): no job "Lint, tipos e testes", logo depois do `pnpm install`, entra o
+  passo `name: Vulnerabilidades (alta ou crítica)` / `run: pnpm audit --audit-level high`. Sem `|| true`.
+- **`.github/dependabot.yml`:**
+
+```yaml
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    versioning-strategy: increase
+    open-pull-requests-limit: 5
+    ignore:
+      # Casa com o Chromium do ambiente de nuvem (ADR-003): sobe junto, à mão.
+      - dependency-name: "@playwright/test"
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]   # segue o Node 22 do projeto
+    groups:
+      desenvolvimento: { dependency-type: development, update-types: [minor, patch] }
+      site: { dependency-type: production, update-types: [minor, patch] }
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    groups:
+      actions: { patterns: ["*"] }
+```
+
+- **`atualizar-dados.yml`**:
+  - Topo com `permissions: {}`. Os gatilhos, o `concurrency` e o `cron` não mudam.
+  - SHA conferidos em 2026-10-30 com `git ls-remote --tags` (os quatro primeiros são os do ADR-003):
+    - checkout v7.0.1: `3d3c42e5aac5ba805825da76410c181273ba90b1`;
+    - pnpm/action-setup v6.1.0: `ea17c68df8912ef543352723c149a84f56e3d413`;
+    - setup-node v7.1.0: `949feb2413d6458794dcd2491c4babbbce0c15c1`;
+    - upload-artifact v7.0.2: `cf430e030ddbb5b0abf93d22962f4752f3646cd9`;
+    - **download-artifact v8.0.2: `9000827ccba6bdab643e8b6fd33ac0654aef8333`** (etiqueta leve, `node24`, entradas
+      `name`/`path`).
+
+```yaml
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions: { contents: read }
+    outputs: { mudou: "${{ steps.conferir.outputs.mudou }}" }
+    steps:
+      - uses: actions/checkout@<sha> # v7.0.1
+        with: { persist-credentials: false }
+      - uses: pnpm/action-setup@<sha> # v6.1.0
+      - uses: actions/setup-node@<sha> # v7.1.0
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Atualizar dados
+        env: { FORCAR: "${{ inputs.forcar }}" }          # nunca ${{ }} dentro do run:
+        run: |
+          set -o pipefail
+          extra=""; if [ "$FORCAR" = "true" ]; then extra="--forcar"; fi
+          pnpm dados:atualizar $extra 2>&1 | tee "$RUNNER_TEMP/atualizacao.log"
+      - name: Publicar resumo da atualização          # igual a hoje, lendo de $RUNNER_TEMP
+        if: always()
+      - name: Conferir o que mudou
+        id: conferir
+        run: |
+          fora=$(git status --porcelain --untracked-files=all | grep -v '^.. apps/web/public/dados/' || true)
+          if [ -n "$fora" ]; then echo "::error::A rotina mexeu fora de apps/web/public/dados"; echo "$fora"; exit 1; fi
+          if [ -z "$(git status --porcelain --untracked-files=all -- apps/web/public/dados)" ]; then echo "mudou=false" >> "$GITHUB_OUTPUT"; else echo "mudou=true" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.conferir.outputs.mudou == 'true'
+        uses: actions/upload-artifact@<sha> # v7.0.2
+        with: { name: dados, path: apps/web/public/dados/, retention-days: 1, if-no-files-found: error }
+  publicar:
+    needs: gerar
+    if: needs.gerar.outputs.mudou == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: { contents: write }
+    steps:                                               # sem setup-node e sem pnpm install
+      - uses: actions/checkout@<sha> # v7.0.1             (credencial mantida: precisa para o push)
+        with: { ref: main }
+      - run: rm -rf apps/web/public/dados                # o artefato substitui a pasta inteira (UF que some)
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with: { name: dados, path: apps/web/public/dados }
+      - name: Conferir e salvar no repositório
+        run: |
+          set -euo pipefail
+          fora=$(git status --porcelain --untracked-files=all | grep -v '^.. apps/web/public/dados/' || true)
+          [ -z "$fora" ] || { echo "::error::Artefato fora de apps/web/public/dados"; exit 1; }
+          [ -z "$(find apps/web/public/dados -type f ! -name '*.json')" ] || { echo "::error::Arquivo que não é JSON"; exit 1; }
+          find apps/web/public/dados -name '*.json' -print0 | xargs -0 -n1 jq -e 'type == "object"' > /dev/null
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- apps/web/public/dados
+          git commit -m "dados: atualiza tarifas e bandeiras da ANEEL"
+          git push
+```
+
+- **`apps/web/.env.example`**: só comentário, sem nenhuma variável. Diz que hoje o site não precisa de nenhuma, que os
+  nomes do Supabase entram no E4 sempre sem valor, e que o valor de verdade fica na Vercel e no GitHub. O `.gitignore`
+  já cobre isso (conferido).
+- R11 muda: **o lockfile não muda** (nenhuma dependência nova).
+
+### D8. Testes
+
+**Unidade (Vitest)**
+
+- `packages/core/test/limites.test.ts`: casos 1–23 do dominio-energia; bordas de cada `Faixa` (limite, limite + 1,
+  `NaN`, `Infinity`); preço com Tarifa Social e com menos de 30 kWh; `periodosDeLeitura` acima de 1.800 por dia.
+- `packages/core/test/entrada.test.ts`: `135,90`, `1.359,00`, `135.90`, `1.500`, `1,2,5`, `0x10`, `1e309`,
+  `Infinity`, `-5`, vazio, espaços e 16 caracteres.
+- `packages/core/test/casa-salva.test.ts`: todos os casos do R4/R4b:
+  - `null`, `[]`, texto;
+  - potência `-5`, `"100"` e 75.001;
+  - nome com 10 000 caracteres;
+  - id repetido;
+  - `comodoId` que não existe;
+  - `__proto__` e chave extra: o resultado não tem a chave e o protótipo é o normal;
+  - 10 000 aparelhos: 500 ficam e 9 500 contam como descartados, em menos de 100 ms;
+  - v1 sem listas: nenhum aviso;
+  - os 2 consertos e a potência 10.001 não contam como descarte;
+  - data no futuro é mantida;
+  - casa válida igual com `toEqual`;
+  - T1a, T1b e T1c.
+
+  **"Igual" é igualdade de conteúdo.** Quando nada sai, os bytes não mudam, porque o arquivo não é regravado. Depois de
+  um descarte, o que fica é regravado na ordem de campos do leitor. O zod faria o mesmo.
+- `packages/core/test/arquivos-publicos.test.ts`:
+  - estrutura errada lança;
+  - tarifa `-1` ou texto: 1 entrada descartada;
+  - `uf` trocada lança;
+  - município sem IBGE: descartado.
+- `packages/dados/test/formato.test.ts`:
+  - os arquivos publicados em `apps/web/public/dados` passam com **0 descartes** (contra falso positivo);
+  - `conferirFormato(montagem)` recusa a tarifa `-1` mesmo com `forcar`.
+
+**e2e (qa; arquivos novos em `apps/web/e2e/`, nos dois projetos, salvo indicação)**
+
+| Arquivo | O que prova |
+| --- | --- |
+| `cabecalhos.spec.ts` (só `computador`, `request`) | R1: `/`, `/casa`, `/sobre`, `/dados/tarifas.json`, um `/_next/static/…js` tirado do HTML e `/nao-existe` com os 7 cabeçalhos no valor exato, escritos no teste e não importados do `next.config.ts`; CSP sem `unsafe-eval` |
+| `casa-salva.spec.ts` | (a) JSON quebrado: T1c em `/casa`, chave regravada, depois de recarregar sem aviso. (b) potência `-5` em 1 de 2 aparelhos: "Tiramos 1 aparelho." e o outro aparece. (c) `uf` `"../x"`: T1b, **nenhum pedido a `/dados/municipios`** (R7); "Escolher minha cidade" faz a casa voltar com os aparelhos. (d) `version` 99 válida: sem aviso. (e) 10 000 aparelhos: abre em menos de 5 s. (f) aviso também em `/` e `/comecar`. (g) `role="status"` presente e vazio no HTML do servidor |
+| `dados-publicos.spec.ts` | `page.route`: `tarifas.json` com 500, HTML ou `{}`: T2a no cadastro e no painel; entrada com tarifa `-1` some e as outras ficam. "Tentar de novo" depois do `unroute`: o aviso some e o foco vai para o `h1`. 2ª falha: frase nova. `setOffline`: T2c. `municipios/SP.json` com 500: T2b com "São Paulo" |
+| `erros.spec.ts` | `/nao-existe`: 404 + T4. `addInitScript` que faz `Intl.NumberFormat.prototype.format` lançar enquanto uma flag estiver ligada: T3 sem o texto do erro, foco no `h1`; desligar a flag + "Tentar de novo": a tela volta; "Voltar ao início" leva a `/` |
+| `campos.spec.ts` (003b) | potência vazia, 0, 75.001 e 10.001 (ao sair do campo, `aria-invalid`/`aria-describedby`, mín. e máx. formatados, "Sim" salva, "Corrigir" seleciona); "Ver o resultado" com erro põe o foco no 1º campo errado; preço da conta 150 kWh / R$ 1.359,00 dá alerta, e com Tarifa Social não; conta 0 no acompanhamento é aceita; leitura acima de 100 kWh por dia dá alerta |
+
+- **Fixture:** a opção `errosEsperados: RegExp[]` (o 500 e o erro de render geram `console.error` de propósito) só vale
+  se cada padrão aparecer. Assim ela não esconde outro erro.
+- **CSP:** violação aparece no console como "Refused to…", e a fixture da 002a já reprova. Por isso o **R2 vale em
+  todos os e2e**. Negativo permanente no `sanidade.spec.ts`: injetar `<img src="https://exemplo.invalid/x.png">`, com
+  `test.fail()`.
+- **`global-error`:** o qa confere à mão, numa cópia própria, com um `throw` temporário no layout raiz. Nada disso vai
+  para o repositório.
+- **axe:** entram os estados com T1, T2, T3 e T4, e o campo com erro e com alerta.
+- **Peso:** a referência `peso-js.json` muda de propósito no PR. Espero no máximo cerca de +3 kB gzip por rota
+  (leitores com cerca de 1,3 kB, mais os avisos e a tela de erro). **Acima de +4 kB, falar comigo antes.**
+
+### D9. Passos, quem faz, estimativa e riscos
+
+São cerca de 3,75 dias, acima dos 3. **Proponho quebrar** (decisão do scrum-master):
+
+- **HIS-003a "Dados quebrados não travam o site":** critérios 1, 2, 3, 4, 6 e 7, mais o `limites.ts` do critério 5.
+- **HIS-003b "Campos com limite e Confere?":** critério 5 nas telas (T5 e T6).
+
+**HIS-003a**
+
+| Passo | Quem | O quê | Est. |
+| --- | --- | --- | --- |
+| a1 | backend | `limites.ts`, `entrada.ts`, `estados.ts`, regra de 1.800 kWh/dia + testes | 0,5 d |
+| a2 | backend | `casa-salva.ts` + `DadosCasa` no core + testes (depende da P-tl-1) | 0,5 d |
+| a3 | backend | `arquivos-publicos.ts` + `conferirFormato` na rotina (sem `--forcar`) + teste dos publicados (depende da P-tl-2) | 0,25 d |
+| a4 | frontend | D3 (storage, `merge`, regravar, ações, `useAvisoDaCasaSalva`) + D4 (leitores, `uf`, `falhasSeguidas`, `no-cache`, servidor sem `catch`) | 0,5 d |
+| a5 | frontend | T1 (3 lugares), T1b, T2 (3 lugares), T3/T4, `focarTitulo`, links `rel`, D6 | 0,5 d |
+| a6 | backend | D7 (`ci.yml`, `dependabot.yml`, `atualizar-dados.yml`, `.env.example`); o tech-lead reconfere os SHA no dia | 0,25 d |
+| a7 | qa | e2e da tabela (menos `campos`), fixture `errosEsperados`, negativo da CSP, axe, peso | 0,5 d |
+
+Total da 003a: cerca de 3 dias, com o qa. O frontend pode adiantar o T3/T4 e o D6 enquanto o a1 e o a2 andam.
+
+**HIS-003b**
+
+Depende do a1 no `main`.
+
+| Passo | Quem | O quê | Est. |
+| --- | --- | --- | --- |
+| b1 | frontend | `Campo`/`Entrada` com contexto, `useCampoNumerico`, `mensagens.ts` | 0,5 d |
+| b2 | frontend | `CamposDaConta` nos 3 lugares, `EditorAparelho`, `TelaComodos`, leitura, `AvisoConsumoAlto`, pessoas até 20 | 0,75 d |
+| b3 | qa | `campos.spec.ts` + axe | 0,25–0,5 d |
+
+**Dependências**
+
+- **Depende da 002a no `main`:** fixture, `ci.yml` com SHA e `peso-js.json`.
+- **Não depende da 002b:**
+  - nenhuma dependência nova, então o lockfile não muda;
+  - nenhum import novo entre camadas;
+  - os arquivos do core são planos.
+- O conflito com a 002b é de uma linha no `ci.yml`. Quem integrar depois faz o rebase e passa no lint da outra; ver a
+  nota do `useArquivo` no D4.
+- Podem ser implementadas em paralelo, em branches separadas, e integradas uma de cada vez.
+
+**Riscos**
+
+1. **Falso positivo apagar dado de família** (o pior risco). Mitigações:
+   - o rígido é o limite físico;
+   - não há conferência de data no futuro;
+   - o id só tem limite de tamanho;
+   - os testes rodam contra os arquivos publicados e contra `casa-v1`/`casa-v2`.
+2. **Mudança interna do `persist`** (o `merge` com `undefined`, o `migrate` só quando a versão muda, o `set` da
+   hidratação que não grava). O PR do Dependabot do zustand passa pelo `casa-salva.spec.ts`.
+3. **CSP quebrar o que o e2e não cobre.** O R2 vale em todos os testes.
+4. **Peso.** Ver D8.
+5. **O build passa a falhar com arquivo de dados ruim.** É de propósito; para rodar localmente, `pnpm dados:exemplo`.
+6. **Memória do navegador cheia.** O `setItem` não salva e não avisa. Vai para o backlog: "avisar quando não der para
+   salvar".
+
 ## Ameaças
 
 _(seguranca, 2026-10-30)_ Ativo: a casa salva no aparelho (não tem dado pessoal, mas perder é perder o trabalho da
@@ -550,6 +1031,21 @@ Riscos: (1) relógio que "dá a volta" (99.999 → 00.012) hoje cai em "leitura 
   **Resposta (ux, 2026-10-30):** ver "Fluxo e textos", T6: o texto de cada campo, "Sim, está certo" / "Corrigir",
   salvar só depois de confirmar, foco e leitor de tela. No T5 entraram o `{min}` da conta por tela e o texto fixo do
   tempo por dia.
+- [ ] `[para: seguranca]` **P-tl-1** (bloqueia o a2). Preciso da confirmação de quatro decisões:
+  - (a) leitores escritos à mão no core no lugar do zod (D1; A3 garantido pela construção campo a campo);
+  - (b) `contaReferencia` inválida sai sozinha e conta em `contas`, e `pessoas` inválido sai sem aviso;
+  - (c) o leitor não descarta data no futuro (relógio do celular errado);
+  - (d) "igual" no R4 é igualdade de conteúdo depois de regravar; byte a byte só quando nada sai.
+- [ ] `[para: dominio-energia]` **P-tl-2** (bloqueia o a3). Faixa rígida dos arquivos da ANEEL. Proposta:
+  - `tarifaKwh` > 0 e ≤ R$ 3,00 (a tarifa sem impostos fica abaixo do teto com impostos que vocês citaram);
+  - `teKwh`/`tusdKwh` entre 0 e 3;
+  - `adicionalKwh` da bandeira entre 0 e R$ 1,00 (a maior já cobrada foi 0,142).
+
+  Confirmar ou corrigir, com a fonte.
+- [ ] `[para: scrum-master]` **P-tl-3**. Quebrar em HIS-003a e HIS-003b, como está no D9?
+- `[para: ux-acessibilidade]` (não bloqueia; para o frontend saber o que fazer):
+  - o T2b também entra no `TrocarCidade` dos ajustes, com a frase "Sua casa continua salva.";
+  - o T1b leva para `/casa/ajustes`, que passa a abrir sem cidade (D5).
 
 ## Conversa da equipe
 
@@ -663,3 +1159,46 @@ Ainda falta o texto do alerta "Confere?", que está em Perguntas abertas.
 critério de formato (`packages/dados` não importa de `apps/web`).
 
 **Próximo:** etapa 6 com R1–R13 e R4b.
+
+### [tech-lead] 2026-10-30 — desenho técnico definitivo (D1–D9), sem zod, quebra em 003a/003b proposta
+
+**O que fiz**
+- Li a história inteira, o ADR-001, o ADR-003, a retro e o código de `infraestrutura/`, `aplicacao/`, `Campo`,
+  `Entrada` e `Aviso`, das telas com campos, do `next.config.ts` e dos dois workflows.
+- Medi o zod no scratchpad (`tl-his003/zod/`) e prototipei o `persist` com o zustand 5.0.16 (`tl-his003/persist/`).
+- Escrevi o "Desenho técnico definitivo" (D1–D9) e o ADR-004.
+
+**Decisões e porquê**
+- **Sem zod.** Leitores escritos à mão no `@ee/core`, usados pelo site, pela rotina e pelo app.
+  - Peso medido, em gzip: `zod` 93 098 B (e testa `new Function`, que a nossa CSP bloqueia); `zod/mini` 8 173 B;
+    leitores à mão 1 284 B.
+  - A parte difícil (descartar item por item, contar, consertos) é nossa de qualquer jeito.
+- **A rotina** usa os mesmos leitores. Na rotina, formato inválido não passa nem com `--forcar`.
+- **Casa salva:** `storage` próprio + `merge` que sempre valida. O `migrate` só repassa. A versão limpa é regravada no
+  `onRehydrateStorage`, e o formato salvo continua o mesmo.
+  - Os 9 casos do protótipo terminam a hidratação (P1 e P2 resolvidos).
+- **T1b vai para `/casa/ajustes`, que passa a abrir sem cidade.** O `/comecar` apagaria os aparelhos.
+- **O leitor não descarta data no futuro.** Um relógio do celular errado apagaria anotações verdadeiras.
+- **O build falha com arquivo de dados ruim**, como pede a segurança.
+- **Estimativa:** cerca de 3,75 dias, então proponho 003a (cerca de 3 dias com o qa) e 003b (cerca de 1,5 dia).
+- **A 003 depende só da 002a.** Não depende da 002b: o lockfile não muda, e o conflito é de uma linha no `ci.yml`.
+
+**Arquivos alterados**
+- `docs/equipe/historias/HIS-003-base-de-seguranca.md`
+- `docs/equipe/decisoes/ADR-004-leitura-segura-de-dados.md`
+- `docs/equipe/decisoes/README.md`
+- `docs/equipe/quadro.md`
+- a minha pasta (`contexto.md` e `diario.md`)
+
+**Como verifiquei**
+- Esbuild + gzip nos três jeitos de escrever os esquemas.
+- `tsc` estrito e `tsx` do protótipo do `persist` contra o zustand do lockfile: JSON quebrado, `null`, `[]`, texto,
+  potência `-5`, chave extra, v1, v99 e casa válida (esta sem regravar).
+- SHA do `download-artifact` v8.0.2 conferido com `git ls-remote --tags` e com um clone raso.
+- Regra de cabeçalhos repetidos conferida na documentação do Next.
+
+**Para o próximo**
+- **seguranca:** responder a P-tl-1.
+- **dominio-energia:** responder a P-tl-2.
+- **scrum-master:** decidir a P-tl-3.
+- **Depois:** etapa 4 (backend a1–a3 e a6, frontend a4–a5, qa a7), quando a 002a estiver no `main`.

@@ -10,6 +10,34 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-003 · desenho técnico definitivo (D1–D9), sem zod, ADR-004 proposto, quebra 003a/003b
+- **O que fiz:**
+  - Li a história inteira, os ADRs 001 e 003, a retro e o código de `infraestrutura/`, `aplicacao/`, `ui/Campo`,
+    `Entrada` e `Aviso`, das telas com campos, do `next.config.ts` e dos dois workflows.
+  - Medi `zod`, `zod/mini` e leitores escritos à mão com esbuild + gzip (`scratchpad/tl-his003/zod/`).
+  - Prototipei o storage e o `merge` com o zustand 5.0.16 e conferi com `tsc` e `tsx`, em 9 casos
+    (`scratchpad/tl-his003/persist/`).
+  - Conferi o SHA do `download-artifact` v8.0.2.
+  - Escrevi o D1–D9, o ADR-004, as perguntas P-tl-1 a P-tl-3, a nota, o quadro e o contexto.
+- **Decisões e porquê:**
+  - Sem zod, porque o peso medido foi 93 kB / 8,2 kB / 1,3 kB e o zod testa `new Function`, que a CSP bloqueia.
+  - Os leitores ficam no core, para o site, a rotina e o app usarem os mesmos. A rotina é estrita, mesmo com `--forcar`.
+  - O `merge` sempre valida.
+  - O T1b vai para os ajustes sem cidade, para não apagar os aparelhos.
+  - Data no futuro não é descartada.
+  - O build falha com dados ruins.
+  - Cerca de 3,75 dias, por isso a proposta de 003a e 003b. A 003 não depende da 002b.
+- **Arquivos:**
+  - `docs/equipe/historias/HIS-003-base-de-seguranca.md`
+  - `docs/equipe/decisoes/ADR-004-leitura-segura-de-dados.md`
+  - `docs/equipe/decisoes/README.md`
+  - `docs/equipe/quadro.md`
+  - `contexto.md` e este diário
+- **Próximos passos:**
+  - Respostas da seguranca (P-tl-1), do dominio-energia (P-tl-2) e do scrum-master (P-tl-3).
+  - Etapa 4 depois da 002a no `main`.
+  - No a6, reconferir os SHA.
+
 ## 2026-10-30 · HIS-002 · revisões de seguranca, qa e ux decididas (D16); ADR-003 aceito; 002a liberada
 - O que fiz: reli as duas histórias, o ADR-003 e a minha pasta; decidi P-qa-1 a 8, P-qa-b1 a b3, Aa9, os pontos de
   desenho da seguranca, Ra1–Ra13, Ab3–Ab14 e o pedido da ux; escrevi o D16 nas duas e levei para D9, D10, D11, D12,

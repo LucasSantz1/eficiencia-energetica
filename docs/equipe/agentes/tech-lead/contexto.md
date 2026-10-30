@@ -26,6 +26,14 @@
   **002b** (lint e camadas; branch própria depois da 002a no `main`). Desenho D1–D15 (2026-10-29) + **D16** (2026-10-30,
   decisões sobre as revisões de seguranca, qa e ux, nas duas). **002a liberada para a etapa 4** (qa A1–A5, frontend no
   A5, A6 CI, A7 tira o `e2e-base`); ≈ 2,75 dias. 002b ≈ 2–2,5 dias. ADR-003 **aceito** em 2026-10-30.
+- **HIS-003:** desenho técnico pronto (D1–D9, 2026-10-30).
+  - Leitores escritos à mão no `@ee/core` (sem zod), descritos no ADR-004 (proposto).
+  - `storage` próprio + `merge` que valida; o `migrate` só repassa.
+  - `atualizar-dados.yml` em dois jobs.
+  - Quebra proposta: 003a (cerca de 3 dias com o qa) e 003b (cerca de 1,5 dia).
+  - Aguarda a P-tl-1 (seguranca), a P-tl-2 (dominio-energia) e a P-tl-3 (scrum-master).
+  - Depende só da 002a no `main`.
+  - Protótipo do `persist` em `scratchpad/tl-his003/persist/`; medição do zod em `scratchpad/tl-his003/zod/`.
 - CI hoje: ~35 s por execução (um job). Com a HIS-002: dois jobs em paralelo, ~4 min de parede.
 - Ambiente de nuvem: Playwright 1.63.0 com Chromium revisão 1243 em `/opt/pw-browsers` (`PLAYWRIGHT_BROWSERS_PATH`);
   baixar navegador é bloqueado. `CI` e `GITHUB_ACTIONS` não estão definidas aqui. A API do GitHub (`gh api`) não
@@ -69,7 +77,33 @@
 - **Builds de revisão** sempre numa cópia própria no scratchpad (`git archive HEAD` + `pnpm install --offline`), nunca no
   `apps/web/.next` do repositório: build em paralelo derruba o servidor de quem está testando (lição do qa na HIS-001).
 
+- **Leitura segura de dados de fora (HIS-003, ADR-004 proposto).**
+  - Funções `lerX(bruto: unknown)` no `@ee/core`, sem biblioteca, com os limites em `limites.ts`.
+  - Medição em gzip: `zod` 93 kB, com teste de `new Function` que a CSP bloqueia; `zod/mini` 8,2 kB; à mão 1,3 kB.
+  - Rever o `zod/mini` quando os formatos crescerem (E4).
+  - O mesmo leitor serve ao navegador (descarta a entrada), ao servidor (lança) e à rotina (recusa até com `--forcar`).
+  - Nada é corrigido, salvo os 2 consertos do dominio.
+  - O leitor não descarta data no futuro.
+  - O formato salvo da casa não muda.
+- **`persist` do zustand 5:**
+  - o `merge` recebe `unknown` e roda sempre;
+  - o `migrate` só roda quando a versão muda;
+  - o `set` da hidratação não grava.
+
+  Para regravar, `storage.setItem` no `onRehydrateStorage`. O tipo fica com `PersistStorage<unknown>` e
+  `partialize: (s): unknown`, conferido com o `tsc`.
+- **SHA de actions:** `actions/download-artifact` v8.0.2 `9000827ccba6bdab643e8b6fd33ac0654aef8333` (etiqueta leve,
+  conferida em 2026-10-30).
+
 ## Pendências
+
+- HIS-003: levar as respostas da P-tl-1, da P-tl-2 e da P-tl-3 para o desenho. No a6, reconferir os SHA. No code
+  review, conferir:
+  - nenhum `as` sobre dado de fora;
+  - os testes de falso positivo (arquivos publicados e `casa-v1`/`casa-v2` sem aviso);
+  - o peso até cerca de +3 kB por rota (acima de +4 kB, conversar antes).
+- Backlog sugerido (HIS-003, risco 6): avisar a pessoa quando o navegador não conseguir salvar (memória cheia ou
+  bloqueada).
 
 - ~~Responder: componentes de aparelho compartilhados vão para `ui/aparelho/`? (HIS-001)~~ respondido em 2026-10-29: sim.
 - ~~Responder: peso do JS da `/casa` sem casa (+1 449 B) (HIS-001)~~ respondido em 2026-10-29: aceito; item 11 em 11a/11b.
