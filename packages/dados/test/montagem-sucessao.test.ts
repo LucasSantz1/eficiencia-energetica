@@ -167,6 +167,13 @@ describe("D2: regras da troca", () => {
       expect(m.relatorio.ligacoesPelaSiglaRecusadas).toEqual([]);
     });
 
+    it("vínculo sem CNPJ com o nome da empresa de hoje fica com ela, sem contar como sucessão", () => {
+      const semCnpj = new Map<number, VinculoMunicipio[]>([[2504009, [{ ibge: 2504009, agente: "CPFL Santa Cruz", ano: 2014 }]]]);
+      const m = montarArquivos({ ...vazia(), tarifas: [santaCruz], vinculos: semCnpj, sucessoes: linhaSantaCruz });
+      expect(m.municipiosPorUF[0]?.municipios[0]?.distribuidoras).toEqual(["cpfl-santa-cruz"]);
+      expect(m.relatorio.sucessoesAplicadas).toEqual([]);
+    });
+
     it("mesma raiz de CNPJ (outra filial) é a mesma empresa: a sigla liga", () => {
       const m = montarArquivos({ ...vazia(), tarifas: [santaCruz], vinculos: vinculo("53859112000250") });
       expect(m.municipiosPorUF[0]?.municipios[0]?.distribuidoras).toEqual(["cpfl-santa-cruz"]);

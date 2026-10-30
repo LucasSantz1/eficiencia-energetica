@@ -166,7 +166,9 @@ export function montarArquivos(entrada: EntradaDaMontagem): Montagem {
   };
 
   const resolver = (v: VinculoMunicipio): Resolucao | undefined => {
-    const primeira = v.cnpj ? sucessaoPorCnpj.get(v.cnpj) : v.agente ? sucessaoPorSigla.get(compacto(v.agente)) : undefined;
+    // Sem CNPJ, a sigla de uma empresa publicada é ela mesma, e não a antiga de nome igual (CPFL SANTA CRUZ, passo 0).
+    const pelaSiglaAntiga = v.agente && !porSigla.has(compacto(v.agente)) ? sucessaoPorSigla.get(compacto(v.agente)) : undefined;
+    const primeira = v.cnpj ? sucessaoPorCnpj.get(v.cnpj) : pelaSiglaAntiga;
     if (primeira) {
       const cadeia = seguirCadeia(sucessaoPorCnpj, primeira.cnpjAntigo);
       const tarifa = tarifaFinal(cadeia.cnpj, cadeia.sigla);
