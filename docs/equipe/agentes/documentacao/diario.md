@@ -10,6 +10,15 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-002a · testes no navegador e CI em dois jobs documentados
+- O que fiz: seção "Testes no navegador" e "Integração contínua" novas em `desenvolvimento.md`; barreira "nada sai do
+  aparelho" em `privacidade-e-seguranca.md`; ESLint apontando para a HIS-002b em `arquitetura.md`; CHANGELOG.
+- Decisões e porquê: conferi `ci.yml`, `playwright.config.ts`, `e2e/apoio/*` e o diff do `src`; rodei `--list` (113) e
+  `rotas` + `sanidade` na porta 3171 (24 passando). Exemplo do changelog com o valor real do Quarto (R$ 21,74).
+- Arquivos: `docs/sistema/desenvolvimento.md`, `docs/sistema/privacidade-e-seguranca.md`, `docs/arquitetura.md`,
+  `CHANGELOG.md`, a história, `contexto.md`, este diário.
+- Próximos passos: HIS-002b (`pnpm lint`), HIS-110 (exceções do axe), HIS-003.
+
 ## 2026-10-29 · HIS-001 · documentação atualizada para as camadas do site
 - O que fiz: conferi a estrutura real de `apps/web/src`, o `verificar-camadas.mjs` e o `package.json`; reescrevi "Camadas
   do site" em `docs/arquitetura.md` (árvore, diagrama Mermaid validado com `mmdc`, regras, decisões, verificador) e as

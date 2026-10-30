@@ -40,6 +40,10 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
 
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
   em `/casa` sem casa, vindos da repetição de `ui/` nos chunks das abas pré-carregadas.
+- HIS-002a: A5 feito (`b0bff1c`, casa ilustrada e `<dl>`) e defeitos D-A5-1/D-A5-2 corrigidos (`92e9fd9`, nome do
+  "Quem mais gasta" e região focável da tabela do painel geral). Com isso, o axe passa nos 2 projetos. Falta o qa trocar o seletor
+  `^${nome}: ` de `e2e/aparelhos.spec.ts:43` pelo nome novo. Achado para a HIS-110: 2 `dd` `text-white/85` nos cartões
+  da Tarifa Social também falham `color-contrast`.
 - HIS-003: validação com zod, tela de erro, limites de entrada.
 - HIS-111: h6 feito (30/10, branch `his-111-tarifas-vencidas`); aguarda qa (h7) e revisão do tech-lead (F1, 3 pontos).
   O F2 (cidade sem preço: cadastro, cartão de cima do painel, Minha casa) não entrou: mexe no `PainelAcompanhamento`
