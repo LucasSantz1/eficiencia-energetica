@@ -4,7 +4,18 @@
  * execução fica vermelha. Cada um tem um controle, que prova que a falha vem da barreira e não da página de ensaio.
  * Usam `page.setContent` com uma página mínima, menos o N7, que precisa das transições do site (só no projeto celular).
  */
-import { analisarAcessibilidade, descreverViolacoes, violacoesQueReprovam } from "./apoio/axe";
+import { readFileSync } from "node:fs";
+import type { Page } from "@playwright/test";
+import {
+  analisarAcessibilidade,
+  aplicarExcecoes,
+  chaveDaTela,
+  descreverViolacoes,
+  resolverExcecoes,
+  TELAS_AXE,
+  violacoesQueReprovam,
+} from "./apoio/axe";
+import { EXCECOES_AXE, type ExcecaoAxe } from "./excecoes-axe";
 import { lerFixture, semearCasa } from "./apoio/casa";
 import { compararPeso, LIMITE_JS_DO_HTML, LIMITE_TOTAL_COM_PREFETCH } from "./apoio/peso";
 import { aba } from "./apoio/telas";
@@ -52,6 +63,62 @@ test.describe("axe (N3)", () => {
     await page.setContent(PAGINA_LIMPA.replace(">Salvar conta</button>", "></button>"));
     const resultado = await analisarAcessibilidade(page);
     expect(descreverViolacoes(violacoesQueReprovam(resultado.violations))).toEqual([]);
+  });
+});
+
+test.describe("axe: contraste e exceções (N4, N5)", () => {
+  // O caso real da `/`: texto branco sobre a faixa D (2,85:1).
+  const CONTRASTE_RUIM = '<p class="pilula" style="color:#fff;background:#ec7a1a">19%</p>';
+  const excecao = (alvo: string): ExcecaoAxe => ({
+    regra: "color-contrast",
+    pagina: "/",
+    estado: "sem casa",
+    alvo,
+    historia: "HIS-110",
+    motivo: "ensaio do sanidade",
+  });
+  /** Analisa a página de ensaio e aplica as exceções, como o acessibilidade.spec.ts faz. */
+  async function restoDoAxe(page: Page, html: string, excecoes: readonly ExcecaoAxe[]) {
+    await page.setContent(PAGINA_LIMPA.replace("<h1>Ensaio das barreiras</h1>", `<h1>Ensaio das barreiras</h1>${html}`));
+    const graves = violacoesQueReprovam((await analisarAcessibilidade(page)).violations);
+    const { violacoes, problemas } = aplicarExcecoes(graves, await resolverExcecoes(page, graves, excecoes));
+    return [...problemas, ...descreverViolacoes(violacoes)];
+  }
+
+  test("N4 · negativo: texto branco no laranja da faixa D é violação séria (color-contrast)", async ({ page }) => {
+    test.fail(true, "o axe precisa acusar color-contrast");
+    expect(await restoDoAxe(page, CONTRASTE_RUIM, [])).toEqual([]);
+  });
+
+  test("controle: a violação coberta por uma exceção de 1 elemento sai da lista", async ({ page }) => {
+    expect(await restoDoAxe(page, CONTRASTE_RUIM, [excecao("p.pilula")])).toEqual([]);
+  });
+
+  test("N5 · negativo: exceção sem violação é \"exceção velha\"", async ({ page }) => {
+    test.fail(true, "exceção que não cobre nada precisa reprovar");
+    expect(await restoDoAxe(page, "", [excecao("button")])).toEqual([]);
+  });
+
+  test("N5 · negativo: a mesma regra em outro elemento continua reprovando", async ({ page }) => {
+    test.fail(true, "a exceção cobre um elemento só");
+    const dois = `${CONTRASTE_RUIM}<p class="outra" style="color:#fff;background:#ec7a1a">47%</p>`;
+    expect(await restoDoAxe(page, dois, [excecao("p.pilula")])).toEqual([]);
+  });
+
+  test("N5 · negativo: exceção cujo alvo acha 2 elementos reprova (Ra12)", async ({ page }) => {
+    test.fail(true, "exceção que cobre mais de um elemento precisa reprovar");
+    const dois = `${CONTRASTE_RUIM}<p class="pilula" style="color:#fff;background:#ec7a1a">47%</p>`;
+    expect(await restoDoAxe(page, dois, [excecao("p.pilula")])).toEqual([]);
+  });
+
+  test("controle: toda exceção da lista é de uma tela do axe e cita uma história do planejamento", () => {
+    const planejamento = readFileSync(new URL("../../../docs/planejamento.md", import.meta.url), "utf8");
+    const telas = TELAS_AXE.map(chaveDaTela);
+    for (const e of EXCECOES_AXE) {
+      expect.soft(telas, `tela da exceção ${e.alvo}`).toContain(chaveDaTela(e));
+      expect.soft(planejamento, `${e.historia} em docs/planejamento.md`).toContain(`| ${e.historia} |`);
+      expect.soft(e.motivo.length, `motivo da exceção ${e.alvo}`).toBeGreaterThan(0);
+    }
   });
 });
 
