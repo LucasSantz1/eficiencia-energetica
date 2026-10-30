@@ -37,11 +37,11 @@ export const LIMITE_RESUMO_BYTES = 64 * 1024;
 
 /**
  * Texto de fora numa tabela Markdown do resumo: uma linha só, sem `|` (quebraria a tabela), sem `<` (HTML) e sem
- * crase (código), cortado em 80 caracteres.
+ * crase (código), cortado em 80 caracteres (as listas do portão, fora de tabela, usam um limite maior).
  */
-export function celulaMarkdown(texto: string): string {
+export function celulaMarkdown(texto: string, limite: number = LIMITE_CELULA): string {
   const limpo = umaLinha(texto).replace(/[|<`]/g, "").trim();
-  return limpo.length > LIMITE_CELULA ? `${limpo.slice(0, LIMITE_CELULA - 1)}…` : limpo;
+  return limpo.length > limite ? `${limpo.slice(0, limite - 1)}…` : limpo;
 }
 
 /** Corta o resumo inteiro em 64 KiB, sem partir um caractere no meio. */

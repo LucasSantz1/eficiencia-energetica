@@ -37,7 +37,7 @@ describe("diagnóstico da HIS-111 (passo 0)", () => {
       ultimoFim: "2017-07-11",
       mesmoCnpjDeVigente: false,
       conjuntosComoDono: 1,
-      ultimoAnoDosConjuntos: 2016,
+      ultimoAnoDosConjuntos: 2022,
       municipios: 1,
       municipiosComConjuntoRecenteDeOutra: 0,
     });

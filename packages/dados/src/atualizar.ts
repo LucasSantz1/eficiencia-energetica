@@ -8,8 +8,10 @@
  */
 import { umaLinha } from "./anotacoes";
 import { escreverArquivos } from "./escrever";
-import { arquivosNaPasta, descreverFontes, lerFontes, PASTA_CACHE } from "./fontes";
-import { montarArquivos, validar } from "./montar";
+import { arquivosNaPasta, lerFontes, PASTA_CACHE } from "./fontes";
+import { validar } from "./montar";
+import { montarComAsFontes } from "./rotina";
+import { carregarSucessoes } from "./sucessoes";
 import { hojeISO } from "./util";
 
 const forcar = process.argv.includes("--forcar");
@@ -19,17 +21,10 @@ async function main() {
   const hoje = hojeISO();
   console.log(`Atualizando dados para ${hoje}\n`);
 
+  // Lê a tabela antes de baixar: uma linha errada para a rotina sem gastar o download (critério 7).
+  const sucessoes = await carregarSucessoes();
   const fontes = await lerFontes({ arquivos: arquivosNaPasta(PASTA_CACHE), hoje, baixar: !semBaixar, usarApiIbge: true });
-
-  const montagem = montarArquivos({
-    tarifas: fontes.tarifas.selecao.tarifas,
-    bandeiras: fontes.bandeiras,
-    vinculos: fontes.vinculos,
-    localidades: fontes.localidades,
-    geradoEm: new Date().toISOString(),
-    origem: "aneel",
-    fontes: descreverFontes(fontes.fonteIbge),
-  });
+  const montagem = montarComAsFontes(fontes, { hoje, geradoEm: new Date().toISOString(), sucessoes });
 
   console.log("\nResumo:");
   // JSON.stringify já escapa quebras de linha dentro dos textos, então o resumo não abre linha nova de comando (R2).

@@ -1,11 +1,18 @@
 import type { ArquivoMunicipios, ArquivoTarifas, BandeiraMes, Distribuidora, Estado, Municipio } from "@ee/core";
 import type { VinculoMunicipio } from "./aneel/municipios";
-import type { TarifaVigente } from "./aneel/tarifas";
-import { normalizar, slug } from "./util";
+import type { AgenteDaTarifa, SelecaoDeTarifas, TarifaVencida, TarifaVigente } from "./aneel/tarifas";
+import { indexarSucessoes, seguirCadeia, type Sucessao } from "./sucessoes";
+import { diaSeguinte, normalizar, slug } from "./util";
 
 export interface Localidades {
   estados: { uf: string; nome: string }[];
   municipios: { ibge: number; nome: string; uf: string }[];
+}
+
+/** Quantos municípios cada sigla afetou. */
+export interface ContagemPorSigla {
+  sigla: string;
+  municipios: number;
 }
 
 export interface Relatorio {
@@ -15,18 +22,36 @@ export interface Relatorio {
   municipios: number;
   municipiosSemDistribuidora: number;
   municipiosComVariasDistribuidoras: number;
+  // HIS-111, D6: o que a rotina trocou ou deixou de fora, em toda execução.
+  /** Maior `AnoIndice` dos conjuntos elétricos (0 = arquivo sem a coluna). */
+  anoMaisRecenteDosConjuntos: number;
+  /** D1: sigla vencida com o CNPJ de uma vigente (RGE SUL → RGE). */
+  renomeacoesPorCnpj: { de: string; para: string; cnpj: string; municipios: number }[];
+  /** D2: linha do `sucessoes.json` usada, com os municípios que ela trocou. */
+  sucessoesAplicadas: { de: string; para: string; municipios: number }[];
+  /** D3: vínculo de conjunto que parou de reportar, tirado porque a cidade tem outro recente. */
+  vinculosExtintosDescartados: ContagemPorSigla[];
+  /** D3: vínculo de conjunto que parou de reportar, mantido por ser o único da cidade (aviso). */
+  vinculosExtintosMantidos: ContagemPorSigla[];
+  /** D4: vencidas há mais de 6 meses, fora do arquivo. */
+  tarifasDescartadasPorVencimento: TarifaVencida[];
+  /** D4: vencidas há 6 meses ou menos, publicadas (aviso). */
+  tarifasVencidasEmUso: TarifaVencida[];
+  /** V7: mais de um valor B1 na vigência escolhida. */
+  tarifasComMaisDeUmValor: { sigla: string; cnpj?: string; valores: number }[];
+  /** Só informação: vigências que começam no dia seguinte ao fim de uma vencida sem sucessão. Nunca troca sozinha. */
+  sucessorasCandidatas: { de: string; fimVigencia: string; candidatas: string[] }[];
+  /** Mesmo id antigo levando a dois ids diferentes (quebra o V8). */
+  substituicoesEmConflito: string[];
 }
 
 export interface Montagem {
-  tarifas: ArquivoTarifas;
+  tarifas: ArquivoTarifas & { substituidas: Readonly<Record<string, string>> };
   municipiosPorUF: ArquivoMunicipios[];
   relatorio: Relatorio;
 }
 
-const compacto = (t: string | undefined) => normalizar(t).replace(/[^a-z0-9]/g, "");
-
-/** Junta tarifas, bandeiras, vínculos município→distribuidora e a lista do IBGE nos arquivos finais. */
-export function montarArquivos(entrada: {
+export interface EntradaDaMontagem {
   tarifas: TarifaVigente[];
   bandeiras: BandeiraMes[];
   vinculos: Map<number, VinculoMunicipio[]>;
@@ -34,8 +59,37 @@ export function montarArquivos(entrada: {
   geradoEm: string;
   origem: "aneel" | "exemplo";
   fontes: string[];
-}): Montagem {
-  const { bandeiras, vinculos, localidades, geradoEm, origem, fontes } = entrada;
+  /** Data de referência (AAAA-MM-DD, Brasília): decide o que está vigente no D1. */
+  hoje: string;
+  /** O resto da seleção (D4 e V7). Sem ele, nada vencido entra no relatório nem vira renomeação. */
+  analiseDasTarifas?: Pick<SelecaoDeTarifas, "vencidasDescartadas" | "vencidasEmUso" | "comMaisDeUmValor">;
+  /** Todas as siglas do CSV de tarifas: dão os ids antigos de cada CNPJ (D2) e as candidatas do relatório. */
+  agentesDaTarifa?: readonly AgenteDaTarifa[];
+  /** Só as linhas em vigor (`sucessoesEmVigor`). */
+  sucessoes?: readonly Sucessao[];
+  /** Maior `AnoIndice` dos conjuntos; sem ele o D3 fica desligado. */
+  anoMaisRecenteDosConjuntos?: number;
+}
+
+/**
+ * D3: a ANEEL publica o ano anterior com atraso, então um conjunto só conta como "parou de reportar" quando o
+ * último ano dele é anterior a `ano máximo − 1`.
+ */
+const ANOS_DE_FOLGA_DO_CONJUNTO = 1;
+/** Quantas sucessoras candidatas mostrar por empresa vencida no relatório. */
+const MAXIMO_DE_CANDIDATAS = 5;
+
+const compacto = (t: string | undefined) => normalizar(t).replace(/[^a-z0-9]/g, "");
+
+/** Como um vínculo chegou à tarifa: direto, por renomeação de mesmo CNPJ (D1) ou por linha de sucessão (D2). */
+type Resolucao = { tarifa: TarifaVigente; via: "direta" } | { tarifa: TarifaVigente; via: "renomeacao"; de: string } | { tarifa: TarifaVigente; via: "sucessao"; linha: Sucessao };
+
+/** Junta tarifas, bandeiras, vínculos município→distribuidora e a lista do IBGE nos arquivos finais. */
+export function montarArquivos(entrada: EntradaDaMontagem): Montagem {
+  const { bandeiras, vinculos, localidades, geradoEm, origem, fontes, hoje } = entrada;
+  const vencidasDescartadas = entrada.analiseDasTarifas?.vencidasDescartadas ?? [];
+  const sucessoes = entrada.sucessoes ?? [];
+  const anoMaximo = entrada.anoMaisRecenteDosConjuntos ?? 0;
 
   // Siglas que viram o mesmo id (ex.: "CPFL Santa Cruz" e "CPFL SANTA CRUZ"): fica a vigência mais recente.
   const unicas = new Map<string, TarifaVigente>();
@@ -43,34 +97,114 @@ export function montarArquivos(entrada: {
     const atual = unicas.get(slug(t.sigla));
     if (!atual || t.inicioVigencia > atual.inicioVigencia) unicas.set(slug(t.sigla), t);
   }
-  const tarifas = [...unicas.values()];
 
-  const porCnpj = new Map(tarifas.filter((t) => t.cnpj).map((t) => [t.cnpj!, t]));
+  // D1: mesmo CNPJ é a mesma empresa. Fica a vigência mais recente; a sigla mais antiga, se não está vigente,
+  // vira renomeação (sai do arquivo e entra em `substituidas`). Duas vigentes com o mesmo CNPJ ficam as duas:
+  // a ANEEL tarifa áreas diferentes, e o V2 para a rotina em vez de adivinhar (T2).
+  const principalDoCnpj = new Map<string, TarifaVigente>();
+  for (const t of unicas.values()) {
+    if (!t.cnpj) continue;
+    const atual = principalDoCnpj.get(t.cnpj);
+    if (!atual || t.inicioVigencia > atual.inicioVigencia) principalDoCnpj.set(t.cnpj, t);
+  }
+  const renomeadas = new Map<string, { principal: TarifaVigente; cnpj: string }>(); // slug antigo → principal
+  for (const t of unicas.values()) {
+    const principal = t.cnpj ? principalDoCnpj.get(t.cnpj) : undefined;
+    if (!t.cnpj || !principal || principal === t) continue;
+    if (t.fimVigencia !== undefined && t.fimVigencia < hoje) renomeadas.set(slug(t.sigla), { principal, cnpj: t.cnpj });
+  }
+  for (const v of vencidasDescartadas) {
+    const principal = v.cnpj ? principalDoCnpj.get(v.cnpj) : undefined;
+    if (v.cnpj && principal && slug(v.sigla) !== slug(principal.sigla)) renomeadas.set(slug(v.sigla), { principal, cnpj: v.cnpj });
+  }
+  const tarifas = [...unicas.values()].filter((t) => !renomeadas.has(slug(t.sigla)));
+  const publicados = new Set(tarifas.map((t) => slug(t.sigla)));
+
+  // Índices para achar a tarifa: pelo CNPJ (a vigência mais nova) e pela sigla compacta.
+  const porCnpj = new Map<string, TarifaVigente>();
+  for (const t of tarifas) {
+    const atual = t.cnpj ? porCnpj.get(t.cnpj) : undefined;
+    if (t.cnpj && (!atual || t.inicioVigencia > atual.inicioVigencia)) porCnpj.set(t.cnpj, t);
+  }
   const porSigla = new Map(tarifas.map((t) => [compacto(t.sigla), t]));
-  for (const t of entrada.tarifas) if (!porSigla.has(compacto(t.sigla))) porSigla.set(compacto(t.sigla), unicas.get(slug(t.sigla))!);
-  const agentesSemTarifa = new Set<string>();
+  for (const t of entrada.tarifas) {
+    const vencedora = unicas.get(slug(t.sigla));
+    if (!porSigla.has(compacto(t.sigla)) && vencedora && publicados.has(slug(vencedora.sigla))) porSigla.set(compacto(t.sigla), vencedora);
+  }
+  const siglasRenomeadas = new Set<string>();
+  for (const t of [...entrada.tarifas, ...vencidasDescartadas]) {
+    const r = renomeadas.get(slug(t.sigla));
+    if (!r) continue;
+    siglasRenomeadas.add(compacto(t.sigla));
+    if (!porSigla.has(compacto(t.sigla))) porSigla.set(compacto(t.sigla), r.principal);
+  }
 
-  const acharTarifa = (v: VinculoMunicipio): TarifaVigente | undefined => {
-    if (v.cnpj && porCnpj.has(v.cnpj)) return porCnpj.get(v.cnpj);
-    const s = compacto(v.agente);
-    if (s && porSigla.has(s)) return porSigla.get(s);
-    agentesSemTarifa.add(v.agente ?? v.cnpj ?? "?");
-    return undefined;
+  // D2: cadeia de sucessão pelo CNPJ do vínculo; pela sigla compacta só quando o vínculo não tem CNPJ (T2).
+  const sucessaoPorCnpj = indexarSucessoes(sucessoes);
+  const sucessaoPorSigla = new Map<string, Sucessao>();
+  for (const s of sucessoes) sucessaoPorSigla.set(compacto(s.siglaAntiga), s);
+  for (const a of entrada.agentesDaTarifa ?? []) {
+    const linha = a.cnpj ? sucessaoPorCnpj.get(a.cnpj) : undefined;
+    if (linha && !sucessaoPorSigla.has(compacto(a.sigla))) sucessaoPorSigla.set(compacto(a.sigla), linha);
+  }
+  const tarifaFinal = (cnpj: string | undefined, sigla: string | undefined) => (cnpj ? porCnpj.get(cnpj) : undefined) ?? (sigla ? porSigla.get(compacto(sigla)) : undefined);
+
+  const resolver = (v: VinculoMunicipio): Resolucao | undefined => {
+    const primeira = v.cnpj ? sucessaoPorCnpj.get(v.cnpj) : v.agente ? sucessaoPorSigla.get(compacto(v.agente)) : undefined;
+    if (primeira) {
+      const cadeia = seguirCadeia(sucessaoPorCnpj, primeira.cnpjAntigo);
+      const tarifa = tarifaFinal(cadeia.cnpj, cadeia.sigla);
+      return tarifa ? { tarifa, via: "sucessao", linha: primeira } : undefined;
+    }
+    const tarifa = tarifaFinal(v.cnpj, v.agente);
+    if (!tarifa) return undefined;
+    const sigla = compacto(v.agente);
+    if (sigla && sigla !== compacto(tarifa.sigla) && siglasRenomeadas.has(sigla)) return { tarifa, via: "renomeacao", de: slug(v.agente ?? "") };
+    return { tarifa, via: "direta" };
   };
 
   // Vínculos podem vir com código IBGE de 7 ou de 6 dígitos.
   const vinculosDe = (ibge: number) => vinculos.get(ibge) ?? vinculos.get(Math.floor(ibge / 10)) ?? [];
+  const extinto = (v: VinculoMunicipio) => anoMaximo > 0 && v.ano !== undefined && v.ano > 0 && v.ano < anoMaximo - ANOS_DE_FOLGA_DO_CONJUNTO;
+
+  const agentesSemTarifa = new Set<string>();
+  const contar = (mapa: Map<string, Set<number>>, chave: string, ibge: number) => mapa.set(chave, (mapa.get(chave) ?? new Set<number>()).add(ibge));
+  const usoDasSucessoes = new Map<string, Set<number>>();
+  const usoDasRenomeacoes = new Map<string, Set<number>>();
+  const extintosDescartados = new Map<string, Set<number>>();
+  const extintosMantidos = new Map<string, Set<number>>();
+  const linhaDaSucessao = new Map<string, Sucessao>();
 
   const ufsPorSigla = new Map<string, Set<string>>();
   const municipios: Municipio[] = localidades.municipios.map((m) => {
-    const ids = new Set<string>();
-    for (const v of vinculosDe(m.ibge)) {
-      const t = acharTarifa(v);
-      if (!t) continue;
-      ids.add(slug(t.sigla));
-      const ufs = ufsPorSigla.get(slug(t.sigla)) ?? new Set<string>();
-      ufs.add(m.uf);
-      ufsPorSigla.set(slug(t.sigla), ufs);
+    const ids = new Set<string>(); // Set: Campina Grande com EPB e EBO fica com a EPB uma vez só
+    const lista = vinculosDe(m.ibge);
+    const temVinculoRecente = lista.some((v) => !extinto(v));
+    for (const v of lista) {
+      const r = resolver(v);
+      const sigla = v.agente ?? v.cnpj ?? "?";
+      // D3 com a regra segura (T2): conjunto que parou de reportar só sai se a cidade tiver outro recente.
+      // Se ele leva a uma sucessora (D1 ou D2), vale: é a empresa de hoje no lugar da antiga.
+      if (extinto(v) && r?.via !== "sucessao" && r?.via !== "renomeacao") {
+        if (temVinculoRecente) {
+          contar(extintosDescartados, sigla, m.ibge);
+          continue;
+        }
+        contar(extintosMantidos, sigla, m.ibge);
+      }
+      if (!r) {
+        agentesSemTarifa.add(sigla);
+        continue;
+      }
+      const id = slug(r.tarifa.sigla);
+      if (r.via === "sucessao") {
+        const chave = `${r.linha.siglaAntiga}\u0000${r.tarifa.sigla}`;
+        linhaDaSucessao.set(chave, r.linha);
+        contar(usoDasSucessoes, chave, m.ibge);
+      }
+      if (r.via === "renomeacao") contar(usoDasRenomeacoes, r.de, m.ibge);
+      ids.add(id);
+      ufsPorSigla.set(id, (ufsPorSigla.get(id) ?? new Set<string>()).add(m.uf));
     }
     return { ibge: m.ibge, nome: m.nome, uf: m.uf, distribuidoras: [...ids] };
   });
@@ -94,6 +228,8 @@ export function montarArquivos(entrada: {
     resolucao: t.resolucao,
   }));
 
+  const { substituidas, conflitos } = montarSubstituidas({ renomeadas, sucessoes, sucessaoPorCnpj, tarifaFinal, publicados, agentes: entrada.agentesDaTarifa ?? [], vencidasDescartadas });
+
   const estados: Estado[] = localidades.estados.map((e) => ({
     uf: e.uf,
     nome: e.nome,
@@ -107,8 +243,11 @@ export function montarArquivos(entrada: {
     municipios: municipios.filter((m) => m.uf === e.uf).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
   }));
 
+  const porQuantidade = (mapa: Map<string, Set<number>>): ContagemPorSigla[] =>
+    [...mapa].map(([sigla, ibges]) => ({ sigla, municipios: ibges.size })).sort((a, b) => b.municipios - a.municipios || a.sigla.localeCompare(b.sigla));
+
   return {
-    tarifas: { geradoEm, origem, fontes, distribuidoras, bandeiras, estados },
+    tarifas: { geradoEm, origem, fontes, distribuidoras, bandeiras, estados, substituidas },
     municipiosPorUF,
     relatorio: {
       distribuidoras: distribuidoras.length,
@@ -117,8 +256,76 @@ export function montarArquivos(entrada: {
       municipios: municipios.length,
       municipiosSemDistribuidora: municipios.filter((m) => m.distribuidoras.length === 0).length,
       municipiosComVariasDistribuidoras: municipios.filter((m) => m.distribuidoras.length > 1).length,
+      anoMaisRecenteDosConjuntos: anoMaximo,
+      renomeacoesPorCnpj: [...renomeadas]
+        .map(([de, { principal, cnpj }]) => ({ de, para: slug(principal.sigla), cnpj, municipios: usoDasRenomeacoes.get(de)?.size ?? 0 }))
+        .sort((a, b) => a.de.localeCompare(b.de)),
+      sucessoesAplicadas: [...usoDasSucessoes]
+        .map(([chave, ibges]) => {
+          const [de = "", para = ""] = chave.split("\u0000");
+          return { de, para, municipios: ibges.size };
+        })
+        .sort((a, b) => b.municipios - a.municipios || a.de.localeCompare(b.de)),
+      vinculosExtintosDescartados: porQuantidade(extintosDescartados),
+      vinculosExtintosMantidos: porQuantidade(extintosMantidos),
+      tarifasDescartadasPorVencimento: vencidasDescartadas,
+      tarifasVencidasEmUso: entrada.analiseDasTarifas?.vencidasEmUso ?? [],
+      tarifasComMaisDeUmValor: entrada.analiseDasTarifas?.comMaisDeUmValor ?? [],
+      sucessorasCandidatas: acharCandidatas(vencidasDescartadas, entrada.agentesDaTarifa ?? [], sucessaoPorCnpj, renomeadas),
+      substituicoesEmConflito: conflitos,
     },
   };
+}
+
+/**
+ * `substituidas` (T1): id antigo → id final, das renomeações (D1) e das sucessões (D2), mesmo que nenhuma cidade
+ * use mais o id antigo: uma casa salva no aparelho ainda pode ter ele. Nenhuma chave é id publicado; chaves em ordem,
+ * para a assinatura do arquivo ficar estável.
+ */
+function montarSubstituidas(p: {
+  renomeadas: ReadonlyMap<string, { principal: TarifaVigente }>;
+  sucessoes: readonly Sucessao[];
+  sucessaoPorCnpj: ReadonlyMap<string, Sucessao>;
+  tarifaFinal: (cnpj: string | undefined, sigla: string | undefined) => TarifaVigente | undefined;
+  publicados: ReadonlySet<string>;
+  agentes: readonly AgenteDaTarifa[];
+  vencidasDescartadas: readonly TarifaVencida[];
+}): { substituidas: Readonly<Record<string, string>>; conflitos: string[] } {
+  const mapa = new Map<string, string>();
+  const conflitos: string[] = [];
+  const registrar = (de: string, para: string) => {
+    if (!de || de === para || p.publicados.has(de)) return;
+    const atual = mapa.get(de);
+    if (atual !== undefined && atual !== para) conflitos.push(`${de} → ${atual} e ${para}`);
+    else mapa.set(de, para);
+  };
+  for (const [de, { principal }] of p.renomeadas) registrar(de, slug(principal.sigla));
+  for (const s of p.sucessoes) {
+    const cadeia = seguirCadeia(p.sucessaoPorCnpj, s.cnpjAntigo);
+    const final = p.tarifaFinal(cadeia.cnpj, cadeia.sigla);
+    if (!final) continue; // o V4 acusa
+    const idsAntigos = new Set([slug(s.siglaAntiga)]);
+    for (const a of [...p.agentes, ...p.vencidasDescartadas]) if (a.cnpj === s.cnpjAntigo) idsAntigos.add(slug(a.sigla));
+    for (const de of idsAntigos) registrar(de, slug(final.sigla));
+  }
+  return { substituidas: Object.fromEntries([...mapa].sort(([a], [b]) => a.localeCompare(b))), conflitos };
+}
+
+/** Vigência que começa no dia seguinte ao fim de uma vencida sem sucessão: só ajuda quem revisa (D2). */
+function acharCandidatas(
+  vencidas: readonly TarifaVencida[],
+  agentes: readonly AgenteDaTarifa[],
+  sucessaoPorCnpj: ReadonlyMap<string, Sucessao>,
+  renomeadas: ReadonlyMap<string, unknown>,
+): Relatorio["sucessorasCandidatas"] {
+  return vencidas
+    .filter((v) => !(v.cnpj && sucessaoPorCnpj.has(v.cnpj)) && !renomeadas.has(slug(v.sigla)))
+    .map((v) => {
+      const dia = diaSeguinte(v.fimVigencia);
+      const candidatas = agentes.filter((a) => a.vigente && a.cnpj !== v.cnpj && a.inicios.includes(dia)).map((a) => a.sigla);
+      return { de: v.sigla, fimVigencia: v.fimVigencia, candidatas: candidatas.slice(0, MAXIMO_DE_CANDIDATAS) };
+    })
+    .filter((c) => c.candidatas.length > 0);
 }
 
 /** Confere se os dados fazem sentido antes de publicar — evita trocar dados bons por dados quebrados. */

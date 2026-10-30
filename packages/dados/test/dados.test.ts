@@ -140,6 +140,7 @@ describe("montagem dos arquivos", () => {
           { ibge: 3550308, nome: "São Paulo", uf: "SP" },
         ],
       },
+      hoje: "2026-10-29",
       geradoEm: "2026-10-29T12:00:00Z",
       origem: "aneel",
       fontes: [],

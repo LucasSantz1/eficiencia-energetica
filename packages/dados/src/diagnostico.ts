@@ -12,8 +12,9 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { celulaMarkdown } from "./anotacoes";
 import type { AgenteDaTarifa, SelecaoDeTarifas } from "./aneel/tarifas";
-import { descreverFontes, lerFontes, type ArquivosDasFontes, type Fontes } from "./fontes";
-import { montarArquivos, validar, type Montagem, type Relatorio } from "./montar";
+import { lerFontes, type ArquivosDasFontes, type Fontes } from "./fontes";
+import { validar, type Montagem, type Relatorio } from "./montar";
+import { montarComAsFontes } from "./rotina";
 import { CAMINHO_SUCESSOES, carregarSucessoes, type Sucessao } from "./sucessoes";
 import { normalizar, slug } from "./util";
 
@@ -71,6 +72,7 @@ export interface DadosDoDiagnostico {
   sucessoras: { sigla: string; cnpj: string; valores: number }[];
   errosDaValidacao: string[];
   relatorio: Relatorio;
+  substituidas: Readonly<Record<string, string>>;
   comparacao: ComparacaoComPublicados;
 }
 
@@ -85,9 +87,13 @@ export interface OpcoesDoDiagnostico {
   registrar?: (linha: string) => void;
 }
 
+/** Listas do portão ficam fora de tabela e podem ser mais longas que uma célula. */
+const LIMITE_LISTA = 600;
+
 const compacto = (t: string | undefined) => normalizar(t).replace(/[^a-z0-9]/g, "");
 
 export async function diagnosticar(opcoes: OpcoesDoDiagnostico): Promise<{ dados: DadosDoDiagnostico; markdown: string }> {
+  const sucessoes = await carregarSucessoes(opcoes.caminhoSucessoes ?? CAMINHO_SUCESSOES);
   const fontes = await lerFontes({
     arquivos: opcoes.arquivos,
     hoje: opcoes.hoje,
@@ -95,16 +101,7 @@ export async function diagnosticar(opcoes: OpcoesDoDiagnostico): Promise<{ dados
     usarApiIbge: opcoes.usarApiIbge ?? false,
     registrar: opcoes.registrar,
   });
-  const montagem = montarArquivos({
-    tarifas: fontes.tarifas.selecao.tarifas,
-    bandeiras: fontes.bandeiras,
-    vinculos: fontes.vinculos,
-    localidades: fontes.localidades,
-    geradoEm: `${opcoes.hoje}T12:00:00.000Z`,
-    origem: "aneel",
-    fontes: descreverFontes(fontes.fonteIbge),
-  });
-  const sucessoes = await carregarSucessoes(opcoes.caminhoSucessoes ?? CAMINHO_SUCESSOES);
+  const montagem = montarComAsFontes(fontes, { hoje: opcoes.hoje, geradoEm: `${opcoes.hoje}T12:00:00.000Z`, sucessoes });
   const { agentes, selecao } = fontes.tarifas;
   const vencidas = agentes.filter((a) => !a.vigente);
   const publicados = await lerMunicipiosPublicados(opcoes.pastaPublicada);
@@ -117,6 +114,7 @@ export async function diagnosticar(opcoes: OpcoesDoDiagnostico): Promise<{ dados
     ...conferirValores(selecao, sucessoes),
     errosDaValidacao: validar(montagem, opcoes.hoje),
     relatorio: montagem.relatorio,
+    substituidas: montagem.tarifas.substituidas,
     comparacao: comparar(publicados, montagem, new Set(vencidas.map((v) => slug(v.sigla)))),
   };
   return { dados, markdown: escreverMarkdown(dados) };
@@ -235,6 +233,7 @@ function comparar(publicados: Map<number, { uf: string; ids: string[] }>, montag
   };
 }
 
+const contagens = (c: readonly { sigla: string; municipios: number }[]) => c.map((x) => `${x.sigla} (${x.municipios})`).join(", ");
 const lista = (ids: readonly string[] | undefined) => (ids === undefined ? "(não está no arquivo)" : ids.length === 0 ? "(nenhuma)" : ids.join(", "));
 const linhaDeTabela = (celulas: readonly (string | number | undefined)[]) => `| ${celulas.map((c) => celulaMarkdown(c === undefined ? "—" : String(c))).join(" | ")} |`;
 
@@ -252,7 +251,7 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
     `- (a) C2: ${comConjunto.length} empresas vencidas (CNPJ só delas) ainda são donas de conjunto; ` +
       (recentes.length === 0
         ? `todas pararam antes de ${anoMaximo - 1} (ano máximo ${anoMaximo}). **C2 confirmada.**`
-        : `reportaram em ${anoMaximo - 1} ou depois: ${celulaMarkdown(recentes.map((v) => `${v.sigla} (${v.ultimoAnoDosConjuntos})`).join(", "))}. ` +
+        : `reportaram em ${anoMaximo - 1} ou depois: ${celulaMarkdown(recentes.map((v) => `${v.sigla} (${v.ultimoAnoDosConjuntos})`).join(", "), LIMITE_LISTA)}. ` +
           "**C2 não confirmada para essas: o backend revê o D3.**"),
   );
   const sucessorasRuins = d.sucessoras.filter((s) => s.valores !== 1);
@@ -260,10 +259,16 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
     `- (b) V7: ${d.sucessoras.length} sucessoras no sucessoes.json; ` +
       (sucessorasRuins.length === 0
         ? "todas com um só valor B1 na vigência. **As linhas ENF e EBO entram.**"
-        : `com problema: ${celulaMarkdown(sucessorasRuins.map((s) => `${s.sigla} (${s.valores === 0 ? "sem tarifa" : `${s.valores} valores`})`).join(", "))}. ` +
+        : `com problema: ${celulaMarkdown(sucessorasRuins.map((s) => `${s.sigla} (${s.valores === 0 ? "sem tarifa" : `${s.valores} valores`})`).join(", "), LIMITE_LISTA)}. ` +
           "**Essas linhas saem do sucessoes.json e voltam ao dominio-energia.**"),
   );
-  saida.push(`- (c) CNPJs com mais de uma sigla: ${d.cnpjsComVariasSiglas.map((g) => celulaMarkdown(`${g.cnpj} (${g.agentes.map((a) => a.sigla).join(", ")})`)).join("; ") || "nenhum"}.`);
+  saida.push(`- (c) CNPJs com mais de uma sigla: ${d.cnpjsComVariasSiglas.map((g) => celulaMarkdown(`${g.cnpj} (${g.agentes.map((a) => a.sigla).join(", ")})`, LIMITE_LISTA)).join("; ") || "nenhum"}.`);
+  const mantidos = d.relatorio.vinculosExtintosMantidos;
+  saida.push(
+    `- (d) D3: ${mantidos.reduce((t, c) => t + c.municipios, 0)} cidades em que o vínculo extinto é o único (fica, com aviso)` +
+      `${mantidos.length > 0 ? `: ${celulaMarkdown(contagens(mantidos), LIMITE_LISTA)}` : ""}; ` +
+      `${d.relatorio.vinculosExtintosDescartados.reduce((t, c) => t + c.municipios, 0)} vínculos extintos saem porque a cidade tem outro recente.`,
+  );
   saida.push("");
 
   saida.push("### Empresas com tarifa vencida", "");
@@ -288,7 +293,14 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
   saida.push("### Montagem da branch", "");
   const r = d.relatorio;
   saida.push(`- Distribuidoras: ${r.distribuidoras}; municípios sem distribuidora: ${r.municipiosSemDistribuidora}; agentes sem tarifa: ${celulaMarkdown(r.agentesSemTarifa.join(", ")) || "nenhum"}.`);
-  saida.push(`- Validação (passa com --forcar): ${d.errosDaValidacao.length === 0 ? "ok" : d.errosDaValidacao.map(celulaMarkdown).join(" / ")}`);
+  saida.push(`- Renomeações por CNPJ (D1): ${celulaMarkdown(r.renomeacoesPorCnpj.map((x) => `${x.de} → ${x.para} (${x.municipios})`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
+  saida.push(`- Sucessões aplicadas (D2): ${celulaMarkdown(r.sucessoesAplicadas.map((x) => `${x.de} → ${x.para} (${x.municipios})`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
+  saida.push(`- Vínculos extintos descartados (D3): ${celulaMarkdown(contagens(r.vinculosExtintosDescartados), LIMITE_LISTA) || "nenhum"}.`);
+  saida.push(`- Tarifas descartadas por vencimento (D4): ${celulaMarkdown(r.tarifasDescartadasPorVencimento.map((t) => `${t.sigla} (${t.fimVigencia})`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
+  saida.push(`- Tarifas vencidas em uso, até 6 meses (aviso): ${celulaMarkdown(r.tarifasVencidasEmUso.map((t) => `${t.sigla} (${t.fimVigencia})`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
+  saida.push(`- Sucessoras candidatas (só informação): ${celulaMarkdown(r.sucessorasCandidatas.map((c) => `${c.de} → ${c.candidatas.join("/")}`).join(", "), LIMITE_LISTA) || "nenhuma"}.`);
+  saida.push(`- substituidas: ${celulaMarkdown(Object.entries(d.substituidas).map(([de, para]) => `${de} → ${para}`).join(", "), LIMITE_LISTA) || "vazio"}.`);
+  saida.push(`- Validação (passa com --forcar): ${d.errosDaValidacao.length === 0 ? "ok" : d.errosDaValidacao.map((e) => celulaMarkdown(e, LIMITE_LISTA)).join(" / ")}`);
   saida.push("");
 
   const c = d.comparacao;
