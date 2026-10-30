@@ -57,8 +57,8 @@ export function limitarResumo(texto: string): string {
 
 /** O GitHub mostra até 10 anotações de cada tipo por passo; 9 deixam uma livre para avisos da própria rotina. */
 export const MAXIMO_ANOTACOES_DO_RESUMO = 9;
-/** Tamanho de cada pedaço do resumo numa anotação (caracteres antes do escape). */
-export const TAMANHO_PEDACO_ANOTACAO = 6000;
+/** Tamanho de cada pedaço do resumo numa anotação: o GitHub corta a mensagem perto de 4 KiB (medido em 30/10/2026). */
+export const TAMANHO_PEDACO_ANOTACAO = 3500;
 
 /**
  * O resumo do diagnóstico também sai como anotações `::notice`. O log do job e o `$GITHUB_STEP_SUMMARY` não podem ser
