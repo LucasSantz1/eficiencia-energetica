@@ -1163,3 +1163,10 @@ resto igual.
   1. `idDaSigla` (core) repete o `slug` da rotina. No h8, o `slug` de `packages/dados` passa a usar a função exportada do core (uma regra só).
   2. O `setState` dentro do efeito entra na dívida da HIS-109 (`set-state-in-effect`).
   3. qa (h7): e2e com a casa salva com `rge-sul` (regrava para `rge`, aviso uma vez, sem aviso com conta de luz, foco no `h1` ao tocar em "Entendi") e capturas em 390 e 1280 px.
+
+### [qa] 2026-10-30 — h7: **devolvido para frontend** (1 defeito; o resto aprovado)
+- **Dados (diagnóstico 4):** crit. 1 (6 cidades "sim"), 2 (227, 0 com vencida, 0 sem distribuidora), 9 (pelo resumo: 12 sucessões, 0 extintos, 13 descartadas) e 10 (mudam 227: RS 127, SP 62, RR 14, MG 13, PB 9, PR 1, RJ 1) ok. Guarapuava `copel-dis, ess` (risco aceito), Nova Friburgo `emr, enel-rj`, Campina Grande `epb`.
+- **Crit. 8 (h6):** `apps/web/e2e/troca-distribuidora.spec.ts` (7 testes × 390/1280; fixtures novas `casa-v2-rge-sul.json` e `substituidas-his111.json`; casa-v1/v2 intactas): RGE R$ 0,94 desde o 1º quadro, 1 gravação só com o id, aviso só sem conta e só na visita, "Entendi" → foco no `h1`, `cnee` sem nome, `cerr` com acento, arquivo sem `substituidas`, laço/malformado (R5, R6), cadastro com `municipios` antigo. Axe, teclado, zoom 200% e movimento reduzido ok. Roda depois de a 002a entrar (usa `e2e/apoio`).
+- **E2e da 002a**, na junção 111 + `his-002-qualidade` (`merge-tree`, só docs em conflito): 120 passam, 6 `fixme` antigos, console limpo, typecheck/test (53 + 87)/build verdes.
+- **D1 (média), peso de JS:** o `peso-js.spec.ts` reprova: 11a +1 135 B em `/casa`, +1 179 `/casa/comodos`, +1 151 `/casa/dicas`, +1 134 `/casa/ajustes` (limite +1 024). A 002a sozinha passa. Frontend reduz (ex.: aviso carregado só quando há troca) ou o tech-lead aceita e atualiza o `peso-js.json` de propósito (Aa13).
+- Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-capturas/` (+ `resultado.txt`) e `…/scratchpad/qa-his111-e2e-completo.txt`.

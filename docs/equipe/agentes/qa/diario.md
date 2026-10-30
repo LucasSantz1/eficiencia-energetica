@@ -10,6 +10,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-30 · HIS-111 · h7: dados ok, critério 8 em e2e, devolvido pelo peso de JS
+- O que fiz: conferi os critérios 1, 2, 9 e 10 no diagnóstico 4; junção 111 + 002a por `merge-tree` numa cópia;
+  barreiras verdes; spec novo `troca-distribuidora.spec.ts` (7 testes × 2 larguras, estável em 3 repetições); e2e da
+  002a inteiro; roteiro exploratório (teclado, zoom 200%, reduzido, nomes acessíveis) com capturas.
+- Decisões e porquê: devolvido para frontend: o `peso-js.spec.ts` reprova só com o código da 111 (a 002a sozinha passa).
+  O spec fica na branch 111 sem a infraestrutura da 002a (não entra no tsconfig do site), para rodar quando as duas se
+  juntarem. Tarifas de teste derivadas do publicado em tempo de execução, para o teste valer antes e depois do h8.
+- Arquivos: `apps/web/e2e/troca-distribuidora.spec.ts`, `apps/web/e2e/fixtures/casa-v2-rge-sul.json`,
+  `apps/web/e2e/fixtures/substituidas-his111.json`, HIS-111, `contexto.md`, este diário. Evidências em
+  `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-capturas/`.
+- Próximos passos: reconferir o peso depois do frontend; h8.
+
 ## 2026-10-29 · HIS-001 · etapa 5: comparação, 11a/11b e testes manuais — aprovado
 - O que fiz: build próprio de `182f355` numa cópia isolada (o `.next` do repositório foi reconstruído por outro agente no
   meio do teste) e de `57700ab` em outra; barreiras verdes; `capturar` + `comparar` → "nada mudou"; 11a/11b no
