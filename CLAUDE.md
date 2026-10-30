@@ -52,8 +52,11 @@ packages/core/                  DOMÍNIO: cálculos, catálogo, dicas, regras (T
 packages/dados/                 Rotina de dados (ETL) da ANEEL/IBGE
 ```
 
-> Estado atual: a reorganização para `funcionalidades/`, `ui/`, `aplicacao/` e `infraestrutura/` é a história
-> HIS-001 (Sprint 0). Até ela terminar, o código está em `components/` e `lib/`. Código novo já segue a estrutura alvo.
+> Estado atual: a reorganização em camadas terminou na HIS-001 (Sprint 0); `components/` e `lib/` não existem mais.
+> O script `scripts/verificar-camadas.mjs` confere as regras (`pnpm camadas`) e roda dentro do `pnpm typecheck` e do CI.
+> Componentes de aparelho usados por mais de uma tela ficam em `ui/aparelho/`; `aplicacao/` é a única porta para
+> `infraestrutura/`; código só de servidor fica em `*.servidor.ts`, com `import "server-only";` como primeiro import.
+> Detalhes em `docs/arquitetura.md` e no ADR-001.
 
 ## Padrões de código
 
