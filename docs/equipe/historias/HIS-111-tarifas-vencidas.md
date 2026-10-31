@@ -1184,3 +1184,10 @@ resto igual.
 4. **Site ok:** o core não lança com 13 formatos de `substituidas` (`null`, `[]`, `Map`, protótipo herdado, `__proto__`, laço `a→b→a`). A casa é regravada só quando o id de hoje está publicado, sem laço. O aviso só tem texto do React com nomes de uma tabela fixa, sem HTML cru. Fica para a a3: o leitor do `tarifas.json` na fronteira (P8 com 501 entradas) e `distribuidoras: [null]`, que ainda lança (já era assim antes).
 5. **Acentos:** sem efeito na segurança. O `de` já passou pelo formato do id, e `-mbar-…` nunca bate com um id. Não há colisão nova. Se Âmbar (2) ou Neoenergia Brasília saírem do arquivo, o aviso só perde o nome antigo e usa o texto genérico do F1.
 6. **Nada sai do aparelho:** o diff não tem `fetch`, beacon nem URL nova, e a regravação fica no `localStorage`. `typecheck`, `test` (53 + 87) e `pnpm audit` limpos. Testes em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/seg-his111/`.
+
+### [backend] 2026-10-31 — S1 corrigida
+- **O que fiz:** o cabeçalho dos quatro erros de coluna passa por `umaLinha`. Os `main` de `atualizar.ts` e
+  `diagnosticar.ts` imprimem com `linhasDoErro`: uma linha por chamada, sem nenhuma começando com `::`. O teste está
+  em `test/anotacoes.test.ts` ("erro com cabeçalho malicioso (S1)"). `pnpm typecheck` e `pnpm test` (dados 92,
+  core 53) verdes.
+- **Para o próximo:** a seguranca confere a S1.

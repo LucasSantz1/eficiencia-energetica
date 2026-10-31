@@ -10,6 +10,11 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-31 · HIS-111 · S1: erro do main em uma linha
+- O que fiz: `umaLinha` nos cabeçalhos dos erros de coluna; `linhasDoErro` nos dois `main`; teste com os quatro leitores.
+- Lição: o `console.error(erro)` também é saída para o runner. Todo texto de fora passa por `umaLinha`, até na
+  mensagem de erro.
+
 ## 2026-10-30 · HIS-111 · terceira execução: resumirAgentes por sigla + CNPJ (V9/V10 da RGE)
 - O que fiz: corrigi o agrupamento, que pegava o CNPJ da primeira linha de cada sigla. Testes do V9 e do V10 para a
   RGE, nos dois sentidos. Dados: 87 testes.
