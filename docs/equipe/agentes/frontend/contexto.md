@@ -41,7 +41,8 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
   em `/casa` sem casa, vindos da repetição de `ui/` nos chunks das abas pré-carregadas.
 - HIS-003: validação com zod, tela de erro, limites de entrada.
-- HIS-111: h6 feito (30/10, branch `his-111-tarifas-vencidas`); aguarda qa (h7) e revisão do tech-lead (F1, 3 pontos).
+- HIS-111: h6 feito (30/10); o D1 do h7 (peso de JS) foi corrigido em 31/10: o 11a de `/casa*` ficou em até +998 B (folga de
+  26 B). Aguarda o qa refazer o h7. O `React.lazy` piora o peso com o Turbopack: não usar para economizar bytes.
   O F2 (cidade sem preço: cadastro, cartão de cima do painel, Minha casa) não entrou: mexe no `PainelAcompanhamento`
   da 002a.
 

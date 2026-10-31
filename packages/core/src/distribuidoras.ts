@@ -5,7 +5,7 @@ import type { Distribuidora } from "./tipos";
  * que aparece na conta de luz. Esta lista traduz as principais para o nome comercial.
  * Distribuidoras que não estão aqui (principalmente cooperativas) aparecem pela sigla.
  */
-const NOMES: Record<string, string> = {
+export const NOMES_COMERCIAIS: Readonly<Record<string, string>> = {
   "Âmbar Amazonas": "Amazonas Energia",
   "Âmbar Roraima": "Roraima Energia",
   CEA: "CEA Equatorial",
@@ -65,33 +65,12 @@ const NOMES: Record<string, string> = {
 
 /** Nome que aparece na conta de luz (ou a sigla da ANEEL, se não soubermos o nome comercial). */
 export function nomeDaDistribuidora(sigla: string): string {
-  return NOMES[sigla] ?? sigla.replace(/-/g, " ").replace(/\s+/g, " ").trim();
+  return NOMES_COMERCIAIS[sigla] ?? sigla.replace(/-/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /** true quando conhecemos o nome comercial (senão vale mostrar também a sigla). */
 export function temNomeComercial(sigla: string): boolean {
-  return sigla in NOMES;
-}
-
-/** O id que a rotina dá a cada sigla (mesma regra do `slug` de `packages/dados/src/util.ts`). */
-function idDaSigla(sigla: string): string {
-  return sigla
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-/** Map, e não objeto: o id vem do localStorage, e "constructor" não pode achar nada. */
-const NOMES_POR_ID = new Map(Object.entries(NOMES).map(([sigla, nome]) => [idDaSigla(sigla), nome]));
-
-/**
- * Nome comercial de um id que pode já ter saído do `tarifas.json` (ex.: `rge-sul` → "RGE Sul"), para o aviso da troca
- * (HIS-111, F1). `undefined` quando não sabemos o nome: a tela nunca mostra o id nem a sigla solta.
- */
-export function nomeComercialDoId(id: string): string | undefined {
-  return NOMES_POR_ID.get(id);
+  return sigla in NOMES_COMERCIAIS;
 }
 
 /**
@@ -117,7 +96,8 @@ function listaDe(arquivo: ArquivoParaBusca): readonly Distribuidora[] {
 /** Id que ficou no lugar de `id`, se `substituidas` disser e for um texto. Um salto só: a rotina grava o id final. */
 function substitutoDe(substituidas: unknown, id: string): string | undefined {
   if (id.length > TAMANHO_MAXIMO_DO_ID || !FORMATO_DO_ID.test(id)) return undefined;
-  if (typeof substituidas !== "object" || substituidas === null || Array.isArray(substituidas)) return undefined;
+  if (typeof substituidas !== "object" || substituidas === null) return undefined;
+  // Só objeto simples (o que o JSON dá): lista, Map e afins têm outro protótipo e ficam de fora.
   const prototipo: unknown = Object.getPrototypeOf(substituidas);
   if (prototipo !== Object.prototype && prototipo !== null) return undefined;
   // Object.hasOwn: o id vem do localStorage, e "constructor" acharia a função do protótipo.
@@ -160,26 +140,7 @@ export function distribuidorasDaCidade(arquivo: ArquivoParaBusca, ids: readonly 
  * `para` está. Por isso `a → a` e `a → b` + `b → a` nunca pedem regravação, e a regravação não entra em laço (R6).
  */
 export function trocaDeDistribuidora(arquivo: ArquivoParaBusca, id: string): { de: string; para: string } | undefined {
-  const lista = listaDe(arquivo);
-  if (lista.some((d) => d.id === id)) return undefined;
+  // `acharDistribuidora` devolve o próprio `id` quando ele está publicado: aí `nova.id === id` e não há troca.
   const nova = acharDistribuidora(arquivo, id);
   return nova && nova.id !== id ? { de: id, para: nova.id } : undefined;
-}
-
-/** O que o aviso da troca mostra (HIS-111, F1): o nome de hoje e, se soubermos, o nome antigo. */
-export interface TrocaDescrita {
-  de: string;
-  para: string;
-  /** Ausente quando não sabemos o nome comercial do id antigo, ou quando ele é igual ao novo: o texto sai sem ele. */
-  nomeAntigo?: string;
-  nomeNovo: string;
-}
-
-/** Junta a troca com os nomes que a família conhece. `undefined` se `para` não está no arquivo. */
-export function descreverTroca(arquivo: ArquivoParaBusca, troca: { de: string; para: string }): TrocaDescrita | undefined {
-  const nova = listaDe(arquivo).find((d) => d.id === troca.para);
-  if (!nova) return undefined;
-  const nomeNovo = nomeDaDistribuidora(nova.sigla);
-  const nomeAntigo = nomeComercialDoId(troca.de);
-  return nomeAntigo === undefined || nomeAntigo === nomeNovo ? { ...troca, nomeNovo } : { ...troca, nomeAntigo, nomeNovo };
 }

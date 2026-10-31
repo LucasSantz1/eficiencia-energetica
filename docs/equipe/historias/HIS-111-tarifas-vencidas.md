@@ -1170,3 +1170,10 @@ resto igual.
 - **E2e da 002a**, na junção 111 + `his-002-qualidade` (`merge-tree`, só docs em conflito): 120 passam, 6 `fixme` antigos, console limpo, typecheck/test (53 + 87)/build verdes.
 - **D1 (média), peso de JS:** o `peso-js.spec.ts` reprova: 11a +1 135 B em `/casa`, +1 179 `/casa/comodos`, +1 151 `/casa/dicas`, +1 134 `/casa/ajustes` (limite +1 024). A 002a sozinha passa. Frontend reduz (ex.: aviso carregado só quando há troca) ou o tech-lead aceita e atualiza o `peso-js.json` de propósito (Aa13).
 - Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-capturas/` (+ `resultado.txt`) e `…/scratchpad/qa-his111-e2e-completo.txt`.
+
+### [frontend] 2026-10-31 — D1 do h7: peso de JS de volta ao limite
+- **Medido** na junção com o `origin/main` (o `peso-js.json` não mudou): o 11a de `/casa*` foi de +1 135–1 179 B para **+953–998 B**, e o de `/` e `/comecar` foi para +468 e +445 B. Passaram o `peso-js` e o `troca-distribuidora` (repetido 3×) e a suíte toda (121 ok, 6 `fixme`).
+- **O `lazy` ficou de fora:** com o Turbopack, ele parte os chunks compartilhados e piora o peso (`/comecar` +1 570 B). Em vez dele: o aviso cuida do próprio "Entendi" e do foco; `nomeComercialDoId` e `descreverTroca` foram para `core/trocas.ts`; e saíram verificações repetidas (o `some` e o `isArray` do core, a espera do `useCasaCarregada` e o `useRef` do hook, já garantido pelo R6).
+- **Mudança para revisar (ux/seguranca):** a busca do nome antigo não tira mais os acentos. Isso não muda nada com os dados de hoje, porque nenhuma sigla que saiu tem acento. Se um dia sair uma sigla com acento, o aviso usa o texto sem o nome antigo. A folga até o limite é pequena: 26 B.
+- **Próximo:** qa refaz o h7. Arquivos: `casca/*`, `ui/Aviso.tsx`, `aplicacao/casa.ts`, `core/src/{distribuidoras,trocas,index}.ts` e o teste.
+

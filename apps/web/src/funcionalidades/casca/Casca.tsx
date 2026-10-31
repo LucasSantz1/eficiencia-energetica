@@ -3,7 +3,7 @@
 import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState, ViewTransition, type ReactNode } from "react";
+import { ViewTransition, type ReactNode } from "react";
 import { useResumo } from "@/aplicacao/resumo";
 import { useCasa, useCasaCarregada, useDistribuidoraAtualizada } from "@/aplicacao/casa";
 import { Marca } from "@/ui/Marca";
@@ -26,19 +26,6 @@ export function Casca({ children }: { children: ReactNode }) {
   const residencia = useCasa((s) => s.residencia);
   const { arquivo, preco } = useResumo();
   const troca = useDistribuidoraAtualizada();
-  const [avisoDaTrocaFechado, setAvisoDaTrocaFechado] = useState(false);
-  const principalRef = useRef<HTMLElement>(null);
-  // Com a conta de luz informada, o preço vem da conta e não muda com a troca: aí não há o que avisar (F1).
-  const mostrarAvisoDaTroca = troca !== undefined && !avisoDaTrocaFechado && preco.origem === "aneel";
-  const fecharAvisoDaTroca = () => {
-    setAvisoDaTrocaFechado(true);
-    // O botão some com o aviso: o foco vai para o título da tela, e não para o começo da página (HIS-003).
-    const titulo = principalRef.current?.querySelector("h1");
-    if (titulo) {
-      if (!titulo.hasAttribute("tabindex")) titulo.tabIndex = -1;
-      titulo.focus();
-    }
-  };
   const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
   // Ir para uma aba à direita desliza para a esquerda, e vice-versa.
   const direcao = (i: number) => (i >= indiceAtual ? IR_ADIANTE : VOLTAR);
@@ -79,7 +66,7 @@ export function Casca({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <main ref={principalRef} className="mx-auto max-w-4xl px-4 pt-6 sm:px-6 sm:pt-8">
+      <main className="mx-auto max-w-4xl px-4 pt-6 sm:px-6 sm:pt-8">
         {arquivo?.origem === "exemplo" && (
           <div className="mb-6">
             <Aviso tom="faisca">Estes são dados de exemplo para testes. As tarifas reais da ANEEL entram na próxima atualização automática.</Aviso>
@@ -87,11 +74,8 @@ export function Casca({ children }: { children: ReactNode }) {
         )}
         {/* Região sempre presente e vazia: o leitor de tela anuncia o aviso quando ele entra (HIS-003). */}
         <div role="status">
-          {mostrarAvisoDaTroca && (
-            <div className="mb-6">
-              <AvisoTrocaDistribuidora troca={troca} aoFechar={fecharAvisoDaTroca} />
-            </div>
-          )}
+          {/* Com a conta de luz, o preço vem da conta e não muda com a troca: não há o que avisar (F1). */}
+          {troca && <AvisoTrocaDistribuidora troca={troca} mostrar={preco.origem === "aneel"} />}
         </div>
         {!carregada ? (
           <div className="space-y-4" aria-busy aria-label="Carregando">

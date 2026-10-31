@@ -11,13 +11,11 @@ export function Aviso({
   children,
   icone,
   anunciar = true,
-  className = "",
 }: {
   tom?: "info" | "alerta" | "faisca";
   children: ReactNode;
   icone?: ReactNode;
   anunciar?: boolean;
-  className?: string;
 }) {
   const cores = {
     info: "bg-energia-claro text-energia-forte",
@@ -25,7 +23,7 @@ export function Aviso({
     faisca: "bg-faisca-claro text-tinta",
   }[tom];
   return (
-    <div role={anunciar ? (tom === "alerta" ? "alert" : "status") : undefined} className={`flex gap-3 rounded-[var(--radius-controle)] px-4 py-3 text-[0.98rem] leading-snug ${cores} ${className}`}>
+    <div role={anunciar ? (tom === "alerta" ? "alert" : "status") : undefined} className={`flex gap-3 rounded-[var(--radius-controle)] px-4 py-3 text-[0.98rem] leading-snug ${cores}`}>
       {icone && <span className="mt-0.5 shrink-0">{icone}</span>}
       <div>{children}</div>
     </div>
