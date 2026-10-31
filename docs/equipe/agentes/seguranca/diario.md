@@ -10,6 +10,19 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-31 · HIS-111 · etapa 6: aprovado com ressalvas (baixo), S1 no log do `main`
+- O que fiz: revisei `packages/dados` (sucessões, V1–V10, rotina), o `diagnosticar-dados.yml`, as anotações, o core
+  (`substituidas`, `trocas.ts`), `aplicacao/casa.ts` e o aviso. Testei 12 entradas ruins do `sucessoes.json`, 13
+  formatos de `substituidas` e 4 CSVs ruins de ponta a ponta, com e sem `--forcar`. Também conferi as colisões de id
+  sem acento. `typecheck`, `test` (53 + 87) e `audit` limpos.
+- Decisões e porquê: S1 é baixo, não bloqueia. O cabeçalho com `\n` vira comando do runner só pelo `console.error` do
+  `main`, mas a rotina para sem gravar e o token só lê. A falta de acento não muda a segurança: o nome vem de uma
+  tabela fixa e o `de` já passou pelo formato do id. A fronteira do `tarifas.json` fica com a a3; o core total cobre
+  até lá (R5).
+- Arquivos: `docs/equipe/historias/HIS-111-tarifas-vencidas.md` (nota), `contexto.md`, `diario.md`. Sondas em
+  `scratchpad/seg-his111/`.
+- Próximos passos: conferir a correção do S1 e o h8 (sem `--forcar`, `push` → `pull_request`).
+
 ## 2026-10-30 · HIS-002a · etapa 6: aprovado com ressalvas (baixo), Ra9 fica com o dono do projeto
 - O que fiz: Ra1–Ra13 sobre o `efab326` numa cópia própria (`scratchpad/seg-h2a/copia`, portas 3171–3173): typecheck,
   test, build e e2e verdes (107/6/0). Integridade dos 5 pacotes novos igual à do `npm view`. Ra10 plantada na `/sobre`
