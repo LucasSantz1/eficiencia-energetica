@@ -11,7 +11,7 @@ coverage/
 Thumbs.db
 .vscode/
 /packages/dados/.cache/
-/test-results/
-/playwright-report/
+test-results/
+playwright-report/
 *.tsbuildinfo
 next-env.d.ts

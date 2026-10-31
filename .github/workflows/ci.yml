@@ -4,19 +4,81 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
+# Um PR que recebe outro push cancela a execução velha; no main, nada é cancelado.
+concurrency:
+  group: verificacao-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Menor privilégio (Aa6): nenhum job escreve no repositório nem usa segredo.
+permissions:
+  contents: read
+
+env:
+  # O next build manda telemetria anônima para a Vercel; o CI não precisa disso (Aa11).
+  NEXT_TELEMETRY_DISABLED: "1"
+
+# Actions fixadas pelo SHA do commit, com a versão em comentário (Aa9): uma etiqueta como v7 pode ser movida por
+# quem controla a action. Para subir: git ls-remote --tags https://github.com/<action> (usar a linha ^{} quando houver).
+# Os nomes dos dois jobs são os checks obrigatórios na proteção do main: não mudar sem mudar lá.
 jobs:
   verificar:
+    name: Lint, tipos e testes
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # ninguém faz push daqui: o token não fica no .git/config (Aa6)
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # pnpm lint entra aqui na HIS-002b (passo B3)
       - run: pnpm typecheck
       - run: pnpm test
+
+  e2e:
+    name: Navegador (e2e, axe e peso)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Só no runner do GitHub; no ambiente de nuvem da equipe o Chromium já existe (D1-3). A versão vem do
+      # @playwright/test do lockfile (1.63.0 → Chromium 1243, o mesmo do ambiente). --only-shell: o modo headless usa
+      # só o Chromium sem janela. Sem cache: rever se o passo passar de 60 s em 3 execuções seguidas (D11).
+      - name: Instalar o Chromium do Playwright
+        run: pnpm --filter @ee/web exec playwright install --with-deps --only-shell chromium
+      # O webServer do playwright.config.ts sobe o next start (porta 3100, 127.0.0.1) e precisa deste build.
       - run: pnpm build
+      # Os testes escrevem no resumo da execução a tabela do peso de JS e as exceções do axe (e2e/apoio/resumo-do-ci.ts).
+      - run: pnpm test:e2e
+      - name: Avisar no resumo onde está o relatório
+        if: failure()
+        run: echo "Teste do navegador falhou. Capturas, traces e o relatório HTML estão no artefato relatorio-e2e (14 dias), no fim desta página." >> "$GITHUB_STEP_SUMMARY"
+      # Em toda execução não cancelada (critério 4 pede na falha; quando passa, o relatório do axe e do peso também
+      # interessa). Só as pastas do relatório: nunca ., .next/, .git/ (Aa10).
+      - name: Guardar relatório, capturas e traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: relatorio-e2e
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+      # Nenhum teste nem o build muda arquivo do repositório (Aa13): a referência de peso só muda num PR, de propósito.
+      - name: Conferir que nada mudou no repositório
+        run: git diff --exit-code && test -z "$(git status --porcelain)"

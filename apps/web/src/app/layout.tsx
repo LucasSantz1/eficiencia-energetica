@@ -22,7 +22,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR">
+    // data-scroll-behavior: o Next tira a rolagem suave ao trocar de página (essa troca já tem a transição própria) e
+    // deixa a rolagem suave só para os links de seção dentro da mesma página.
+    <html lang="pt-BR" data-scroll-behavior="smooth">
       <body className="min-h-dvh">{children}</body>
     </html>
   );

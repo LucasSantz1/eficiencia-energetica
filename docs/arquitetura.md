@@ -121,9 +121,9 @@ apps/web/src/ui/Botao.tsx → @/aplicacao/casa: ui não pode importar aplicacao 
 1 problema(s)
 ```
 
-Limites conhecidos (ficam para a [HIS-002](equipe/historias/HIS-002-qualidade-automatica.md), que traz o ESLint):
+Limites conhecidos (ficam para a [HIS-002b](equipe/historias/HIS-002b-lint-e-camadas.md), que traz o ESLint):
 o script usa expressões regulares, não segue imports indiretos e deixa passar formas raras escritas de propósito
-(por exemplo `from"x"` sem espaço). Na HIS-002 o ESLint assume as regras que dependem só do próprio arquivo, e o script
+(por exemplo `from"x"` sem espaço). Na HIS-002b o ESLint assume as regras que dependem só do próprio arquivo, e o script
 continua com as que precisam olhar outro arquivo ou a estrutura de pastas.
 
 ## Dados públicos

@@ -32,14 +32,17 @@ o projeto, o planejamento e o Scrum. Quando algo grande mudar, atualizar os dois
   `site.md` detalha arquivo a arquivo. Notas antigas de histórias e o "Contexto" do ADR-001 ficam como registro histórico.
 - Exemplo de saída do verificador documentado (arquitetura e desenvolvimento) foi conferido numa cópia: se a mensagem do
   `scripts/verificar-camadas.mjs` mudar, atualizar os dois.
+- Testes no navegador: fonte única em `desenvolvimento.md` ("Testes no navegador" e "Integração contínua"). Se mudar o
+  nome dos checks no `ci.yml`, o número de testes ou as exceções do axe, atualizar lá (HIS-002a).
 
 ## Pendências
 
 - Manter o CHANGELOG a cada história fechada.
 - HIS-001: o dono do projeto precisa aplicar no `CLAUDE.md` o texto novo da nota "Estado atual" (proposto em 2026-10-29,
   entregue a quem orquestra; a documentação não edita o `CLAUDE.md`).
-- HIS-002: quando o ESLint dividir as regras com o script e `apps/web/e2e-base/` virar `apps/web/e2e/`, atualizar
-  `docs/arquitetura.md` ("Verificador de camadas") e `docs/sistema/desenvolvimento.md` (`pnpm test:e2e`, estrutura).
+- HIS-002b: quando o ESLint dividir as regras com o script, atualizar `docs/arquitetura.md` ("Verificador de camadas")
+  e `docs/sistema/desenvolvimento.md` (`pnpm lint` na tabela de comandos e no check "Lint, tipos e testes").
+- HIS-110: quando corrigir o contraste da `/`, tirar a frase "8 entradas de `color-contrast`" de `desenvolvimento.md`.
 - HIS-003: validação de fronteira em `infraestrutura/validacao/` → acrescentar em `site.md` e `arquitetura.md`.
 
 ## Orientações do responsável

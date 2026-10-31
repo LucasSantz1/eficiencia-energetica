@@ -35,7 +35,21 @@
 
 ## Pendências
 
-- Faixas aceitáveis de potência, minutos, kWh e valor da conta (pergunta da HIS-003).
+- HIS-003: revisar o `limites.ts`, o `arquivos-publicos.ts` (P1–P7) e os testes quando o backend escrever; trocar o
+  link da EPE (hoje cópia da eixos) pelo oficial.
+- **P-de-1 → HIS-111.** As sucessões estão confirmadas na história, com os atos:
+  - REA 6.318/2017 (ESS);
+  - REA 6.723/2017 (CPFL Santa Cruz);
+  - REA 12.177/2022 (EMR) e REA 12.687/2022 (EPB);
+  - despacho do MME no DOU de 12/08/2016 para a CERR, sem número;
+  - RGE pelo CNPJ.
+
+  Falta:
+  - revisar o `sucessoes.json` no PR;
+  - completar o número do ato da CERR;
+  - conferir a data da REA 6.318 no DOU;
+  - trocar as cópias pelos links do cedoc ou do `in.gov.br`;
+  - acompanhar o V7, que trata o preço diferente em cada área depois de um agrupamento.
 - Pesquisar ICMS residencial por estado e PIS/COFINS por distribuidora (HIS-202).
 - Percentual do Desconto Social por distribuidora (HIS-203).
 - HIS-111: achar o número da REA de dez/2018 (RGE) no cedoc/DOU. Trocar as fontes de cópia pelo cedoc/DOU quando houver

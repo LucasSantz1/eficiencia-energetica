@@ -9,15 +9,21 @@
 
 | Risco | Situação | História |
 | --- | --- | --- |
-| localStorage lido sem validação (`lib/store.ts`, `migrate` com `as`) — dado corrompido pode quebrar a tela | aberto | HIS-003 |
-| JSON de `/dados` lido sem validação (`lib/dados.ts`; `app/page.tsx` com `as`) | aberto | HIS-003 |
+| localStorage: JSON quebrado prende o site no carregamento (P1, provado); mesma versão não passa pelo `migrate` (P2, provado) | alta, aberto; desenho na história (storage próprio + `merge`, descarte por item, retorno com contagem) | HIS-003 |
+| JSON de `/dados` lido sem validação (`navegador.ts`, `arquivos.servidor.ts` com `as`); `uf` do localStorage monta o caminho do `fetch` | médio/baixo, aberto | HIS-003 |
 | Sem `app/error.tsx`: exceção de render vira tela branca | aberto | HIS-003 |
-| Sem cabeçalhos de segurança (CSP, HSTS, etc.) em `next.config.ts` | aberto | HIS-003 |
-| Sem `pnpm audit` nem Dependabot no CI | aberto | HIS-003 |
+| Sem cabeçalhos de segurança (CSP, HSTS, etc.) em `next.config.ts` | aberto; valores exatos na HIS-003 | HIS-003 |
+| Sem `pnpm audit` nem Dependabot no CI; `atualizar-dados.yml` com token de escrita durante o `pnpm install` e actions por etiqueta | médio, aberto; dois jobs + SHA | HIS-003 |
 | Links externos sem `rel="noopener noreferrer"` (`funcionalidades/inicio/PaginaInicial.tsx` l. 275, `app/sobre/page.tsx` l. 44–56); sem `target="_blank"`, então baixo | aberto (baixo) | HIS-003 |
 | Refatoração em camadas: perda da casa salva, código de servidor no cliente, script de camadas com falso negativo | etapa 6 **aprovada com ressalvas (baixo)** em `182f355`: R1–R15 ok | HIS-001 |
-| `verificar-camadas.mjs` com lacunas que pedem escrita deliberada (S1: `from"x"` sem espaço, `.js/.jsx` não lidos, link simbólico pulado em silêncio, caminho absoluto/`?sufixo`, `getBuiltinModule`, `"use server"` livre) | aberto (baixo) | HIS-002 |
-| Constante (`VOLTAR`) importada de módulo `"use client"` por componente de servidor (`app/sobre/page.tsx`) — armadilha A7, funciona hoje (S2) | aberto (baixo, pré-existente) | HIS-002 |
+| `verificar-camadas.mjs` com lacunas que pedem escrita deliberada (S1: `from"x"` sem espaço, `.js/.jsx` não lidos, link simbólico pulado em silêncio, caminho absoluto/`?sufixo`, `getBuiltinModule`, `"use server"` livre) | etapa 3 aprovada: os 21 casos estão escritos na HIS-002b (20 ESLint, 1 script, medidos contra o D4) | HIS-002b |
+| Constante (`VOLTAR`) importada de módulo `"use client"` por componente de servidor (`app/sobre/page.tsx`) — armadilha A7, funciona hoje (S2) | aberto (baixo, pré-existente); correção no D7 | HIS-002b |
+| Comentário `eslint-disable`/`/* eslint … off */` derruba matriz, `innerHTML` e `"use server"` (medido) | médio; mitigação C10 no script, só a forma HIS-109 | HIS-002b (Ab3) |
+| `globalIgnores` com `**/build/**`, `**/out/**`, `**/test-results/**` tira pastas do site do lint (medido) | médio; ignores ancorados + controle de contagem | HIS-002b (Ab4) |
+| HTML a partir de texto fora da lista (`setHTMLUnsafe`, `createContextualFragment`, `srcdoc`/`srcDoc`) | baixo; 3 seletores propostos | HIS-002b (Ab6) |
+| CI: `ci.yml` sem `permissions`, actions por etiqueta, `persist-credentials` padrão; artefato público 14 dias | **resolvido no `ci.yml`** (etapa 6 da HIS-002a aprovada com ressalva baixa em 2026-10-30: Ra1–Ra13 ok); falta: dono do projeto conferir o artefato no GitHub (Ra9) e o Dependabot de actions + `atualizar-dados.yml` (HIS-003) | HIS-002a / HIS-003 |
+| Site chamando terceiro sem a pessoa saber: sem barreira automática | **resolvido**: fixture do e2e reprova pedido fora de `127.0.0.1` (Ra10 plantada na `/sobre`: 3 vermelhos com a URL) | HIS-002a |
+| Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | médio; análise aprovada, V9/V10 no h1/h3; workflow de diagnóstico só leitura aprovado | HIS-111 |
 | Server Actions (`"use server"`): cada uma vira endpoint POST público; nenhuma existe | regra a definir antes do E4 | E4 |
 | SQL injection | não se aplica ainda (sem banco); regra já vale para o E4 | E4 |
 | XSS | React escapa texto; não há `dangerouslySetInnerHTML`, `innerHTML`, `eval` nem `new Function` | — |
@@ -29,6 +35,8 @@
 - Chave `eficiencia-energetica:casa` em 1 arquivo de `apps/web/.next/static`.
 - Nenhum `readFile`, `process.cwd` ou `node:fs` em `.next/static`.
 - Endereços nos scripts do cliente: só textos de bibliotecas (w3.org, nextjs.org, react.dev, github.com).
+  Depois da HIS-002a (conferido em `efab326`): também fragmentos de teste do polyfill de URL (`https://a`, `http://n`,
+  `https://x`), sem pedido; e 1 chunk com o caminho `/ROOT/node_modules/.pnpm/next@…_@playwright+test@…` (nome de pasta).
 - `packages/core/src` só com imports relativos.
 - zustand 5 `persist` só grava ao hidratar quando a versão muda (`middleware.mjs` l. 397–428): abrir o site com a
   mesma versão não reescreve a casa.
@@ -44,6 +52,30 @@
 - Todo `*.servidor.ts` começa com `import "server-only";` (provado em 2026-10-29: import indireto a partir de `"use
   client"` derruba o `next build`). O `verificar-camadas.mjs` cobre só o import direto.
 - `/casa/aparelhos` é estática: responde 200 com `NEXT_REDIRECT` no conteúdo (não 307).
+- CI: `permissions: contents: read` no topo, nada de `pull_request_target`/`workflow_run`, nada de `${{ github.event.* }}`
+  em `run:`, `persist-credentials: false`; artefato só com dado inventado e só das pastas do relatório.
+- Ra9/varredura de segredo em artefato: padrão estrito (`AKIA[0-9A-Z]{16}`, `gh[pousr]_[A-Za-z0-9]{36}`…) e **extrair os
+  `.zip`** (trace e `playwright-report/data/`) antes do `grep`; o `AKIA` cru no `index.html` é base64 (falso positivo).
+- e2e: nenhum pedido fora de `127.0.0.1` (fixture automática); limites de peso no spec, nunca no JSON; axe sem
+  `disableRules`/`withTags`/`exclude()`, exceção por nó (1 só) com história.
+- CSP sem nonce enquanto não houver Auth nem script de terceiro: `script-src`/`style-src 'self' 'unsafe-inline'`, sem
+  `unsafe-eval`, tudo `'self'`, `connect-src 'self'`. Nonce em `proxy.ts` volta à mesa no E4/E11 (doc do Next 16: nonce
+  = tudo dinâmico; hash não cobre o `__next_f` inline).
+- Validação de dado de fora: só o rígido do domínio descarta; nunca corrigir número (exceto os 2 consertos do
+  domínio na HIS-003); retorno do validador só com contagens/`boolean`, em memória.
+- Leitores escritos à mão no `@ee/core`, sem zod (ADR-004, P-tl-1 de 2026-10-30). Condições: todo leitor cobre todos
+  os campos do tipo, com checagem no `typecheck` e a fixture `casa-completa`; nada de `trim` nem conserto no valor
+  devolvido; o leitor nunca lança (um `merge` que lança traz o P1 de volta); só propriedade própria; data conferida por
+  UTC; data no futuro não é descartada.
+- Distribuidora só muda de dona por mesmo CNPJ (com a antiga vencida) ou por linha do `sucessoes.json` com ato e
+  fonte, antiga **sem** tarifa vigente e siglas que batem com o CNPJ (V9/V10, sem `--forcar`). A rotina diária nunca
+  escreve em `packages/dados/base/` (ADR-005, HIS-111).
+- Texto de dado externo que vai para log do Actions (`::notice::`/`::warning::`) passa por escape de `%`, `\r`, `\n`;
+  no `$GITHUB_STEP_SUMMARY`, sem `|`/`<`/crase e com tamanho limitado.
+- Funções do core que leem dado de rede (ex.: `substituidas`) são totais por conta própria; não dependem de o leitor
+  da fronteira já existir.
+- Lint: o único `eslint-disable` aceito no site e no domínio é o da HIS-109; ignores do ESLint só com caminho ancorado;
+  arquivos lidos pelo ESLint = `git ls-files`.
 
 ## Estrutura do site depois da HIS-001 (para as próximas revisões)
 
@@ -55,9 +87,18 @@
 
 ## Pendências
 
-- **HIS-002:** conferir que S1 e S2 (seção "Revisão de código (etapa 6)" da HIS-001) entraram no ESLint ou no script;
-  rodar de novo os 21 casos de `testar-seg.mjs` esperando 0 "BRECHA".
-- **HIS-003:** completar a tabela de ameaças.
+- **HIS-002a:** etapa 6 feita (aprovado com ressalvas, baixo). Fica só a Ra9 no GitHub, com o dono do projeto (roteiro
+  na minha nota da história). Aa9 entrou no A6 (SHA); Dependabot de actions segue na HIS-003.
+- **HIS-002b (etapa 6):** Rb1–Rb9; rodar de novo os 21 + 9 casos numa cópia própria (roteiros em
+  `scratchpad/seg-his002/casos-eslint.mjs` e `propostas.mjs`; se sumirem, as tabelas estão na história) esperando 0
+  diferente; conferir C10 (Ab3) e ignores ancorados (Ab4).
+- **HIS-003a (etapa 6):** R1–R13 + R4b, R4c, R4d da história; rodar `scratchpad/seg-his003/prova-hidratacao.mjs`
+  contra o storage novo (se sumir: P1/P2 na história explicam o caso). Conferir que o ADR-004 passou para aceito.
+  A HIS-003 foi dividida: T5/T6 e `campos.spec.ts` estão na `HIS-003b-campos-com-limite.md` (revisar lá também).
+- **HIS-111 (etapa 6):** R1–R9 da história. Conferir: `paths` do diagnóstico com `core` e lockfile; escape do log
+  com o teste `"X\n::add-mask::a"`; V9/V10 com fixture e sem `--forcar`; core total com os 5 formatos de
+  `substituidas`; regravação só com `de` fora e `para` dentro; `Object.fromEntries` + limite de 500 no leitor da a3;
+  h8 sem `--forcar` e gatilho `push` trocado por `pull_request`. Conferir que o ADR-005 passou para aceito com o R3.
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

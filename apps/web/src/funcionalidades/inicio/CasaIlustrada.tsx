@@ -43,14 +43,18 @@ export function CasaIlustrada() {
                 onClick={() => setEscolhido(c.id)}
                 onMouseEnter={() => setEscolhido(c.id)}
                 aria-pressed={ativo}
-                aria-label={`${c.nome}: ${reais(c.valor)} por mês`}
+                // O nome começa com o que o botão mostra (nome e porcentagem), para quem usa comando de voz achar o
+                // botão (WCAG 2.5.3, texto da ux na HIS-002a). Usa o mesmo reais() da legenda: espaço sem quebra no "R$".
+                aria-label={`${c.nome}, ${Math.round(c.parte * 100)}% da conta, ${reais(c.valor)} por mês`}
                 style={{ animationDelay: `${350 + i * 220}ms` }}
                 className={`acende relative flex min-h-28 flex-col justify-between rounded-lg p-2.5 text-left text-tinta transition-shadow sm:min-h-36 sm:p-3 ${c.classe} ${
                   ativo ? "bg-[#ffe7a1] ring-4 ring-faisca" : "bg-[#fff1c9] hover:bg-[#ffe7a1]"
                 }`}
               >
                 <span className="flex flex-wrap items-start justify-between gap-1">
-                  <span className="text-[0.9rem] font-bold sm:text-base">{c.nome}</span>
+                  <span className="text-[0.9rem] font-bold sm:text-base">{c.nome}</span>{" "}
+                  {/* O espaço não aparece (entre itens flex, só espaço em branco não é desenhado), mas separa "Quarto" de
+                      "19%" para o axe, que junta o texto dos filhos sem espaço e leria "quarto19%". */}
                   <span className={`numeros rounded-full px-2 py-0.5 text-[0.8rem] font-extrabold sm:text-[0.9rem] ${corDaParte(c.parte)}`}>{Math.round(c.parte * 100)}%</span>
                 </span>
                 <span className="flex items-end gap-2 text-tinta/80">

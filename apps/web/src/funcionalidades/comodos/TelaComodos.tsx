@@ -261,7 +261,9 @@ function PainelGeral() {
         <Numero rotulo="horas de uso somadas no mês" valor={<ValorAnimado valor={totalHoras} formatar={(v) => Math.round(v).toLocaleString("pt-BR")} />} />
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-[var(--radius-cartao)] bg-papel">
+      {/* Em 390 px a tabela passa da tela e rola para o lado: a região entra no Tab para as setas rolarem (WCAG 2.1.1,
+          texto da ux no D-A5-2). Sempre focável, também sem rolagem; o contorno é o :focus-visible padrão. */}
+      <div role="region" aria-label="Tabela com todos os aparelhos da casa" tabIndex={0} className="mt-6 overflow-x-auto rounded-[var(--radius-cartao)] bg-papel">
         <table className="w-full min-w-[34rem] text-left">
           <caption className="sr-only">Todos os aparelhos da casa, juntando os iguais de todos os cômodos</caption>
           <thead className="border-b border-linha text-[0.9rem] text-tinta-suave">

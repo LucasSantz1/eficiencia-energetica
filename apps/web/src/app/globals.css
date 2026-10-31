@@ -65,6 +65,13 @@
   dialog::backdrop {
     background: rgb(19 35 63 / 0.45);
   }
+  /* Links para seções da mesma página (#como-funciona, #tarifa-social, #perguntas) deslizam até o lugar em vez de
+     pular de uma vez, para a pessoa ver para onde foi. Quem pede menos movimento continua com o salto direto. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
