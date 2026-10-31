@@ -1,3 +1,4 @@
+import { umaLinha } from "../anotacoes";
 import { acharColuna, normalizar, type Linha } from "../util";
 import { soDigitos } from "./tarifas";
 
@@ -36,7 +37,7 @@ export function mapearColunasConjuntos(cabecalho: string[]) {
   const agente = acharColuna(cabecalho, "SigAgente", /^sigagente/);
   const cnpj = acharColuna(cabecalho, "NumCNPJ", /cnpj/);
   const ano = acharColuna(cabecalho, "AnoIndice", /^ano/);
-  if (!conjunto || !agente) throw new Error(`Colunas de conjunto/distribuidora não encontradas. Cabeçalho: ${cabecalho.join(" | ")}`);
+  if (!conjunto || !agente) throw new Error(`Colunas de conjunto/distribuidora não encontradas. Cabeçalho: ${umaLinha(cabecalho.join(" | "))}`);
   return { conjunto, agente, cnpj, ano };
 }
 
@@ -80,7 +81,7 @@ export function criarLeitorConjuntos(c: ReturnType<typeof mapearColunasConjuntos
 export function mapearColunasMunicipios(cabecalho: string[]) {
   const conjunto = acharColuna(cabecalho, "IdeConjUnidConsumidoras", "IdeConjUndConsumidoras", /^ideconj/);
   const ibge = acharColuna(cabecalho, "CodMunicipio", "CodMunicipioIbge", /ibge/, /codmunic/);
-  if (!conjunto || !ibge) throw new Error(`Colunas de conjunto/município não encontradas. Cabeçalho: ${cabecalho.join(" | ")}`);
+  if (!conjunto || !ibge) throw new Error(`Colunas de conjunto/município não encontradas. Cabeçalho: ${umaLinha(cabecalho.join(" | "))}`);
   return { conjunto, ibge };
 }
 

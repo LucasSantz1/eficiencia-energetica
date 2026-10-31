@@ -1,4 +1,5 @@
 import { normalizarBandeira, BANDEIRAS, type BandeiraMes } from "@ee/core";
+import { umaLinha } from "../anotacoes";
 import { acharColuna, dataISO, numeroBR, type Linha } from "../util";
 
 /**
@@ -25,7 +26,7 @@ export function lerBandeiras(cabecalho: string[], linhas: Linha[]): { bandeiras:
   const colNome = acharColuna(cabecalho, "NomBandeiraAcionada", /bandeira/);
   const colValor = acharColuna(cabecalho, "VlrAdicionalBandeira", /adicional|valor|vlr/);
   if (!colCompetencia || !colNome || !colValor) {
-    throw new Error(`Colunas de bandeiras não encontradas. Cabeçalho: ${cabecalho.join(" | ")}`);
+    throw new Error(`Colunas de bandeiras não encontradas. Cabeçalho: ${umaLinha(cabecalho.join(" | "))}`);
   }
 
   const avisos: string[] = [];

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { anotacao, anotacoesDoResumo, celulaMarkdown, escaparDadoDeComando, LIMITE_RESUMO_BYTES, limitarResumo, MAXIMO_ANOTACOES_DO_RESUMO, umaLinha } from "../src/anotacoes";
+import { anotacao, anotacoesDoResumo, celulaMarkdown, escaparDadoDeComando, LIMITE_RESUMO_BYTES, limitarResumo, linhasDoErro, MAXIMO_ANOTACOES_DO_RESUMO, umaLinha } from "../src/anotacoes";
+import { mapearColunasTarifas } from "../src/aneel/tarifas";
+import { mapearColunasConjuntos, mapearColunasMunicipios } from "../src/aneel/municipios";
+import { lerBandeiras } from "../src/aneel/bandeiras";
 
 // HIS-111, R2 da seguranca: texto da ANEEL não pode virar comando do runner nem quebrar o resumo do job.
 describe("saída para o GitHub Actions", () => {
@@ -51,5 +54,41 @@ describe("anotacoesDoResumo", () => {
     expect(a).toBeDefined();
     expect(a?.split("\n")).toHaveLength(1);
     expect(a).toContain("%0A::add-mask::segredo");
+  });
+});
+
+// S1 da seguranca: um cabeçalho de CSV com quebra de linha não pode criar um comando no log do main.
+describe("erro com cabeçalho malicioso (S1)", () => {
+  const cabecalho = ["Coluna", "x\n::add-mask::x", "y\r\n::stop-commands::z"];
+  const erroDe = (f: () => unknown): unknown => {
+    try {
+      f();
+    } catch (e) {
+      return e;
+    }
+    throw new Error("era para lançar");
+  };
+  const casos: [string, () => unknown][] = [
+    ["tarifas", () => mapearColunasTarifas(cabecalho)],
+    ["conjuntos", () => mapearColunasConjuntos(cabecalho)],
+    ["municípios", () => mapearColunasMunicipios(cabecalho)],
+    ["bandeiras", () => lerBandeiras(cabecalho, [])],
+  ];
+
+  it.each(casos)("%s: a mensagem e as linhas do console.error não abrem linha nova nem começam com ::", (_nome, f) => {
+    const erro = erroDe(f);
+    expect(erro).toBeInstanceOf(Error);
+    expect(erro instanceof Error ? erro.message : "").not.toMatch(/[\r\n]/);
+    const linhas = linhasDoErro(erro);
+    expect(linhas.length).toBeGreaterThan(0);
+    for (const linha of linhas) {
+      expect(linha).not.toMatch(/[\r\n\u2028\u2029]/);
+      expect(linha.trimStart().startsWith("::")).toBe(false);
+    }
+    expect(linhas.join("\n").split("\n").some((l) => l.startsWith("::"))).toBe(false);
+  });
+
+  it("um erro que não é Error também sai em uma linha", () => {
+    expect(linhasDoErro("a\n::add-mask::b")).toEqual(["Erro: a ::add-mask::b"]);
   });
 });

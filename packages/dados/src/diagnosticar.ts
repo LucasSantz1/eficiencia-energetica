@@ -9,7 +9,7 @@
  * Sai com 1 só quando não consegue baixar ou ler os dados.
  */
 import { appendFile } from "node:fs/promises";
-import { anotacoesDoResumo, limitarResumo, umaLinha } from "./anotacoes";
+import { anotacoesDoResumo, limitarResumo, linhasDoErro, umaLinha } from "./anotacoes";
 import { diagnosticar } from "./diagnostico";
 import { PASTA_SAIDA } from "./escrever";
 import { arquivosNaPasta, PASTA_CACHE } from "./fontes";
@@ -33,6 +33,7 @@ async function main() {
 }
 
 main().catch((erro) => {
-  console.error(erro);
+  // S1: a mensagem pode trazer texto da ANEEL; uma linha por chamada, sem quebra.
+  for (const linha of linhasDoErro(erro)) console.error(linha);
   process.exit(1);
 });

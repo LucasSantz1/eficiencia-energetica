@@ -9,6 +9,7 @@
  * Roda todo dia pela GitHub Action .github/workflows/atualizar-dados.yml. Só grava em apps/web/public/dados:
  * nunca em packages/dados/base (R4 da HIS-111).
  */
+import { linhasDoErro } from "./anotacoes";
 import { PASTA_SAIDA } from "./escrever";
 import { arquivosNaPasta, PASTA_CACHE } from "./fontes";
 import { executarAtualizacao } from "./rotina";
@@ -30,6 +31,7 @@ async function main() {
 }
 
 main().catch((erro) => {
-  console.error(erro);
+  // S1: a mensagem pode trazer texto da ANEEL; uma linha por chamada, sem quebra.
+  for (const linha of linhasDoErro(erro)) console.error(linha);
   process.exit(1);
 });

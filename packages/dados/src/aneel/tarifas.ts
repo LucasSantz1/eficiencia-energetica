@@ -1,3 +1,4 @@
+import { umaLinha } from "../anotacoes";
 import { acharColuna, dataISO, diaSeguinte, normalizar, numeroBR, semValor, subtrairMeses, type Linha } from "../util";
 
 /**
@@ -66,7 +67,7 @@ export interface ColunasTarifas {
 export function mapearColunasTarifas(cabecalho: string[]): ColunasTarifas {
   const obrigatoria = (nome: string, ...c: (string | RegExp)[]) => {
     const col = acharColuna(cabecalho, ...c);
-    if (!col) throw new Error(`Coluna "${nome}" não encontrada no CSV de tarifas. Cabeçalho: ${cabecalho.join(" | ")}`);
+    if (!col) throw new Error(`Coluna "${nome}" não encontrada no CSV de tarifas. Cabeçalho: ${umaLinha(cabecalho.join(" | "))}`);
     return col;
   };
   return {

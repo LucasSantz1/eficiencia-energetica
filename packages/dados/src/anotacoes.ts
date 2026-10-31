@@ -30,6 +30,17 @@ export function umaLinha(texto: string): string {
   return texto.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ");
 }
 
+/**
+ * Linhas para o `console.error` do `main` (S1 da seguranca): a mensagem do erro pode trazer texto da ANEEL (um
+ * cabeçalho de CSV com quebra de linha) e viraria comando do runner. A mensagem sai em uma linha só; as linhas
+ * "at ..." da pilha vêm depois, cada uma limpa e com recuo, para nenhuma começar com "::".
+ */
+export function linhasDoErro(erro: unknown): string[] {
+  if (!(erro instanceof Error)) return [umaLinha(`Erro: ${String(erro)}`)];
+  const pilha = (erro.stack ?? "").split("\n").filter((l) => /^\s+at /.test(l));
+  return [umaLinha(`${erro.name}: ${erro.message}`), ...pilha.map((l) => `  ${umaLinha(l.trim())}`)];
+}
+
 /** Maior pedaço de texto de uma célula do resumo do job (R2). */
 export const LIMITE_CELULA = 80;
 /** O GitHub aceita até 1 MiB no `$GITHUB_STEP_SUMMARY`; 64 KiB bastam e deixam o resumo legível (R2). */
