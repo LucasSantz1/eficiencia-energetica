@@ -10,6 +10,14 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-31 · HIS-111 · h7 refeito: D1 fechado, aprovado
+- O que fiz: cópia limpa de `314555c` (main junto); barreiras; e2e inteiro (121 ok); `peso-js` + `troca-distribuidora` 3×;
+  roteiro exploratório 19/19; comparei a busca do nome antigo sem acentos com a antiga, para todas as siglas.
+- Decisões e porquê: aprovado. O 11a ficou abaixo do limite, e a mudança dos acentos não troca nenhum nome (só três
+  siglas publicadas perdem o nome antigo, e o aviso cai no texto sem nome).
+- Arquivos: HIS-111, `contexto.md`, este diário. Evidências em `…/scratchpad/qa-his111-r2-*`.
+- Próximos passos: h8.
+
 ## 2026-10-30 · HIS-111 · h7: dados ok, critério 8 em e2e, devolvido pelo peso de JS
 - O que fiz: conferi os critérios 1, 2, 9 e 10 no diagnóstico 4; junção 111 + 002a por `merge-tree` numa cópia;
   barreiras verdes; spec novo `troca-distribuidora.spec.ts` (7 testes × 2 larguras, estável em 3 repetições); e2e da

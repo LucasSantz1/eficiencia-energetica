@@ -1192,3 +1192,9 @@ resto igual.
   em `test/anotacoes.test.ts` ("erro com cabeçalho malicioso (S1)"). `pnpm typecheck` e `pnpm test` (dados 92,
   core 53) verdes.
 - **Para o próximo:** a seguranca confere a S1.
+
+### [qa] 2026-10-31 — h7 refeito em `314555c`: **aprovado**
+- **D1 fechado:** 11a de `/casa*` +953 a +998 B (limite +1 024; folga de 26 B), `/` +468, `/comecar` +445; `peso-js.json` intacto.
+- **Sem regressão:** typecheck, test (53 + 87) e build verdes; e2e inteiro 121 ok + 6 `fixme` antigos; `peso-js` e `troca-distribuidora` 3× verdes; roteiro manual (teclado, zoom 200%, reduzido, nomes) 19/19, console limpo.
+- **Acentos:** os 12 ids de `substituidas` acham o mesmo nome de antes (`cnee` segue sem nome); só "Âmbar Amazonas", "Âmbar Roraima" e "Neoenergia Brasília" perdem o nome antigo, e as três estão publicadas. Se uma sair, o aviso usa o texto sem o nome antigo (F1). Nenhum nome sai trocado. Risco baixo, aceito.
+- Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-r2-*` (e2e, peso, capturas).
