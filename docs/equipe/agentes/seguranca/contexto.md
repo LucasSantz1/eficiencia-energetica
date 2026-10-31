@@ -23,7 +23,7 @@
 | HTML a partir de texto fora da lista (`setHTMLUnsafe`, `createContextualFragment`, `srcdoc`/`srcDoc`) | baixo; 3 seletores propostos | HIS-002b (Ab6) |
 | CI: `ci.yml` sem `permissions`, actions por etiqueta, `persist-credentials` padrão; artefato público 14 dias | **resolvido no `ci.yml`** (etapa 6 da HIS-002a aprovada com ressalva baixa em 2026-10-30: Ra1–Ra13 ok); falta: dono do projeto conferir o artefato no GitHub (Ra9) e o Dependabot de actions + `atualizar-dados.yml` (HIS-003) | HIS-002a / HIS-003 |
 | Site chamando terceiro sem a pessoa saber: sem barreira automática | **resolvido**: fixture do e2e reprova pedido fora de `127.0.0.1` (Ra10 plantada na `/sobre`: 3 vermelhos com a URL) | HIS-002a |
-| Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | **mitigado**: etapa 6 aprovada com ressalvas (baixo) em `314555c`; V1–V4/V7–V10 sem `--forcar` e 0 arquivos com CSV ruim (provado). Aberto S1 (baixo): cabeçalho de CSV com `\n` cru no `console.error` do `main` (`::add-mask::` provado) | HIS-111 |
+| Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | **mitigado**: etapa 6 aprovada com ressalvas (baixo) em `314555c`; V1–V4/V7–V10 sem `--forcar` e 0 arquivos com CSV ruim (provado). S1 (cabeçalho com `\n` no `console.error` do `main`) fechada em `0cc072a` | HIS-111 |
 | Server Actions (`"use server"`): cada uma vira endpoint POST público; nenhuma existe | regra a definir antes do E4 | E4 |
 | SQL injection | não se aplica ainda (sem banco); regra já vale para o E4 | E4 |
 | XSS | React escapa texto; não há `dangerouslySetInnerHTML`, `innerHTML`, `eval` nem `new Function` | — |
@@ -96,8 +96,7 @@
 - **HIS-003a (etapa 6):** R1–R13 + R4b, R4c, R4d da história; rodar `scratchpad/seg-his003/prova-hidratacao.mjs`
   contra o storage novo (se sumir: P1/P2 na história explicam o caso). Conferir que o ADR-004 passou para aceito.
   A HIS-003 foi dividida: T5/T6 e `campos.spec.ts` estão na `HIS-003b-campos-com-limite.md` (revisar lá também).
-- **HIS-111:** etapa 6 feita em 2026-10-31 (aprovado com ressalvas, baixo). Falta conferir: S1 corrigido pelo
-  backend (`umaLinha` nas 4 mensagens `Cabeçalho:` e nos dois `main`); no h8, rodar sem `--forcar` e trocar o
+- **HIS-111:** etapa 6 feita em 2026-10-31 (aprovado com ressalvas, baixo). S1 fechada em `0cc072a` (conferida). Falta: no h8, rodar sem `--forcar` e trocar o
   gatilho `push` por `pull_request`. Na a3: leitor do `tarifas.json` com `Object.fromEntries`, limite de 500 (caso 501
   no P8) e `distribuidoras: [null]` sem lançar. Sondas em `scratchpad/seg-his111/` (`sondas.ts`, `rodar-ruim.mts`).
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.

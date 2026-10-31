@@ -10,6 +10,14 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-10-31 · HIS-111 · S1 fechada (`0cc072a`)
+- O que fiz: refiz a prova do S1 (`scratchpad/seg-his111/s1.mts`) contra a correção, com cabeçalho quebrado, binário,
+  `\n    at ::add-mask::` e um erro que não é `Error`. Resultado: nenhuma linha com `::` e 0 arquivos gravados; teste
+  "S1" verde.
+- Decisões e porquê: S1 fechada. O `exemplo.ts` continua com `console.error(e)`, mas não lê dado de fora.
+- Arquivos: nota da HIS-111 (item 7), `contexto.md`, `diario.md`.
+- Próximos passos: h8 (sem `--forcar`, `push` → `pull_request`).
+
 ## 2026-10-31 · HIS-111 · etapa 6: aprovado com ressalvas (baixo), S1 no log do `main`
 - O que fiz: revisei `packages/dados` (sucessões, V1–V10, rotina), o `diagnosticar-dados.yml`, as anotações, o core
   (`substituidas`, `trocas.ts`), `aplicacao/casa.ts` e o aviso. Testei 12 entradas ruins do `sucessoes.json`, 13
