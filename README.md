@@ -20,7 +20,7 @@ Projeto independente e gratuito, feito para as famílias que mais precisam econo
 
 ## Como rodar
 
-Requer Node 22 e pnpm 10.
+Requer Node 26 (LTS) e pnpm 10.
 
 ```bash
 pnpm install
