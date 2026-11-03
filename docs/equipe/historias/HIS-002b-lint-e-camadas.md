@@ -666,6 +666,34 @@ controles; o resumo "N casos: X no ESLint, Y no script".
 7. B6 sem mudança para quem usa: e2e da HIS-002a verde (inclusive a transição `/sobre` → `/`, P-qa-1 da HIS-002a) e
    peso de JS dentro do limite.
 
+### Resultado da etapa 5 (qa, 2026-11-03, `01e7df0`, cópia própria)
+
+| # | Mutação plantada | Resultado (vermelho, com o id/mensagem) |
+| --- | --- | --- |
+| V1 | sem `...camada("ui", …)` | 17 casos da `ui` falham com o id (`I7-01`, `I7-08/09`, `R13-01/02`, `S1-a/c/e/e-sufixo`, `seguranca-09/10/11/17/20/27`, `nega-ui-servidor-node`, `nega-core-caminho-interno`) |
+| V2 | `permitidos` da `ui` = `(?!)` e sem `@ee/core` | `permite-ui-ui`, `permite-ui-config`, `permite-ui-core`, `controle-seguranca-01` e `seguranca-09` (mensagem mudou) |
+| V3 | sem o caso `I7-13` | "faltando caso obrigatório: I7-13" |
+| V4 | sem o ramo `isSymbolicLink` (C4) | `C4` e `S1-d`: "esperava código 1" |
+| V5 | domínio lido de `packages/core/srcx` e sem a C3 | `controle-repositorio` ("leu um número de arquivos diferente do git ls-files"), `C3`, `S1-c-script`; **V5b** (só a pasta errada): `pnpm camadas` código 1, "nenhum arquivo lido" |
+| V6 | `lint` sem `--max-warnings 0` | `controle-linha-de-comando`: "`<img>` sem alt deveria reprovar" |
+| V7 | `node_modules/typescript` renomeado | script e `pnpm camadas` código 1, `ERR_MODULE_NOT_FOUND`, nenhum "tudo certo" |
+| V8 | 9º `eslint-disable-next-line react-hooks/set-state-in-effect` sem motivo em `ui/Botao.tsx` | `controle-repositorio` e `controle-outra-pasta` (C10, `Botao.tsx:3`); **V8b** (8º **com** motivo válido): "8 comentários da HIS-109; o teto é 7" (D17) |
+
+Os 21 da seguranca conferidos um a um contra a tabela de "Ameaças" (arquivo, código, barreira, regra e trecho): iguais.
+Saídas e roteiro (`mutacoes.sh`) fora do git, em `…/scratchpad/qa-002b/`.
+
+**DEF-002b-1 · Fluxo principal falha às vezes em "terminar o cadastro" (13 transições em vez de 14) — pré-existente,
+não bloqueia a 002b.** Gravidade: média para o CI (`retries: 0`, o job `e2e` fica vermelho sem mudança no código);
+baixa para quem usa (falta só a animação de entrada no painel). Para: **frontend**. Sugestão: história própria.
+- Passos: `PORTA_E2E=34xx npx playwright test e2e/fluxo-principal.spec.ts --repeat-each=10` (build de produção).
+- Esperado: depois de "Pular, não tenho a conta agora", 14 chamadas de `startViewTransition`. Obtido: 13, com a URL
+  `/casa` e "Sua conta estimada por mês" na tela; sem erro de console e sem recarregar a página (o trace mostra só o
+  pedido RSC de `/casa`, sem prefetch, e nenhum documento novo).
+- Medido pelo qa: branch `01e7df0` 1 em 20 (celular); `main` `0cef6c1` 2 em 30 (computador), mesmo passo e mesmo 13 ≠ 14. Frontend: 2/19 aqui, 1/16 no `main`. Nos arquivos
+  do caminho (`Cadastro`, `Casca`, `Movimento`, `app/casa`, `app/comecar`) a 002b só move imports (`ENTRAR_NO_PAINEL` igual).
+- Pista, não confirmada: o `router.push("/casa")` do `concluir` não tem prefetch e a `Casca` monta primeiro o
+  esqueleto (`useCasaCarregada` começa `false`), sem `TransicaoTela`; vale medir antes de mudar o teste ou o site.
+
 ## Perguntas abertas
 
 - [x] `[para: seguranca]` (scrum-master, 2026-10-29 — **bloqueia a implementação (etapa 4)**, não o desenho; movida da
@@ -789,3 +817,11 @@ ficam na [HIS-002a](HIS-002-qualidade-automatica.md), "Conversa da equipe", e va
 4. **B8:** ADR-001 revisado (o que fica no ESLint e o que fica no script; valor compartilhado mora em arquivo sem diretiva). A lista para o `docs/arquitetura.md` está no D17.
 5. Como verifiquei: numa cópia, `pnpm lint`, `typecheck`, `test` (152 passam) e `build` verdes. `pnpm audit` sem alta. Apaguei um caso obrigatório e o teste acusou o id. Também conferi a C10 num comentário de JSX e a sonda do (a).
 6. Próximo: **frontend** (item 1), depois **qa** (etapa 5) ‖ **seguranca** (Rb1–Rb9) e **documentacao** (D17). Quem orquestra leva o (a) à HIS-111 e o (b) à 003a.
+
+### [qa] 2026-11-03 — etapa 5: aprovado (DEF-002b-1 pré-existente, fora desta história)
+1. Numa cópia de `01e7df0` com git próprio: `pnpm lint`, `typecheck` ("66 arquivos; 7 comentário(s) da HIS-109"), `test` (152; "145 casos: 104 no ESLint, 41 no script") e `build` verdes; `pnpm audit --audit-level high` sem alta (2 moderadas).
+2. V1–V8 (+V5b e V8b, o teto 7 do D17) vermelhos com o id e a mensagem certa; tabela em "Resultado da etapa 5". Todos os ids obrigatórios presentes e verdes; os 21 da seguranca iguais à lista de "Ameaças".
+3. Critério 8: C8 acusa `VOLTAR` e `novoId`; critério 10: o B2 (`e8ffa7a`) só tem linhas de import fora do `eslint.config.mjs`; critério 11: 7 linhas da HIS-109 com motivo + bloco provisório (aceito no D17).
+4. e2e completo (porta 3451): 107 ✓, 6 pendentes, 0 falha, peso de JS no limite, `/sobre` → `/` ok, sem erro de console.
+5. **Defeitos: DEF-002b-1** (fluxo principal, 13 em vez de 14 transições ao terminar o cadastro): **pré-existente** — 1/20 aqui, 2/30 no `main` `0cef6c1`; não bloqueia. Detalhe e passos em "Resultado da etapa 5". Nenhum defeito desta história.
+6. Para o próximo: **seguranca** (Rb1–Rb9) e fechamento; quem orquestra leva o DEF-002b-1 ao **frontend** como história própria.

@@ -10,6 +10,17 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-002b · etapa 5 aprovada; DEF-002b-1 (transição intermitente, pré-existente) registrado
+- O que fiz: numa cópia de `01e7df0` com git próprio: lint, typecheck, test (152), build, audit; `grep` do critério 11
+  (7 linhas + bloco provisório, D17); diff do B2 (só imports fora da configuração); V1–V8 + V5b/V8b numa segunda
+  cópia (`mutacoes.sh`); os 21 da seguranca contra a lista; e2e completo (porta 3451); `fluxo-principal`
+  `--repeat-each` na branch (3452) e num `main` `0cef6c1` próprio (3453), com o trace da falha.
+- Decisões e porquê: aprovado — tudo vermelho com id e mensagem; o defeito do fluxo existe no `main` e a 002b só move
+  imports nos arquivos do caminho (`ENTRAR_NO_PAINEL` com o mesmo valor), então fica fora (DEF-002b-1, para o frontend).
+  V8b acrescentado para provar o teto 7 do D17 (um 8º comentário válido também barra).
+- Arquivos: a história (resultado da etapa 5, DEF-002b-1, nota), `contexto.md`, este diário.
+- Próximos passos: DEF-002b-1 vira história (quem orquestra); quando o bloco provisório sair (003a), teto volta a 8.
+
 ## 2026-10-30 · HIS-002a · A5 fechado, A7 (tira o e2e-base) e etapa 5 aprovada
 - O que fiz: seletor do `aparelhos.spec.ts` pelo nome do D-A5-1 (`d5a4940`); `git rm -r apps/web/e2e-base` e 2
   comentários do `e2e/` (`020db92`); e2e completo e `--repeat-each=3` numa cópia própria; M1–M16 plantadas numa
