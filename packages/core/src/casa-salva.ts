@@ -41,12 +41,13 @@ const LIGACOES = listaCompleta<Ligacao>()(["monofasica", "bifasica", "trifasica"
  * Campos que cada leitor lê (R4c). O `typecheck` reprova se o tipo ganhar um campo que não está aqui, e o teste
  * `casa-salva.test.ts` reprova se o leitor não devolver todos eles. Assim um campo novo nunca some em silêncio.
  */
+// `/* @__PURE__ */`: as listas só servem ao `typecheck` e aos testes (R4c); marcadas assim, saem do JS do site (D10, 1b).
 export const CAMPOS_DA_CASA_SALVA = {
-  casa: listaCompleta<keyof DadosCasa>()(["residencia", "comodos", "aparelhos", "contas", "leituras", "plano"]),
-  residencia: listaCompleta<keyof Residencia>()(["uf", "municipioIbge", "municipioNome", "distribuidoraId", "beneficio", "ligacao", "contaReferencia", "pessoas"]),
-  contaReferencia: listaCompleta<keyof ContaReferencia>()(["kwh", "valor"]),
-  comodo: listaCompleta<keyof Comodo>()(["id", "tipo", "nome"]),
-  aparelho: listaCompleta<keyof Aparelho>()([
+  casa: /* @__PURE__ */ listaCompleta<keyof DadosCasa>()(["residencia", "comodos", "aparelhos", "contas", "leituras", "plano"]),
+  residencia: /* @__PURE__ */ listaCompleta<keyof Residencia>()(["uf", "municipioIbge", "municipioNome", "distribuidoraId", "beneficio", "ligacao", "contaReferencia", "pessoas"]),
+  contaReferencia: /* @__PURE__ */ listaCompleta<keyof ContaReferencia>()(["kwh", "valor"]),
+  comodo: /* @__PURE__ */ listaCompleta<keyof Comodo>()(["id", "tipo", "nome"]),
+  aparelho: /* @__PURE__ */ listaCompleta<keyof Aparelho>()([
     "id",
     "comodoId",
     "catalogoId",
@@ -60,9 +61,9 @@ export const CAMPOS_DA_CASA_SALVA = {
     "variantes",
     "kwhMesInformado",
   ]),
-  banho: listaCompleta<keyof NonNullable<Aparelho["banho"]>>()(["banhosPorDia", "minutosPorBanho"]),
-  conta: listaCompleta<keyof ContaMensal>()(["id", "competencia", "kwh", "valor"]),
-  leitura: listaCompleta<keyof LeituraRelogio>()(["id", "data", "valorKwh"]),
+  banho: /* @__PURE__ */ listaCompleta<keyof NonNullable<Aparelho["banho"]>>()(["banhosPorDia", "minutosPorBanho"]),
+  conta: /* @__PURE__ */ listaCompleta<keyof ContaMensal>()(["id", "competencia", "kwh", "valor"]),
+  leitura: /* @__PURE__ */ listaCompleta<keyof LeituraRelogio>()(["id", "data", "valorKwh"]),
 } as const;
 
 /**

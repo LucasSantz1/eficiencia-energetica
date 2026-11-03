@@ -42,13 +42,14 @@ const ORIGENS = listaCompleta<ArquivoTarifas["origem"]>()(["aneel", "exemplo"]);
 const TIPOS_DE_BANDEIRA = listaCompleta<Bandeira>()(["verde", "amarela", "vermelha-1", "vermelha-2", "escassez-hidrica"]);
 
 /** Campos que cada leitor lê (R4c): o `typecheck` reprova campo novo no tipo que não esteja aqui. */
+// `/* @__PURE__ */`: as listas só servem ao `typecheck` e aos testes (R4c); marcadas assim, saem do JS do site (D10, 1b).
 export const CAMPOS_DOS_ARQUIVOS_PUBLICOS = {
-  tarifas: listaCompleta<keyof ArquivoTarifas>()(["geradoEm", "origem", "fontes", "distribuidoras", "bandeiras", "estados"]),
-  distribuidora: listaCompleta<keyof Distribuidora>()(["id", "sigla", "cnpj", "ufs", "teKwh", "tusdKwh", "tarifaKwh", "inicioVigencia", "fimVigencia", "resolucao"]),
-  bandeira: listaCompleta<keyof BandeiraMes>()(["competencia", "bandeira", "nome", "adicionalKwh"]),
-  estado: listaCompleta<keyof Estado>()(["uf", "nome", "distribuidoras"]),
-  municipios: listaCompleta<keyof ArquivoMunicipios>()(["uf", "geradoEm", "origem", "municipios"]),
-  municipio: listaCompleta<keyof Municipio>()(["ibge", "nome", "uf", "distribuidoras"]),
+  tarifas: /* @__PURE__ */ listaCompleta<keyof ArquivoTarifas>()(["geradoEm", "origem", "fontes", "distribuidoras", "bandeiras", "estados"]),
+  distribuidora: /* @__PURE__ */ listaCompleta<keyof Distribuidora>()(["id", "sigla", "cnpj", "ufs", "teKwh", "tusdKwh", "tarifaKwh", "inicioVigencia", "fimVigencia", "resolucao"]),
+  bandeira: /* @__PURE__ */ listaCompleta<keyof BandeiraMes>()(["competencia", "bandeira", "nome", "adicionalKwh"]),
+  estado: /* @__PURE__ */ listaCompleta<keyof Estado>()(["uf", "nome", "distribuidoras"]),
+  municipios: /* @__PURE__ */ listaCompleta<keyof ArquivoMunicipios>()(["uf", "geradoEm", "origem", "municipios"]),
+  municipio: /* @__PURE__ */ listaCompleta<keyof Municipio>()(["ibge", "nome", "uf", "distribuidoras"]),
 } as const;
 
 const INVALIDO = Symbol("invalido");
