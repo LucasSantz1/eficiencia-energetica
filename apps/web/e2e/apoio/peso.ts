@@ -17,6 +17,8 @@ export type PesosPorMedida = Record<string, PesoDaMedida>;
 
 export interface ReferenciaDePeso {
   medidoNoCommit: string;
+  /** Por que a referência mudou (decisão e história), já que JSON não tem comentário. */
+  decisao?: string;
   rotas: PesosPorMedida;
 }
 
@@ -106,5 +108,7 @@ export function lerReferenciaDePeso(bruto: unknown): ReferenciaDePeso {
     }
     rotas[medida] = lido;
   }
-  return { medidoNoCommit: bruto.medidoNoCommit, rotas };
+  if ("decisao" in bruto && typeof bruto.decisao !== "string") throw new Error("peso-js.json: decisao não é texto");
+  const decisao = "decisao" in bruto && typeof bruto.decisao === "string" ? { decisao: bruto.decisao } : {};
+  return { medidoNoCommit: bruto.medidoNoCommit, ...decisao, rotas };
 }

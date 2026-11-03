@@ -5,8 +5,8 @@
  *         da rota — o que a página precisa para abrir. Baixado pelo Node, como o jsDoHtml da linha de base da HIS-001.
  *   11b · `totalComPrefetch`: soma de `encodedBodySize` de todo `.js` que o navegador baixou até `networkidle` + 1 s
  *         (o prefetch dos <Link> visíveis entra). Sem relógio falso: ele troca o `performance`.
- * Atualizar de propósito (num PR que explica o porquê na história):
- *   ATUALIZAR_PESO_JS=1 pnpm test:e2e --project=celular peso-js
+ * Atualizar de propósito (num PR que explica o porquê na história), com a decisão gravada no próprio JSON:
+ *   ATUALIZAR_PESO_JS=1 DECISAO_PESO_JS="HIS-NNN, D…: …" pnpm test:e2e --project=celular peso-js
  * O CI nunca atualiza: com GITHUB_ACTIONS=true essa variável reprova (Aa13).
  */
 import { execSync } from "node:child_process";
@@ -100,13 +100,16 @@ test("peso de JS dentro do limite da referência", async () => {
       throw new Error("ATUALIZAR_PESO_JS no CI: a referência só muda num PR, medida no computador de quem muda o peso (Aa13)");
     }
     const commit = execSync("git rev-parse --short HEAD").toString().trim();
-    writeFileSync(ARQUIVO_REFERENCIA, `${JSON.stringify({ medidoNoCommit: commit, rotas: medido }, null, 2)}\n`);
+    const decisao = process.env.DECISAO_PESO_JS?.trim();
+    if (!decisao) throw new Error("ATUALIZAR_PESO_JS sem DECISAO_PESO_JS: diga no JSON qual decisão aceitou o peso novo");
+    writeFileSync(ARQUIVO_REFERENCIA, `${JSON.stringify({ medidoNoCommit: commit, decisao, rotas: medido }, null, 2)}\n`);
     info.annotations.push({ type: "peso-js.json", description: `referência regravada a partir do commit ${commit}` });
   }
 
   const referencia = lerReferenciaDePeso(JSON.parse(readFileSync(ARQUIVO_REFERENCIA, "utf8")));
   const { erros, anotacoes, linhas } = compararPeso(referencia.rotas, medido);
-  const tabela = `### Peso de JS (referência do commit ${referencia.medidoNoCommit})\n\n${tabelaDoPeso(linhas)}`;
+  const origem = referencia.decisao ? `; ${referencia.decisao}` : "";
+  const tabela = `### Peso de JS (referência do commit ${referencia.medidoNoCommit}${origem})\n\n${tabelaDoPeso(linhas)}`;
   await info.attach("peso-js.md", { body: tabela, contentType: "text/markdown" });
   console.log(tabela); // aparece no terminal de quem roda local e no log do job
   escreverNoResumoDoCi([tabela, ...erros.map((e) => `- **erro:** ${e}`), ...anotacoes.map((a) => `- aviso: ${a}`)].join("\n"));
