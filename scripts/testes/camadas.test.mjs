@@ -106,11 +106,15 @@ function listarComGit() {
   return saida.split("\n").filter((linha) => EXTENSOES.has(path.extname(linha)));
 }
 
-function arquivosLidosPeloScript(saida) {
-  const casamento = /tudo certo \((\d+) arquivos/.exec(saida);
+/** Da linha "Camadas: tudo certo (N arquivos; M comentário(s) da HIS-109)". */
+function lerResumoDoScript(saida) {
+  const casamento = /tudo certo \((\d+) arquivos; (\d+) comentário\(s\) da HIS-109\)/.exec(saida);
   assert.ok(casamento, `saída inesperada do script: ${saida}`);
-  return Number(casamento[1]);
+  return { arquivos: Number(casamento[1]), his109: Number(casamento[2]) };
 }
+
+// Critério 11: os efeitos da HIS-109 só podem diminuir (a HIS-109 leva a 0).
+const TETO_HIS_109 = 8;
 
 const casosDoEslint = CASOS.filter((caso) => caso.verificador === "eslint");
 const casosDoScript = CASOS.filter((caso) => caso.verificador === "script");
@@ -172,7 +176,9 @@ const TESTES_DE_CONTROLE = {
     const doGit = listarComGit().length;
     const { codigo, saida, erro } = rodarScript(undefined, { cwd: RAIZ });
     assert.equal(codigo, 0, erro);
-    assert.equal(arquivosLidosPeloScript(saida), doGit, "o script leu um número de arquivos diferente do git ls-files");
+    const resumo = lerResumoDoScript(saida);
+    assert.equal(resumo.arquivos, doGit, "o script leu um número de arquivos diferente do git ls-files");
+    assert.ok(resumo.his109 <= TETO_HIS_109, `${resumo.his109} comentários da HIS-109; o teto é ${TETO_HIS_109}`);
     // Ab4: nenhuma pasta do site pode ficar fora do lint por um ignore solto.
     const resultados = await eslint.lintFiles(PASTAS_LIDAS);
     assert.equal(resultados.length, doGit, "o ESLint leu um número de arquivos diferente do git ls-files");

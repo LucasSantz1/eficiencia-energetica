@@ -206,7 +206,37 @@ const MATRIZ = [
   eslint("nega-pasta-antiga", "ADR-001", `${SITE}/app/exemplo/page.tsx`, usa("@/components/Botao"), "no-restricted-imports", "app só importa"),
 ];
 
-export const CASOS = [...ITEM_7_E_R13, ...S1, ...SEGURANCA, ...QUALIDADE, ...ESTRUTURA, ...MATRIZ];
+/** Script com o parser do TypeScript (B5): links, extensões, destino inexistente e comentários que mudam regra (C10). */
+const C10 = "comentário que muda regra do ESLint não é permitido (só o da HIS-109)";
+const MOTIVO_HIS_109 = "-- lê ?visao da URL só depois da hidratação (HIS-109)";
+const SCRIPT_TS = [
+  script("C4", "C4", {}, "link simbólico não é permitido", { links: [[`${SITE}/funcionalidades/exemplo/Tela.tsx`, `${SITE}/ui/Atalho.tsx`]] }),
+  script("S1-d", "S1 (seguranca, HIS-001)", {}, "link simbólico não é permitido", { links: [[`${SITE}/funcionalidades/exemplo`, `${SITE}/ui/pasta`]] }),
+  script("C5", "C5", { [`${SITE}/aplicacao/dados.servidor.js`]: "export const a = 1;\n" }, 'todo *.servidor.ts começa com import "server-only";'),
+  script("S1-c-script", "S1 (seguranca, HIS-001)", { "packages/core/src/exemplo.cts": "/* eslint-disable */\nexport const a = 1;\n" }, C10),
+  script("C9", "C9", { [UI]: 'import { a } from "@/ui/NaoExiste";\nexport const b = a;\n' }, "destino não encontrado"),
+  script("C9-relativo", "C9", { [UI]: 'import { a } from "./NaoExiste";\nexport const b = a;\n' }, "destino não encontrado"),
+  script("seguranca-14b", "seguranca-14b", {
+    ...SERVIDOR_DE_EXEMPLO,
+    [`${SITE}/funcionalidades/dicas/T.tsx`]: '"use client";\nimport { carregarNumerosDoInicio } from "@/aplicacao/numeros-do-inicio.servidor?x";\nexport const a = carregarNumerosDoInicio;\n',
+  }, "destino não encontrado"),
+  script("seguranca-22", "seguranca-22", { [T]: '// eslint-disable-next-line no-restricted-imports\nimport { useCasa } from "@/infraestrutura/armazenamento/casa";\nexport const a = useCasa;\n' }, C10),
+  script("seguranca-23", "seguranca-23", { [T]: "/* eslint-disable */\nexport const a = 1;\n" }, C10),
+  script("seguranca-24", "seguranca-24", { [T]: '/* eslint no-restricted-imports: "off" */\nexport const a = 1;\n' }, C10),
+  script("seguranca-25", "seguranca-25", { [T]: "export function f(e: HTMLElement, t: string) {\n  // eslint-disable-next-line no-restricted-syntax\n  e.innerHTML = t;\n}\n" }, C10),
+  script("seguranca-26", "seguranca-26", { [T]: "// eslint-disable-next-line react-hooks/set-state-in-effect\nexport const a = 1;\n" }, C10),
+  script("controle-seguranca-26", "controle", { [T]: `// eslint-disable-next-line react-hooks/set-state-in-effect ${MOTIVO_HIS_109}\nexport const a = 1;\n` }, null),
+  script("C10", "C10", { [UI_TSX]: "export function F() {\n  return (\n    <div>\n      {/* eslint-disable-next-line no-restricted-syntax */}\n      <p>x</p>\n    </div>\n  );\n}\n" }, C10),
+  script("C10-global", "C10", { [T]: "/* global fetch */\nexport const a = 1;\n" }, C10),
+  script("C10-mesma-linha", "C10", { [T]: "export const a = 1; // eslint-disable-line no-console\n" }, C10),
+  script("C10-motivo-curto", "C10", { [T]: "// eslint-disable-next-line react-hooks/set-state-in-effect -- curto (HIS-109)\nexport const a = 1;\n" }, C10),
+  script("C10-his109-no-fim-da-linha", "C10", { [T]: `export const a = 1; // eslint-disable-next-line react-hooks/set-state-in-effect ${MOTIVO_HIS_109}\n` }, C10),
+  script("controle-C10-texto", "controle", {
+    [UI_TSX]: 'export const t = "/* eslint-disable */";\nexport function F() {\n  return <p>// eslint-disable em texto, veja https://exemplo.org</p>;\n}\n',
+  }, null),
+];
+
+export const CASOS = [...ITEM_7_E_R13, ...S1, ...SEGURANCA, ...QUALIDADE, ...ESTRUTURA, ...MATRIZ, ...SCRIPT_TS];
 
 /** Controles que não cabem no formato de caso; cada um é um teste com o mesmo nome em camadas.test.mjs. */
 export const CONTROLES = ["controle-repositorio", "controle-arvore-minima", "controle-outra-pasta", "controle-linha-de-comando"];
@@ -229,5 +259,8 @@ export const OBRIGATORIOS = [
   "permite-infraestrutura-infraestrutura", "permite-infraestrutura-config", "permite-infraestrutura-core", "permite-infraestrutura-zustand", "permite-infraestrutura-node-no-servidor",
   "permite-servidor-server-only", "permite-config-config", "permite-dominio-relativo",
   "nega-ui-servidor-node", "nega-server-only-fora", "nega-config-ui", "nega-config-core", "nega-core-caminho-interno", "nega-infraestrutura-aplicacao", "nega-pasta-antiga",
+  "C4", "S1-d", "C5", "S1-c-script", "C9", "C9-relativo", "seguranca-14b",
+  "seguranca-22", "seguranca-23", "seguranca-24", "seguranca-25", "seguranca-26", "controle-seguranca-26",
+  "C10", "C10-global", "C10-mesma-linha", "C10-motivo-curto", "C10-his109-no-fim-da-linha", "controle-C10-texto",
   "controle-repositorio", "controle-arvore-minima", "controle-outra-pasta", "controle-linha-de-comando",
 ];
