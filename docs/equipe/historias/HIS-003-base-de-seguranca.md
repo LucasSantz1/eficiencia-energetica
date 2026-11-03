@@ -1362,3 +1362,7 @@ aceito, com R4c e R4d nas consequências.
 4. **No rebase** (D10, item 3): `pnpm lint --fix` num commit só de formatação; depois, num commit só, tirar o bloco provisório da 002b e subir o `TETO_HIS_109` para 8. Confiro isso antes do merge.
 5. Próximo: documentacao e scrum-master (fechamento), na ordem HIS-111 → 002b → 003a.
 
+
+### [qa] 2026-11-03 — D-3a-1, D-3a-2 e D-3a-3 conferidos: aprovado
+1. Cópia de `ab0838a`: typecheck, test (core 209, web 16, dados 17) e build verdes; `casa-salva`, `erros`, `peso-js`, `ajustes`, axe, `migracao`, `rotas`, `teclado` e `fluxo-principal` com 131 ✓ e 0 ✗ (6 pendentes já conhecidos).
+2. "Apagar tudo" aparece sem cidade, com a trava e só com a cópia ilegível, e tira as duas chaves; o aviso T1b não tem mais o link na própria Minha casa; aparece "9.500" e os botões do T3 ficam centralizados com zoom de 200%. Os testes novos afirmam cada correção. Peso contra a referência nova: +3 a +210 B (11a), dentro do limite.
