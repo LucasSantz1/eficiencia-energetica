@@ -1240,3 +1240,10 @@ aceito, com R4c e R4d nas consequências.
 - **Proposta:** D1 a D7, com a barreira V1 a V6, em `HIS-111-tarifas-vencidas.md`.
 - **Não muda a HIS-003a.** A HIS-111 começa depois do a3, porque mexe nos mesmos `tarifas.ts` e `validar`.
 - **Para o próximo:** dominio-energia confirma as sucessões. Ver as perguntas na HIS-111.
+
+### [backend] 2026-11-03 — etapa 4: a1, a2, a3 e a6 prontos (4 commits, sem push)
+- **O que fiz:** a1 `limites.ts`, `entrada.ts`, `estados.ts`, regra de 1.800 kWh/dia; a2 `casa-salva.ts`, `leitura-segura.ts`, `DadosCasa` no core; a3 `arquivos-publicos.ts`, `conferirFormato` dentro do `escreverArquivos` (sem `--forcar`), corte da `tarifas.ts` com `LIMITES.tarifaKwh`, alerta de bandeira > 0,15 no `validar`; a6 audit no CI, `dependabot.yml`, rotina em dois jobs (SHA reconferidos hoje), `.env.example`.
+- **Decisões:** (1) na casa salva, medidas (potência, minutos, leitura, kWh e R$ da conta) conferem só o limite físico, sem `inteiro`/`casas`, porque as telas antigas salvavam "12340,5" e "135,905" (risco 1); quantidade, banho e pessoas seguem inteiros. (2) `lerCasaSalva` não tem `try/catch`: um bug viraria "ilegível" e o `onRehydrate` regravaria a casa vazia; quem pega é o `merge` do D3, sem regravar. (3) O job `publicar` só roda no `main` e sai sem commit se o `main` já tiver os dados.
+- **Como verifiquei:** `pnpm typecheck`, `pnpm test` (core 197, dados 17) e `pnpm build`; R4c com mutação (tirar `kwhMesInformado` do leitor reprova 25 testes); 2 × 1.000 valores com semente fixa, nenhum lança; publicados e `dados:exemplo` com 0 descartes.
+- **Rebase com a HIS-111:** só os imports da `tarifas.ts` conflitam. O `typecheck` vai exigir ler `substituidas` (P8 da 111) no `lerArquivoTarifas`; faço no rebase.
+- **Para o próximo:** frontend no a4/a5 (`lerCasaSalva`, `avisoDaCasaSalva`, `lerArquivoTarifas`/`Municipios`, `ehUf`, `lerNumeroDigitado`). `[para: seguranca]` conferir R4c, R4d, R10, R11 e a decisão (1).

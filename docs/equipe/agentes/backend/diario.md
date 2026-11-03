@@ -10,6 +10,22 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-003a · leitores no core, conferência de formato na rotina e CI (a1, a2, a3, a6)
+- O que fiz:
+  - a1: `limites.ts`, `entrada.ts`, `estados.ts` e o período acima de 1.800 kWh/dia ignorado.
+  - a2: `casa-salva.ts` e `leitura-segura.ts`; `DadosCasa` foi para o core.
+  - a3: `arquivos-publicos.ts`; `conferirFormato` no `escreverArquivos`; corte da tarifa com `LIMITES`; alerta de
+    bandeira > 0,15 no `validar`.
+  - a6: `pnpm audit` no CI, `dependabot.yml`, rotina em dois jobs, `.env.example`.
+- Decisões e porquê:
+  - Medida da casa salva só com limite físico: tela antiga salvava fração, e tirar o item seria perder anotação.
+  - Sem `try/catch` no leitor: um bug viraria "ilegível" e a casa vazia seria regravada.
+  - `conferirFormato` no `escreverArquivos` e não no `atualizar.ts`, que a HIS-111 reescreveu: rebase pequeno.
+- Arquivos: `packages/core/src/{limites,entrada,estados,casa-salva,leitura-segura,arquivos-publicos}.ts` e testes;
+  `packages/dados/src/{formato,escrever,montar}.ts`, `aneel/tarifas.ts`, `test/formato.test.ts`; `.github/`;
+  `apps/web/.env.example`; `apps/web/src/infraestrutura/armazenamento/casa.ts` (só o tipo).
+- Próximos passos: rebase sobre a HIS-111 (ler `substituidas`); responder à revisão da seguranca e do tech-lead.
+
 ## 2026-10-30 · HIS-111 · tarifas vencidas: 227 municípios, três causas, proposta D1–D7
 - O que fiz:
   - Investiguei a P-de-1 da HIS-003 nos arquivos publicados de 29/10 e no código da rotina.
