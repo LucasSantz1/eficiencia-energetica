@@ -10,6 +10,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-003a · a4 e a5: casa salva e /dados validados, avisos T1/T2, telas de erro e cabeçalhos
+- O que fiz: a4 `9be1f4c` (armazenamento seguro, `merge`, trava de gravação do pedido 1, ações pelo leitor, `/dados`
+  pelos leitores, servidor sem `catch`, vitest no site) e a5 `017281f` (T1 ×3, T1b, T2 ×3, T3, T4, foco, `rel`, D6).
+- Decisões e porquê: `carregando` derivado da chave (caminho + tentativa), sem `setState` síncrono no efeito; 2ª falha
+  do T3 por instante guardado no módulo (funciona com ou sem remontagem, conferido); telas de toda rota sem `Botao`,
+  `lucide` e `next/link` no erro (o peso mostrou cada uma levando o módulo inteiro).
+- Verificação: barreira verde; e2e (3351) 106 ✓ e só o peso ✗; roteiro avulso em 390/1280 com capturas.
+- Aprendizado: medir o peso por pedaço (`gzip` dos `<script>` do HTML) mostra na hora qual import puxa o quê. E, para
+  forçar erro no `Intl`, chamar o getter original pelo descritor.
+- Arquivos: ver o contexto (linha HIS-003a), a história e este diário.
+- Próximos passos: tech-lead decide o peso; qa no a7; seguranca nos R1–R13.
+
 ## 2026-10-30 · HIS-002 · D-A5-1 e D-A5-2: nome do "Quem mais gasta" e Tab na tabela do painel geral
 - O que fiz: commit `92e9fd9`. Coloquei o `aria-label` da ux nos 6 botões do ranking, com `{" "}` entre os blocos, e
   `role="region"`, nome e `tabIndex={0}` na região rolável da tabela do painel geral.

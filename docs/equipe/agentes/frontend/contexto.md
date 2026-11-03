@@ -21,6 +21,7 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
 | `ui/aparelho/` | componentes de aparelho compartilhados, sem store: `tipos.ts` (`ItemComodo`), `textosDeUso.ts`, `LinhaAparelho`, `BlocoIluminacao`, `TempoUso`, `SeletorCatalogo`, `EditorAparelho` (props `comodos`/`aoSalvar`/`aoRemover`) |
 | `aplicacao/` | única porta para `infraestrutura/`: `casa.ts` (`useCasa`, `useCasaCarregada`, `novoId`, `useEdicaoDeAparelho`), `dados-publicos.ts` (`useTarifas`, `useMunicipios`), `resumo.ts` (`useResumo`, `tarifaMedia`, `nomeDistribuidora`), `numeros-do-inicio.servidor.ts` |
 | `infraestrutura/` | `armazenamento/casa.ts` (o único `create` do store: chave `eficiencia-energetica:casa`, versão 2 + `migrate`), `identificador.ts` (`novoId`), `dados-publicos/navegador.ts` (fetch de `/dados`), `dados-publicos/arquivos.servidor.ts` (único `node:fs`) |
+| HIS-003a (a4/a5) | `infraestrutura/armazenamento/armazenamento-local.ts` (nunca lança; `travarGravacao`) e `hidratacao.ts` (`lerCasaNaHidratacao`, `dadosSalvaveis`); `ui/AvisoDaCasaSalva`, `ui/AvisoFalhaDeCarga`, `ui/TelaDeErro`, `ui/foco.ts`, `ui/estilosDeBotao.ts`; `app/error.tsx`, `global-error.tsx`, `not-found.tsx`; testes do store em `apps/web/test/` (vitest) |
 | `config/recursos.ts` | `RECURSOS.espacosReservados = false` |
 
 ## Decisões em vigor
@@ -41,6 +42,14 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
   animações por CSS e esperar a `Contagem` terminar (sem `clock.setFixedTime`, que a trava). Roteiro:
   `scratchpad/fe-his002/comparar.cjs` (o essencial está na nota da HIS-002a).
 
+- Casa salva (HIS-003a): o `merge` lê tudo com `lerCasaSalva` a cada abertura; existe aviso exatamente quando algo
+  saiu, e só então regrava. Se o leitor lançar, a gravação fica travada (nunca regravar a casa vazia). Toda ação do
+  store passa pelo leitor; o que ele recusa não muda nada.
+- `/dados`: a tela recebe `falhasSeguidas`, `semInternet`, `carregando` e `tentarDeNovo`, nunca texto técnico. O aviso
+  de falha fica sempre montado para levar o foco ao título quando volta a dar certo.
+- O que entra em toda rota (`error.tsx`, `global-error.tsx`, `not-found.tsx`) não importa `Botao.tsx`, `lucide` nem
+  `next/link` no erro: usa `classesDeBotao` (medido: ~8 kB por rota).
+
 ## Pendências
 
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
@@ -49,7 +58,8 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
   "Quem mais gasta" e região focável da tabela do painel geral). Com isso, o axe passa nos 2 projetos. Falta o qa trocar o seletor
   `^${nome}: ` de `e2e/aparelhos.spec.ts:43` pelo nome novo. Achado para a HIS-110: 2 `dd` `text-white/85` nos cartões
   da Tarifa Social também falham `color-contrast`.
-- HIS-003: validação com zod, tela de erro, limites de entrada.
+- HIS-003a: a4 `9be1f4c` e a5 `017281f` feitos (2026-11-03); falta o tech-lead decidir o peso (+8 a +12 kB por
+  rota), depois qa (a7) e seguranca. HIS-003b (limites nas telas, "Confere?") vem depois.
 
 ## Orientações do responsável
 
