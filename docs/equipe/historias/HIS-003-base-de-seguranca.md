@@ -1354,3 +1354,11 @@ aceito, com R4c e R4d nas consequências.
 ### [frontend] 2026-11-03 — D-3a-1 a D-3a-3 corrigidos (1 commit, sem push)
 - D-3a-1: a Minha casa abre sem cidade sempre que houver dado guardado (também a casa travada e a `casa-ilegivel`) e mostra "Seus dados". D-3a-2: na Minha casa, o aviso T1b fica sem o link para a própria página. D-3a-3: `formatarQuantidade` no core ("9.500") e `text-center` nos botões.
 - e2e para cada um (`casa-salva`, `erros`), mais testes de unidade; e2e numa cópia (3356): 187 ✓, e o fluxo principal falhou uma vez no "terminar o cadastro" (instabilidade conhecida, passou 4 vezes em seguida). Peso dentro da referência.
+
+### [tech-lead] 2026-11-03 — code review final (etapa 7): aprovado
+1. **Aprovado** (`0cef6c1..ab0838a`). Camadas certas (`aplicacao/` é a única porta, a `ui/` só chama funções puras do core). Nenhum `as` nem `any` no código novo. A fronteira segue o ADR-004: `lerX(unknown)` no core, o navegador descarta, o servidor lança, a rotina recusa e nada é corrigido. A trava e o "Apagar tudo" seguem o D10.
+2. Como verifiquei: numa cópia, typecheck (80 arquivos), test (core 209, web 16, dados 17), build e `pnpm audit` limpos. Rodei peso, casa-salva, erros, dados-publicos e cabeçalhos: 71 passam e 2 ficam pulados. Peso dentro do D10 e da P-qa-3a-1 (11a até +10 382 B, 11b até +13 252 B).
+3. Ajuste pequeno, que não bloqueia: em `casa-salva.ts` e `arquivos-publicos.ts`, o `//` do `@__PURE__` separa o JSDoc do `CAMPOS_*`. Juntar os dois num JSDoc só, no rebase.
+4. **No rebase** (D10, item 3): `pnpm lint --fix` num commit só de formatação; depois, num commit só, tirar o bloco provisório da 002b e subir o `TETO_HIS_109` para 8. Confiro isso antes do merge.
+5. Próximo: documentacao e scrum-master (fechamento), na ordem HIS-111 → 002b → 003a.
+

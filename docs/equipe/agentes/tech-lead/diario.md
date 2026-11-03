@@ -10,6 +10,15 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-003a · code review final aprovado (etapa 7)
+- **O que fiz:** revisei `0cef6c1..ab0838a` (a1–a7, cortes do D10, trava, D-3a-1 a 3). Numa cópia
+  (`scratchpad/tl-his003a-rev/`), typecheck, test, build e audit verdes. Rodei 5 specs de e2e (71 passam, 2 pulados);
+  o peso fica dentro dos tetos.
+- **Decisões e porquê:** aprovado. Nada de `as` nem `any`, as camadas e o ADR-004 estão respeitados. Só um ajuste
+  pequeno de JSDoc, para o rebase.
+- **Arquivos:** `HIS-003-base-de-seguranca.md` (nota), `contexto.md` e este diário.
+- **Próximos passos:** no rebase, conferir o `--fix`, o bloco fora e o teto 8 antes do merge.
+
 ## 2026-11-03 · HIS-003a · peso, trava da gravação e ordem de integração (D10)
 - **O que fiz:** fiz builds da `5c5f171` e do `main` em cópias (`scratchpad/tl-his003a-peso/`), reproduzi o peso
   (+8,2 a +11,8 kB) e medi 4 experimentos: sem o leitor dos arquivos no navegador (−1 kB), sem `error.tsx` (−1,3 kB),

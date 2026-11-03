@@ -118,7 +118,8 @@
 
 ## Pendências
 
-- HIS-003a (D10, 2026-11-03): no code review, conferir o `app/error.tsx` fora (ou de volta, com o teto +1,3 kB), os
+- HIS-003a: **code review aprovado em 2026-11-03**. Falta conferir no rebase o `--fix`, o bloco fora e o teto 8.
+  Itens do D10 já conferidos: o `app/error.tsx` fora (ou de volta, com o teto +1,3 kB), os
   `/* @__PURE__ */`, o teto de +10,5 kB por rota no `peso-js.json` do qa, que "Apagar tudo" faz `removeItem` e solta a
   trava, a cópia `eficiencia-energetica:casa-ilegivel` (uma vez só, apagada com "Apagar tudo") e, no rebase, o bloco
   provisório fora e o `TETO_HIS_109` em 8. A ordem é HIS-111 → 002b → 003a.
