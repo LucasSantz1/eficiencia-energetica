@@ -664,6 +664,56 @@ Ela começa depois da 003a no `main`.
 6. **Memória do navegador cheia.** O `setItem` não salva e não avisa. Vai para o backlog: "avisar quando não der para
    salvar".
 
+### D10. Decisões da etapa 4: peso, trava da gravação e ordem de integração (tech-lead, 2026-11-03)
+
+**Medição** (cópia do `5c5f171`, contra um build do `main` na mesma máquina; JS do HTML em gzip; detalhes em
+`scratchpad/tl-his003a-peso/`, que não é guardado):
+
+| Experimento | `/` | `/comecar` | `/casa` | `/casa/ajustes` | `/sobre` |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `5c5f171` como está | +8 249 | +11 590 | +11 699 | +11 828 | +2 141 |
+| sem o leitor dos arquivos no navegador (só medida) | −1 018 | −1 004 | −1 211 | −1 019 | 0 |
+| sem `app/error.tsx` (só o `global-error`) | −1 300 | −1 286 | −1 493 | −1 301 | −1 285 |
+| `/* @__PURE__ */` nos `CAMPOS_*` | −266 | −252 | −459 | −267 | 0 |
+| os dois cortes pedidos juntos | **+6 698** | **+10 053** | **+9 955** | **+10 276** | **+856** |
+
+O que sobra é o custo da própria história, quase todo no chunk do `@ee/core` + store (+4,8 kB: leitor da casa,
+limites, `leitura-segura`, armazenamento) e nos avisos T1 e T2. O `"sideEffects": false` no `@ee/core` não muda nada
+(medido). O leitor dos arquivos fica no navegador: tirar poupa só cerca de 1 kB e desfaz o ADR-004.
+
+**1. Peso: cortar 2 coisas e aceitar o resto, com teto.**
+
+- (a) **frontend:** tirar `app/error.tsx` e deixar só o `global-error.tsx`, que já usa a mesma `TelaDeErro`. Pela
+  documentação do Next 16 (`error.md`), o `global-error` é o limite de erro da raiz e pega também o erro de uma tela.
+  Isso poupa cerca de 1,3 kB em **toda** rota. Só vale se o `erros.spec.ts` (a7) provar o T3, o foco no `h1`, a 2ª falha
+  e o "Tentar de novo" com o erro numa tela. Se não provar, o `error.tsx` volta e o teto sobe 1,3 kB.
+- (b) **backend:** marcar os `listaCompleta()()` dos `CAMPOS_*` (casa e arquivos) com `/* @__PURE__ */`, com um
+  comentário do porquê: são só para o `typecheck` (R4c) e saem do bundle. Os testes do R4c continuam iguais.
+- (c) **Teto aceito:** até **+10,5 kB** por rota no 11a (e +1 kB na `/sobre`) contra a referência `06be352`. Acima
+  disso, falar comigo. O **qa** atualiza o `peso-js.json` no a7, num commit próprio medido no último commit de código,
+  com a tabela na nota. Em 3G (cerca de 50 kB/s) são cerca de 0,2 s a mais. Em troca, a casa da família não se perde e a
+  tela não fica branca.
+- (d) **Backlog:** carregar o `AvisoDaCasaSalva` e o `AvisoFalhaDeCarga` só quando aparecem (cerca de 1,5 kB) quando
+  existir a regra de `import()` dinâmico. Hoje a 002b o proíbe.
+
+**2. Trava da gravação: solta com "Apagar tudo" e com o cadastro novo confirmado.** Hoje o "Apagar tudo" com a trava
+ligada não apaga nada, porque só faz `set` e o `setItem` está travado. Os dados ilegíveis voltam na próxima visita e o T1c
+aparece de novo. Isso fura o "opção de apagar tudo" da LGPD. Decisão (frontend, com teste no `apps/web/test/`):
+
+- "Apagar tudo" chama `removeItem` da chave **e** solta a trava;
+- `criarCasa` (cadastro confirmado) solta a trava, mas antes guarda uma cópia do texto bruto em `eficiencia-energetica:casa-ilegivel`,
+  uma vez só e sem sobrescrever. É o que permite que uma versão corrigida leia a casa depois. Se a cópia falhar
+  (memória cheia), grava assim mesmo: o trabalho novo da pessoa vale mais que um texto que não conseguimos ler;
+- "Apagar tudo" também apaga a `eficiencia-energetica:casa-ilegivel`. O formato da casa não muda (é outra chave, sem `version`).
+
+`[para: seguranca]` confirmar: a cópia bruta fica só no aparelho, não é lida por nada e some com "Apagar tudo".
+
+**3. Ordem de integração.** A HIS-111 entra primeiro quando estiver pronta (prioridade 1, número errado no ar), já
+com o efeito reescrito sem comentário da HIS-109 (D17 da 002b). Depois entra a 002b. A **003a entra por último**: no
+rebase, ela lê o `substituidas` (nota do backend), roda o `pnpm lint --fix` num commit só de formatação e, num commit
+só, tira o bloco `provisorio/arquivos-em-outras-historias` e sobe o `TETO_HIS_109` para 8. Se a 002b ficar pronta antes
+da 111, a ordem é 002b, 111, 003a, e a 111 faz o próprio `--fix` no rebase.
+
 ## Ameaças
 
 _(seguranca, 2026-10-30)_ Ativo: a casa salva no aparelho (não tem dado pessoal, mas perder é perder o trabalho da
@@ -1261,3 +1311,10 @@ aceito, com R4c e R4d nas consequências.
 - **`[para: tech-lead]` Peso acima do D8:** +8,2 a +11,8 kB por rota no 11a. O a4 soma +4,8 kB (leitores do core); o a5 soma +2,6 kB das 2 telas de erro, +1,5 kB do framework e o resto dos avisos. O `peso-js.spec` falha até a referência mudar; decidir antes do a7.
 - **Como verifiquei:** typecheck, test (core 207, web 10, dados 17) e build verdes, todas as rotas continuam estáticas. e2e numa cópia (3351): 106 ✓, só o peso ✗. Roteiro avulso em 390 e 1280 px (porta 3353): T1a, T1b, T1c, T2, T2c, T3 (com a 2ª falha) e T4 com foco certo, nenhum pedido com `../x`, os 7 cabeçalhos e nenhum erro de console além dos provocados.
 - **Para o próximo:** **tech-lead**: peso. **qa**: a7 (para o T3, fazer o `format` lançar pelo descritor, `get.call(this)`). **seguranca**: R1–R13.
+
+### [tech-lead] 2026-11-03 — pergunta do peso, trava da gravação e ordem de integração decididas (D10)
+1. **Peso:** dois cortes medidos, **frontend** tira o `app/error.tsx` (−1,3 kB em toda rota, se o `erros.spec` provar o T3) e **backend** põe `/* @__PURE__ */` nos `CAMPOS_*` (−0,3 kB). O resto fica aceito até +10,5 kB por rota, e o **qa** atualiza o `peso-js.json` no a7.
+2. **Trava:** "Apagar tudo" hoje não apaga com a trava ligada (fura a LGPD). Ela solta com "Apagar tudo" (`removeItem`) e com o `criarCasa`, que antes guarda uma cópia bruta, uma vez só. `[para: seguranca]` confirmar.
+3. **Ordem:** HIS-111 → 002b → **003a por último**. No rebase, a 003a tira o bloco provisório e sobe o teto da HIS-109 para 8 num commit só.
+4. Como verifiquei: builds da `5c5f171` e do `main` em cópias, com 4 experimentos medidos (tabela no D10).
+5. Próximo: frontend (1 e 2) ‖ backend (1b) → seguranca (item 2 e R1–R13) → qa (a7).

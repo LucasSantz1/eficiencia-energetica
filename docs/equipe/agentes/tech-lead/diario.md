@@ -10,6 +10,19 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-003a · peso, trava da gravação e ordem de integração (D10)
+- **O que fiz:** fiz builds da `5c5f171` e do `main` em cópias (`scratchpad/tl-his003a-peso/`), reproduzi o peso
+  (+8,2 a +11,8 kB) e medi 4 experimentos: sem o leitor dos arquivos no navegador (−1 kB), sem `error.tsx` (−1,3 kB),
+  `@__PURE__` nos `CAMPOS_*` (−0,3 kB) e `sideEffects: false` (nada).
+- **Decisões e porquê:**
+  - Cortar o `error.tsx` e marcar os `CAMPOS_*`; o resto é o custo da história, aceito até +10,5 kB por rota.
+  - O leitor dos arquivos fica: tirar poupa 1 kB e desfaz o ADR-004.
+  - Achei que "Apagar tudo" não apaga com a trava ligada (LGPD). A trava passa a soltar com "Apagar tudo" e com o
+    `criarCasa`, este depois de guardar uma cópia bruta.
+  - Ordem: 111 → 002b → 003a.
+- **Arquivos:** `HIS-003-base-de-seguranca.md` (D10 e a nota), `contexto.md` e este diário.
+- **Próximos passos:** frontend e backend aplicam; a seguranca confirma a cópia bruta; o qa faz o a7 com a referência nova.
+
 ## 2026-10-30 · HIS-002 · etapa 7 da 002a: code review aprovado; ADR-004 e ADR-005 aceitos
 - **O que fiz:** revisei o diff de código contra o D9–D16 e rodei typecheck, test e build numa cópia
   (`scratchpad/tl-his002a-rev/copia`): tudo verde. Pela API REST do GitHub conferi os runs do PR #3: `4c860b5` e

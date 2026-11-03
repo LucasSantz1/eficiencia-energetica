@@ -118,6 +118,12 @@
 
 ## Pendências
 
+- HIS-003a (D10, 2026-11-03): no code review, conferir o `app/error.tsx` fora (ou de volta, com o teto +1,3 kB), os
+  `/* @__PURE__ */`, o teto de +10,5 kB por rota no `peso-js.json` do qa, que "Apagar tudo" faz `removeItem` e solta a
+  trava, a cópia `eficiencia-energetica:casa-ilegivel` (uma vez só, apagada com "Apagar tudo") e, no rebase, o bloco
+  provisório fora e o `TETO_HIS_109` em 8. A ordem é HIS-111 → 002b → 003a.
+- Backlog (D10d): carregar os avisos T1/T2 só quando aparecem (cerca de 1,5 kB) quando houver regra de `import()`.
+
 - HIS-003: levar as respostas da P-tl-1, da P-tl-2 e da P-tl-3 para o desenho. No a6, reconferir os SHA. No code
   review, conferir:
   - nenhum `as` sobre dado de fora;
