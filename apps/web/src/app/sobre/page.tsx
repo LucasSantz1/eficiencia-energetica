@@ -41,19 +41,19 @@ export default function Sobre() {
           <p>Todos os dados são públicos e são conferidos todos os dias por uma rotina automática:</p>
           <ul className="list-disc space-y-2 pl-6">
             <li>
-              <a className="font-bold text-energia underline underline-offset-2" href="https://dadosabertos.aneel.gov.br/dataset/tarifas-distribuidoras-energia-eletrica">
+              <a className="font-bold text-energia underline underline-offset-2" rel="noopener noreferrer" href="https://dadosabertos.aneel.gov.br/dataset/tarifas-distribuidoras-energia-eletrica">
                 Tarifas de aplicação das distribuidoras
               </a>{" "}
               (ANEEL): tarifa residencial B1 convencional vigente de cada distribuidora.
             </li>
             <li>
-              <a className="font-bold text-energia underline underline-offset-2" href="https://dadosabertos.aneel.gov.br/dataset/bandeiras-tarifarias">
+              <a className="font-bold text-energia underline underline-offset-2" rel="noopener noreferrer" href="https://dadosabertos.aneel.gov.br/dataset/bandeiras-tarifarias">
                 Bandeiras tarifárias
               </a>{" "}
               (ANEEL): a bandeira de cada mês e o valor adicional.
             </li>
             <li>
-              <a className="font-bold text-energia underline underline-offset-2" href="https://dadosabertos.aneel.gov.br/dataset/indqual-municipio">
+              <a className="font-bold text-energia underline underline-offset-2" rel="noopener noreferrer" href="https://dadosabertos.aneel.gov.br/dataset/indqual-municipio">
                 Indicadores de qualidade por município
               </a>{" "}
               (ANEEL): quais distribuidoras atendem cada cidade.

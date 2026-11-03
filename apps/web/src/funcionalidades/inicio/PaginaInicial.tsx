@@ -6,6 +6,7 @@ import { Icone } from "@/ui/Icone";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { Marca } from "@/ui/Marca";
 import { Contagem, Revelar, TransicaoTela } from "@/ui/Movimento";
+import { AvisoDaCasaNoInicio } from "./AvisoDaCasaNoInicio";
 import { BotaoComecar } from "./BotaoComecar";
 import { CasaIlustrada } from "./CasaIlustrada";
 import { Simulador } from "./Simulador";
@@ -68,6 +69,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
           </nav>
           <BotaoComecar compacto estilo="contorno" />
         </header>
+        <AvisoDaCasaNoInicio />
 
         <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pt-14 pb-16 sm:px-8 lg:min-h-[calc(92dvh-4.5rem)] lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pt-10">
           <div>
@@ -276,7 +278,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
                 </Link>
               </li>
               <li>
-                <a href="https://dadosabertos.aneel.gov.br" className="hover:text-white">
+                <a href="https://dadosabertos.aneel.gov.br" rel="noopener noreferrer" className="hover:text-white">
                   Dados abertos da ANEEL
                 </a>
               </li>

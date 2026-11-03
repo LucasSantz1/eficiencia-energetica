@@ -5,10 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
 import { useResumo } from "@/aplicacao/resumo";
-import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
+import { useAvisoDaCasaSalva, useCasa, useCasaCarregada } from "@/aplicacao/casa";
 import { Marca } from "@/ui/Marca";
 import { IR_ADIANTE, TransicaoTela, VOLTAR } from "@/ui/Movimento";
 import { Aviso } from "@/ui/Aviso";
+import { AvisoDaCasaSalva } from "@/ui/AvisoDaCasaSalva";
 import { BotaoLink } from "@/ui/Botao";
 
 const ITENS: { href: string; rotulo: string; curto?: string; Icone: typeof Lightbulb }[] = [
@@ -23,6 +24,9 @@ export function Casca({ children }: { children: ReactNode }) {
   const caminho = usePathname();
   const carregada = useCasaCarregada();
   const residencia = useCasa((s) => s.residencia);
+  // T1b: a cidade saiu, mas cômodos ou aparelhos ficaram. Mandar para o /comecar apagaria tudo (criarCasa).
+  const temCasaSemCidade = useCasa((s) => !s.residencia && (s.comodos.length > 0 || s.aparelhos.length > 0));
+  const { aviso, dispensar } = useAvisoDaCasaSalva();
   const { arquivo } = useResumo();
   const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
   // Ir para uma aba à direita desliza para a esquerda, e vice-versa.
@@ -65,6 +69,7 @@ export function Casca({ children }: { children: ReactNode }) {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 pt-6 sm:px-6 sm:pt-8">
+        <AvisoDaCasaSalva aviso={aviso} aoEntender={dispensar} className="mb-6" />
         {arquivo?.origem === "exemplo" && (
           <div className="mb-6">
             <Aviso tom="faisca">Estes são dados de exemplo para testes. As tarifas reais da ANEEL entram na próxima atualização automática.</Aviso>
@@ -75,7 +80,18 @@ export function Casca({ children }: { children: ReactNode }) {
             <div className="h-40 animate-pulse rounded-[var(--radius-cartao)] bg-papel" />
             <div className="h-64 animate-pulse rounded-[var(--radius-cartao)] bg-papel" />
           </div>
-        ) : !residencia ? (
+        ) : !residencia && temCasaSemCidade && caminho !== "/casa/ajustes" ? (
+          // Enquanto o aviso T1b está na tela, ele já tem o mesmo texto e o botão: nada se repete embaixo.
+          aviso?.tipo === "sem-residencia" ? null : (
+          <div className="py-10">
+            <h1 className="text-[2rem] leading-tight font-extrabold">Não conseguimos abrir sua cidade e sua empresa de luz.</h1>
+            <p className="mt-3 max-w-[48ch] text-lg text-tinta-suave">Seus aparelhos continuam salvos. Escolha a cidade de novo para ver os valores.</p>
+            <BotaoLink href="/casa/ajustes" className="mt-8">
+              Escolher minha cidade
+            </BotaoLink>
+          </div>
+          )
+        ) : !residencia && !temCasaSemCidade ? (
           <div className="py-10">
             <h1 className="text-[2rem] leading-tight font-extrabold">Vamos cadastrar a sua casa</h1>
             <p className="mt-3 max-w-[48ch] text-lg text-tinta-suave">Leva uns dois minutos. Precisamos saber a sua cidade e quais aparelhos você tem.</p>

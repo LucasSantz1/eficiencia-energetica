@@ -1,11 +1,12 @@
 "use client";
 
-import { formatarReais, precoKwh, type Beneficio, type Distribuidora, type Ligacao, type Municipio } from "@ee/core";
+import { ehUf, ESTADOS, formatarReais, precoKwh, type Beneficio, type Distribuidora, type Ligacao, type Municipio } from "@ee/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Aviso } from "@/ui/Aviso";
+import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
 import { Entrada } from "@/ui/Entrada";
@@ -33,6 +34,7 @@ export function TelaAjustes() {
   const router = useRouter();
   const { residencia, arquivo, distribuidora } = useResumo();
   const atualizar = useCasa((s) => s.atualizarResidencia);
+  const definirResidencia = useCasa((s) => s.definirResidencia);
   const apagarTudo = useCasa((s) => s.apagarTudo);
   const [mudandoCidade, setMudandoCidade] = useState(false);
   const [confirmarApagar, setConfirmarApagar] = useState(false);
@@ -45,7 +47,28 @@ export function TelaAjustes() {
   const porId = useMemo(() => new Map((arquivo?.distribuidoras ?? []).map((d) => [d.id, d])), [arquivo]);
   const opcoesDistribuidora = (municipioAtual?.distribuidoras ?? []).map((id) => porId.get(id)).filter((d): d is Distribuidora => Boolean(d));
 
-  if (!residencia) return null;
+  if (!residencia) {
+    // T1b: a cidade saiu e os aparelhos ficaram. Só "Onde você mora"; a escolha cria a residência de novo, sem apagar
+    // os aparelhos (o /comecar apagaria, D5). Benefício e ligação voltam para "não sei" até a pessoa escolher.
+    return (
+      <div className="space-y-12">
+        <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
+        <Secao titulo="Onde você mora">
+          <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
+        </Secao>
+        <TrocarCidade
+          aberta={mudandoCidade}
+          aoFechar={() => setMudandoCidade(false)}
+          estados={arquivo?.estados ?? []}
+          distribuidorasValidas={porId}
+          aoEscolher={(m, distribuidoraId) => {
+            definirResidencia({ uf: m.uf, municipioIbge: m.ibge, municipioNome: m.nome, distribuidoraId, beneficio: "nao-sei", ligacao: "nao-sei" });
+            setMudandoCidade(false);
+          }}
+        />
+      </div>
+    );
+  }
 
   const salvarConta = () => {
     const k = Number(kwh.replace(",", "."));
@@ -212,12 +235,14 @@ function TrocarCidade({
 }: {
   aberta: boolean;
   aoFechar: () => void;
-  ufAtual: string;
+  ufAtual?: string;
   estados: { uf: string; nome: string; distribuidoras: string[] }[];
   distribuidorasValidas: Map<string, Distribuidora>;
   aoEscolher: (m: Municipio, distribuidoraId: string) => void;
 }) {
-  const [uf, setUf] = useState(ufAtual);
+  const [ufEscolhida, setUf] = useState(ufAtual);
+  // Sem cidade salva (T1b), começa pelo primeiro estado da lista, que é o que o seletor mostra.
+  const uf = ufEscolhida ?? estados[0]?.uf;
   const [escolhido, setEscolhido] = useState<Municipio>();
   const municipios = useMunicipios(uf);
 
@@ -248,6 +273,16 @@ function TrocarCidade({
               ))}
             </select>
           </Campo>
+          <div className="empty:hidden">
+            <AvisoFalhaDeCarga
+              assunto={{ tipo: "cidades", estado: ehUf(uf) ? ESTADOS[uf] : "" }}
+              fraseDeSeguranca="Sua casa continua salva."
+              falhasSeguidas={municipios.falhasSeguidas}
+              semInternet={municipios.semInternet}
+              carregando={municipios.carregando}
+              aoTentarDeNovo={municipios.tentarDeNovo}
+            />
+          </div>
           {municipios.dados && (
             <BuscaCidade
               autoFocus={false}
