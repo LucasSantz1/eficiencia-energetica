@@ -33,6 +33,10 @@
 - **HIS-002a, A5 fechado / A7 / etapa 5 (2026-10-30): aprovado.** `d5a4940` (seletor do D-A5-1), `020db92` (A7).
   e2e 107 passam / 6 pendentes / 0 falha; `--repeat-each=3` 321 / 18 / 0; M1–M16 na história (M1 equivalente, com
   M1b–M1d). Roteiro `…/scratchpad/h2a/mutacoes.sh` (cópia `h2a/mut`, porta 3142, restaura do repositório a cada caso).
+- **HIS-003a, a7 (2026-11-03): aprovado com 3 defeitos baixos.** e2e novos `cabecalhos`, `casa-salva` (R4 + trava do
+  D10 2), `dados-publicos`, `erros` (T3 pelo `global-error`), 7 telas novas no axe, N9 (`errosEsperados`) e N10 (CSP).
+  `peso-js.json` regravado com `decisao` (D10 1c). `global-error` com o layout raiz quebrado conferido à mão. Cópias
+  `…/scratchpad/qa-his003a/copia` (3502) e `mut` (3503, mutações da trava); `sincronizar.sh` e `exploratorio.cjs` lá.
 - Peso: referência `peso-js.json` com o lockfile novo (11a `/` 164 215 … 11b `/casa` com casa 212 282). O spec no build
   do `main` dá a HIS-001 byte a byte; o lockfile muda −5…+23 B (caminho `next@…_@playwright+test@1.63.0` embutido).
 - Como subir o site para testar: `pnpm build && pnpm --filter @ee/web start -p 3100` (em segundo plano);
@@ -40,6 +44,14 @@
 - O Chromium já está instalado no ambiente de nuvem: `require('playwright')` (1.63, via NODE_PATH global), sem `playwright install`.
 
 ## Decisões em vigor
+
+- Erro provocado de propósito: `errosEsperados.push(/…/)` no teste (fixture nova a cada teste). Cada padrão precisa
+  aparecer; o resto reprova; "pedido para fora do site" nunca é esperado. A violação da CSP no Chromium do PW 1.63 diz
+  "violates the following Content Security Policy directive" (não "Refused to"). 404 e 500 geram `status of 404/500`.
+- Quebrar uma tela sem mexer no site: getter do `Intl.NumberFormat.prototype.format` lançando (`apoio/erros.ts`).
+  Leitor da casa que lança (trava): `Object.hasOwn` lança com objeto que tem `e2eLancar`. Não rodar `git` nas cópias:
+  o `.git` delas aponta para o worktree de verdade.
+- `peso-js.json` tem `decisao` (texto); `ATUALIZAR_PESO_JS=1` exige `DECISAO_PESO_JS`.
 
 - e2e: fixture automática reprova `pageerror`, `console.error` e pedido fora da origem do `baseURL`; contexto novo por
   teste (não usar `browser.newContext`, que fica sem vigia — usar `test.use`). Scripts de `addInitScript` precisam
@@ -88,6 +100,8 @@
 - HIS-002a: a ux ainda não revisou `excecoes-axe.ts` (8 `color-contrast` da `/`, HIS-110). Depois do push (A6):
   conferir peso do runner × local (D14; se diferir, referência = CI e rodar de novo), artefato do commit descartável
   (critério 4) e `--list` no runner (critério 6).
+- HIS-003a: `[para: tech-lead]` o 11b subiu até +13 252 B (`/casa*`) e o D10 só fala do 11a; confirmar. No rebase
+  (D10 3), tirar o `fixme` do caso (h) HIS-111 em `casa-salva.spec.ts`. Defeitos baixos D-3a-1…3 na nota da história.
 - HIS-002b, etapa 5: V1–V8 e os ids obrigatórios (inclusive `seguranca-01…21` quando a lista existir).
 - Backlog (pré-existentes, HIS-001 P1–P4): foco no passo "cidade" pula da busca para o título (ux/frontend); zoom 200%
   com rolagem horizontal em `/`, `/casa`, `/casa/dicas` (ux); âncora não alinha ao topo pelo link **nem** direto numa página nova (371/491 px; frontend, HIS-108).

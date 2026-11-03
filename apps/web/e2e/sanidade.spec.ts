@@ -1,5 +1,6 @@
 /*
- * Negativos permanentes: cada barreira do e2e precisa reprovar o que deve (plano de testes do qa, N1–N8; D16 P-qa-6).
+ * Negativos permanentes: cada barreira do e2e precisa reprovar o que deve (plano de testes do qa, N1–N8; D16 P-qa-6;
+ * N9 e N10 da HIS-003a).
  * Cada negativo usa `test.fail()`: se a barreira deixar de reprovar, o teste vira "Expected to fail, but passed" e a
  * execução fica vermelha. Cada um tem um controle, que prova que a falha vem da barreira e não da página de ensaio.
  * Usam `page.setContent` com uma página mínima, menos o N7, que precisa das transições do site (só no projeto celular).
@@ -195,5 +196,61 @@ test.describe("nada sai do aparelho (N8)", () => {
     );
     await page.setContent(PAGINA_LIMPA);
     expect(await page.evaluate(async () => (await fetch("https://exemplo.com/x")).text())).toBe("ok");
+  });
+});
+
+test.describe("erros esperados (N9, HIS-003a D8)", () => {
+  test("controle: console.error esperado não reprova", async ({ page, errosEsperados }) => {
+    errosEsperados.push(/plantado e esperado/);
+    await page.setContent(PAGINA_LIMPA);
+    await page.evaluate(() => console.error("plantado e esperado pelo teste de sanidade"));
+  });
+
+  test("N9 · negativo: padrão esperado que não aparece reprova", async ({ page, errosEsperados }) => {
+    test.fail(true, "a lista de erros esperados não pode esconder um erro que deixou de acontecer");
+    errosEsperados.push(/nunca acontece/);
+    await page.setContent(PAGINA_LIMPA);
+  });
+
+  test("N9 · negativo: outro console.error continua reprovando", async ({ page, errosEsperados }) => {
+    test.fail(true, "só o erro do padrão é esperado");
+    errosEsperados.push(/plantado e esperado/);
+    await page.setContent(PAGINA_LIMPA);
+    await page.evaluate(() => {
+      console.error("plantado e esperado pelo teste de sanidade");
+      console.error("outro erro que ninguém esperava");
+    });
+  });
+
+  test("N9 · negativo: pedido para fora do site nunca é esperado, nem com /.*/", async ({ page, errosEsperados }) => {
+    test.fail(true, "nada sai do aparelho, nem em teste de erro");
+    errosEsperados.push(/.*/);
+    await page.route("https://exemplo.com/**", (rota) =>
+      rota.fulfill({ status: 200, body: "ok", headers: { "access-control-allow-origin": "*" } }),
+    );
+    await page.setContent(PAGINA_LIMPA);
+    await page.evaluate(async () => (await fetch("https://exemplo.com/x")).text());
+  });
+});
+
+test.describe("CSP (N10, HIS-003a R2)", () => {
+  // A CSP do site faz o navegador recusar recurso de outro endereço e escrever um console.error ("Loading the image
+  // '…' violates the following Content Security Policy directive" no Chromium do Playwright 1.63; "Refused to…" em
+  // versões antigas); a fixture reprova. Por isso o R2 vale em todos os e2e. Aqui, na página de verdade (a CSP vem no
+  // cabeçalho do site). O pedido também aparece como "pedido para fora do site": são duas barreiras.
+  test("N10 · negativo: imagem de outro endereço é recusada pela CSP e reprova o teste", async ({ page }) => {
+    test.fail(true, "a CSP precisa recusar img-src de fora e a fixture precisa reprovar o console.error da violação");
+    await page.goto("/sobre");
+    const diretiva = await page.evaluate(
+      () =>
+        new Promise<string>((resolver) => {
+          document.addEventListener("securitypolicyviolation", (e) => resolver(e.effectiveDirective), { once: true });
+          const imagem = document.createElement("img");
+          imagem.src = "https://exemplo.invalid/x.png";
+          document.body.append(imagem);
+        }),
+    );
+    // A própria CSP recusou (e não a rede): é ela que gera o "Refused to" que reprova o teste.
+    expect(diretiva).toBe("img-src");
   });
 });

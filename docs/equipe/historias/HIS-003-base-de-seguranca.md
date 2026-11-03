@@ -1064,6 +1064,9 @@ Sucessoras prováveis, porque o fim de uma vigência e o começo da outra caem e
 - `[para: ux-acessibilidade]` (não bloqueia; para o frontend saber o que fazer):
   - o T2b também entra no `TrocarCidade` dos ajustes, com a frase "Sua casa continua salva.";
   - o T1b leva para `/casa/ajustes`, que passa a abrir sem cidade (D5).
+- [ ] `[para: tech-lead]` **P-qa-3a-1** (não bloqueia o a7). O D10 1c aceita até +10,5 kB no 11a; o 11b (total com
+  prefetch) subiu +11 431 B em `/` e `/comecar`, +13 252 B em `/casa*`, +11 952 B em `/casa` com casa e +6 819 B em
+  `/sobre`. Já está no `peso-js.json` novo. Confirmar que o aceite vale também para o 11b.
 
 ## Conversa da equipe
 
@@ -1331,3 +1334,12 @@ aceito, com R4c e R4d nas consequências.
 3. **Telas de erro:** o texto é fixo, sem `error`/`digest` e sem HTML cru (0 `dangerouslySetInnerHTML`/`innerHTML`/`eval` em `src`). Nas 24 combinações de rota × casa (quebrada, `uf` `../x`, válida) não houve tela branca nem texto técnico, e a CSP não registrou nenhuma violação. O T2/T3 completo (R6/R8) ainda depende do `erros.spec` do a7 (qa).
 4. **Ressalva baixa, para o backend no rebase:** `atualizar-dados.yml` l. 61 escapa `%` e `\n`, mas não `\r`. Acrescentar `s/\r/%0D/g` (pré-existente).
 5. **Ressalva baixa, para o tech-lead (ADR-004):** quem um dia ler a `casa-ilegivel` passa pelo `lerCasaSalva` e apaga a chave depois de recuperar a casa.
+
+### [qa] 2026-11-03 — a7 feito: aprovado, com 3 defeitos baixos (não bloqueiam)
+1. **Testes:** `cabecalhos` (R1), `casa-salva` (R4 a–g, R7, trava do D10 2; (h) `fixme` HIS-111), `dados-publicos` (R6, T2a/b/c, 2ª falha, foco), `erros` (T3 só com o `global-error`: foco no `h1`, 2ª falha, retry volta à tela; T4), 7 telas novas no axe, `errosEsperados` + N9 e N10 (CSP). e2e numa cópia: 178 ✓, 8 pendentes, 0 ✗ (novos com `--repeat-each=3`: 156 ✓); typecheck, test e build verdes.
+2. **D10 1a provado:** o `error.tsx` pode ficar fora. À mão, com `throw` no layout raiz (só na cópia): T3 completo em 390/1280. Trava: 3 mutações plantadas morrem.
+3. **Peso:** `peso-js.json` regravado com `decisao` (D10 1c); 11a de +856 a +10 382 B, tabela no `diario.md` do qa. `[para: tech-lead]` o 11b sobe até +13 252 B (`/casa*`) e o D10 só fala do 11a: confirmar.
+4. **D-3a-1 (baixa, frontend/ux):** no T1b, `/casa/ajustes` não oferece "Apagar todos os meus dados" (LGPD): só depois de escolher a cidade. No estado da trava, só depois de um cadastro.
+5. **D-3a-2 (baixa, ux):** no T1b em `/casa/ajustes`, o aviso tem o link "Escolher minha cidade" para a própria página (não faz nada) e, abaixo, um botão com o mesmo nome que abre a folha.
+6. **D-3a-3 (baixa, frontend):** "Tiramos 9500 aparelhos" sem ponto de milhar; e com zoom de 200% o texto do `<a>` "Voltar ao início" do T3 fica à esquerda (falta `text-center`).
+7. **Evidências** (fora do git): `scratchpad/qa-his003a/` (`e2e-completo.txt`, `capturas/`). **Próximo:** tech-lead (11b) ‖ fechamento.

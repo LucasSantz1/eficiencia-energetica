@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
 const PORTA = Number(process.env.PORTA_E2E ?? 3100);
 const NO_GITHUB = process.env.GITHUB_ACTIONS === "true";
 // Testes que não dependem da largura da tela rodam uma vez só, no celular.
-const SO_NO_CELULAR = /(migracao|aparelhos|ajustes|rotas|peso-js|sanidade)\.spec\.ts$/;
+const SO_NO_CELULAR = /(migracao|aparelhos|ajustes|rotas|peso-js|sanidade|cabecalhos)\.spec\.ts$/;
 
 export default defineConfig({
   testDir: "./e2e",

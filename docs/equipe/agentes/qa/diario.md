@@ -10,6 +10,21 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-003a · a7: e2e dos dados quebrados, axe T1–T4, peso novo — aprovado com 3 defeitos baixos
+- O que fiz: `cabecalhos`, `casa-salva` (a–g, (h) `fixme` HIS-111, trava do D10 2), `dados-publicos`, `erros`; fixture
+  `errosEsperados` + N9; N10 (CSP); 7 estados no axe; `peso-js.json` com `decisao`. Mutações na trava (setItem sem
+  trava; `criarCasa` sem soltar; "Apagar tudo" sem tirar a cópia): as 3 morrem (a 2ª só depois de reforçar o teste 3).
+  `global-error` com `throw` temporário no layout raiz (só na cópia `mut`): T3, foco no `h1`, 2ª falha, retry e
+  "Voltar ao início" ok em 390/1280. Exploratório (zoom 200%, 10 000 aparelhos, T1b/T1c em `/casa/ajustes`).
+- Peso 11a contra `06be352` (B): `/` +6 819 · `/comecar` +10 159 · `/casa` +10 097 · `/casa/comodos` +9 855 ·
+  `/casa/dicas` +9 827 · `/casa/ajustes` +10 382 · `/sobre` +856. 11b: +11 431 (`/`, `/comecar`), +13 252 (`/casa*`),
+  +11 952 (`/casa` com casa), +6 819 (`/sobre`).
+- Decisões e porquê: `cabecalhos` só no celular (não depende da largura); R8 lido como "nada sai do site" (o `retry()`
+  do Next 16 refaz o pedido RSC de propósito); T4 aceita o sufixo do `template` no título.
+- Arquivos: `apps/web/e2e/{cabecalhos,casa-salva,dados-publicos,erros}.spec.ts`, `apoio/{erros,casa,teste,axe,peso}.ts`,
+  `acessibilidade`, `sanidade`, `peso-js.spec.ts`, `peso-js.json`, `playwright.config.ts`, a história, `contexto.md`.
+- Próximos passos: tech-lead confirma o 11b; rebase (D10 3) tira o `fixme` (h).
+
 ## 2026-10-30 · HIS-002a · A5 fechado, A7 (tira o e2e-base) e etapa 5 aprovada
 - O que fiz: seletor do `aparelhos.spec.ts` pelo nome do D-A5-1 (`d5a4940`); `git rm -r apps/web/e2e-base` e 2
   comentários do `e2e/` (`020db92`); e2e completo e `--repeat-each=3` numa cópia própria; M1–M16 plantadas numa
