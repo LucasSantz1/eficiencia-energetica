@@ -17,12 +17,15 @@ vi.mock("@ee/core", async (importarOriginal) => {
 });
 
 const CHAVE = "eficiencia-energetica:casa";
+const COPIA = "eficiencia-energetica:casa-ilegivel";
 
 /** localStorage de mentira, com as gravações contadas. */
 class ArmazenamentoDeTeste implements Storage {
   readonly dados = new Map<string, string>();
   gravacoes = 0;
   cheio = false;
+  /** Chaves que não cabem mais (memória cheia só para elas). */
+  readonly chavesCheias = new Set<string>();
   get length() {
     return this.dados.size;
   }
@@ -39,7 +42,7 @@ class ArmazenamentoDeTeste implements Storage {
     this.dados.delete(chave);
   }
   setItem(chave: string, valor: string) {
-    if (this.cheio) throw new Error("QuotaExceededError");
+    if (this.cheio || this.chavesCheias.has(chave)) throw new Error("QuotaExceededError");
     this.gravacoes += 1;
     this.dados.set(chave, valor);
   }
@@ -156,7 +159,6 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
     // Ações que antes gravariam a casa vazia por cima da salva.
     useCasa.getState().adicionarComodo("cozinha");
     useCasa.getState().dispensarAvisoDaCasaSalva();
-    useCasa.getState().apagarTudo();
     expect(local.gravacoes).toBe(0);
     expect(local.dados.get(CHAVE)).toBe(texto);
   });
@@ -189,5 +191,61 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
     expect(useCasa.getState().residencia?.uf).toBe("SP");
     // E o que ele aceita entra.
     expect(useCasa.getState().adicionarAparelho(base)?.nome).toBe("Chuveiro");
+  });
+
+  describe("a trava solta (D10, 2)", () => {
+    const TEXTO = JSON.stringify({ state: CASA_VALIDA, version: 2 });
+    const cadastroNovo = { residencia: RESIDENCIA, comodos: [{ id: "n1", tipo: "cozinha" as const, nome: "Cozinha" }], aparelhos: [] };
+    async function abrirComLeitorQueLanca() {
+      local.dados.set(CHAVE, TEXTO);
+      leitor.lancar = true;
+      const useCasa = await abrirStore(local);
+      leitor.lancar = false;
+      return useCasa;
+    }
+
+    it('"Apagar tudo" com a trava: tira a chave e a cópia ilegível do aparelho, e a próxima ação grava', async () => {
+      local.dados.set(COPIA, "texto antigo");
+      const useCasa = await abrirComLeitorQueLanca();
+      useCasa.getState().apagarTudo();
+      expect(local.dados.has(CHAVE)).toBe(false);
+      expect(local.dados.has(COPIA)).toBe(false);
+      expect(useCasa.getState().avisoDaCasaSalva).toBeUndefined();
+      useCasa.getState().adicionarComodo("cozinha");
+      const salvo: unknown = JSON.parse(local.dados.get(CHAVE) ?? "");
+      expect(salvo).toMatchObject({ state: { comodos: [{ tipo: "cozinha" }] }, version: 2 });
+    });
+
+    it("cadastro novo com a trava: guarda o texto que não deu para ler e grava a casa nova", async () => {
+      const useCasa = await abrirComLeitorQueLanca();
+      useCasa.getState().criarCasa(cadastroNovo);
+      expect(local.dados.get(COPIA)).toBe(TEXTO);
+      const salvo: unknown = JSON.parse(local.dados.get(CHAVE) ?? "");
+      expect(salvo).toMatchObject({ state: { residencia: RESIDENCIA, comodos: cadastroNovo.comodos, aparelhos: [] }, version: 2 });
+    });
+
+    it("cadastro novo com a trava: a cópia é feita uma vez só, sem sobrescrever a que já existe", async () => {
+      local.dados.set(COPIA, "cópia de antes");
+      const useCasa = await abrirComLeitorQueLanca();
+      useCasa.getState().criarCasa(cadastroNovo);
+      expect(local.dados.get(COPIA)).toBe("cópia de antes");
+      expect(local.dados.get(CHAVE)).not.toBe(TEXTO);
+    });
+
+    it("cadastro novo com a trava e sem espaço para a cópia: grava a casa nova assim mesmo", async () => {
+      local.chavesCheias.add(COPIA);
+      const useCasa = await abrirComLeitorQueLanca();
+      useCasa.getState().criarCasa(cadastroNovo);
+      expect(local.dados.has(COPIA)).toBe(false);
+      const salvo: unknown = JSON.parse(local.dados.get(CHAVE) ?? "");
+      expect(salvo).toMatchObject({ state: { comodos: cadastroNovo.comodos }, version: 2 });
+    });
+
+    it("sem trava, o cadastro novo não cria a cópia", async () => {
+      local.dados.set(CHAVE, TEXTO);
+      const useCasa = await abrirStore(local);
+      useCasa.getState().criarCasa(cadastroNovo);
+      expect(local.dados.has(COPIA)).toBe(false);
+    });
   });
 });

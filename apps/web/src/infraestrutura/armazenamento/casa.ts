@@ -34,6 +34,12 @@ export type { DadosCasa };
 /** Mesma chave e mesma versão de antes: o formato salvo não muda na HIS-003a (D1, item 4). */
 const NOME_DA_CHAVE = "eficiencia-energetica:casa";
 const VERSAO_DA_CASA = 2;
+/**
+ * Cópia do texto da casa que o leitor não conseguiu abrir, guardada antes de um cadastro novo gravar por cima (D10, 2).
+ * Fica só no aparelho, ninguém a lê hoje; serve para uma versão corrigida do leitor recuperar a casa. Sai com
+ * "Apagar tudo". Não é a casa: outra chave, sem `version`.
+ */
+const NOME_DA_COPIA_ILEGIVEL = "eficiencia-energetica:casa-ilegivel";
 
 /**
  * Toda ação passa pelo mesmo leitor da casa salva antes de mudar o estado: a tela não é a única porta (console,
@@ -94,6 +100,12 @@ export const useCasa = create<EstadoDaCasa>()(
       criarCasa: ({ residencia, comodos, aparelhos }) => {
         const { casa } = lerCasaSalva({ residencia, comodos, aparelhos, contas: get().contas, leituras: get().leituras, plano: [] });
         if (casa.residencia === undefined) return;
+        // Cadastro novo confirmado com a gravação travada: guarda o texto que não deu para ler e solta a trava, porque o
+        // trabalho novo da pessoa vale mais que um texto ilegível (se a cópia falhar, grava assim mesmo).
+        if (armazenamento.gravacaoTravada()) {
+          armazenamento.copiarTextoUmaVez(NOME_DA_CHAVE, NOME_DA_COPIA_ILEGIVEL);
+          armazenamento.liberarGravacao();
+        }
         set({ residencia: casa.residencia, comodos: casa.comodos, aparelhos: casa.aparelhos, contas: casa.contas, leituras: casa.leituras, plano: [] });
       },
       salvarConta: (c) => {
@@ -182,7 +194,14 @@ export const useCasa = create<EstadoDaCasa>()(
         return atualizado;
       },
       removerAparelho: (id) => set({ aparelhos: get().aparelhos.filter((a) => a.id !== id), plano: get().plano.filter((d) => !d.startsWith(`${id}:`)) }),
-      apagarTudo: () => set({ residencia: undefined, comodos: [], aparelhos: [], contas: [], leituras: [], plano: [] }),
+      // "Apagar tudo" apaga de verdade (LGPD), também com a gravação travada: tira a chave e a cópia ilegível do
+      // aparelho e solta a trava. A próxima ação grava do zero.
+      apagarTudo: () => {
+        set({ residencia: undefined, comodos: [], aparelhos: [], contas: [], leituras: [], plano: [], avisoDaCasaSalva: undefined });
+        armazenamento.removeItem(NOME_DA_CHAVE);
+        armazenamento.removeItem(NOME_DA_COPIA_ILEGIVEL);
+        armazenamento.liberarGravacao();
+      },
       dispensarAvisoDaCasaSalva: () => set({ avisoDaCasaSalva: undefined }),
     }),
     {
