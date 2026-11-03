@@ -4,26 +4,28 @@ import { agregarAparelhos, COMODOS_PADRAO, distribuidorasDaCidade, type Benefici
 import { ArrowLeft, ChevronDown, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { BuscaCidade } from "@/ui/BuscaCidade";
+import { agregarAparelhos, COMODOS_PADRAO, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
+import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
+import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
+import { nomeDistribuidora } from "@/aplicacao/resumo";
 import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
-import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
 import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
-import type { ItemComodo } from "@/ui/aparelho/tipos";
-import { Icone } from "@/ui/Icone";
-import { Marca } from "@/ui/Marca";
-import { ENTRAR_NO_PAINEL, TransicaoTela } from "@/ui/Movimento";
 import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
+import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
+import type { ItemComodo } from "@/ui/aparelho/tipos";
 import { Aviso } from "@/ui/Aviso";
 import { Botao, BotaoLink } from "@/ui/Botao";
+import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Campo } from "@/ui/Campo";
 import { Contador } from "@/ui/Contador";
 import { Entrada } from "@/ui/Entrada";
+import { Icone } from "@/ui/Icone";
+import { Marca } from "@/ui/Marca";
+import { TransicaoTela } from "@/ui/Movimento";
 import { Opcao } from "@/ui/Opcao";
 import { Pilulas } from "@/ui/Pilulas";
-import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
+import { ENTRAR_NO_PAINEL } from "@/ui/tiposDeTransicao";
 import { ajustarComodos, itemDoCatalogoParaComodo, rascunhoParaCasa, type ComodoRascunho } from "./rascunho";
-import { nomeDistribuidora } from "@/aplicacao/resumo";
-import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
 
 type Passo = "estado" | "cidade" | "distribuidora" | "beneficio" | "pessoas" | "comodos" | `comodo:${number}` | "revisao" | "conta";
 

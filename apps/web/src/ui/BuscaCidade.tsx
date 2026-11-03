@@ -1,8 +1,8 @@
 "use client";
 
-import type { Municipio } from "@ee/core";
 import { MapPin, Search } from "lucide-react";
 import { useMemo, useState } from "react";
+import type { Municipio } from "@ee/core";
 import { Opcao } from "./Opcao";
 
 const semAcento = (t: string) =>

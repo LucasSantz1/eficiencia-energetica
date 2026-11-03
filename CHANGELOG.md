@@ -1,5 +1,17 @@
 # Registro de mudanças
 
+## 2026-10-31 · Node 26 (LTS)
+
+**Para quem usa**
+- Nada muda na tela.
+
+**Técnico**
+- O projeto passa a usar o Node 26, que virou a versão LTS em 28/10/2026: `.nvmrc`, `engines` (`>=26`), CI e rotina
+  diária de dados com `node-version: 26`, `@types/node` 26.6.6.
+- `casa.ts` lê o armazenamento por `window.localStorage`. A partir do Node 25 o servidor tem um `localStorage` global
+  vazio, que avisava no build; pelo `window`, o servidor continua sem gravar nada, como antes.
+- Conferido no Node 26.13.0: typecheck, testes, build sem aviso, `pnpm audit` limpo e e2e (107 ok, 6 pendentes).
+
 ## 2026-10-30 · Rolagem suave nos links da página inicial
 
 **Para quem usa**

@@ -35,6 +35,11 @@
   M1b–M1d). Roteiro `…/scratchpad/h2a/mutacoes.sh` (cópia `h2a/mut`, porta 3142, restaura do repositório a cada caso).
 - Peso: referência `peso-js.json` com o lockfile novo (11a `/` 164 215 … 11b `/casa` com casa 212 282). O spec no build
   do `main` dá a HIS-001 byte a byte; o lockfile muda −5…+23 B (caminho `next@…_@playwright+test@1.63.0` embutido).
+- **HIS-002b, etapa 5 (2026-11-03): aprovado** em `01e7df0`. lint/typecheck/test (152, "145 casos: 104 no ESLint, 41
+  no script") /build verdes, audit sem alta; V1–V8 (+V5b, V8b) vermelhos com o id, tabela na história; 21 da seguranca
+  iguais à lista; e2e 107 ✓ / 6 pendentes. DEF-002b-1 (transição de "terminar o cadastro", pré-existente) registrado
+  na história, para o frontend. Cópias `…/scratchpad/qa-002b/{copia,mut,main}` (git próprio em cada uma);
+  `mutacoes.sh` restaura com `git checkout`/`clean` a cada caso.
 - Como subir o site para testar: `pnpm build && pnpm --filter @ee/web start -p 3100` (em segundo plano);
   liberar a porta com `fuser -k 3100/tcp` (não usar `pkill -f "next start"`).
 - O Chromium já está instalado no ambiente de nuvem: `require('playwright')` (1.63, via NODE_PATH global), sem `playwright install`.
