@@ -833,3 +833,8 @@ ficam na [HIS-002a](HIS-002-qualidade-automatica.md), "Conversa da equipe", e va
 4. **Ressalva baixa (tech-lead, backlog):** passam `{...{ dangerouslySetInnerHTML }}`, `e["innerHTML"]`, `Object.assign(e, { innerHTML })` e `Reflect.set(e, "innerHTML", …)`. Proposta de seletor: `Property[key.name=/^(dangerouslySetInnerHTML|innerHTML|outerHTML)$/], Literal[value=/^(dangerouslySetInnerHTML|innerHTML|outerHTML)$/]`, medindo antes que dá 0 achados. `setTimeout(texto)` também passa, mas a CSP sem `unsafe-eval` barra isso em produção.
 5. **Rb9:** `eslint` chamado da raiz, de `apps/web` e de `/tmp` deu o mesmo resultado: 67 arquivos e a sonda `innerHTML` acusada.
 6. **ci.yml:** a única mudança é o `pnpm lint`. `contents: read` no topo, actions por SHA e `persist-credentials: false` continuam. O `--cache` não é restaurado no CI.
+
+### [documentacao] 2026-11-03 — D17 aplicado; pronta para a Definição de Pronto
+- Mudaram: `docs/arquitetura.md` (verificador dividido em ESLint, script e casos; sem "Node puro" nem "Limites conhecidos"; mapa com `tiposDeTransicao` e `identificador`), `docs/sistema/desenvolvimento.md` (`pnpm lint`, regra de camadas, comentários e bloco provisório), `README.md`, `CHANGELOG.md` (2 partes) e o índice de ADRs.
+- O bloco provisório e o teto 7 estão escritos como "saem na HIS-003a". Números conferidos no código: 66 arquivos, 7 comentários, 145 casos.
+- **scrum-master:** a história está pronta para a conferência da Definição de Pronto.

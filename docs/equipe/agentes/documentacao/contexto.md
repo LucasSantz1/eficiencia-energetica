@@ -32,6 +32,8 @@ o projeto, o planejamento e o Scrum. Quando algo grande mudar, atualizar os dois
   `site.md` detalha arquivo a arquivo. Notas antigas de histórias e o "Contexto" do ADR-001 ficam como registro histórico.
 - Exemplo de saída do verificador documentado (arquitetura e desenvolvimento) foi conferido numa cópia: se a mensagem do
   `scripts/verificar-camadas.mjs` mudar, atualizar os dois.
+- Lint e camadas (HIS-002b): fonte única em `arquitetura.md#verificador-de-camadas`; os números (66 arquivos, 7
+  comentários, 145 casos) mudam com o código: reconferir com `node scripts/verificar-camadas.mjs`.
 - Testes no navegador: fonte única em `desenvolvimento.md` ("Testes no navegador" e "Integração contínua"). Se mudar o
   nome dos checks no `ci.yml`, o número de testes ou as exceções do axe, atualizar lá (HIS-002a).
 
@@ -40,8 +42,8 @@ o projeto, o planejamento e o Scrum. Quando algo grande mudar, atualizar os dois
 - Manter o CHANGELOG a cada história fechada.
 - HIS-001: o dono do projeto precisa aplicar no `CLAUDE.md` o texto novo da nota "Estado atual" (proposto em 2026-10-29,
   entregue a quem orquestra; a documentação não edita o `CLAUDE.md`).
-- HIS-002b: quando o ESLint dividir as regras com o script, atualizar `docs/arquitetura.md` ("Verificador de camadas")
-  e `docs/sistema/desenvolvimento.md` (`pnpm lint` na tabela de comandos e no check "Lint, tipos e testes").
+- HIS-003a: quando o bloco provisório do `eslint.config.mjs` sair, tirar o parágrafo dele de `arquitetura.md` e de
+  `desenvolvimento.md` ("Comentários que desligam o lint") e trocar o teto 7 por 8.
 - HIS-110: quando corrigir o contraste da `/`, tirar a frase "8 entradas de `color-contrast`" de `desenvolvimento.md`.
 - HIS-003: validação de fronteira em `infraestrutura/validacao/` → acrescentar em `site.md` e `arquitetura.md`.
 
