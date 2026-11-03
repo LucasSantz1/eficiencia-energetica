@@ -10,6 +10,12 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-002b · etapa 6 (Rb1–Rb9): aprovado com ressalvas (baixo)
+- O que fiz: numa cópia de `57eb736` com git próprio rodei audit, lockfile, integridade contra o registro, scripts de instalação, `lint` e `test:camadas` (152/152). Rodei 26 sondas de segurança no ESLint e o lint de 3 pastas diferentes, e revisei o `ci.yml`.
+- Decisões e porquê: as 2 moderadas do `minimatch` foram aceitas (só em desenvolvimento, padrão nosso). O HTML por nome calculado que passa no lint é baixo (exige escrita de propósito) e tem seletor proposto.
+- Arquivos: `docs/equipe/historias/HIS-002b-lint-e-camadas.md`, `contexto.md`, `diario.md`.
+- Próximos passos: conferir o bloco provisório e o teto 8 no rebase da 003a.
+
 ## 2026-10-30 · HIS-002a · etapa 6: aprovado com ressalvas (baixo), Ra9 fica com o dono do projeto
 - O que fiz: Ra1–Ra13 sobre o `efab326` numa cópia própria (`scratchpad/seg-h2a/copia`, portas 3171–3173): typecheck,
   test, build e e2e verdes (107/6/0). Integridade dos 5 pacotes novos igual à do `npm view`. Ra10 plantada na `/sobre`
