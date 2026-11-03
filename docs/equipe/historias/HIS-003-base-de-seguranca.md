@@ -1350,3 +1350,7 @@ aceito, com R4c e R4d nas consequências.
 ### [tech-lead] 2026-11-03 — P-qa-3a-1 respondida: 11b aceito com teto de +13,5 kB por rota (+7 kB na `/sobre`)
 - O 11b repete o chunk do core e soma as rotas do prefetch, que roda depois da abertura. Os cortes do D10 já valem para os dois números. O `peso-js.json` do `8e486fb` fica como está.
 - Acima desse teto, falar comigo. Próximo: o qa segue o a7.
+
+### [frontend] 2026-11-03 — D-3a-1 a D-3a-3 corrigidos (1 commit, sem push)
+- D-3a-1: a Minha casa abre sem cidade sempre que houver dado guardado (também a casa travada e a `casa-ilegivel`) e mostra "Seus dados". D-3a-2: na Minha casa, o aviso T1b fica sem o link para a própria página. D-3a-3: `formatarQuantidade` no core ("9.500") e `text-center` nos botões.
+- e2e para cada um (`casa-salva`, `erros`), mais testes de unidade; e2e numa cópia (3356): 187 ✓, e o fluxo principal falhou uma vez no "terminar o cadastro" (instabilidade conhecida, passou 4 vezes em seguida). Peso dentro da referência.
