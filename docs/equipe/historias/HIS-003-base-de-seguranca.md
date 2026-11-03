@@ -1318,3 +1318,9 @@ aceito, com R4c e R4d nas consequências.
 3. **Ordem:** HIS-111 → 002b → **003a por último**. No rebase, a 003a tira o bloco provisório e sobe o teto da HIS-109 para 8 num commit só.
 4. Como verifiquei: builds da `5c5f171` e do `main` em cópias, com 4 experimentos medidos (tabela no D10).
 5. Próximo: frontend (1 e 2) ‖ backend (1b) → seguranca (item 2 e R1–R13) → qa (a7).
+
+### [frontend] 2026-11-03 — D10 feito (3 commits, sem push)
+- `3f60fe4`: tirei o `app/error.tsx`. Numa execução avulsa em 390/1280 com o erro em `/casa`, o `global-error` mostra o T3 com foco no `h1`, a 2ª falha e a tela de volta depois do retry; o `erros.spec` (a7) ainda precisa provar o mesmo. `040ddd4`: `/* @__PURE__ */` nos `CAMPOS_*`, −249 B por rota.
+- `1b235d5`: "Apagar tudo" tira a chave e a `casa-ilegivel` e solta a trava; o cadastro novo copia o texto bruto uma vez só, sem sobrescrever (se não couber, grava assim mesmo), e solta a trava. São 5 testes novos em `apps/web/test/` (web 15 ✓), com mutação conferida.
+- **Peso no 11a, contra `06be352`:** de +6 819 a +10 382 B por rota (máximo em `/casa/ajustes`); `/sobre` +856 B, dentro do teto. e2e numa cópia (3355): 106 ✓ e só o peso ✗ até o qa atualizar o `peso-js.json` no a7. typecheck, test e build verdes.
+- **Para o próximo:** **qa** (a7), **seguranca** (confirmar a cópia bruta, D10 2).

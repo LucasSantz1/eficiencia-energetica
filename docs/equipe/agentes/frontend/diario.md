@@ -10,6 +10,12 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-003a · D10: só o global-error, CAMPOS_* puros e a trava que solta
+- O que fiz: `3f60fe4` (sem `app/error.tsx`, T3 conferido com o `global-error`), `040ddd4` (`/* @__PURE__ */`, −249 B),
+  `1b235d5` ("Apagar tudo" e cadastro novo soltam a trava; cópia bruta uma vez só; 5 testes).
+- Verificação: barreira verde; peso 11a até +10 382 B (teto +10,5 kB); e2e 106 ✓, só o peso ✗ (o qa atualiza no a7).
+- Aprendizado: ler o `document.title` depois do retry mede a tela que voltou, não a de erro: medir no momento certo.
+
 ## 2026-11-03 · HIS-003a · a4 e a5: casa salva e /dados validados, avisos T1/T2, telas de erro e cabeçalhos
 - O que fiz: a4 `9be1f4c` (armazenamento seguro, `merge`, trava de gravação do pedido 1, ações pelo leitor, `/dados`
   pelos leitores, servidor sem `catch`, vitest no site) e a5 `017281f` (T1 ×3, T1b, T2 ×3, T3, T4, foco, `rel`, D6).
