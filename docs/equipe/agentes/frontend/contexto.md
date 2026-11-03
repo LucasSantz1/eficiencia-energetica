@@ -6,8 +6,10 @@
 
 ## Estado atual (mapa do código)
 
-Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/src/`). `pnpm camadas`
-(`scripts/verificar-camadas.mjs`, dentro do `pnpm typecheck`) barra import que fure as camadas.
+Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/src/`). Desde a HIS-002b:
+`pnpm lint` (ESLint 10, `eslint.config.mjs` na raiz, `--max-warnings 0`, no CI) tem a matriz de camadas e a sintaxe
+proibida; `pnpm camadas` (`scripts/verificar-camadas.mjs`, parser do TS, dentro do `pnpm typecheck`) tem o que depende
+de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/testes/` (`pnpm test:camadas`).
 
 | Onde | O quê |
 | --- | --- |
@@ -17,9 +19,9 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
 | `funcionalidades/casca/` | `Casca` (topo, abas, transições `topo`/`navegacao`/`aba-ativa`, "Vamos cadastrar") |
 | `funcionalidades/acompanhamento/` | `PainelAcompanhamento` (conta, cômodos, ranking, melhor dica) e `Acompanhamento` (contas e relógio) |
 | `funcionalidades/comodos/` · `dicas/` · `ajustes/` | `TelaComodos` (sanfona, painel geral, novo/editar cômodo) · `TelaDicas` (plano) · `TelaAjustes` (minha casa, apagar tudo) |
-| `ui/` | um componente por arquivo: `Botao` (+`BotaoLink`), `Opcao`, `Pilulas`, `Contador`, `Campo`, `Entrada`, `Folha`, `Aviso`, `Icone`, `Marca`, `Movimento`, `Barras`, `Etiqueta`, `EspacoReservado`, `BuscaCidade` |
+| `ui/` | um componente por arquivo: `Botao` (+`BotaoLink`), `Opcao`, `Pilulas`, `Contador`, `Campo`, `Entrada`, `Folha`, `Aviso`, `Icone`, `Marca`, `Movimento`, `Barras`, `Etiqueta`, `EspacoReservado`, `BuscaCidade`; `tiposDeTransicao.ts` (`IR_ADIANTE`, `VOLTAR`, `ENTRAR_NO_PAINEL`, sem diretiva) |
 | `ui/aparelho/` | componentes de aparelho compartilhados, sem store: `tipos.ts` (`ItemComodo`), `textosDeUso.ts`, `LinhaAparelho`, `BlocoIluminacao`, `TempoUso`, `SeletorCatalogo`, `EditorAparelho` (props `comodos`/`aoSalvar`/`aoRemover`) |
-| `aplicacao/` | única porta para `infraestrutura/`: `casa.ts` (`useCasa`, `useCasaCarregada`, `novoId`, `useEdicaoDeAparelho`), `dados-publicos.ts` (`useTarifas`, `useMunicipios`), `resumo.ts` (`useResumo`, `tarifaMedia`, `nomeDistribuidora`), `numeros-do-inicio.servidor.ts` |
+| `aplicacao/` | única porta para `infraestrutura/`: `casa.ts` (`useCasa`, `useCasaCarregada`, `useEdicaoDeAparelho`), `identificador.ts` (`novoId`, sem diretiva), `dados-publicos.ts` (`useTarifas`, `useMunicipios`), `resumo.ts` (`useResumo`, `tarifaMedia`, `nomeDistribuidora`), `numeros-do-inicio.servidor.ts` |
 | `infraestrutura/` | `armazenamento/casa.ts` (o único `create` do store: chave `eficiencia-energetica:casa`, versão 2 + `migrate`), `identificador.ts` (`novoId`), `dados-publicos/navegador.ts` (fetch de `/dados`), `dados-publicos/arquivos.servidor.ts` (único `node:fs`) |
 | `config/recursos.ts` | `RECURSOS.espacosReservados = false` |
 
@@ -28,7 +30,12 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
 - Camadas (ADR-001): telas importam estado e dados só de `aplicacao/`; `ui/` não lê estado; funcionalidade não importa
   outra; sem barris `index.ts`; `@/` entre pastas e `./` só na mesma pasta. Código só de servidor em `*.servidor.ts`
   com `import "server-only";` como primeiro import; arquivo `"use client"` nunca importa `.servidor`.
-- Componente de servidor (rotas, `PaginaInicial`) só importa **componentes** de módulos `"use client"` (ameaça A7).
+- Componente de servidor (rotas, `PaginaInicial`) e módulo sem diretiva só importam **componentes** (PascalCase) ou
+  tipos de módulos `"use client"` (ameaça A7; C8 do script). Constante ou função usada dos dois lados mora em arquivo
+  sem diretiva.
+- Nenhum `eslint-disable` além da forma da HIS-109 (`// eslint-disable-next-line react-hooks/set-state-in-effect --
+  <motivo> (HIS-109)`); qualquer outro comentário que muda regra reprova na C10. Efeito novo que copia estado: reescrever,
+  não silenciar (teto de 8).
 - Transições com `<ViewTransition>` + `transitionTypes` (`nav-forward`, `nav-back`, `entrar-painel`); `viewTransitionName`
   "topo" e "navegacao" fixam cabeçalho e navegação; indicadores "aba-ativa" e "pilula-ativa".
 - Toda conta vem de `@ee/core`. Nomes longos quebram linha (não truncar). Valores fora de barras curtas.
@@ -49,6 +56,11 @@ Estrutura em camadas do ADR-001 desde a HIS-001 (caminhos a partir de `apps/web/
   "Quem mais gasta" e região focável da tabela do painel geral). Com isso, o axe passa nos 2 projetos. Falta o qa trocar o seletor
   `^${nome}: ` de `e2e/aparelhos.spec.ts:43` pelo nome novo. Achado para a HIS-110: 2 `dd` `text-white/85` nos cartões
   da Tarifa Social também falham `color-contrast`.
+- HIS-002b: B1–B7 feitos (2026-11-03, `7427be6`…`1062111`); aguarda tech-lead (B8, bloco provisório do
+  `eslint.config.mjs` para `infraestrutura/armazenamento/casa.ts` e `packages/dados/src/escrever.ts`), qa e seguranca.
+  Ao integrar a HIS-003a/HIS-111: `pnpm lint --fix`, pôr o 8º comentário da HIS-109 em `casa.ts:132`, tirar o bloco;
+  o efeito novo de `aplicacao/casa.ts` da HIS-111 passaria do teto de 8.
+- Teste instável anterior: fluxo principal, "terminar o cadastro" às vezes conta 13 transições em vez de 14 (também no `main`).
 - HIS-003: validação com zod, tela de erro, limites de entrada.
 
 ## Orientações do responsável

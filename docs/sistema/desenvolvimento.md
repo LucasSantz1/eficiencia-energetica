@@ -17,9 +17,10 @@ pnpm install
 | `pnpm dev` | site em modo desenvolvimento em http://localhost:3000 |
 | `pnpm build` | build de produção do site |
 | `pnpm start` | sobe o build de produção |
+| `pnpm lint` | ESLint em todo o repositório: padrão do código, regras de segurança e a maior parte das regras de camadas (ADR-001); sem aviso nenhum |
 | `pnpm camadas` | confere se cada arquivo do site só usa as camadas permitidas (ADR-001); ver abaixo |
 | `pnpm typecheck` | roda `pnpm camadas` e depois a verificação de tipos em todos os pacotes |
-| `pnpm test` | testes de unidade (`@ee/core` e `@ee/dados`) |
+| `pnpm test` | testes de unidade (`@ee/core` e `@ee/dados`) e os casos negativos do lint e das camadas (`pnpm test:camadas`, `scripts/testes/`) |
 | `pnpm test:e2e` | testes no navegador (fluxo, acessibilidade com axe e peso de JS); precisa de `pnpm build` antes; ver abaixo |
 | `pnpm dados:atualizar` | baixa os dados da ANEEL e grava em `apps/web/public/dados` |
 | `pnpm dados:exemplo` | gera dados fictícios para trabalhar sem internet |
@@ -31,7 +32,8 @@ apps/web/                 site (Next.js); o código fica em apps/web/src/, organ
 apps/web/e2e/             testes no navegador (Playwright), exceções do axe e referência de peso de JS
 packages/core/            regras de negócio (domínio) e testes
 packages/dados/           rotina de dados da ANEEL/IBGE, fixtures e testes
-scripts/                  verificar-camadas.mjs (barreira de camadas)
+scripts/                  verificar-camadas.mjs (barreira de camadas) e testes/ (casos negativos do lint e das camadas)
+eslint.config.mjs         regras do ESLint (camadas, segurança, padrão do código)
 docs/                     documentação (índice em docs/README.md)
 .claude/agents/           definições dos agentes da equipe
 .github/workflows/        CI (ci.yml) e rotina diária (atualizar-dados.yml)
@@ -56,8 +58,12 @@ cada uma pode importar estão em [../arquitetura.md](../arquitetura.md#camadas-d
 Antes de dizer que terminou:
 
 ```bash
-pnpm typecheck && pnpm test && pnpm build
+pnpm lint && pnpm typecheck && pnpm test && pnpm build
 ```
+
+O `pnpm lint` confere o padrão do código e as regras que se decidem olhando um arquivo só. Quando acusa um import
+proibido, mostra a regra do ADR-001, por exemplo `ui só importa @/ui, @/config e @ee/core (ADR-001, regra 4)`. Ele
+não aceita nenhum aviso (`--max-warnings 0`). Para arrumar sozinho a ordem dos imports: `pnpm lint --fix`.
 
 O `pnpm typecheck` começa pelo verificador de camadas. Se ele achar um import proibido, para ali e mostra uma linha por
 problema, com o arquivo, o import e a regra do ADR-001:
@@ -67,8 +73,17 @@ apps/web/src/ui/Botao.tsx → @/aplicacao/casa: ui não pode importar aplicacao 
 1 problema(s)
 ```
 
-Sem problemas, mostra `Camadas: tudo certo (64 arquivos)` (o número cresce com o código). O script funciona de qualquer
-pasta (`node scripts/verificar-camadas.mjs`), só lê arquivos e não precisa de dependência.
+O script cuida do que depende de outro arquivo ou da estrutura das pastas (`.servidor`, `"use client"`, destino do import). Sem
+problemas, mostra `Camadas: tudo certo (66 arquivos; 7 comentário(s) da HIS-109)` (os números mudam com o código). Ele
+só lê arquivos e usa o parser do TypeScript, que já vem instalado.
+
+### Comentários que desligam o lint
+
+Ninguém desliga uma regra do ESLint por comentário: o script de camadas reprova qualquer `eslint-disable`. A única exceção
+é o desligamento de `react-hooks/set-state-in-effect` com motivo e a marca `(HIS-109)`, que a HIS-109 vai eliminar. Há
+hoje 7, e o teto só pode diminuir. Enquanto a HIS-003a não sai, um bloco provisório em `eslint.config.mjs`
+(`provisorio/arquivos-em-outras-historias`) desliga duas regras em `infraestrutura/armazenamento/casa.ts` e
+`packages/dados/src/escrever.ts`; quem integrar por último tira o bloco e sobe o teto para 8.
 
 Para mudanças de interface, rode também os testes no navegador (abaixo) e olhe as capturas de tela.
 
@@ -124,7 +139,7 @@ obrigatórios para entrar no `main`:
 
 | Check | O que faz |
 | --- | --- |
-| **Lint, tipos e testes** | instala, `typecheck` (com o verificador de camadas e os tipos de `e2e/`) e `test` |
+| **Lint, tipos e testes** | instala, `lint`, `typecheck` (com o verificador de camadas e os tipos de `e2e/`) e `test` (com os casos negativos do lint e das camadas) |
 | **Navegador (e2e, axe e peso)** | instala o Chromium, `build`, `test:e2e`; guarda o relatório; confere que nada mudou no repositório |
 
 - O resumo de cada execução mostra a tabela do peso de JS e as exceções do axe.

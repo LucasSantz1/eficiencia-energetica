@@ -14,8 +14,8 @@
 - Site em camadas (HIS-001, branch `his-001-camadas`, PR #1): `app/`, `funcionalidades/<nome>/`, `ui/` (+ `ui/aparelho/`),
   `aplicacao/`, `infraestrutura/`, `config/`. **Code review aprovado em 2026-10-29** (seção 12 do desenho); próximo:
   `documentacao` (etapa 8) e `scrum-master` (etapa 9). O `main` só muda quando a PR #1 for integrada.
-- Sem ESLint ainda (entra na HIS-002). As camadas são conferidas por `scripts/verificar-camadas.mjs` (`pnpm camadas`),
-  que roda dentro do `pnpm typecheck` (64 arquivos hoje). CI verde no `182f355`.
+- ESLint entra com a HIS-002b (`pnpm lint`, cerca de 13 s sem cache). O script de camadas usa o parser do TypeScript
+  (66 arquivos, 7 comentários da HIS-109). O `test:camadas` tem 145 casos e 4 controles, cerca de 37 s.
 - Next 16: o build não mostra mais "First Load JS"; para comparar peso, usar `.next/prerender-manifest.json`
   (`htmlSize`, `initialRevalidateSeconds`) e os bytes de script. A `/` hoje: `htmlSize` ≈ 66 kB, revalidate 86400.
 - JS do HTML depois da HIS-001 (gzip, sem `noModule`): `/` 164 212, `/comecar` 172 561, `/casa` 175 053,
@@ -83,6 +83,8 @@
   parser do `typescript`. `import()` dinâmico e `"use server"` proibidos até haver regra. e2e em todo PR e push no
   `main`; sem cache do navegador no runner (rever se o passo passar de 60 s). Peso de JS com referência em
   `apps/web/e2e/peso-js.json`. `e2e-base` sai no fim da parte do navegador.
+- **Efeitos da HIS-109 (2026-11-03):** o teto só desce. Efeito novo que só copia estado não ganha comentário: usa
+  estado derivado ou ajustado no render, e o efeito fica só com o que fala com fora (store, rede, DOM).
 - **Builds de revisão** sempre numa cópia própria no scratchpad (`git archive HEAD` + `pnpm install --offline`), nunca no
   `apps/web/.next` do repositório: build em paralelo derruba o servidor de quem está testando (lição do qa na HIS-001).
 
@@ -143,7 +145,12 @@
 - ~~HIS-002a: code review na etapa 7~~ aprovado em 2026-10-30 (2 checks verdes, artefato no descartável, mesma lista).
   Resta o peso do runner × local: o verde só prova que está dentro do limite. Pedi a quem orquestra a tabela do resumo
   do job; se a diferença passar de ±100 B, a referência passa a ser a do CI (D14). Se o e2e passar de 10 min, rever os workers.
-- HIS-002b: implementação depois da 002a no `main`; no B8, a frase do ADR-001.
+- HIS-002b (branch `his-002b-lint-e-camadas`): B1–B7 revistos em 2026-11-03 e devolvidos só pelo `TETO_HIS_109` = 7
+  enquanto existir o bloco provisório (D17). B8 feito (ADR-001 revisado). Conferir de novo depois do ajuste.
+- HIS-111: o efeito novo em `aplicacao/casa.ts` (`useDistribuidoraAtualizada`) precisa sair sem 9ª linha da HIS-109,
+  com o estado ajustado no render (D17 da 002b). No rebase, o `--fix` da ordem vai num commit só de formatação.
+- HIS-003a: no rebase sobre a 002b, tirar o bloco `provisorio/arquivos-em-outras-historias` (o 8º comentário no
+  `useCasaCarregada`, o `--fix` no `escrever.ts` e o teto 8). Conferir isso no code review dela.
 - Dívida nova (HIS-109, se o scrum-master confirmar): 8 efeitos que copiam estado (`react-hooks/set-state-in-effect`)
   em `TelaComodos`, `armazenamento/casa`, `dados-publicos/navegador`, `Movimento`, `EditorAparelho` — reescrever com
   `key`, estado derivado ou `useSyncExternalStore`, com e2e conferindo.

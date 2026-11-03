@@ -10,6 +10,21 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-002b · lint e camadas no CI: B1–B7 (ESLint, casos negativos, script com parser do TS, S2/T3)
+- O que fiz: um commit por passo (`7427be6` B1, `e8ffa7a` B2, `c602b73` B3, `7e25a8c` B4, `b0bd88c` B5, `666fe8c` B6,
+  `1062111` B7). 145 casos + 4 controles em `scripts/testes/`; script reescrito com `ts.createSourceFile`.
+- Decisões e porquê: `casa.ts` e `packages/dados` estão em outras histórias → bloco provisório na configuração (2
+  regras, 2 arquivos) em vez de mexer neles. `OBRIGATORIOS` conferido nos dois sentidos (caso novo também precisa entrar
+  na lista). Os comentários da C10 são lidos pelos tokens do parser, pulando texto de JSX, para `//` em texto não acusar.
+- Verificação: barreira verde; mutações V1–V4 e V6–V8 vermelhas com o id; e2e numa cópia (3341) e controle do `main`
+  (3342): a falha de transição em "terminar o cadastro" aparece nos dois, então não é desta história.
+- Aprendizado: num `sed` de mutação, conferir que o padrão casa só onde se quer (apagar `"I7-13", ` tirou também o id
+  do caso). E o ESLint 10 com `-c` usa a pasta atual como base.
+- Arquivos: `eslint.config.mjs`, `package.json`, `pnpm-lock.yaml`, `.github/workflows/ci.yml`, `scripts/**`,
+  `apps/web/postcss.config.mjs`, `ui/tiposDeTransicao.ts`, `aplicacao/identificador.ts`, 20 arquivos com imports
+  reordenados, a história, este diário e `contexto.md`.
+- Próximos passos: tech-lead (B8 e o bloco provisório), documentacao, qa (etapa 5) e seguranca (Rb1–Rb9).
+
 ## 2026-10-30 · HIS-002 · D-A5-1 e D-A5-2: nome do "Quem mais gasta" e Tab na tabela do painel geral
 - O que fiz: commit `92e9fd9`. Coloquei o `aria-label` da ux nos 6 botões do ranking, com `{" "}` entre os blocos, e
   `role="region"`, nome e `tabIndex={0}` na região rolável da tabela do painel geral.

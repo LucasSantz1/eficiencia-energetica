@@ -1,11 +1,11 @@
 "use client";
 
-import { competenciaAtual, formatarCompetencia, formatarKwh, formatarReais, historicoContas, periodosDeLeitura, type ContaMensal } from "@ee/core";
 import { Gauge, Pencil, Plus, Receipt } from "lucide-react";
 import { useState } from "react";
+import { competenciaAtual, formatarCompetencia, formatarKwh, formatarReais, historicoContas, periodosDeLeitura, type ContaMensal } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
-import { Barras } from "@/ui/Barras";
 import { Aviso } from "@/ui/Aviso";
+import { Barras } from "@/ui/Barras";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
 import { Entrada } from "@/ui/Entrada";
