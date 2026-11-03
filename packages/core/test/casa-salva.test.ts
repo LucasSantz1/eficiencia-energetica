@@ -405,3 +405,39 @@ describe("o leitor nunca lança (R4d)", () => {
     return lerCasaSalva(doArmazenamento(lida.casa));
   }
 });
+
+describe("medida só com limite físico; contagem só inteira (pedido 2 da seguranca, 2026-11-03)", () => {
+  it("fração salva por tela antiga fica: leitura 12.340,5 e conta R$ 135,905", () => {
+    const lida = lerCasaSalva(doArmazenamento({ ...casaCompleta, leituras: [{ ...leituraUm, valorKwh: 12_340.5 }], contas: [{ ...conta, valor: 135.905 }] }));
+    semAviso(lida);
+    expect(lida.casa.leituras[0]?.valorKwh).toBe(12_340.5);
+    expect(lida.casa.contas[0]?.valor).toBe(135.905);
+  });
+
+  // 1e400 não existe em JSON: vira Infinity só em memória (ação do store), por isso não passa por doArmazenamento.
+  const invalidos: [string, unknown][] = [["1e308", 1e308], ["-1", -1], ["1e400", 1e400], ['"12" em texto', "12"]];
+
+  it.each(invalidos)("medida %s sai: leitura, conta (kWh e R$) e potência", (_caso, valor) => {
+    const lida = lerCasaSalva({
+      ...casaCompleta,
+      aparelhos: [{ ...geladeira, potenciaW: valor }],
+      contas: [{ ...conta, kwh: valor }, { ...conta, id: "k2", competencia: "2026-10", valor }],
+      leituras: [{ ...leituraUm, valorKwh: valor }],
+    });
+    expect(lida.descartados).toEqual({ ...nenhumDescarte, aparelhos: 1, contas: 2, leituras: 1 });
+  });
+
+  it.each([...invalidos, ["2.5", 2.5]] as [string, unknown][])("contagem %s: quantidade e banho tiram o aparelho; pessoas sai só o campo", (_caso, valor) => {
+    const lida = lerCasaSalva({
+      ...casaCompleta,
+      residencia: { ...residencia, pessoas: valor },
+      aparelhos: [
+        { ...geladeira, quantidade: valor },
+        { ...aparelhoCompleto, banho: { banhosPorDia: valor, minutosPorBanho: 8 } },
+        { ...aparelhoCompleto, id: "a3", banho: { banhosPorDia: 4, minutosPorBanho: valor } },
+      ],
+    });
+    expect(lida.descartados).toEqual({ ...nenhumDescarte, aparelhos: 3 });
+    expect(lida.casa.residencia).toEqual({ ...residencia, pessoas: undefined });
+  });
+});
