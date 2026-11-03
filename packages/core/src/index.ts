@@ -7,3 +7,6 @@ export * from "./bandeiras";
 export * from "./distribuidoras";
 export * from "./comodos";
 export * from "./acompanhamento";
+export * from "./limites";
+export * from "./entrada";
+export * from "./estados";
