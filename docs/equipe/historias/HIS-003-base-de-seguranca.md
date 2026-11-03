@@ -1064,9 +1064,12 @@ Sucessoras prováveis, porque o fim de uma vigência e o começo da outra caem e
 - `[para: ux-acessibilidade]` (não bloqueia; para o frontend saber o que fazer):
   - o T2b também entra no `TrocarCidade` dos ajustes, com a frase "Sua casa continua salva.";
   - o T1b leva para `/casa/ajustes`, que passa a abrir sem cidade (D5).
-- [ ] `[para: tech-lead]` **P-qa-3a-1** (não bloqueia o a7). O D10 1c aceita até +10,5 kB no 11a; o 11b (total com
+- [x] `[para: tech-lead]` **P-qa-3a-1** (não bloqueia o a7). O D10 1c aceita até +10,5 kB no 11a; o 11b (total com
   prefetch) subiu +11 431 B em `/` e `/comecar`, +13 252 B em `/casa*`, +11 952 B em `/casa` com casa e +6 819 B em
   `/sobre`. Já está no `peso-js.json` novo. Confirmar que o aceite vale também para o 11b.
+  — **Resposta (tech-lead, 2026-11-03):** aceito. Teto do 11b nesta história: **+13,5 kB** por rota e +7 kB na `/sobre`,
+  contra a referência `06be352`. O 11b soma de novo o mesmo chunk do core e os chunks das rotas dos `<Link>`, e o
+  prefetch roda depois que a página abriu (critério da HIS-001). Não há corte novo: o que sobra é o D10d (backlog).
 
 ## Conversa da equipe
 
@@ -1343,3 +1346,7 @@ aceito, com R4c e R4d nas consequências.
 5. **D-3a-2 (baixa, ux):** no T1b em `/casa/ajustes`, o aviso tem o link "Escolher minha cidade" para a própria página (não faz nada) e, abaixo, um botão com o mesmo nome que abre a folha.
 6. **D-3a-3 (baixa, frontend):** "Tiramos 9500 aparelhos" sem ponto de milhar; e com zoom de 200% o texto do `<a>` "Voltar ao início" do T3 fica à esquerda (falta `text-center`).
 7. **Evidências** (fora do git): `scratchpad/qa-his003a/` (`e2e-completo.txt`, `capturas/`). **Próximo:** tech-lead (11b) ‖ fechamento.
+
+### [tech-lead] 2026-11-03 — P-qa-3a-1 respondida: 11b aceito com teto de +13,5 kB por rota (+7 kB na `/sobre`)
+- O 11b repete o chunk do core e soma as rotas do prefetch, que roda depois da abertura. Os cortes do D10 já valem para os dois números. O `peso-js.json` do `8e486fb` fica como está.
+- Acima desse teto, falar comigo. Próximo: o qa segue o a7.
