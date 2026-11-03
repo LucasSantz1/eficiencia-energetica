@@ -1,3 +1,4 @@
+import { LIMITES, validarFaixa } from "@ee/core";
 import { acharColuna, dataISO, normalizar, numeroBR, semValor, type Linha } from "../util";
 
 /**
@@ -127,7 +128,7 @@ export function selecionarTarifasVigentes(linhas: Linha[], c: ColunasTarifas, ho
       continue;
     }
     const total = escolhida.teKwh + escolhida.tusdKwh;
-    if (total <= 0.05 || total > 5) {
+    if (validarFaixa(LIMITES.tarifaKwh, total) === "fora") {
       descartadas.push(`${sigla}: tarifa fora do esperado (R$ ${total.toFixed(4)}/kWh)`);
       continue;
     }
