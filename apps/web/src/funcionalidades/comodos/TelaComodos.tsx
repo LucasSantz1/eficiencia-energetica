@@ -44,6 +44,7 @@ export function TelaComodos() {
 
   // Abre direto no painel geral (?visao=geral) ou rola até o cômodo (#comodo-id).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lê ?visao da URL só depois da hidratação (HIS-109)
     if (new URLSearchParams(window.location.search).get("visao") === "geral") setVisao("geral");
   }, []);
 
@@ -140,6 +141,7 @@ function CartaoComodo({
 
   useEffect(() => {
     if (window.location.hash === `#comodo-${comodo.id}`) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- abre o cômodo do #comodo-id da URL só depois da hidratação (HIS-109)
       setAberto(true);
       document.getElementById(`comodo-${comodo.id}`)?.scrollIntoView({ block: "start" });
     }
@@ -359,6 +361,7 @@ function EditarComodo({ comodo, aoFechar, quantidade }: { comodo?: TipoComodoCas
   const [nome, setNome] = useState("");
   const [confirmar, setConfirmar] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reinicia o formulário quando muda o cômodo em edição (HIS-109)
     setNome(comodo?.nome ?? "");
     setConfirmar(false);
   }, [comodo]);

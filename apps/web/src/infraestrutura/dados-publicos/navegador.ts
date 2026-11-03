@@ -29,6 +29,7 @@ function useArquivo<T>(caminho: string | undefined): Estado<T> & { tentarDeNovo:
   const [tentativa, setTentativa] = useState(0);
   useEffect(() => {
     if (!caminho) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- limpa o estado quando não há arquivo para carregar (HIS-109)
       setEstado({ carregando: false });
       return;
     }

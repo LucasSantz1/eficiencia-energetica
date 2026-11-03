@@ -42,12 +42,13 @@ export function EditorAparelho({
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reinicia o rascunho quando muda o aparelho em edição (HIS-109)
     setR(aparelho);
     setSemEtiqueta(false);
     setConfirmarRemocao(false);
   }, [aparelho]);
 
-  if (!r) return <Folha aberta={false} aoFechar={aoFechar} titulo="" children={null} />;
+  if (!r) return <Folha aberta={false} aoFechar={aoFechar} titulo="">{null}</Folha>;
 
   const item = itemDoCatalogo(r.catalogoId);
   const modo = item?.modo ?? "tempo";
