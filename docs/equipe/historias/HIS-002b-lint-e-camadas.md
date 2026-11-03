@@ -6,7 +6,7 @@
 | Sprint | 0 |
 | Tamanho | M (≈ 2–2,5 dias: D12 + 0,5 das revisões de seguranca e qa; revisto em 2026-10-30, D16) |
 | Papéis principais | tech-lead, frontend, seguranca |
-| Status | Preparada (implementação bloqueada: ver "Dependências") |
+| Status | **Pronto** (2026-11-03), com ressalvas: critério 11 aceito com 7 linhas da HIS-109 + bloco provisório até a HIS-003a (D17); ressalvas baixas da seguranca (item 4 vira HIS-113); DEF-002b-1 pré-existente, fora daqui |
 | Branch | `his-002b-lint-camadas` (sai do `main` **depois** da integração da HIS-002a) |
 
 > **Origem:** dividida da HIS-002 pelo scrum-master em 2026-10-29, a partir da proposta D12 do tech-lead. A outra
@@ -838,3 +838,9 @@ ficam na [HIS-002a](HIS-002-qualidade-automatica.md), "Conversa da equipe", e va
 - Mudaram: `docs/arquitetura.md` (verificador dividido em ESLint, script e casos; sem "Node puro" nem "Limites conhecidos"; mapa com `tiposDeTransicao` e `identificador`), `docs/sistema/desenvolvimento.md` (`pnpm lint`, regra de camadas, comentários e bloco provisório), `README.md`, `CHANGELOG.md` (2 partes) e o índice de ADRs.
 - O bloco provisório e o teto 7 estão escritos como "saem na HIS-003a". Números conferidos no código: 66 arquivos, 7 comentários, 145 casos.
 - **scrum-master:** a história está pronta para a conferência da Definição de Pronto.
+
+### [scrum-master] 2026-11-03 — Definição de Pronto conferida (etapa 9): **Pronto**, com ressalvas
+- Conferi pelas notas registradas, sem rodar nada: critérios 1, 5, 7, 8, 10 e 11 (qa, etapa 5); `typecheck`, `test` (152), `build`, `lint` e e2e (107 ✓) verdes; sem mudança visível (capturas de `/sobre` em 390 e 1280 px, sem erro de console); tech-lead (D17, teto 7), seguranca (baixas), qa e documentação (`df4bf99`) aprovados; CHANGELOG e `arquitetura.md` atualizados.
+- Ressalvas: (1) critério 11 fica com 7 linhas + bloco provisório, que sai na **HIS-003a** (quem integra por último confere, D17-b); (2) seguranca item 4 → **HIS-113**; (3) **DEF-002b-1**, pré-existente, no backlog (frontend + qa); (4) 2 moderadas de `minimatch` em dev, aceitas, o Dependabot da 003a sobe.
+- Pendência do dono: conferir que os 2 checks do CI seguem obrigatórios na proteção do `main` (não verifico daqui).
+- Próximo: quem orquestra integra ao `main`; depois a etapa 4 da HIS-003a (com rebase sobre a 002b e retirada do bloco provisório).
