@@ -9,7 +9,7 @@ const JANELA_DA_SEGUNDA_FALHA_MS = 10_000;
 let instanteDoUltimoToque = 0;
 
 /**
- * Tela de erro geral (T3), usada por app/error.tsx e app/global-error.tsx. Não usa o store nem o erro: o texto é
+ * Tela de erro geral (T3), usada por app/global-error.tsx. Não usa o store nem o erro: o texto é
  * fixo, sem mensagem técnica (A8). O link de volta vem de fora, porque no global-error ele precisa ser um <a> comum.
  */
 export function TelaDeErro({ aoTentarDeNovo, voltarAoInicio }: { aoTentarDeNovo: () => void; voltarAoInicio: ReactNode }) {
