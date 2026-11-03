@@ -114,7 +114,9 @@ function lerResumoDoScript(saida) {
 }
 
 // Critério 11: os efeitos da HIS-109 só podem diminuir (a HIS-109 leva a 0).
-const TETO_HIS_109 = 8;
+// 7, e não 8, enquanto o bloco provisório do eslint.config.mjs esconder o efeito do casa.ts (D17 do tech-lead):
+// com 8, um efeito novo passaria sem ninguém ver. Quem tirar o bloco (HIS-003a) volta para 8.
+const TETO_HIS_109 = 7;
 
 const casosDoEslint = CASOS.filter((caso) => caso.verificador === "eslint");
 const casosDoScript = CASOS.filter((caso) => caso.verificador === "script");
