@@ -186,6 +186,48 @@ function conferirServidor({ arquivo, imports }) {
   if (!ok) anotar(arquivo, undefined, 'todo *.servidor.ts começa com import "server-only"; como primeiro import (ADR-001)');
 }
 
+// C8 (S2): componente é nome em PascalCase com ao menos uma minúscula (TransicaoTela sim; VOLTAR, novoId, useCasa não).
+const NOME_DE_COMPONENTE = /^[A-Z](?=[A-Za-z0-9]*[a-z])[A-Za-z0-9]*$/;
+
+/**
+ * Nomes de valor que um import ou reexport traz, sem os tipos. `undefined` quando traz o módulo inteiro
+ * (`import * as`, `export *`, `import x = …`), o que de um módulo "use client" nunca é permitido.
+ */
+function valoresTrazidos(instrucao) {
+  const nomeImportado = (elemento) => (elemento.propertyName && elemento.propertyName.text !== "default" ? elemento.propertyName.text : elemento.name.text);
+  if (ts.isImportDeclaration(instrucao)) {
+    const clausula = instrucao.importClause;
+    if (clausula === undefined || clausula.isTypeOnly) return [];
+    const nomes = clausula.name ? [clausula.name.text] : []; // no default, vale o nome local
+    const ligacoes = clausula.namedBindings;
+    if (ligacoes && ts.isNamespaceImport(ligacoes)) return undefined;
+    for (const elemento of ligacoes?.elements ?? []) if (!elemento.isTypeOnly) nomes.push(nomeImportado(elemento));
+    return nomes;
+  }
+  if (ts.isExportDeclaration(instrucao)) {
+    if (instrucao.isTypeOnly) return [];
+    const clausula = instrucao.exportClause;
+    if (clausula === undefined || ts.isNamespaceExport(clausula)) return undefined;
+    return clausula.elements.filter((elemento) => !elemento.isTypeOnly).map(nomeImportado);
+  }
+  return undefined;
+}
+
+/** C8: arquivo sem "use client" só leva componentes (e tipos) de um módulo "use client" do site. */
+function conferirValoresDeCliente({ arquivo, imports, ehCliente }, clientes) {
+  if (ehCliente) return;
+  for (const { especificador, instrucao } of imports) {
+    if (!ehInterno(especificador, true)) continue;
+    const destino = resolverInterno(arquivo, especificador);
+    if (destino === undefined || !clientes.has(destino)) continue;
+    const nomes = valoresTrazidos(instrucao);
+    const proibidos = nomes === undefined ? [ts.isExportDeclaration(instrucao) ? "export *" : "import * as"] : nomes.filter((nome) => !NOME_DE_COMPONENTE.test(nome));
+    for (const nome of proibidos) {
+      anotar(arquivo, undefined, `arquivo sem "use client" só importa componentes de um módulo "use client" (S2): ${nome} de ${especificador}`);
+    }
+  }
+}
+
 /** C7 e C9: destino interno existe; arquivo "use client" não importa *.servidor (nem com import type). */
 function conferirDestinos({ arquivo, imports, ehCliente }, noSite) {
   for (const { especificador } of imports) {
@@ -214,6 +256,7 @@ for (const [pasta, arquivos] of [[SITE, arquivosDoSite], [DOMINIO, arquivosDoDom
 
 const lidosDoSite = arquivosDoSite.map(lerArquivo);
 const lidosDoDominio = arquivosDoDominio.map(lerArquivo);
+const modulosDeCliente = new Set(lidosDoSite.filter((lido) => lido.ehCliente).map((lido) => lido.arquivo));
 
 for (const lido of lidosDoSite) {
   if (camadaDe(lido.arquivo) === undefined) {
@@ -221,6 +264,7 @@ for (const lido of lidosDoSite) {
   }
   if (ARQUIVO_SERVIDOR.test(lido.arquivo)) conferirServidor(lido);
   conferirDestinos(lido, true);
+  conferirValoresDeCliente(lido, modulosDeCliente);
   conferirComentarios(lido.arquivo, lido.arquivoTs);
 }
 for (const lido of lidosDoDominio) {

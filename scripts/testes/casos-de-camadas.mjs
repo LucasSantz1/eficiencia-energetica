@@ -236,7 +236,37 @@ const SCRIPT_TS = [
   }, null),
 ];
 
-export const CASOS = [...ITEM_7_E_R13, ...S1, ...SEGURANCA, ...QUALIDADE, ...ESTRUTURA, ...MATRIZ, ...SCRIPT_TS];
+/** C8 (critério 8, S2): o que um arquivo sem "use client" pode levar de um módulo "use client" (B7). */
+const MODULOS_DE_CLIENTE = {
+  [`${SITE}/ui/Movimento.tsx`]:
+    '"use client";\nexport const VOLTAR = ["nav-back"];\nexport function TransicaoTela() {\n  return null;\n}\nexport type Tipo = string;\nexport default function principal() {\n  return null;\n}\n',
+  [`${SITE}/aplicacao/casa.ts`]: '"use client";\nexport const novoId = () => "x";\n',
+};
+const S2 = 'arquivo sem "use client" só importa componentes de um módulo "use client" (S2)';
+const PAGINA = `${SITE}/app/sobre/page.tsx`;
+const C8 = [
+  script("C8", "C8", { ...MODULOS_DE_CLIENTE, [PAGINA]: 'import { TransicaoTela, VOLTAR } from "@/ui/Movimento";\nexport const a = [TransicaoTela, VOLTAR];\n' }, `${S2}: VOLTAR de @/ui/Movimento`),
+  script("C8-novoId", "C8", { ...MODULOS_DE_CLIENTE, [`${SITE}/funcionalidades/cadastro/rascunho.ts`]: 'import { novoId } from "@/aplicacao/casa";\nexport const a = novoId;\n' }, `${S2}: novoId de @/aplicacao/casa`),
+  script("C8-import-asterisco", "C8", { ...MODULOS_DE_CLIENTE, [PAGINA]: 'import * as M from "@/ui/Movimento";\nexport const a = M;\n' }, `${S2}: import * as de @/ui/Movimento`),
+  script("C8-export-asterisco", "C8", { ...MODULOS_DE_CLIENTE, [`${SITE}/ui/Barril.ts`]: 'export * from "./Movimento";\n' }, `${S2}: export * de ./Movimento`),
+  script("C8-default-minuscula", "C8", { ...MODULOS_DE_CLIENTE, [PAGINA]: 'import principal from "@/ui/Movimento";\nexport const a = principal;\n' }, `${S2}: principal de @/ui/Movimento`),
+  script("C8-reexporta-valor", "C8", { ...MODULOS_DE_CLIENTE, [`${SITE}/ui/Constantes.ts`]: 'export { VOLTAR as Voltar } from "./Movimento";\n' }, `${S2}: VOLTAR de ./Movimento`),
+  script("C8-varias-linhas", "C8", { ...MODULOS_DE_CLIENTE, [PAGINA]: 'import {\n  type Tipo,\n  VOLTAR,\n} from "@/ui/Movimento";\nexport const a: Tipo[] = VOLTAR;\n' }, `${S2}: VOLTAR de @/ui/Movimento`),
+  script("controle-C8-import-type", "controle", {
+    ...MODULOS_DE_CLIENTE,
+    [PAGINA]: 'import type { Tipo } from "@/ui/Movimento";\nimport { type Tipo as Outro } from "@/ui/Movimento";\nexport type A = [Tipo, Outro];\n',
+  }, null),
+  script("controle-C8-componente", "controle", {
+    ...MODULOS_DE_CLIENTE,
+    [PAGINA]: 'import Principal, { TransicaoTela } from "@/ui/Movimento";\nexport const a = [Principal, TransicaoTela];\n',
+  }, null),
+  script("controle-C8-cliente", "controle", {
+    ...MODULOS_DE_CLIENTE,
+    [`${SITE}/funcionalidades/casca/Casca.tsx`]: '"use client";\nimport { VOLTAR } from "@/ui/Movimento";\nimport { novoId } from "@/aplicacao/casa";\nexport const a = [VOLTAR, novoId];\n',
+  }, null),
+];
+
+export const CASOS = [...ITEM_7_E_R13, ...S1, ...SEGURANCA, ...QUALIDADE, ...ESTRUTURA, ...MATRIZ, ...SCRIPT_TS, ...C8];
 
 /** Controles que não cabem no formato de caso; cada um é um teste com o mesmo nome em camadas.test.mjs. */
 export const CONTROLES = ["controle-repositorio", "controle-arvore-minima", "controle-outra-pasta", "controle-linha-de-comando"];
@@ -262,5 +292,7 @@ export const OBRIGATORIOS = [
   "C4", "S1-d", "C5", "S1-c-script", "C9", "C9-relativo", "seguranca-14b",
   "seguranca-22", "seguranca-23", "seguranca-24", "seguranca-25", "seguranca-26", "controle-seguranca-26",
   "C10", "C10-global", "C10-mesma-linha", "C10-motivo-curto", "C10-his109-no-fim-da-linha", "controle-C10-texto",
+  "C8", "C8-novoId", "C8-import-asterisco", "C8-export-asterisco", "C8-default-minuscula", "C8-reexporta-valor", "C8-varias-linhas",
+  "controle-C8-import-type", "controle-C8-componente", "controle-C8-cliente",
   "controle-repositorio", "controle-arvore-minima", "controle-outra-pasta", "controle-linha-de-comando",
 ];
