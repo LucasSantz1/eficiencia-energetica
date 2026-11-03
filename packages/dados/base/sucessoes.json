@@ -1,0 +1,137 @@
+{
+  "sobre": "Distribuidoras incorporadas por outra (CNPJ diferente). Cada linha precisa de ato e fonte oficiais. Só muda por PR revisado pelo dominio-energia, com o resumo do diagnóstico anexado; a rotina diária nunca escreve aqui (HIS-111, ADR-005, R4). Mesmo CNPJ (RGE SUL e RGE) não entra: a rotina resolve sozinha.",
+  "sucessoes": [
+    {
+      "cnpjAntigo": "07297359000111",
+      "siglaAntiga": "EDEVP",
+      "cnpjSucessor": "07282377000120",
+      "siglaSucessora": "ESS",
+      "desde": "2017-06-30",
+      "ato": "REA ANEEL nº 6.318/2017: aprova o agrupamento das áreas, com incorporação pela Caiuá Distribuição, que forma a Energisa Sul-Sudeste",
+      "fonte": "https://api.mziq.com/mzfilemanager/v2/d/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/1f1a9406-2219-1c70-8239-1b42746c5de4?origin=2",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Fonte: Nota Técnica nº 150/2021-SGT/ANEEL, § 6 (cópia no RI da Energisa). A data de 30/06/2017 vem do Relatório Anual Energisa 2017. A data citada para a REA (25/03/2017) caiu num sábado: conferir no DOU."
+    },
+    {
+      "cnpjAntigo": "61416244000144",
+      "siglaAntiga": "CNEE",
+      "cnpjSucessor": "07282377000120",
+      "siglaSucessora": "ESS",
+      "desde": "2017-06-30",
+      "ato": "REA ANEEL nº 6.318/2017: aprova o agrupamento das áreas, com incorporação pela Caiuá Distribuição, que forma a Energisa Sul-Sudeste",
+      "fonte": "https://api.mziq.com/mzfilemanager/v2/d/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/1f1a9406-2219-1c70-8239-1b42746c5de4?origin=2",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Mesmo ato e mesma fonte da EDEVP."
+    },
+    {
+      "cnpjAntigo": "60942281000123",
+      "siglaAntiga": "EEB",
+      "cnpjSucessor": "07282377000120",
+      "siglaSucessora": "ESS",
+      "desde": "2017-06-30",
+      "ato": "REA ANEEL nº 6.318/2017: aprova o agrupamento das áreas, com incorporação pela Caiuá Distribuição, que forma a Energisa Sul-Sudeste",
+      "fonte": "https://api.mziq.com/mzfilemanager/v2/d/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/1f1a9406-2219-1c70-8239-1b42746c5de4?origin=2",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Mesmo ato e mesma fonte da EDEVP."
+    },
+    {
+      "cnpjAntigo": "77882504000107",
+      "siglaAntiga": "CFLO",
+      "cnpjSucessor": "07282377000120",
+      "siglaSucessora": "ESS",
+      "desde": "2017-06-30",
+      "ato": "REA ANEEL nº 6.318/2017: aprova o agrupamento das áreas, com incorporação pela Caiuá Distribuição, que forma a Energisa Sul-Sudeste",
+      "fonte": "https://api.mziq.com/mzfilemanager/v2/d/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/1f1a9406-2219-1c70-8239-1b42746c5de4?origin=2",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Mesmo ato e mesma fonte da EDEVP. Guarapuava (PR) tem também a Copel na lista: conferir a ordem."
+    },
+    {
+      "cnpjAntigo": "61015582000174",
+      "siglaAntiga": "CPFL LESTE PAULI",
+      "cnpjSucessor": "53859112000169",
+      "siglaSucessora": "CPFL Santa Cruz",
+      "desde": "2018-01-01",
+      "ato": "REA ANEEL nº 6.723, de 21/11/2017: incorporação pela Companhia Jaguari de Energia (CPFL Santa Cruz), feita em 31/12/2017",
+      "fonte": "https://www2.aneel.gov.br/cedoc/rea20176723ti.pdf",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Também nas demonstrações da Cia. Jaguari (RI CPFL): https://ri.cpfl.com.br/Download.aspx?Arquivo=ppJOuVjC1xAIdBWbJYeeZA%3D%3D"
+    },
+    {
+      "cnpjAntigo": "52503802000118",
+      "siglaAntiga": "CPFL MOCOCA",
+      "cnpjSucessor": "53859112000169",
+      "siglaSucessora": "CPFL Santa Cruz",
+      "desde": "2018-01-01",
+      "ato": "REA ANEEL nº 6.723, de 21/11/2017: incorporação pela Companhia Jaguari de Energia (CPFL Santa Cruz), feita em 31/12/2017",
+      "fonte": "https://www2.aneel.gov.br/cedoc/rea20176723ti.pdf",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Mesmo ato e mesma fonte da CPFL Leste Paulista."
+    },
+    {
+      "cnpjAntigo": "60855608000120",
+      "siglaAntiga": "CPFL SUL PAULIST",
+      "cnpjSucessor": "53859112000169",
+      "siglaSucessora": "CPFL Santa Cruz",
+      "desde": "2018-01-01",
+      "ato": "REA ANEEL nº 6.723, de 21/11/2017: incorporação pela Companhia Jaguari de Energia (CPFL Santa Cruz), feita em 31/12/2017",
+      "fonte": "https://www2.aneel.gov.br/cedoc/rea20176723ti.pdf",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Mesmo ato e mesma fonte da CPFL Leste Paulista."
+    },
+    {
+      "cnpjAntigo": "61116265000144",
+      "siglaAntiga": "CPFL SANTA CRUZ",
+      "cnpjSucessor": "53859112000169",
+      "siglaSucessora": "CPFL Santa Cruz",
+      "desde": "2018-01-01",
+      "ato": "REA ANEEL nº 6.723, de 21/11/2017: incorporação da Companhia Luz e Força Santa Cruz pela Companhia Jaguari de Energia (CPFL Santa Cruz), feita em 31/12/2017",
+      "fonte": "https://www2.aneel.gov.br/cedoc/rea20176723ti.pdf",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Mesmo ato da CPFL Leste Paulista. As demonstrações da Cia. Jaguari (RI CPFL) listam a Companhia Luz e Força Santa Cruz entre as quatro incorporadas e dizem que a Jaguari passou a usar o nome CPFL Santa Cruz. O nome igual ao da sucessora é coincidência de marca: o CNPJ (raiz 61116265) é outro."
+    },
+    {
+      "cnpjAntigo": "33249046000106",
+      "siglaAntiga": "ENF",
+      "cnpjSucessor": "19527639000158",
+      "siglaSucessora": "EMR",
+      "desde": "2023-06-22",
+      "ato": "REA ANEEL nº 12.177, de 13/09/2022 (DOU de 21/09/2022, processo 48500.005211/2021-67): agrupa as áreas e aprova a incorporação da ENF pela Energisa Minas Gerais",
+      "fonte": "https://abrapch.org.br/2022/09/diario-oficial-da-uniao-21-09-2022/",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Cópia do DOU. Condição V7: a EMR precisa ter um só valor B1 na vigência; se tiver mais de um, esta linha sai e volta ao dominio-energia. Nova Friburgo na área da EMR: https://avozdaserra.com.br/noticias/contas-de-luz-em-friburgo-sobem-361-em-media-no-domingo"
+    },
+    {
+      "cnpjAntigo": "08826596000195",
+      "siglaAntiga": "EBO",
+      "cnpjSucessor": "09095183000140",
+      "siglaSucessora": "EPB",
+      "desde": "2023-08-28",
+      "ato": "REA ANEEL nº 12.687, de 13/09/2022 (DOU de 21/09/2022, processo 48500.005212/2021-10): agrupa as áreas e aprova a incorporação da EBO pela EPB",
+      "fonte": "https://abrapch.org.br/2022/09/diario-oficial-da-uniao-21-09-2022/",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Cópia do DOU. Condição V7, como na ENF. Tarifas da EBO prorrogadas até 27/08/2023: https://www.canalenergia.com.br/noticias/53236466/tarifas-da-energisa-borborema-serao-prorrogadas-ate-agosto"
+    },
+    {
+      "cnpjAntigo": "05938444000196",
+      "siglaAntiga": "CERR",
+      "cnpjSucessor": "02341470000144",
+      "siglaSucessora": "Âmbar Roraima",
+      "desde": "2017-01-01",
+      "ato": "Despacho MME s/n, de 23/09/2016: a Boa Vista Energia passa a atender o interior de Roraima (o Despacho ANEEL nº 580/2016 recomenda unificar as áreas)",
+      "fonte": "https://www2.camara.leg.br/atividade-legislativa/comissoes/comissoes-permanentes/cme/apresentacoes-em-eventos/2017/29-11-2017-discutir-o-constante-aumento-de-tarifa-de-energia-eletrica-em-roraima/Aneel%20-Roraima_SGT_Camara.pdf",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Fonte: apresentação da ANEEL na Câmara, 29/11/2017. O despacho do MME de 12/08/2016 só adiou a extinção da concessão da CERR: https://www.gov.br/mme/pt-br/assuntos/noticias/mme-define-prazo-de-transicao-de-prestacao-de-servico-da-cerr-para-a-boa-vista-energia. A Boa Vista Energia (hoje Roraima Energia / Âmbar Roraima) assume todo o interior; Contrato de Concessão nº 04/2018-ANEEL. Voto ANEEL de 09/12/2025 (cópia Poder360): https://static.poder360.com.br/2025/12/roraima-sin-aneel.pdf"
+    },
+    {
+      "cnpjAntigo": "02016439000138",
+      "siglaAntiga": "RGE",
+      "cnpjSucessor": "02016440000162",
+      "siglaSucessora": "RGE",
+      "desde": "2019-01-01",
+      "ato": "Agrupamento das concessões da RGE e da RGE Sul aprovado pela ANEEL em 04/12/2018: a RGE Sul incorporou a RGE e passou a se chamar RGE (número da REA não localizado)",
+      "fonte": "https://ri.cpfl.com.br/Download.aspx?Arquivo=AiJIS2TJi1r3E7fuxnXsSQ%3D%3D&linguagem=pt",
+      "consultadoEm": "2026-10-30",
+      "observacao": "Fonte: Formulário de referência da CPFL Energia, item 1.1 (dominio-energia, 30/10, tabela da HIS-111). A RGE antiga (Rio Grande Energia, CNPJ 02016439000138) só aparece nos conjuntos; a RGE de hoje tem o CNPJ da antiga RGE Sul. Nome igual, empresa diferente (raiz do CNPJ diferente). Trocar o ato pelo número da REA quando alguém abrir o cedoc. `desde` conferido: comunicado da CPFL à CVM (IstoÉ, imprensa) dá aprovação em 04/12/2018 e agrupamento em 31/12/2018."
+    }
+  ]
+}

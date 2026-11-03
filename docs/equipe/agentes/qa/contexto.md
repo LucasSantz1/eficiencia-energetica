@@ -44,6 +44,12 @@
   liberar a porta com `fuser -k 3100/tcp` (não usar `pkill -f "next start"`).
 - O Chromium já está instalado no ambiente de nuvem: `require('playwright')` (1.63, via NODE_PATH global), sem `playwright install`.
 
+- **HIS-111, h7: aprovado em 2026-10-31 (`314555c`, D1 fechado: +953 a +998 B).** Antes, em 2026-10-30: devolvido para frontend (D1, peso de JS 11a +1 135 a +1 179 B nas rotas `/casa*`,
+  limite +1 024).** Crit. 1, 2, 9, 10 (diagnóstico 4) e 8 ok. Spec `apps/web/e2e/troca-distribuidora.spec.ts` + fixtures
+  `casa-v2-rge-sul.json`/`substituidas-his111.json` na branch 111; só roda com a 002a junto (`e2e/apoio`).
+- Testar história × 002a sem tocar worktree: `git merge-tree --write-tree A B` + `git archive <árvore> | tar -x` numa
+  pasta do scratchpad + `pnpm install --offline --frozen-lockfile`; `PORTA_E2E=31xx pnpm exec playwright test`.
+
 ## Decisões em vigor
 
 - e2e: fixture automática reprova `pageerror`, `console.error` e pedido fora da origem do `baseURL`; contexto novo por
@@ -90,13 +96,11 @@
 
 ## Pendências
 
-- HIS-002a: a ux ainda não revisou `excecoes-axe.ts` (8 `color-contrast` da `/`, HIS-110). Depois do push (A6):
-  conferir peso do runner × local (D14; se diferir, referência = CI e rodar de novo), artefato do commit descartável
-  (critério 4) e `--list` no runner (critério 6).
-- DEF-002b-1 (fluxo principal, 13 em vez de 14 transições, ~5 %): quando virar história, medir a causa antes de
-  mexer no teste (pista: `router.push("/casa")` sem prefetch + esqueleto da `Casca`).
-- Cópia de um repositório que é worktree: **não** levar o `.git` (é um arquivo que aponta para o índice do worktree);
-  fazer `git init` na cópia — o `controle-repositorio` usa `git ls-files --others --exclude-standard`.
+- HIS-111 h8: 6 cidades + Guarapuava/Nova Friburgo/Campina Grande nos arquivos publicados. Peso de `/casa*` com folga
+  de só 26 B no 11a: qualquer história que mexer na `Casca` mede de novo.
+
+- HIS-002: transformar o fluxo em testes Playwright no CI, com axe; aposentar `apps/web/e2e-base/`.
+- HIS-002: levar o `manual-qa.cjs` (teclado, folhas, nomes acessíveis, zoom, âncora) para `apps/web/e2e/`, com axe.
 - Backlog (pré-existentes, HIS-001 P1–P4): foco no passo "cidade" pula da busca para o título (ux/frontend); zoom 200%
   com rolagem horizontal em `/`, `/casa`, `/casa/dicas` (ux); âncora não alinha ao topo pelo link **nem** direto numa página nova (371/491 px; frontend, HIS-108).
 

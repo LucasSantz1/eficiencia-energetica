@@ -23,7 +23,7 @@
 | HTML a partir de texto por nome calculado (`e["innerHTML"]`, `Object.assign`, `Reflect.set`, spread de `dangerouslySetInnerHTML`) passa no lint (medido) | baixo, backlog; seletor `Property`/`Literal` proposto na nota da 002b | HIS-002b |
 | CI: `ci.yml` sem `permissions`, actions por etiqueta, `persist-credentials` padrão; artefato público 14 dias | **resolvido no `ci.yml`** (etapa 6 da HIS-002a aprovada com ressalva baixa em 2026-10-30: Ra1–Ra13 ok); falta: dono do projeto conferir o artefato no GitHub (Ra9) e o Dependabot de actions + `atualizar-dados.yml` (HIS-003) | HIS-002a / HIS-003 |
 | Site chamando terceiro sem a pessoa saber: sem barreira automática | **resolvido**: fixture do e2e reprova pedido fora de `127.0.0.1` (Ra10 plantada na `/sobre`: 3 vermelhos com a URL) | HIS-002a |
-| Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | médio; análise aprovada, V9/V10 no h1/h3; workflow de diagnóstico só leitura aprovado | HIS-111 |
+| Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | **mitigado**: etapa 6 aprovada com ressalvas (baixo) em `314555c`; V1–V4/V7–V10 sem `--forcar` e 0 arquivos com CSV ruim (provado). S1 (cabeçalho com `\n` no `console.error` do `main`) fechada em `0cc072a` | HIS-111 |
 | Server Actions (`"use server"`): cada uma vira endpoint POST público; nenhuma existe | regra a definir antes do E4 | E4 |
 | SQL injection | não se aplica ainda (sem banco); regra já vale para o E4 | E4 |
 | XSS | React escapa texto; não há `dangerouslySetInnerHTML`, `innerHTML`, `eval` nem `new Function` | — |
@@ -71,7 +71,8 @@
   fonte, antiga **sem** tarifa vigente e siglas que batem com o CNPJ (V9/V10, sem `--forcar`). A rotina diária nunca
   escreve em `packages/dados/base/` (ADR-005, HIS-111).
 - Texto de dado externo que vai para log do Actions (`::notice::`/`::warning::`) passa por escape de `%`, `\r`, `\n`;
-  no `$GITHUB_STEP_SUMMARY`, sem `|`/`<`/crase e com tamanho limitado.
+  no `$GITHUB_STEP_SUMMARY`, sem `|`/`<`/crase e com tamanho limitado. Vale também para mensagem de erro que sai
+  pelo `catch` do `main` (`console.error`), não só para `registrar` (S1 da HIS-111).
 - Funções do core que leem dado de rede (ex.: `substituidas`) são totais por conta própria; não dependem de o leitor
   da fronteira já existir.
 - Lint: o único `eslint-disable` aceito no site e no domínio é o da HIS-109; ignores do ESLint só com caminho ancorado;
@@ -95,10 +96,9 @@
 - **HIS-003a (etapa 6):** R1–R13 + R4b, R4c, R4d da história; rodar `scratchpad/seg-his003/prova-hidratacao.mjs`
   contra o storage novo (se sumir: P1/P2 na história explicam o caso). Conferir que o ADR-004 passou para aceito.
   A HIS-003 foi dividida: T5/T6 e `campos.spec.ts` estão na `HIS-003b-campos-com-limite.md` (revisar lá também).
-- **HIS-111 (etapa 6):** R1–R9 da história. Conferir: `paths` do diagnóstico com `core` e lockfile; escape do log
-  com o teste `"X\n::add-mask::a"`; V9/V10 com fixture e sem `--forcar`; core total com os 5 formatos de
-  `substituidas`; regravação só com `de` fora e `para` dentro; `Object.fromEntries` + limite de 500 no leitor da a3;
-  h8 sem `--forcar` e gatilho `push` trocado por `pull_request`. Conferir que o ADR-005 passou para aceito com o R3.
+- **HIS-111:** etapa 6 feita em 2026-10-31 (aprovado com ressalvas, baixo). S1 fechada em `0cc072a` (conferida). Falta: no h8, rodar sem `--forcar` e trocar o
+  gatilho `push` por `pull_request`. Na a3: leitor do `tarifas.json` com `Object.fromEntries`, limite de 500 (caso 501
+  no P8) e `distribuidoras: [null]` sem lançar. Sondas em `scratchpad/seg-his111/` (`sondas.ts`, `rodar-ruim.mts`).
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

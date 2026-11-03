@@ -7,6 +7,7 @@
   "scripts": {
     "atualizar": "tsx src/atualizar.ts",
     "exemplo": "tsx src/exemplo.ts",
+    "diagnosticar": "tsx src/diagnosticar.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

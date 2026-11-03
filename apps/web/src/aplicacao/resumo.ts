@@ -1,5 +1,6 @@
 "use client";
 
+import { acharDistribuidora, bandeiraDoMes, competenciaAtual, gerarDicas, nomeDaDistribuidora, precoKwh, resumirCasa, simularPlano, type ArquivoTarifas, type Distribuidora } from "@ee/core";
 import { useMemo } from "react";
 import { bandeiraDoMes, competenciaAtual, gerarDicas, nomeDaDistribuidora, precoKwh, resumirCasa, simularPlano, type ArquivoTarifas, type Distribuidora } from "@ee/core";
 import { useCasa } from "@/infraestrutura/armazenamento/casa";
@@ -15,7 +16,9 @@ export function useResumo() {
 
   return useMemo(() => {
     const arquivo = tarifas.dados;
-    const distribuidora = residencia && arquivo ? arquivo.distribuidoras.find((d) => d.id === residencia.distribuidoraId) : undefined;
+    // acharDistribuidora segue `substituidas`: a casa salva com um id que saiu do arquivo (rge-sul) já usa o preço de
+    // hoje (rge) na primeira tela, antes de a casa ser regravada (HIS-111, D7).
+    const distribuidora = residencia && arquivo ? acharDistribuidora(arquivo, residencia.distribuidoraId) : undefined;
     const bandeira = arquivo ? bandeiraDoMes(arquivo.bandeiras, competenciaAtual()) : undefined;
     const preco = precoKwh(residencia ?? {}, distribuidora, bandeira?.bandeira);
     const r = residencia ?? { beneficio: "nao-sei" as const, ligacao: "nao-sei" as const };

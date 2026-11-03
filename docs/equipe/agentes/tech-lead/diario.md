@@ -10,17 +10,25 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
-## 2026-11-03 · HIS-002b · B8 e code review de B1–B7: devolvido por 1 linha (teto 7); decisões sobre a HIS-111 e o bloco provisório
-- **O que fiz:** revisei os commits `7427be6`…`1062111` contra o D4–D7 e o D16. Rodei lint, typecheck, test (152) e build
-  numa cópia (`scratchpad/tl-his002b/copia`), todos verdes, e o audit sem alta. Fiz 3 sondas: apagar um caso
-  obrigatório (o teste acusa o id), C10 num comentário de JSX (acusa) e o padrão de estado ajustado no render (lint
-  limpo). Também revisei o ADR-001 (B8).
-- **Decisões e porquê:**
-  - Teto 7 enquanto o bloco existir, para o efeito da HIS-111 não ocupar a vaga escondida.
-  - HIS-111: correção pedida, sem 9ª linha.
-  - O bloco sai na 003a, que é a dona dos dois arquivos. Tudo isso está no D17.
-- **Arquivos:** `ADR-001-camadas.md`, `HIS-002b-lint-e-camadas.md` (D17 e a nota), `contexto.md` e este diário.
-- **Próximos passos:** frontend (teto), qa ‖ seguranca, documentacao (D17). Reconferir depois do ajuste.
+## 2026-10-30 · HIS-111 · code review do h6 (frontend) aprovado
+- **O que fiz:** revisei o `10166f5` (core, `aplicacao/casa.ts`, `Casca`, `AvisoTrocaDistribuidora`, `Aviso`,
+  `Cadastro`, `TelaAjustes`) e rodei typecheck, test (core 53, dados 87) e build numa cópia
+  (`scratchpad/tl-his111-h6/copia`): verdes. O ESLint ainda não existe nesta branch (vem com a 002b).
+- **Decisões e porquê:** aprovado. A regravação não entra em laço porque `trocaDeDistribuidora` só troca para um id
+  publicado. A `Casca` fica no layout, então o par da visita dura até "Entendi". `idDaSigla` duplicado vai para o h8.
+- **Arquivos:** `HIS-111-tarifas-vencidas.md` (nota), `contexto.md` e este diário.
+- **Próximos passos:** qa (h7) com o e2e da troca e as capturas; h8 com os itens das duas notas.
+
+## 2026-10-30 · HIS-111 · code review do backend em `packages/dados` aprovado; T2 e ADR-005 revistos depois do passo 0
+- **O que fiz:** revisei os commits do backend em `packages/dados` desde `6daaabf` (h0–h5, correções do passo 0, linha
+  12 do `sucessoes.json`) e rodei typecheck, test (core 48, dados 87) e build numa cópia
+  (`scratchpad/tl-his111-rev/copia`): verdes. Trouxe o ADR-005 aceito e o meu contexto/diário da `his-002-qualidade`
+  (o `origin/main` ainda tem a proposta) e apliquei a revisão.
+- **Decisões e porquê:** aprovado sem devolver; o diagnóstico 4 passou todos os portões. ADR-005 item 2 ganhou: nome
+  igual não é a mesma empresa (raiz do CNPJ), empresa da tarifa = sigla + CNPJ, ano do conjunto não troca sozinho.
+  V4 confirmado como "publicada", porque o estrito pararia a rotina a cada atraso da ANEEL.
+- **Arquivos:** `HIS-111-tarifas-vencidas.md` (T2, perguntas, nota), `ADR-005-…md`, `contexto.md` e este diário.
+- **Próximos passos:** h6 (frontend), h7 (qa); no h8, os 3 itens da nota. Responder a pergunta F1.
 
 ## 2026-10-30 · HIS-002 · etapa 7 da 002a: code review aprovado; ADR-004 e ADR-005 aceitos
 - **O que fiz:** revisei o diff de código contra o D9–D16 e rodei typecheck, test e build numa cópia

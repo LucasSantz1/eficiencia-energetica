@@ -1,7 +1,9 @@
 "use client";
 
-import type { Aparelho, Comodo } from "@ee/core";
+import { descreverTroca, trocaDeDistribuidora, type Aparelho, type Comodo, type TrocaDescrita } from "@ee/core";
+import { useEffect, useState } from "react";
 import { useCasa } from "@/infraestrutura/armazenamento/casa";
+import { useTarifas } from "@/infraestrutura/dados-publicos/navegador";
 
 // Porta das telas para a casa guardada no aparelho (ADR-001: aplicacao é a única porta para infraestrutura).
 // Hoje é quase só reexportação; é aqui que a sincronização com o servidor vai entrar (E4) sem mudar as telas.
@@ -28,4 +30,32 @@ export function useEdicaoDeAparelho(): EdicaoDeAparelho {
     else adicionarAparelho(dados);
   };
   return { comodos, salvar, remover };
+}
+
+/**
+ * Regrava, uma vez, a casa salva com o id de uma distribuidora que saiu do `tarifas.json` (empresa renomeada ou
+ * incorporada: `rge-sul` → `rge`), para a Minha casa marcar a opção certa (HIS-111, D7; ADR-005). O preço já vem certo
+ * antes disso, pelo `acharDistribuidora` do `useResumo`.
+ *
+ * Devolve a troca feita nesta visita, com os nomes, para o aviso da `Casca` (F1). O par fica só na memória: depois da
+ * regravação o id salvo já é o novo, e nada novo é guardado no aparelho, então o aviso não volta na próxima visita.
+ * Contra laço (R6): `trocaDeDistribuidora` só pede troca quando o id salvo não está publicado e o de hoje está. Depois
+ * da regravação o id salvo já é o de hoje, então a troca acontece uma vez só, sem precisar de memória.
+ */
+export function useDistribuidoraAtualizada(): TrocaDescrita | undefined {
+  const idSalvo = useCasa((s) => s.residencia?.distribuidoraId);
+  const atualizarResidencia = useCasa((s) => s.atualizarResidencia);
+  const arquivo = useTarifas().dados;
+  const [trocaDaVisita, setTrocaDaVisita] = useState<TrocaDescrita>();
+
+  useEffect(() => {
+    // Sem esperar o `useCasaCarregada`: o persist lê o localStorage na hora, e antes disso `idSalvo` é `undefined`.
+    if (!arquivo || idSalvo === undefined) return;
+    const troca = trocaDeDistribuidora(arquivo, idSalvo);
+    if (!troca) return;
+    atualizarResidencia({ distribuidoraId: troca.para });
+    setTrocaDaVisita(descreverTroca(arquivo, troca));
+  }, [arquivo, idSalvo, atualizarResidencia]);
+
+  return trocaDaVisita;
 }

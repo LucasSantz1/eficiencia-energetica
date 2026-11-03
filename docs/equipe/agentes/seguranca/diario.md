@@ -10,11 +10,26 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
-## 2026-11-03 · HIS-002b · etapa 6 (Rb1–Rb9): aprovado com ressalvas (baixo)
-- O que fiz: numa cópia de `57eb736` com git próprio rodei audit, lockfile, integridade contra o registro, scripts de instalação, `lint` e `test:camadas` (152/152). Rodei 26 sondas de segurança no ESLint e o lint de 3 pastas diferentes, e revisei o `ci.yml`.
-- Decisões e porquê: as 2 moderadas do `minimatch` foram aceitas (só em desenvolvimento, padrão nosso). O HTML por nome calculado que passa no lint é baixo (exige escrita de propósito) e tem seletor proposto.
-- Arquivos: `docs/equipe/historias/HIS-002b-lint-e-camadas.md`, `contexto.md`, `diario.md`.
-- Próximos passos: conferir o bloco provisório e o teto 8 no rebase da 003a.
+## 2026-10-31 · HIS-111 · S1 fechada (`0cc072a`)
+- O que fiz: refiz a prova do S1 (`scratchpad/seg-his111/s1.mts`) contra a correção, com cabeçalho quebrado, binário,
+  `\n    at ::add-mask::` e um erro que não é `Error`. Resultado: nenhuma linha com `::` e 0 arquivos gravados; teste
+  "S1" verde.
+- Decisões e porquê: S1 fechada. O `exemplo.ts` continua com `console.error(e)`, mas não lê dado de fora.
+- Arquivos: nota da HIS-111 (item 7), `contexto.md`, `diario.md`.
+- Próximos passos: h8 (sem `--forcar`, `push` → `pull_request`).
+
+## 2026-10-31 · HIS-111 · etapa 6: aprovado com ressalvas (baixo), S1 no log do `main`
+- O que fiz: revisei `packages/dados` (sucessões, V1–V10, rotina), o `diagnosticar-dados.yml`, as anotações, o core
+  (`substituidas`, `trocas.ts`), `aplicacao/casa.ts` e o aviso. Testei 12 entradas ruins do `sucessoes.json`, 13
+  formatos de `substituidas` e 4 CSVs ruins de ponta a ponta, com e sem `--forcar`. Também conferi as colisões de id
+  sem acento. `typecheck`, `test` (53 + 87) e `audit` limpos.
+- Decisões e porquê: S1 é baixo, não bloqueia. O cabeçalho com `\n` vira comando do runner só pelo `console.error` do
+  `main`, mas a rotina para sem gravar e o token só lê. A falta de acento não muda a segurança: o nome vem de uma
+  tabela fixa e o `de` já passou pelo formato do id. A fronteira do `tarifas.json` fica com a a3; o core total cobre
+  até lá (R5).
+- Arquivos: `docs/equipe/historias/HIS-111-tarifas-vencidas.md` (nota), `contexto.md`, `diario.md`. Sondas em
+  `scratchpad/seg-his111/`.
+- Próximos passos: conferir a correção do S1 e o h8 (sem `--forcar`, `push` → `pull_request`).
 
 ## 2026-10-30 · HIS-002a · etapa 6: aprovado com ressalvas (baixo), Ra9 fica com o dono do projeto
 - O que fiz: Ra1–Ra13 sobre o `efab326` numa cópia própria (`scratchpad/seg-h2a/copia`, portas 3171–3173): typecheck,
