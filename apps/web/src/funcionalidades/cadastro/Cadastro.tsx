@@ -20,9 +20,10 @@ import { Contador } from "@/ui/Contador";
 import { Entrada } from "@/ui/Entrada";
 import { Icone } from "@/ui/Icone";
 import { Marca } from "@/ui/Marca";
-import { ENTRAR_NO_PAINEL, TransicaoTela } from "@/ui/Movimento";
+import { TransicaoTela } from "@/ui/Movimento";
 import { Opcao } from "@/ui/Opcao";
 import { Pilulas } from "@/ui/Pilulas";
+import { ENTRAR_NO_PAINEL } from "@/ui/tiposDeTransicao";
 import { ajustarComodos, itemDoCatalogoParaComodo, rascunhoParaCasa, type ComodoRascunho } from "./rascunho";
 
 type Passo = "estado" | "cidade" | "distribuidora" | "beneficio" | "pessoas" | "comodos" | `comodo:${number}` | "revisao" | "conta";

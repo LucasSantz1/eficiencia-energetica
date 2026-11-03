@@ -9,7 +9,8 @@ import { useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
 import { BotaoLink } from "@/ui/Botao";
 import { Marca } from "@/ui/Marca";
-import { IR_ADIANTE, TransicaoTela, VOLTAR } from "@/ui/Movimento";
+import { TransicaoTela } from "@/ui/Movimento";
+import { IR_ADIANTE, VOLTAR } from "@/ui/tiposDeTransicao";
 
 const ITENS: { href: string; rotulo: string; curto?: string; Icone: typeof Lightbulb }[] = [
   { href: "/casa", rotulo: "Acompanhamento", curto: "Acompanhar", Icone: ChartNoAxesColumn },

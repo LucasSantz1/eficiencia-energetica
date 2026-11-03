@@ -1,5 +1,5 @@
 import { aparelhoInicial, COMODOS_PADRAO, ILUMINACAO_PADRAO, itemDoCatalogo, nomesPadrao, SUGESTOES_COMODO, type Aparelho, type Comodo, type TipoComodo } from "@ee/core";
-import { novoId } from "@/aplicacao/casa";
+import { novoId } from "@/aplicacao/identificador";
 import type { ItemComodo } from "@/ui/aparelho/tipos";
 
 /** Cômodo sendo montado no cadastro: nome, aparelhos sugeridos (alguns com quantidade 0) e lâmpadas. */

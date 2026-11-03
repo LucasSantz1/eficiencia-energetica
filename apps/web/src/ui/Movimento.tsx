@@ -2,11 +2,6 @@
 
 import { useEffect, useRef, useState, ViewTransition, type ReactNode } from "react";
 
-/** Tipos de transição entre telas (usados em <Link transitionTypes> e router.push). */
-export const IR_ADIANTE = ["nav-forward"];
-export const VOLTAR = ["nav-back"];
-export const ENTRAR_NO_PAINEL = ["entrar-painel"];
-
 const MAPA = { "nav-forward": "nav-forward", "nav-back": "nav-back", "entrar-painel": "entrar-painel", default: "none" };
 
 /**
