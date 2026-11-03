@@ -16,11 +16,11 @@
 | Sem `pnpm audit` nem Dependabot no CI; `atualizar-dados.yml` com token de escrita durante o `pnpm install` e actions por etiqueta | médio, aberto; dois jobs + SHA | HIS-003 |
 | Links externos sem `rel="noopener noreferrer"` (`funcionalidades/inicio/PaginaInicial.tsx` l. 275, `app/sobre/page.tsx` l. 44–56); sem `target="_blank"`, então baixo | aberto (baixo) | HIS-003 |
 | Refatoração em camadas: perda da casa salva, código de servidor no cliente, script de camadas com falso negativo | etapa 6 **aprovada com ressalvas (baixo)** em `182f355`: R1–R15 ok | HIS-001 |
-| `verificar-camadas.mjs` com lacunas que pedem escrita deliberada (S1: `from"x"` sem espaço, `.js/.jsx` não lidos, link simbólico pulado em silêncio, caminho absoluto/`?sufixo`, `getBuiltinModule`, `"use server"` livre) | etapa 3 aprovada: os 21 casos estão escritos na HIS-002b (20 ESLint, 1 script, medidos contra o D4) | HIS-002b |
+| `verificar-camadas.mjs` com lacunas que pedem escrita deliberada (S1: `from"x"` sem espaço, `.js/.jsx` não lidos, link simbólico pulado em silêncio, caminho absoluto/`?sufixo`, `getBuiltinModule`, `"use server"` livre) | **resolvido** (parser do TS + ESLint; etapa 6 aprovada com ressalvas baixas em `57eb736`) | HIS-002b |
 | Constante (`VOLTAR`) importada de módulo `"use client"` por componente de servidor (`app/sobre/page.tsx`) — armadilha A7, funciona hoje (S2) | aberto (baixo, pré-existente); correção no D7 | HIS-002b |
-| Comentário `eslint-disable`/`/* eslint … off */` derruba matriz, `innerHTML` e `"use server"` (medido) | médio; mitigação C10 no script, só a forma HIS-109 | HIS-002b (Ab3) |
-| `globalIgnores` com `**/build/**`, `**/out/**`, `**/test-results/**` tira pastas do site do lint (medido) | médio; ignores ancorados + controle de contagem | HIS-002b (Ab4) |
-| HTML a partir de texto fora da lista (`setHTMLUnsafe`, `createContextualFragment`, `srcdoc`/`srcDoc`) | baixo; 3 seletores propostos | HIS-002b (Ab6) |
+| Comentário `eslint-disable` derruba barreira (Ab3) | **resolvido**: C10 no script, só a forma HIS-109 (7 linhas + bloco provisório até a 003a) | HIS-002b |
+| Pastas do site fora do lint (Ab4) | **resolvido**: ignores ancorados + `controle-repositorio` | HIS-002b |
+| HTML a partir de texto por nome calculado (`e["innerHTML"]`, `Object.assign`, `Reflect.set`, spread de `dangerouslySetInnerHTML`) passa no lint (medido) | baixo, backlog; seletor `Property`/`Literal` proposto na nota da 002b | HIS-002b |
 | CI: `ci.yml` sem `permissions`, actions por etiqueta, `persist-credentials` padrão; artefato público 14 dias | **resolvido no `ci.yml`** (etapa 6 da HIS-002a aprovada com ressalva baixa em 2026-10-30: Ra1–Ra13 ok); falta: dono do projeto conferir o artefato no GitHub (Ra9) e o Dependabot de actions + `atualizar-dados.yml` (HIS-003) | HIS-002a / HIS-003 |
 | Site chamando terceiro sem a pessoa saber: sem barreira automática | **resolvido**: fixture do e2e reprova pedido fora de `127.0.0.1` (Ra10 plantada na `/sobre`: 3 vermelhos com a URL) | HIS-002a |
 | Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | médio; análise aprovada, V9/V10 no h1/h3; workflow de diagnóstico só leitura aprovado | HIS-111 |
@@ -89,9 +89,9 @@
 
 - **HIS-002a:** etapa 6 feita (aprovado com ressalvas, baixo). Fica só a Ra9 no GitHub, com o dono do projeto (roteiro
   na minha nota da história). Aa9 entrou no A6 (SHA); Dependabot de actions segue na HIS-003.
-- **HIS-002b (etapa 6):** Rb1–Rb9; rodar de novo os 21 + 9 casos numa cópia própria (roteiros em
-  `scratchpad/seg-his002/casos-eslint.mjs` e `propostas.mjs`; se sumirem, as tabelas estão na história) esperando 0
-  diferente; conferir C10 (Ab3) e ignores ancorados (Ab4).
+- **HIS-002b:** etapa 6 feita em `57eb736` (aprovado com ressalvas, baixo). As 2 moderadas do `minimatch` foram aceitas (só
+  em desenvolvimento): conferir o PR do Dependabot. As sondas estão em `scratchpad/seg-his002b/roteiro/sondas-xss.mjs`. No rebase
+  da 003a, o bloco provisório sai e o teto vira 8.
 - **HIS-003a (etapa 6):** R1–R13 + R4b, R4c, R4d da história; rodar `scratchpad/seg-his003/prova-hidratacao.mjs`
   contra o storage novo (se sumir: P1/P2 na história explicam o caso). Conferir que o ADR-004 passou para aceito.
   A HIS-003 foi dividida: T5/T6 e `campos.spec.ts` estão na `HIS-003b-campos-com-limite.md` (revisar lá também).

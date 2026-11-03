@@ -10,6 +10,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-002b · B8 e code review de B1–B7: devolvido por 1 linha (teto 7); decisões sobre a HIS-111 e o bloco provisório
+- **O que fiz:** revisei os commits `7427be6`…`1062111` contra o D4–D7 e o D16. Rodei lint, typecheck, test (152) e build
+  numa cópia (`scratchpad/tl-his002b/copia`), todos verdes, e o audit sem alta. Fiz 3 sondas: apagar um caso
+  obrigatório (o teste acusa o id), C10 num comentário de JSX (acusa) e o padrão de estado ajustado no render (lint
+  limpo). Também revisei o ADR-001 (B8).
+- **Decisões e porquê:**
+  - Teto 7 enquanto o bloco existir, para o efeito da HIS-111 não ocupar a vaga escondida.
+  - HIS-111: correção pedida, sem 9ª linha.
+  - O bloco sai na 003a, que é a dona dos dois arquivos. Tudo isso está no D17.
+- **Arquivos:** `ADR-001-camadas.md`, `HIS-002b-lint-e-camadas.md` (D17 e a nota), `contexto.md` e este diário.
+- **Próximos passos:** frontend (teto), qa ‖ seguranca, documentacao (D17). Reconferir depois do ajuste.
+
 ## 2026-10-30 · HIS-002 · etapa 7 da 002a: code review aprovado; ADR-004 e ADR-005 aceitos
 - **O que fiz:** revisei o diff de código contra o D9–D16 e rodei typecheck, test e build numa cópia
   (`scratchpad/tl-his002a-rev/copia`): tudo verde. Pela API REST do GitHub conferi os runs do PR #3: `4c860b5` e

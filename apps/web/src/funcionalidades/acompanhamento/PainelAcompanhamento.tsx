@@ -1,19 +1,19 @@
 "use client";
 
-import { COMODOS_PADRAO, ehLampada, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
 import { ChevronRight, Info } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { descreverUso } from "@/ui/aparelho/textosDeUso";
+import { COMODOS_PADRAO, ehLampada, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
+import { useEdicaoDeAparelho } from "@/aplicacao/casa";
+import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
+import { descreverUso } from "@/ui/aparelho/textosDeUso";
+import { Aviso } from "@/ui/Aviso";
+import { BotaoLink } from "@/ui/Botao";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
-import { Aviso } from "@/ui/Aviso";
-import { BotaoLink } from "@/ui/Botao";
-import { useEdicaoDeAparelho } from "@/aplicacao/casa";
-import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { Acompanhamento } from "./Acompanhamento";
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;

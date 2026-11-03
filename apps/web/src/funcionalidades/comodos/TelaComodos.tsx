@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import {
   agregarAparelhos,
   COMODOS_PADRAO,
@@ -13,23 +15,21 @@ import {
   type Comodo as TipoComodoCasa,
   type TipoComodo,
 } from "@ee/core";
-import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCasa, useEdicaoDeAparelho } from "@/aplicacao/casa";
+import { useResumo } from "@/aplicacao/resumo";
 import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
-import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
-import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
-import type { ItemComodo } from "@/ui/aparelho/tipos";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
-import { Icone } from "@/ui/Icone";
+import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
 import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
-import { ValorAnimado } from "@/ui/Movimento";
+import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
+import type { ItemComodo } from "@/ui/aparelho/tipos";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
 import { Entrada } from "@/ui/Entrada";
 import { Folha } from "@/ui/Folha";
+import { Icone } from "@/ui/Icone";
+import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
-import { useResumo } from "@/aplicacao/resumo";
-import { useCasa, useEdicaoDeAparelho } from "@/aplicacao/casa";
 
 export function TelaComodos() {
   const { resumo, preco, comodos, aparelhos } = useResumo();
@@ -44,6 +44,7 @@ export function TelaComodos() {
 
   // Abre direto no painel geral (?visao=geral) ou rola até o cômodo (#comodo-id).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lê ?visao da URL só depois da hidratação (HIS-109)
     if (new URLSearchParams(window.location.search).get("visao") === "geral") setVisao("geral");
   }, []);
 
@@ -140,6 +141,7 @@ function CartaoComodo({
 
   useEffect(() => {
     if (window.location.hash === `#comodo-${comodo.id}`) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- abre o cômodo do #comodo-id da URL só depois da hidratação (HIS-109)
       setAberto(true);
       document.getElementById(`comodo-${comodo.id}`)?.scrollIntoView({ block: "start" });
     }
@@ -359,6 +361,7 @@ function EditarComodo({ comodo, aoFechar, quantidade }: { comodo?: TipoComodoCas
   const [nome, setNome] = useState("");
   const [confirmar, setConfirmar] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reinicia o formulário quando muda o cômodo em edição (HIS-109)
     setNome(comodo?.nome ?? "");
     setConfirmar(false);
   }, [comodo]);

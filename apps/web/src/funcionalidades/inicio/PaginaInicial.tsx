@@ -1,9 +1,9 @@
-import { BANDEIRAS, formatarCompetencia } from "@ee/core";
 import Link from "next/link";
+import { BANDEIRAS, formatarCompetencia } from "@ee/core";
 import type { NumerosDoInicio } from "@/aplicacao/numeros-do-inicio.servidor";
+import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta } from "@/ui/Etiqueta";
 import { Icone } from "@/ui/Icone";
-import { EspacoReservado } from "@/ui/EspacoReservado";
 import { Marca } from "@/ui/Marca";
 import { Contagem, Revelar, TransicaoTela } from "@/ui/Movimento";
 import { BotaoComecar } from "./BotaoComecar";
