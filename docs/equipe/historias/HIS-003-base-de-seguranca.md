@@ -1247,3 +1247,9 @@ aceito, com R4c e R4d nas consequências.
 - **Como verifiquei:** `pnpm typecheck`, `pnpm test` (core 197, dados 17) e `pnpm build`; R4c com mutação (tirar `kwhMesInformado` do leitor reprova 25 testes); 2 × 1.000 valores com semente fixa, nenhum lança; publicados e `dados:exemplo` com 0 descartes.
 - **Rebase com a HIS-111:** só os imports da `tarifas.ts` conflitam. O `typecheck` vai exigir ler `substituidas` (P8 da 111) no `lerArquivoTarifas`; faço no rebase.
 - **Para o próximo:** frontend no a4/a5 (`lerCasaSalva`, `avisoDaCasaSalva`, `lerArquivoTarifas`/`Municipios`, `ehUf`, `lerNumeroDigitado`). `[para: seguranca]` conferir R4c, R4d, R10, R11 e a decisão (1).
+
+### [seguranca] 2026-11-03 — decisões (1) e (2) da etapa 4: aceito, com 2 pedidos para o a4
+- **Aceito (1), medidas só com limite físico.** `NaN`/`Infinity` e `1e308` caem em `validarFaixa` (finito + `max`); `JSON.parse` nem produz `NaN`. Nenhuma faixa perde teto, então não há conta gigante nova; `1e-300` passa só em kWh/R$ de conta (mín. 0) e é inofensivo. Sobra o teto somado (500 aparelhos × 75 kW): a tela deve mostrar "Confere?" e nunca estourar o layout.
+- **Aceito (2) só se o `merge` do D3 existir como descrito.** Hoje ele não existe (vem no a4); `lerCasaSalva` em si não lança com valor de `JSON.parse` (`ehObjeto`, `Object.hasOwn`, listas limitadas).
+- **Pedido 1 (médio):** se o `merge` pegar um erro e devolver casa vazia, a próxima ação do store regrava a casa vazia por cima da salva. Ao pegar, o `merge` deve travar a gravação (ou guardar cópia da chave bruta) e mostrar o aviso "nada aproveitável". Teste: `lerCasaSalva` forçado a lançar, `merge` sem exceção, `setItem` não chamado.
+- **Pedido 2 (teste a mais, core):** em `casa-salva.test.ts`, "12340,5" e "135,905" mantidos; `1e308`, `-1`, `1e400` (vira `Infinity` só em memória) e `"12"` como texto saem; quantidade/banho/pessoas `2.5` saem.

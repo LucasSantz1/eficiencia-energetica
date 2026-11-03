@@ -10,6 +10,12 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-003a · decisões (1) e (2) da etapa 4: aceito com 2 pedidos
+- O que fiz: li `casa-salva.ts`, `limites.ts`, `leitura-segura.ts`; conferi NaN, Infinity, 1e308, 1e-300 e teto somado.
+- Decisões e porquê: decimal em medida aceito (teto e finitude ficam). Sem try/catch aceito se o `merge` (a4, ainda não existe) travar a gravação ao pegar erro, senão a próxima ação regrava a casa vazia.
+- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md`.
+- Próximos passos: revisar o `merge` e o teste de `setItem` não chamado no a4.
+
 ## 2026-10-30 · HIS-002a · etapa 6: aprovado com ressalvas (baixo), Ra9 fica com o dono do projeto
 - O que fiz: Ra1–Ra13 sobre o `efab326` numa cópia própria (`scratchpad/seg-h2a/copia`, portas 3171–3173): typecheck,
   test, build e e2e verdes (107/6/0). Integridade dos 5 pacotes novos igual à do `npm view`. Ra10 plantada na `/sobre`

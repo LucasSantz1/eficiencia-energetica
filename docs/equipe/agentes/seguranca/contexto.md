@@ -11,6 +11,7 @@
 | --- | --- | --- |
 | localStorage: JSON quebrado prende o site no carregamento (P1, provado); mesma versão não passa pelo `migrate` (P2, provado) | alta, aberto; desenho na história (storage próprio + `merge`, descarte por item, retorno com contagem) | HIS-003 |
 | JSON de `/dados` lido sem validação (`navegador.ts`, `arquivos.servidor.ts` com `as`); `uf` do localStorage monta o caminho do `fetch` | médio/baixo, aberto | HIS-003 |
+| HIS-003a etapa 4: medidas da casa salva só com limite físico (aceito); `merge` que pega erro precisa travar a gravação (pedido 1, a4) | médio, aberto até o a4 | HIS-003a |
 | Sem `app/error.tsx`: exceção de render vira tela branca | aberto | HIS-003 |
 | Sem cabeçalhos de segurança (CSP, HSTS, etc.) em `next.config.ts` | aberto; valores exatos na HIS-003 | HIS-003 |
 | Sem `pnpm audit` nem Dependabot no CI; `atualizar-dados.yml` com token de escrita durante o `pnpm install` e actions por etiqueta | médio, aberto; dois jobs + SHA | HIS-003 |
