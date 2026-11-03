@@ -2,7 +2,7 @@
 
 ## Preparar o ambiente
 
-Requer **Node 22** e **pnpm 10** (o `packageManager` da raiz fixa a versão 10.28.0).
+Requer **Node 26** (LTS desde 28/10/2026) e **pnpm 10** (o `packageManager` da raiz fixa a versão 10.28.0).
 
 ```bash
 git clone https://github.com/LucasSantz1/eficiencia-energetica.git

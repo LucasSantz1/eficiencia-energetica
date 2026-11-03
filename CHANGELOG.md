@@ -1,26 +1,16 @@
 # Registro de mudanças
 
-## 2026-11-03 · Lint e camadas conferidos sozinhos (HIS-002b)
+## 2026-10-31 · Node 26 (LTS)
 
 **Para quem usa**
-- Nada muda na tela. Por dentro, o projeto passou a conferir sozinho, a cada mudança, se o código segue o padrão e as
-  regras de segurança. Isso ajuda a manter o site rápido e seguro para todas as famílias.
+- Nada muda na tela.
 
 **Técnico**
-- `pnpm lint` (ESLint 10.13.0, `eslint-config-next` 16.4.3, `eslint-plugin-import-x` 4.17.1; `eslint.config.mjs`, com
-  `--max-warnings 0`) e novo passo no job "Lint, tipos e testes" do `ci.yml`. Regras: matriz de camadas por
-  `no-restricted-imports`, `zustand` e módulos do Node só onde o ADR-001 permite, `no-explicit-any`, `ban-ts-comment`,
-  `react/no-danger`, `eval`/`new Function`, `innerHTML` e afins, `"use server"`, link `target="_blank"` sem `rel`,
-  `import-x/order` (ordem dos imports corrigida em commit só de formatação).
-- `scripts/verificar-camadas.mjs` passou a usar o parser do TypeScript e ficou com o que depende de outro arquivo: `.servidor`,
-  `"use client"`, valor importado de módulo `"use client"` por arquivo sem diretiva (S2), destino do import, link simbólico,
-  comentário `eslint-disable` (só a forma da HIS-109, com teto de 7). Saída: `Camadas: tudo certo (N arquivos; M comentário(s) da HIS-109)`.
-- 145 casos negativos em `scripts/testes/` (104 no ESLint, 41 no script), rodados no `pnpm test`; apagar um caso obrigatório reprova.
-- Correção S2: `ui/tiposDeTransicao.ts` (constantes de transição, antes no `Movimento`) e `aplicacao/identificador.ts`
-  (`novoId`, antes em `aplicacao/casa`), para valor compartilhado morar em arquivo sem diretiva.
-- Bloco provisório `provisorio/arquivos-em-outras-historias` no `eslint.config.mjs`: sai na HIS-003a, com o teto da HIS-109 subindo para 8.
-- `pnpm audit`: sem alta ou crítica; 2 moderadas de `minimatch` (só ferramenta de desenvolvimento, aceitas).
-- ADR-001 revisado (onde cada regra é conferida); `docs/arquitetura.md` e `docs/sistema/desenvolvimento.md` atualizados.
+- O projeto passa a usar o Node 26, que virou a versão LTS em 28/10/2026: `.nvmrc`, `engines` (`>=26`), CI e rotina
+  diária de dados com `node-version: 26`, `@types/node` 26.6.6.
+- `casa.ts` lê o armazenamento por `window.localStorage`. A partir do Node 25 o servidor tem um `localStorage` global
+  vazio, que avisava no build; pelo `window`, o servidor continua sem gravar nada, como antes.
+- Conferido no Node 26.13.0: typecheck, testes, build sem aviso, `pnpm audit` limpo e e2e (107 ok, 6 pendentes).
 
 ## 2026-10-30 · Rolagem suave nos links da página inicial
 

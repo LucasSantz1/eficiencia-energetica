@@ -117,7 +117,10 @@ export const useCasa = create<DadosCasa & Acoes>()(
     {
       name: "eficiencia-energetica:casa",
       version: 2,
-      storage: createJSONStorage(() => localStorage),
+      // `window.localStorage`, e não `localStorage`: a partir do Node 25 o servidor tem um `localStorage` global
+      // vazio, que avisa no build e não lança erro. Pelo `window`, no servidor dá ReferenceError e o zustand
+      // desliga a gravação, como no Node 22; no navegador é o mesmo objeto.
+      storage: createJSONStorage(() => window.localStorage),
       partialize: ({ residencia, comodos, aparelhos, contas, leituras, plano }) => ({ residencia, comodos, aparelhos, contas, leituras, plano }),
       // Versão 1 não tinha acompanhamento nem plano de economia.
       migrate: (salvo) => ({ contas: [], leituras: [], plano: [], ...(salvo as Partial<DadosCasa>) }) as DadosCasa & Acoes,
