@@ -37,6 +37,10 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Sem --prod: as ferramentas de desenvolvimento também rodam aqui. Sem "|| true": vulnerabilidade alta ou crítica
+      # reprova. Exceção só por pnpm.auditConfig.ignoreGhsas, com história e data para rever (A13 da HIS-003).
+      - name: Vulnerabilidades (alta ou crítica)
+        run: pnpm audit --audit-level high
       # pnpm lint entra aqui na HIS-002b (passo B3)
       - run: pnpm typecheck
       - run: pnpm test
