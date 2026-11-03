@@ -241,6 +241,22 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
       expect(salvo).toMatchObject({ state: { comodos: cadastroNovo.comodos }, version: 2 });
     });
 
+    it("há texto guardado sem ler com a trava ou com a cópia, e some com Apagar tudo (D-3a-1)", async () => {
+      const comTrava = await abrirComLeitorQueLanca();
+      expect(comTrava.getState().textoGuardadoSemLer).toBe(true);
+      comTrava.getState().apagarTudo();
+      expect(comTrava.getState().textoGuardadoSemLer).toBe(false);
+
+      local = new ArmazenamentoDeTeste();
+      local.dados.set(COPIA, "texto antigo");
+      const soComCopia = await abrirStore(local);
+      expect(soComCopia.getState().textoGuardadoSemLer).toBe(true);
+
+      local = new ArmazenamentoDeTeste();
+      local.dados.set(CHAVE, TEXTO);
+      expect((await abrirStore(local)).getState().textoGuardadoSemLer).toBe(false);
+    });
+
     it("sem trava, o cadastro novo não cria a cópia", async () => {
       local.dados.set(CHAVE, TEXTO);
       const useCasa = await abrirStore(local);

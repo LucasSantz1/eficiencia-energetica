@@ -7,7 +7,7 @@ import { useCasa, useCasaCarregada } from "@/infraestrutura/armazenamento/casa";
 // Hoje é quase só reexportação; é aqui que a sincronização com o servidor vai entrar (E4) sem mudar as telas.
 // Só reexportação nomeada: o Next não aceita `export *` em módulo "use client". O store tem um só `create`,
 // em infraestrutura/armazenamento/casa.ts — nunca criar outro aqui.
-export { useCasa, useCasaCarregada, type DadosCasa } from "@/infraestrutura/armazenamento/casa";
+export { useCasa, useCasaCarregada, useHaDadosGuardados, type DadosCasa } from "@/infraestrutura/armazenamento/casa";
 export { novoId } from "@/infraestrutura/identificador";
 
 export interface EdicaoDeAparelho {

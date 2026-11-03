@@ -70,6 +70,11 @@ interface Acoes {
 /** Fica só em memória (fora do `partialize`): só o tipo do aviso e números, nada do que saiu (T1). */
 interface EstadoDoAviso {
   avisoDaCasaSalva?: AvisoDaCasaSalva;
+  /**
+   * Há no aparelho um texto que o site guarda sem conseguir ler: a casa protegida pela trava ou a cópia ilegível.
+   * Mesmo sem casa em memória, "Apagar todos os meus dados" precisa aparecer (LGPD; D-3a-1 do qa).
+   */
+  textoGuardadoSemLer?: boolean;
 }
 
 type EstadoDaCasa = DadosCasa & EstadoDoAviso & Acoes;
@@ -197,7 +202,7 @@ export const useCasa = create<EstadoDaCasa>()(
       // "Apagar tudo" apaga de verdade (LGPD), também com a gravação travada: tira a chave e a cópia ilegível do
       // aparelho e solta a trava. A próxima ação grava do zero.
       apagarTudo: () => {
-        set({ residencia: undefined, comodos: [], aparelhos: [], contas: [], leituras: [], plano: [], avisoDaCasaSalva: undefined });
+        set({ residencia: undefined, comodos: [], aparelhos: [], contas: [], leituras: [], plano: [], avisoDaCasaSalva: undefined, textoGuardadoSemLer: false });
         armazenamento.removeItem(NOME_DA_CHAVE);
         armazenamento.removeItem(NOME_DA_COPIA_ILEGIVEL);
         armazenamento.liberarGravacao();
@@ -213,8 +218,9 @@ export const useCasa = create<EstadoDaCasa>()(
       migrate: (salvo) => salvo,
       merge: (salvo, atual) => {
         const { casa, aviso } = lerCasaNaHidratacao(salvo, armazenamento);
+        const textoGuardadoSemLer = armazenamento.gravacaoTravada() || armazenamento.existe(NOME_DA_COPIA_ILEGIVEL);
         // `residencia` sempre presente na troca, para uma casa sem cidade não herdar a do estado atual.
-        return { ...atual, residencia: casa.residencia, ...casa, avisoDaCasaSalva: aviso };
+        return { ...atual, residencia: casa.residencia, ...casa, avisoDaCasaSalva: aviso, textoGuardadoSemLer };
       },
       // Existe aviso exatamente quando algo saiu: só então a versão limpa é regravada, e o aviso não volta (T1).
       // Com a gravação travada (leitor falhou), o setItem não grava nada.
@@ -234,4 +240,18 @@ export function useCasaCarregada(): boolean {
     return useCasa.persist.onFinishHydration(() => setCarregada(true));
   }, []);
   return carregada;
+}
+
+/** true quando há qualquer dado da pessoa guardado no aparelho, lido ou não: é quando "Apagar tudo" precisa aparecer. */
+export function useHaDadosGuardados(): boolean {
+  return useCasa(
+    (s) =>
+      s.textoGuardadoSemLer === true ||
+      s.residencia !== undefined ||
+      s.comodos.length > 0 ||
+      s.aparelhos.length > 0 ||
+      s.contas.length > 0 ||
+      s.leituras.length > 0 ||
+      s.plano.length > 0,
+  );
 }

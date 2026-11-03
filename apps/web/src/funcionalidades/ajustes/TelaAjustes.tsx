@@ -31,13 +31,11 @@ const LIGACOES: { id: Ligacao; titulo: string; descricao: string }[] = [
 ];
 
 export function TelaAjustes() {
-  const router = useRouter();
   const { residencia, arquivo, distribuidora } = useResumo();
   const atualizar = useCasa((s) => s.atualizarResidencia);
   const definirResidencia = useCasa((s) => s.definirResidencia);
-  const apagarTudo = useCasa((s) => s.apagarTudo);
+  const temCasaSemCidade = useCasa((s) => s.comodos.length > 0 || s.aparelhos.length > 0);
   const [mudandoCidade, setMudandoCidade] = useState(false);
-  const [confirmarApagar, setConfirmarApagar] = useState(false);
   const [kwh, setKwh] = useState(residencia?.contaReferencia ? String(residencia.contaReferencia.kwh).replace(".", ",") : "");
   const [valor, setValor] = useState(residencia?.contaReferencia ? residencia.contaReferencia.valor.toFixed(2).replace(".", ",") : "");
   const [contaSalva, setContaSalva] = useState(false);
@@ -53,9 +51,12 @@ export function TelaAjustes() {
     return (
       <div className="space-y-12">
         <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
-        <Secao titulo="Onde você mora">
-          <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
-        </Secao>
+        {temCasaSemCidade && (
+          <Secao titulo="Onde você mora">
+            <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
+          </Secao>
+        )}
+        <SeusDados />
         <TrocarCidade
           aberta={mudandoCidade}
           aoFechar={() => setMudandoCidade(false)}
@@ -167,37 +168,7 @@ export function TelaAjustes() {
         )}
       </Secao>
 
-      <Secao titulo="Seus dados">
-        <p className="max-w-[56ch] text-tinta-suave">Tudo o que você cadastrou fica guardado só neste navegador. Se limpar os dados do navegador, as informações são apagadas.</p>
-        <div className="mt-4">
-          {!confirmarApagar ? (
-            <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
-              Apagar todos os meus dados
-            </Botao>
-          ) : (
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="font-bold">Apagar a casa e todos os aparelhos?</span>
-              <Botao
-                variante="perigo"
-                onClick={() => {
-                  apagarTudo();
-                  router.push("/");
-                }}
-              >
-                Sim, apagar
-              </Botao>
-              <Botao variante="fantasma" onClick={() => setConfirmarApagar(false)}>
-                Cancelar
-              </Botao>
-            </div>
-          )}
-        </div>
-        <p className="mt-6">
-          <Link href="/sobre" className="font-bold text-energia underline underline-offset-4">
-            De onde vêm as tarifas e como o cálculo é feito
-          </Link>
-        </p>
-      </Secao>
+      <SeusDados />
 
       <TrocarCidade
         aberta={mudandoCidade}
@@ -211,6 +182,49 @@ export function TelaAjustes() {
         }}
       />
     </div>
+  );
+}
+
+/**
+ * "Apagar todos os meus dados" (LGPD). Aparece em toda Minha casa, também sem cidade e quando a casa guardada não deu
+ * para ler (D-3a-1 do qa): a Casca só abre esta tela sem cidade quando há algum dado guardado.
+ */
+function SeusDados() {
+  const router = useRouter();
+  const apagarTudo = useCasa((s) => s.apagarTudo);
+  const [confirmarApagar, setConfirmarApagar] = useState(false);
+  return (
+    <Secao titulo="Seus dados">
+      <p className="max-w-[56ch] text-tinta-suave">Tudo o que você cadastrou fica guardado só neste navegador. Se limpar os dados do navegador, as informações são apagadas.</p>
+      <div className="mt-4">
+        {!confirmarApagar ? (
+          <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
+            Apagar todos os meus dados
+          </Botao>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-bold">Apagar a casa e todos os aparelhos?</span>
+            <Botao
+              variante="perigo"
+              onClick={() => {
+                apagarTudo();
+                router.push("/");
+              }}
+            >
+              Sim, apagar
+            </Botao>
+            <Botao variante="fantasma" onClick={() => setConfirmarApagar(false)}>
+              Cancelar
+            </Botao>
+          </div>
+        )}
+      </div>
+      <p className="mt-6">
+        <Link href="/sobre" className="font-bold text-energia underline underline-offset-4">
+          De onde vêm as tarifas e como o cálculo é feito
+        </Link>
+      </p>
+    </Secao>
   );
 }
 

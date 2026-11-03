@@ -9,7 +9,7 @@ export const estilosBotao: Record<Variante, string> = {
 };
 
 export const baseBotao =
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-controle)] px-5 py-3 text-[1.0625rem] font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45";
+  "inline-flex min-h-12 items-center justify-center gap-2 text-center rounded-[var(--radius-controle)] px-5 py-3 text-[1.0625rem] font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-45";
 
 /** Classes de um botão (ou link com cara de botão) que não pode usar os componentes de Botao.tsx. */
 export function classesDeBotao(variante: Variante, largo = false): string {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { AvisoDaCasaSalva as Aviso, ContagemDeDescartes } from "@ee/core";
+import { formatarQuantidade, type AvisoDaCasaSalva as Aviso, type ContagemDeDescartes } from "@ee/core";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { focarTitulo } from "@/ui/foco";
 
@@ -15,7 +15,7 @@ const NOMES: { tipo: keyof ContagemDeDescartes; um: string; varios: string }[] =
 
 /** "2 aparelhos e 1 conta de luz": vírgula entre os itens e "e" antes do último. */
 export function listaDoQueSaiu(descartados: ContagemDeDescartes): string {
-  const partes = NOMES.filter(({ tipo }) => descartados[tipo] > 0).map(({ tipo, um, varios }) => (descartados[tipo] === 1 ? um : `${descartados[tipo]} ${varios}`));
+  const partes = NOMES.filter(({ tipo }) => descartados[tipo] > 0).map(({ tipo, um, varios }) => (descartados[tipo] === 1 ? um : `${formatarQuantidade(descartados[tipo])} ${varios}`));
   if (partes.length <= 1) return partes.join("");
   return `${partes.slice(0, -1).join(", ")} e ${partes.at(-1)}`;
 }
@@ -45,7 +45,7 @@ function Textos({ aviso }: { aviso: Aviso }) {
   );
 }
 
-function Acao({ aviso }: { aviso: Aviso }) {
+function Acao({ aviso, naTelaDaCidade }: { aviso: Aviso; naTelaDaCidade: boolean }) {
   const classe = "sm:w-auto";
   if (aviso.tipo === "nada-aproveitavel") {
     return (
@@ -55,6 +55,8 @@ function Acao({ aviso }: { aviso: Aviso }) {
     );
   }
   if (aviso.tipo === "sem-residencia") {
+    // Na própria Minha casa o link não levaria a lugar nenhum: o botão que abre a escolha está logo abaixo (D-3a-2).
+    if (naTelaDaCidade) return null;
     return (
       <BotaoLink href="/casa/ajustes" variante="secundario" largo className={classe}>
         Escolher minha cidade
@@ -73,14 +75,25 @@ function Acao({ aviso }: { aviso: Aviso }) {
  * Aviso de que parte da casa salva foi tirada (T1). O recipiente com `role="status"` fica sempre na página, vazio
  * até a casa ser lida: se ele nascesse junto com o texto, o TalkBack e o NVDA não leriam nada. Não puxa o foco.
  */
-export function AvisoDaCasaSalva({ aviso, aoEntender, className = "" }: { aviso?: Aviso; aoEntender: () => void; className?: string }) {
+export function AvisoDaCasaSalva({
+  aviso,
+  aoEntender,
+  className = "",
+  naTelaDaCidade = false,
+}: {
+  aviso?: Aviso;
+  aoEntender: () => void;
+  className?: string;
+  /** A tela atual já é a /casa/ajustes, onde se escolhe a cidade. */
+  naTelaDaCidade?: boolean;
+}) {
   return (
     <div role="status" className={aviso ? className : ""}>
       {aviso && (
         <div className="rounded-[var(--radius-controle)] bg-faisca-claro px-4 py-4 text-[0.98rem] leading-snug text-tinta">
           <Textos aviso={aviso} />
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <Acao aviso={aviso} />
+            <Acao aviso={aviso} naTelaDaCidade={naTelaDaCidade} />
             <Botao
               variante="fantasma"
               largo

@@ -19,6 +19,8 @@ export interface ArmazenamentoSeguro extends PersistStorage<unknown, void> {
    * só, sem sobrescrever). Não lança: se a memória estiver cheia, a cópia simplesmente não acontece.
    */
   copiarTextoUmaVez(origem: string, destino: string): void;
+  /** Diz se há texto guardado na chave (sem ler o conteúdo). Não lança. */
+  existe(nome: string): boolean;
 }
 
 /** O localStorage, ou `undefined` no servidor e quando o navegador o bloqueia (o acesso pode lançar `SecurityError`). */
@@ -86,6 +88,13 @@ export function criarArmazenamentoSeguro(versaoAtual: number, obterArmazenamento
       travada = false;
     },
     gravacaoTravada: () => travada,
+    existe: (nome) => {
+      try {
+        return obterArmazenamento()?.getItem(nome) != null;
+      } catch {
+        return false;
+      }
+    },
     copiarTextoUmaVez: (origem, destino) => {
       try {
         const armazenamento = obterArmazenamento();

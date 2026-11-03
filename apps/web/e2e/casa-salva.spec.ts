@@ -147,7 +147,8 @@ test("(e) 10 000 aparelhos: abre em menos de 5 s, ficam 500 e o aviso conta o re
   await semearCasa(context, { ...casa, state: { ...casa.state, aparelhos, plano: [] } });
   const inicio = Date.now();
   await page.goto("/casa");
-  await expect(aviso(page)).toContainText(/Tiramos 9\.?500 aparelhos\./);
+  // D-3a-3: a quantidade sai com ponto de milhar (formatarQuantidade do core).
+  await expect(aviso(page)).toContainText("Tiramos 9.500 aparelhos.");
   await expect(titulo(page)).toHaveText("Sua conta estimada por mês");
   expect(Date.now() - inicio, "milissegundos até a tela abrir").toBeLessThan(5_000);
   await expect.poll(async () => (await casaSalva(page))?.state.aparelhos.length).toBe(500);
@@ -186,6 +187,47 @@ test.fixme("HIS-111 · (h) distribuidora substituída: a casa com rge-sul mostra
   await page.goto("/casa");
   await expect(titulo(page)).toHaveText("Sua conta estimada por mês");
   await expect.poll(async () => (await casaSalva(page))?.state.residencia).toMatchObject({ distribuidoraId: "rge" });
+});
+
+/** "Apagar todos os meus dados" na Minha casa, confirmado: volta para a / (LGPD). */
+async function apagarTudoPelaMinhaCasa(pagina: Page): Promise<void> {
+  await pagina.getByRole("button", { name: "Apagar todos os meus dados" }).click();
+  await pagina.getByRole("button", { name: "Sim, apagar" }).click();
+  await expect(pagina).toHaveURL((url) => url.pathname === "/");
+}
+
+test.describe("Minha casa sem cidade (D-3a-1 e D-3a-2)", () => {
+  test("T1b: a Minha casa oferece Apagar tudo, e o aviso não tem link para a própria página", async ({ page, context }) => {
+    await semearCasa(context, comResidencia(casaV2(), { uf: "../x" }));
+    await page.goto("/casa/ajustes");
+    await expect(aviso(page)).toContainText(T1B);
+    // D-3a-2: aqui o link "Escolher minha cidade" do aviso não levaria a lugar nenhum; fica só o botão da tela.
+    await expect(aviso(page).getByRole("link", { name: "Escolher minha cidade" })).toHaveCount(0);
+    await page.locator("main").getByRole("button", { name: "Escolher minha cidade" }).click();
+    await expect(page.getByRole("dialog", { name: "Mudar cidade" })).toBeVisible();
+    await page.getByRole("dialog").getByRole("button", { name: "Fechar" }).click();
+
+    // D-3a-1: com aparelhos guardados e sem cidade, dá para apagar tudo.
+    await apagarTudoPelaMinhaCasa(page);
+    await page.reload();
+    const depois = await casaSalva(page);
+    expect(depois?.state.aparelhos ?? [], "os aparelhos saíram do aparelho").toEqual([]);
+  });
+
+  test("só a cópia ilegível guardada: a Minha casa abre e Apagar tudo a tira", async ({ page, context }) => {
+    await semearTextos(context, { [CHAVE_CASA_ILEGIVEL]: "texto que não deu para ler" });
+    await page.goto("/casa/ajustes");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Minha casa");
+    await expect(page.locator("main").getByRole("button", { name: "Escolher minha cidade" }), "sem aparelhos, não há cidade a escolher").toHaveCount(0);
+    await apagarTudoPelaMinhaCasa(page);
+    expect(await textoGuardado(page, CHAVE_CASA_ILEGIVEL)).toBeNull();
+  });
+
+  test("nada guardado: a Minha casa continua mandando cadastrar", async ({ page }) => {
+    await page.goto("/casa/ajustes");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Vamos cadastrar a sua casa");
+    await expect(page.getByRole("button", { name: "Apagar todos os meus dados" })).toHaveCount(0);
+  });
 });
 
 test.describe("trava da gravação (D10 2)", () => {
@@ -270,6 +312,16 @@ test.describe("trava da gravação (D10 2)", () => {
     const depois = await casaSalva(page);
     expect(depois?.state.residencia ?? null).toBeNull();
     expect(depois?.state.aparelhos ?? []).toEqual([]);
+  });
+
+  test("com a trava, a Minha casa oferece Apagar tudo, que tira a casa e a cópia (D-3a-1)", async ({ page, context }) => {
+    await semearTextos(context, { [CHAVE_CASA]: TEXTO, [CHAVE_CASA_ILEGIVEL]: "cópia de antes" });
+    await page.goto("/casa/ajustes");
+    await expect(aviso(page)).toContainText(T1C);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Minha casa");
+    await apagarTudoPelaMinhaCasa(page);
+    expect(await textoGuardado(page, CHAVE_CASA), "Apagar tudo tira a casa que não deu para ler (LGPD)").toBeNull();
+    expect(await textoGuardado(page, CHAVE_CASA_ILEGIVEL)).toBeNull();
   });
 
   test("a cópia é feita uma vez só: não sobrescreve a que já existe", async ({ page, context }) => {

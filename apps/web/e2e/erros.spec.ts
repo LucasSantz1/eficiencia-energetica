@@ -58,6 +58,15 @@ test.describe("T3 · erro numa tela (global-error)", () => {
     await expect(page).toHaveURL(/\/casa$/);
   });
 
+  test("com zoom de 200% (195 px de largura), o texto dos dois botões fica centralizado (D-3a-3)", async ({ page }) => {
+    await page.setViewportSize({ width: 195, height: 422 });
+    await page.goto("/casa");
+    await conferirT3(page);
+    for (const botao of [page.getByRole("button", { name: "Tentar de novo" }), page.getByRole("link", { name: "Voltar ao início" })]) {
+      await expect(botao).toHaveCSS("text-align", "center");
+    }
+  });
+
   test("Voltar ao início leva à / (página carregada do zero)", async ({ page }) => {
     await page.goto("/casa");
     await conferirT3(page);
