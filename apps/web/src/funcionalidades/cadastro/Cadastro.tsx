@@ -213,7 +213,7 @@ export function Cadastro() {
     >
       <TransicaoTela chave={passo}>
       <div>
-      {tarifas.erro && (
+      {tarifas.falhasSeguidas > 0 && !tarifas.carregando && (
         <Aviso tom="alerta">
           Não conseguimos carregar as tarifas. Confira sua internet.{" "}
           <button className="font-bold underline" onClick={tarifas.tentarDeNovo}>

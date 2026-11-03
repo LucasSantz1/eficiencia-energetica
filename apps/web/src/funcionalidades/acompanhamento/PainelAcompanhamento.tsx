@@ -19,14 +19,14 @@ import { Acompanhamento } from "./Acompanhamento";
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
 
 export function PainelAcompanhamento() {
-  const { resumo, resumoPlano, plano, preco, bandeira, distribuidora, residencia, comodos, aparelhos, dicas, carregando, erro } = useResumo();
+  const { resumo, resumoPlano, plano, preco, bandeira, distribuidora, residencia, comodos, aparelhos, dicas, carregando, falhasSeguidas } = useResumo();
   const [editando, setEditando] = useState<Aparelho>();
   const edicao = useEdicaoDeAparelho();
   const { conta } = resumo;
   const maior = resumo.aparelhos[0]?.kwhMes ?? 0;
   const melhor = dicas.find((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id));
 
-  if (erro) return <Aviso tom="alerta">Não conseguimos carregar as tarifas. Confira sua internet e recarregue a página.</Aviso>;
+  if (falhasSeguidas > 0 && !carregando) return <Aviso tom="alerta">Não conseguimos carregar as tarifas. Confira sua internet e recarregue a página.</Aviso>;
   if (carregando && !distribuidora) return <div className="h-48 animate-pulse rounded-[var(--radius-cartao)] bg-papel" aria-busy aria-label="Carregando" />;
 
   if (aparelhos.length === 0) {

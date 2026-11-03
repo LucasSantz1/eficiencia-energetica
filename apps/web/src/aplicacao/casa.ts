@@ -1,7 +1,7 @@
 "use client";
 
-import type { Aparelho, Comodo } from "@ee/core";
-import { useCasa } from "@/infraestrutura/armazenamento/casa";
+import type { Aparelho, AvisoDaCasaSalva, Comodo } from "@ee/core";
+import { useCasa, useCasaCarregada } from "@/infraestrutura/armazenamento/casa";
 
 // Porta das telas para a casa guardada no aparelho (ADR-001: aplicacao é a única porta para infraestrutura).
 // Hoje é quase só reexportação; é aqui que a sincronização com o servidor vai entrar (E4) sem mudar as telas.
@@ -29,4 +29,15 @@ export function useEdicaoDeAparelho(): EdicaoDeAparelho {
     else adicionarAparelho(dados);
   };
   return { comodos, salvar, remover };
+}
+
+/**
+ * Aviso de que parte da casa salva foi tirada (T1). Fica `undefined` até a casa ser lida: assim o `role="status"`
+ * nasce vazio no HTML e o texto chega depois, e o leitor de tela anuncia.
+ */
+export function useAvisoDaCasaSalva(): { aviso?: AvisoDaCasaSalva; dispensar: () => void } {
+  const carregada = useCasaCarregada();
+  const aviso = useCasa((s) => s.avisoDaCasaSalva);
+  const dispensar = useCasa((s) => s.dispensarAvisoDaCasaSalva);
+  return carregada && aviso ? { aviso, dispensar } : { dispensar };
 }
