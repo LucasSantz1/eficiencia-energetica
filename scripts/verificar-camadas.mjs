@@ -9,8 +9,18 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { builtinModules } from "node:module";
 import path from "node:path";
 
-// A raiz vem do lugar do script, não da pasta de onde ele foi chamado: assim funciona de qualquer `cwd`.
-const RAIZ = path.resolve(import.meta.dirname, "..");
+/** `--raiz=<pasta>` só para os testes (scripts/testes/); sem ele, a raiz vem do lugar do script, não da pasta atual. */
+function lerRaiz(argumentos) {
+  const raiz = path.resolve(import.meta.dirname, "..");
+  if (argumentos.length === 0) return raiz;
+  const [unico] = argumentos;
+  if (argumentos.length > 1 || unico === undefined || !unico.startsWith("--raiz=") || unico.length === "--raiz=".length) {
+    throw new Error("uso: node scripts/verificar-camadas.mjs [--raiz=<pasta>]");
+  }
+  return path.resolve(unico.slice("--raiz=".length));
+}
+
+const RAIZ = lerRaiz(process.argv.slice(2));
 const SITE = path.join(RAIZ, "apps", "web", "src");
 const DOMINIO = path.join(RAIZ, "packages", "core", "src");
 
