@@ -1,8 +1,8 @@
 "use client";
 
-import { consumoMensalKwh, formatarKwh, formatarReais, itemDoCatalogo, type Aparelho, type Comodo, type PrecoKwh } from "@ee/core";
 import { CircleHelp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { consumoMensalKwh, formatarKwh, formatarReais, itemDoCatalogo, type Aparelho, type Comodo, type PrecoKwh } from "@ee/core";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
 import { Contador } from "@/ui/Contador";

@@ -1,14 +1,14 @@
 "use client";
 
-import { formatarKwh, formatarReais, type Dica } from "@ee/core";
 import { Check } from "lucide-react";
 import { useState } from "react";
+import { formatarKwh, formatarReais, type Dica } from "@ee/core";
+import { useCasa } from "@/aplicacao/casa";
+import { useResumo } from "@/aplicacao/resumo";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
-import { useResumo } from "@/aplicacao/resumo";
-import { useCasa } from "@/aplicacao/casa";
 
 type Filtro = "todas" | "habito" | "troca";
 

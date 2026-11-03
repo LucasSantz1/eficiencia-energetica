@@ -1,7 +1,7 @@
 "use client";
 
-import { bandeiraDoMes, competenciaAtual, gerarDicas, nomeDaDistribuidora, precoKwh, resumirCasa, simularPlano, type ArquivoTarifas, type Distribuidora } from "@ee/core";
 import { useMemo } from "react";
+import { bandeiraDoMes, competenciaAtual, gerarDicas, nomeDaDistribuidora, precoKwh, resumirCasa, simularPlano, type ArquivoTarifas, type Distribuidora } from "@ee/core";
 import { useCasa } from "@/infraestrutura/armazenamento/casa";
 import { useTarifas } from "@/infraestrutura/dados-publicos/navegador";
 

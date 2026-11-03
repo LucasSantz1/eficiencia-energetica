@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import {
   agregarAparelhos,
   COMODOS_PADRAO,
@@ -13,23 +15,21 @@ import {
   type Comodo as TipoComodoCasa,
   type TipoComodo,
 } from "@ee/core";
-import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCasa, useEdicaoDeAparelho } from "@/aplicacao/casa";
+import { useResumo } from "@/aplicacao/resumo";
 import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
-import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
-import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
-import type { ItemComodo } from "@/ui/aparelho/tipos";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
-import { Icone } from "@/ui/Icone";
+import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
 import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
-import { ValorAnimado } from "@/ui/Movimento";
+import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
+import type { ItemComodo } from "@/ui/aparelho/tipos";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
 import { Entrada } from "@/ui/Entrada";
 import { Folha } from "@/ui/Folha";
+import { Icone } from "@/ui/Icone";
+import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
-import { useResumo } from "@/aplicacao/resumo";
-import { useCasa, useEdicaoDeAparelho } from "@/aplicacao/casa";
 
 export function TelaComodos() {
   const { resumo, preco, comodos, aparelhos } = useResumo();

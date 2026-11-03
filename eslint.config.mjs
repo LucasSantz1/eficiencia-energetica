@@ -114,6 +114,14 @@ export default defineConfig([
       "no-eval": "error",
       "no-implied-eval": "error",
       "no-new-func": "error",
+      // T1 da HIS-001. O import/order do eslint-plugin-import 2.32 quebra no ESLint 10; o import-x é o fork mantido.
+      "import-x/order": ["error", {
+        groups: ["builtin", "external", "internal", ["parent", "sibling", "index"]],
+        pathGroups: [{ pattern: "@ee/**", group: "internal", position: "before" }, { pattern: "@/**", group: "internal" }],
+        pathGroupsExcludedImportTypes: ["builtin"],
+        "newlines-between": "never",
+        alphabetize: { order: "asc", caseInsensitive: true },
+      }],
     },
   },
   { name: "projeto/site", files: [`${SITE}/**/*.${EXTENSOES}`], rules: { "no-restricted-syntax": ["error", ...SINTAXE_PROIBIDA] } },
@@ -137,11 +145,12 @@ export default defineConfig([
     },
   },
   {
-    // Provisório (HIS-002b, etapa 4): o 8º efeito da HIS-109 (useCasaCarregada, linha 132) mora num arquivo que a
-    // HIS-003a e a HIS-111 estão mudando; o comentário na linha entra quando elas forem integradas, e este bloco sai.
-    // Só esta regra, só este arquivo: nada de camadas nem de sintaxe proibida fica de fora.
-    name: "provisorio/his-109-casa",
-    files: [`${SITE}/infraestrutura/armazenamento/casa.ts`],
-    rules: { "react-hooks/set-state-in-effect": "off" },
+    // Provisório (HIS-002b, etapa 4): estes dois arquivos estão em mudança na HIS-003a e na HIS-111 e não podiam ser
+    // tocados aqui. Quando elas forem integradas: casa.ts ganha o 8º comentário da HIS-109 (useCasaCarregada) e os
+    // dois recebem o pnpm lint --fix da ordem dos imports; então este bloco sai. Só estas duas regras, só estes
+    // arquivos: camadas e sintaxe proibida continuam valendo neles.
+    name: "provisorio/arquivos-em-outras-historias",
+    files: [`${SITE}/infraestrutura/armazenamento/casa.ts`, "packages/dados/src/escrever.ts"],
+    rules: { "react-hooks/set-state-in-effect": "off", "import-x/order": "off" },
   },
 ]);

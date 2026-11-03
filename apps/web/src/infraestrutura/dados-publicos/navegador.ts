@@ -1,7 +1,7 @@
 "use client";
 
-import type { ArquivoMunicipios, ArquivoTarifas } from "@ee/core";
 import { useEffect, useState } from "react";
+import type { ArquivoMunicipios, ArquivoTarifas } from "@ee/core";
 
 /**
  * Os dados de tarifas e municípios são arquivos estáticos em /dados, atualizados todo dia

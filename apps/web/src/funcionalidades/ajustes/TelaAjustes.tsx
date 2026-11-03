@@ -1,19 +1,19 @@
 "use client";
 
-import { formatarReais, precoKwh, type Beneficio, type Distribuidora, type Ligacao, type Municipio } from "@ee/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { BuscaCidade } from "@/ui/BuscaCidade";
+import { formatarReais, precoKwh, type Beneficio, type Distribuidora, type Ligacao, type Municipio } from "@ee/core";
+import { useCasa } from "@/aplicacao/casa";
+import { useMunicipios } from "@/aplicacao/dados-publicos";
+import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
 import { Botao } from "@/ui/Botao";
+import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Campo } from "@/ui/Campo";
 import { Entrada } from "@/ui/Entrada";
 import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
-import { useMunicipios } from "@/aplicacao/dados-publicos";
-import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
-import { useCasa } from "@/aplicacao/casa";
 
 const BENEFICIOS: { id: Beneficio; titulo: string; descricao: string }[] = [
   { id: "tarifa-social", titulo: "Tarifa Social", descricao: "CadÚnico com renda de até meio salário mínimo por pessoa, ou BPC. Os primeiros 80 kWh são de graça." },

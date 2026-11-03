@@ -4,12 +4,12 @@ import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2 } from "lucide-react"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
-import { useResumo } from "@/aplicacao/resumo";
 import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
-import { Marca } from "@/ui/Marca";
-import { IR_ADIANTE, TransicaoTela, VOLTAR } from "@/ui/Movimento";
+import { useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
 import { BotaoLink } from "@/ui/Botao";
+import { Marca } from "@/ui/Marca";
+import { IR_ADIANTE, TransicaoTela, VOLTAR } from "@/ui/Movimento";
 
 const ITENS: { href: string; rotulo: string; curto?: string; Icone: typeof Lightbulb }[] = [
   { href: "/casa", rotulo: "Acompanhamento", curto: "Acompanhar", Icone: ChartNoAxesColumn },
