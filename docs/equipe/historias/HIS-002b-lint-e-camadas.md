@@ -437,6 +437,44 @@ página. Confere-se com o e2e (transição de `/sobre` para `/`) e com o peso de
 
 A pergunta `[para: tech-lead]` do qa fica respondida por esta tabela. Estimativa: +0,5 dia (D12 da HIS-002a).
 
+### D17. Code review de B1–B7 e decisões da etapa 4 (tech-lead, 2026-11-03)
+
+**Ajuste pedido (frontend, antes do merge):** `TETO_HIS_109` em `scripts/testes/camadas.test.mjs` passa de 8 para **7**
+enquanto o bloco `provisorio/arquivos-em-outras-historias` existir. Com 8, o bloco esconde o efeito do `casa.ts` e
+sobra uma vaga: um efeito novo (como o da HIS-111) passa no CI hoje e só quebra a 003a depois. Quem tirar o bloco sobe
+o teto para 8 no mesmo commit. O resto de B1–B7 está aprovado: camadas, D4–D7, C10, `OBRIGATORIOS` (apagar um caso
+acusa o id) e o CI conferem com o desenho.
+
+**(a) Efeito novo da HIS-111 em `aplicacao/casa.ts:58` (`useDistribuidoraAtualizada`): correção pedida, sem 9ª linha.**
+O teto existe para só diminuir, e esse efeito não precisa copiar estado. Forma sugerida: calcular a `troca` no render
+(`trocaDeDistribuidora` é pura); guardar a troca da visita ajustando o estado **no render**, com guarda (`if (troca &&
+vista?.para !== troca.para) setVista(...)`, o padrão do React para "informação do render anterior"); e deixar no
+`useEffect` só a regravação no store, com dependências primitivas (`troca?.para`). Medido numa sonda: `pnpm lint` limpo
+com essa forma; com o `setState` dentro do efeito, `set-state-in-effect` acusa. No rebase sobre a 002b, a HIS-111 faz o
+`pnpm lint --fix` da ordem dos imports (10 arquivos) num commit só de formatação, como o B2.
+
+**(b) Bloco provisório: sai com a HIS-003a.** Os dois arquivos do bloco (`infraestrutura/armazenamento/casa.ts` e
+`packages/dados/src/escrever.ts`) só mudam na 003a (conferido com `git diff main...his-111-tarifas-vencidas`: a
+HIS-111 não os toca). Quem integrar **por último** entre 002b e 003a tira o bloco no rebase, antes do merge, num commit
+só: o 8º comentário da HIS-109 no `useCasaCarregada` (frontend), o `--fix` no `escrever.ts` (backend) e o teto 8.
+Pela ordem do quadro, a 002b entra antes, então isso fica na **003a** e eu confiro no code review dela. O critério 11
+desta história ("exatamente 8") fica aceito com 7 + o bloco até lá.
+
+**Para a documentacao (`docs/arquitetura.md`):**
+
+1. Seção "Verificador de camadas": trocar "Node puro, sem dependência" e a lista de regras pela divisão do ADR-001
+   (ESLint no `pnpm lint`; script com o parser do TypeScript no `pnpm typecheck`; casos no `pnpm test`).
+2. Saída do script: agora `Camadas: tudo certo (N arquivos; M comentário(s) da HIS-109)`. O exemplo `ui/Botao.tsx →
+   @/aplicacao/casa` passa a ser erro do ESLint (`ui só importa @/ui, @/config e @ee/core (ADR-001, regra 4)`).
+3. Tirar o parágrafo "Limites conhecidos": as lacunas foram fechadas nesta história.
+4. Mapa das pastas (linhas 46–52): `ui/tiposDeTransicao` (constantes de transição, saíram do `Movimento`) e
+   `aplicacao/identificador` (`novoId`, saiu de `aplicacao/casa`).
+
+**Observações que não bloqueiam:** o `test:camadas` leva cerca de 37 s aqui (os 41 casos do script abrem um processo
+cada); se o job `verificar` passar de 2 min, rodar esses casos em paralelo. O `pnpm audit` tem 2 moderadas de
+desenvolvimento (`minimatch`, via eslint), sem alta nem crítica. A falha intermitente de "terminar o cadastro" também
+acontece no `main`: vai para o qa registrar fora desta história.
+
 ## Ameaças
 
 _(seguranca)_ Análise desta parte: dependências do ESLint (`eslint`, `eslint-config-next`, `eslint-plugin-import-x`,
@@ -743,3 +781,11 @@ ficam na [HIS-002a](HIS-002-qualidade-automatica.md), "Conversa da equipe", e va
 - Como verifiquei: lint, typecheck, test e build verdes. V1–V4 e V6–V8 ficaram vermelhos com o id (teste avulso). A C8 acusa exatamente `VOLTAR` e `novoId` no código de antes do B6. e2e numa cópia (porta 3341): 106 ✓, peso de `/sobre` −54 B; capturas de `/sobre` → `/` em 390/1280 px sem erro no console.
 - Achado anterior a esta história: o fluxo principal às vezes falha em "terminar o cadastro" (13 transições em vez de 14). Aconteceu 2 vezes em 19 execuções aqui e 1 em 16 no `main` de controle.
 - Para o próximo: **tech-lead**: B8 (ADR-001), o bloco provisório e o efeito da HIS-111. **documentacao**: `docs/arquitetura.md` ainda diz "Node puro". Depois, **qa** (etapa 5) e **seguranca** (Rb1–Rb9).
+
+### [tech-lead] 2026-11-03 — B8 e code review de B1–B7: devolvido para 1 ajuste de uma linha; decisões (a) e (b) no D17
+1. **Devolvido ao frontend só por isto:** `TETO_HIS_109` = 7 enquanto o bloco provisório existir (com 8, um efeito novo passa hoje sem ser visto). Fora isso, B1–B7 aprovados (D17).
+2. **(a) HIS-111:** correção pedida, sem 9ª linha da HIS-109. Estado ajustado no render e efeito só com a regravação (forma medida no D17). No rebase, `--fix` da ordem num commit só de formatação.
+3. **(b) Bloco provisório:** sai na **003a** (os dois arquivos são dela, não da 111). Quem integrar por último tira o bloco e sobe o teto para 8. O critério 11 fica aceito com 7 até lá.
+4. **B8:** ADR-001 revisado (o que fica no ESLint e o que fica no script; valor compartilhado mora em arquivo sem diretiva). A lista para o `docs/arquitetura.md` está no D17.
+5. Como verifiquei: numa cópia, `pnpm lint`, `typecheck`, `test` (152 passam) e `build` verdes. `pnpm audit` sem alta. Apaguei um caso obrigatório e o teste acusou o id. Também conferi a C10 num comentário de JSX e a sonda do (a).
+6. Próximo: **frontend** (item 1), depois **qa** (etapa 5) ‖ **seguranca** (Rb1–Rb9) e **documentacao** (D17). Quem orquestra leva o (a) à HIS-111 e o (b) à 003a.
