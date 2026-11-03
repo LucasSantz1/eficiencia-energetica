@@ -170,3 +170,20 @@ export interface LeituraRelogio {
   /** Número que aparece no relógio, em kWh. */
   valorKwh: number;
 }
+
+/**
+ * Tudo o que a família guarda no próprio aparelho (localStorage), sem precisar de conta. É o formato da chave
+ * `eficiencia-energetica:casa` (versão 2). Quando houver login, este mesmo formato será sincronizado com o servidor.
+ * Mora no domínio porque o leitor da casa salva (`casa-salva.ts`) e o app futuro usam o mesmo tipo.
+ */
+export interface DadosCasa {
+  residencia?: Residencia;
+  comodos: Comodo[];
+  aparelhos: Aparelho[];
+  /** Contas de luz registradas mês a mês no acompanhamento. */
+  contas: ContaMensal[];
+  /** Leituras do relógio de luz anotadas pela pessoa. */
+  leituras: LeituraRelogio[];
+  /** Dicas que a pessoa marcou no plano de economia. */
+  plano: string[];
+}

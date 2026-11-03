@@ -1,26 +1,13 @@
 "use client";
 
-import { aparelhoInicial, COMODOS_PADRAO, itemDoCatalogo, type Aparelho, type Comodo, type ContaMensal, type LeituraRelogio, type Residencia, type TipoComodo } from "@ee/core";
+import { aparelhoInicial, COMODOS_PADRAO, itemDoCatalogo, type Aparelho, type Comodo, type ContaMensal, type DadosCasa, type LeituraRelogio, type Residencia, type TipoComodo } from "@ee/core";
 import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { novoId } from "@/infraestrutura/identificador";
 
-/**
- * Os dados da casa ficam guardados no próprio aparelho da pessoa (localStorage), sem precisar de conta.
- * Quando houver login, este mesmo formato será sincronizado com o servidor.
- */
-export interface DadosCasa {
-  residencia?: Residencia;
-  comodos: Comodo[];
-  aparelhos: Aparelho[];
-  /** Contas de luz registradas mês a mês no acompanhamento. */
-  contas: ContaMensal[];
-  /** Leituras do relógio de luz anotadas pela pessoa. */
-  leituras: LeituraRelogio[];
-  /** Dicas que a pessoa marcou no plano de economia. */
-  plano: string[];
-}
+/** O formato da casa salva mora no domínio (`DadosCasa` em `@ee/core`), junto do leitor que o confere. */
+export type { DadosCasa };
 
 interface Acoes {
   definirResidencia: (r: Residencia) => void;

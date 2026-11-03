@@ -10,3 +10,4 @@ export * from "./acompanhamento";
 export * from "./limites";
 export * from "./entrada";
 export * from "./estados";
+export * from "./casa-salva";
