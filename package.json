@@ -17,5 +17,11 @@
     "dados:atualizar": "pnpm --filter @ee/dados atualizar",
     "dados:exemplo": "pnpm --filter @ee/dados exemplo",
     "dados:diagnosticar": "pnpm --filter @ee/dados diagnosticar"
+  },
+  "devDependencies": {
+    "eslint": "10.13.0",
+    "eslint-config-next": "16.4.3",
+    "eslint-plugin-import-x": "4.17.1",
+    "typescript": "5.9.3"
   }
 }

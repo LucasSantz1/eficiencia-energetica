@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { anotacao, anotacoesDoResumo, celulaMarkdown, escaparDadoDeComando, LIMITE_RESUMO_BYTES, limitarResumo, linhasDoErro, MAXIMO_ANOTACOES_DO_RESUMO, umaLinha } from "../src/anotacoes";
-import { mapearColunasTarifas } from "../src/aneel/tarifas";
-import { mapearColunasConjuntos, mapearColunasMunicipios } from "../src/aneel/municipios";
 import { lerBandeiras } from "../src/aneel/bandeiras";
+import { mapearColunasConjuntos, mapearColunasMunicipios } from "../src/aneel/municipios";
+import { mapearColunasTarifas } from "../src/aneel/tarifas";
+import { anotacao, anotacoesDoResumo, celulaMarkdown, escaparDadoDeComando, LIMITE_RESUMO_BYTES, limitarResumo, linhasDoErro, MAXIMO_ANOTACOES_DO_RESUMO, umaLinha } from "../src/anotacoes";
 
 // HIS-111, R2 da seguranca: texto da ANEEL não pode virar comando do runner nem quebrar o resumo do job.
 describe("saída para o GitHub Actions", () => {

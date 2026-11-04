@@ -1,7 +1,7 @@
 "use client";
 
-import { descreverTroca, trocaDeDistribuidora, type Aparelho, type Comodo, type TrocaDescrita } from "@ee/core";
 import { useEffect, useState } from "react";
+import { descreverTroca, trocaDeDistribuidora, type Aparelho, type Comodo, type TrocaDescrita } from "@ee/core";
 import { useCasa } from "@/infraestrutura/armazenamento/casa";
 import { useTarifas } from "@/infraestrutura/dados-publicos/navegador";
 
@@ -46,16 +46,22 @@ export function useDistribuidoraAtualizada(): TrocaDescrita | undefined {
   const idSalvo = useCasa((s) => s.residencia?.distribuidoraId);
   const atualizarResidencia = useCasa((s) => s.atualizarResidencia);
   const arquivo = useTarifas().dados;
-  const [trocaDaVisita, setTrocaDaVisita] = useState<TrocaDescrita>();
+  const [trocaDaVisita, setTrocaDaVisita] = useState<{ para: string; descrita: TrocaDescrita | undefined }>();
 
+  // A troca é calculada no render (`trocaDeDistribuidora` é pura). Sem esperar o `useCasaCarregada`: o persist lê o
+  // localStorage na hora, e antes disso `idSalvo` é `undefined`.
+  const troca = arquivo && idSalvo !== undefined ? trocaDeDistribuidora(arquivo, idSalvo) : undefined;
+  // O aviso da visita é guardado ajustando o estado no render, com guarda (padrão do React para "informação do render
+  // anterior"), e não num efeito (D17-a da HIS-002b). Depois da regravação `troca` some, mas o aviso fica.
+  if (arquivo && troca && trocaDaVisita?.para !== troca.para) {
+    setTrocaDaVisita({ para: troca.para, descrita: descreverTroca(arquivo, troca) });
+  }
+
+  const paraId = troca?.para;
   useEffect(() => {
-    // Sem esperar o `useCasaCarregada`: o persist lê o localStorage na hora, e antes disso `idSalvo` é `undefined`.
-    if (!arquivo || idSalvo === undefined) return;
-    const troca = trocaDeDistribuidora(arquivo, idSalvo);
-    if (!troca) return;
-    atualizarResidencia({ distribuidoraId: troca.para });
-    setTrocaDaVisita(descreverTroca(arquivo, troca));
-  }, [arquivo, idSalvo, atualizarResidencia]);
+    // O efeito só regrava a casa no store, com dependência primitiva.
+    if (paraId !== undefined) atualizarResidencia({ distribuidoraId: paraId });
+  }, [paraId, atualizarResidencia]);
 
-  return trocaDaVisita;
+  return trocaDaVisita?.descrita;
 }
