@@ -11,8 +11,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Distribuidora } from "@ee/core";
-import { celulaMarkdown } from "./anotacoes";
 import type { AgenteDaTarifa, SelecaoDeTarifas } from "./aneel/tarifas";
+import { celulaMarkdown } from "./anotacoes";
 import { lerFontes, type ArquivosDasFontes, type Fontes } from "./fontes";
 import type { Montagem, Relatorio } from "./montar";
 import { conferirMontagem, montarComAsFontes } from "./rotina";

@@ -1,10 +1,9 @@
 "use client";
 
-import { agregarAparelhos, COMODOS_PADRAO, distribuidorasDaCidade, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
 import { ArrowLeft, ChevronDown, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { agregarAparelhos, COMODOS_PADRAO, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
+import { agregarAparelhos, COMODOS_PADRAO, distribuidorasDaCidade, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
 import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
 import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora } from "@/aplicacao/resumo";

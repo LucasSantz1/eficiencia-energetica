@@ -1,10 +1,9 @@
 "use client";
 
-import { distribuidorasDaCidade, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type Ligacao, type Municipio } from "@ee/core";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { formatarReais, precoKwh, type Beneficio, type Distribuidora, type Ligacao, type Municipio } from "@ee/core";
+import { distribuidorasDaCidade, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type Ligacao, type Municipio } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";

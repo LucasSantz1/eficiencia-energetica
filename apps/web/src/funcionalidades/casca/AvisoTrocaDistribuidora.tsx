@@ -1,12 +1,12 @@
 "use client";
 
-import type { TrocaDescrita } from "@ee/core";
 import { Info } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import type { TrocaDescrita } from "@ee/core";
 import { Aviso } from "@/ui/Aviso";
 import { Botao } from "@/ui/Botao";
-import { IR_ADIANTE } from "@/ui/Movimento";
+import { IR_ADIANTE } from "@/ui/tiposDeTransicao";
 
 /**
  * Aviso de que a empresa de luz da casa mudou de nome ou foi incorporada e o preço foi atualizado (HIS-111, F1).

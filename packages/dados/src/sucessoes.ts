@@ -10,8 +10,8 @@
  */
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { umaLinha } from "./anotacoes";
 import type { AgenteDaTarifa } from "./aneel/tarifas";
+import { umaLinha } from "./anotacoes";
 import { dataExiste, diasEntre, normalizar } from "./util";
 
 export const CAMINHO_SUCESSOES = fileURLToPath(new URL("../base/sucessoes.json", import.meta.url));

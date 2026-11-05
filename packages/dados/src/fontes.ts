@@ -7,7 +7,6 @@
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { BandeiraMes } from "@ee/core";
-import { umaLinha } from "./anotacoes";
 import { lerBandeiras, URL_BANDEIRAS } from "./aneel/bandeiras";
 import {
   criarLeitorConjuntos,
@@ -19,6 +18,7 @@ import {
   type VinculoMunicipio,
 } from "./aneel/municipios";
 import { ehTarifaResidencialB1, mapearColunasTarifas, resumirAgentes, selecionarTarifasVigentes, URL_TARIFAS, type AgenteDaTarifa, type ColunasTarifas, type SelecaoDeTarifas } from "./aneel/tarifas";
+import { umaLinha } from "./anotacoes";
 import { baixar, lerCSV } from "./csv";
 import { carregarLocalidades } from "./ibge";
 import type { Localidades } from "./montar";
