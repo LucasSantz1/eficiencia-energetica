@@ -1,0 +1,15 @@
+{
+  "sobre": "R3, V9: a CEMIG-D tem tarifa vigente e não pode ser sucedida.",
+  "sucessoes": [
+    {
+      "cnpjAntigo": "06981180000116",
+      "siglaAntiga": "CEMIG-D",
+      "cnpjSucessor": "07282377000120",
+      "siglaSucessora": "ESS",
+      "desde": "2017-06-30",
+      "ato": "REA ANEEL nº 6.318/2017",
+      "fonte": "https://api.mziq.com/mzfilemanager/v2/d/60f49a2d-bd8c-4fd9-95ab-bdf833097a83/1f1a9406-2219-1c70-8239-1b42746c5de4?origin=2",
+      "consultadoEm": "2026-10-30"
+    }
+  ]
+}

@@ -1,36 +1,36 @@
 {
-  "medidoNoCommit": "06be352",
+  "medidoNoCommit": "6e2f6da",
   "rotas": {
     "/": {
-      "jsDoHtml": 164215,
-      "totalComPrefetch": 184415
+      "jsDoHtml": 164734,
+      "totalComPrefetch": 184856
     },
     "/comecar": {
-      "jsDoHtml": 172560,
-      "totalComPrefetch": 184415
+      "jsDoHtml": 173027,
+      "totalComPrefetch": 184856
     },
     "/casa": {
-      "jsDoHtml": 175055,
-      "totalComPrefetch": 232482
+      "jsDoHtml": 176004,
+      "totalComPrefetch": 233316
     },
     "/casa/comodos": {
-      "jsDoHtml": 172949,
-      "totalComPrefetch": 232482
+      "jsDoHtml": 173981,
+      "totalComPrefetch": 233316
     },
     "/casa/dicas": {
-      "jsDoHtml": 166021,
-      "totalComPrefetch": 232482
+      "jsDoHtml": 167073,
+      "totalComPrefetch": 233316
     },
     "/casa/ajustes": {
-      "jsDoHtml": 163963,
-      "totalComPrefetch": 232482
+      "jsDoHtml": 164988,
+      "totalComPrefetch": 233316
     },
     "/sobre": {
-      "jsDoHtml": 139574,
-      "totalComPrefetch": 168342
+      "jsDoHtml": 139546,
+      "totalComPrefetch": 168801
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 212282
+      "totalComPrefetch": 213194
     }
   }
 }

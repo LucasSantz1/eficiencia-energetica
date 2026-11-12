@@ -3,6 +3,12 @@
 Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 
 ```
+## 2026-11-03 · HIS-002b · lint e camadas documentados
+
+- Apliquei a lista do D17: verificador de camadas reescrito (ESLint, script, casos), saída nova, sem "Limites conhecidos", mapa de pastas.
+- `desenvolvimento.md`: `pnpm lint`, `--fix`, comentários que desligam o lint, bloco provisório (sai na HIS-003a), check do CI.
+- `README.md`, `CHANGELOG.md`, índice de ADRs. Links para HIS-109 e HIS-003a ficaram sem link: os arquivos ainda não existem.
+
 ## AAAA-MM-DD · HIS-NNN · resumo em uma linha
 - O que fiz:
 - Decisões e porquê:

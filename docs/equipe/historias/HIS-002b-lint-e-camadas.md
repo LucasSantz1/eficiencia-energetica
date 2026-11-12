@@ -6,7 +6,7 @@
 | Sprint | 0 |
 | Tamanho | M (≈ 2–2,5 dias: D12 + 0,5 das revisões de seguranca e qa; revisto em 2026-10-30, D16) |
 | Papéis principais | tech-lead, frontend, seguranca |
-| Status | Preparada (implementação bloqueada: ver "Dependências") |
+| Status | **Pronto** (2026-11-03), com ressalvas: critério 11 aceito com 7 linhas da HIS-109 + bloco provisório até a HIS-003a (D17); ressalvas baixas da seguranca (item 4 vira HIS-113); DEF-002b-1 pré-existente, fora daqui |
 | Branch | `his-002b-lint-camadas` (sai do `main` **depois** da integração da HIS-002a) |
 
 > **Origem:** dividida da HIS-002 pelo scrum-master em 2026-10-29, a partir da proposta D12 do tech-lead. A outra
@@ -437,6 +437,44 @@ página. Confere-se com o e2e (transição de `/sobre` para `/`) e com o peso de
 
 A pergunta `[para: tech-lead]` do qa fica respondida por esta tabela. Estimativa: +0,5 dia (D12 da HIS-002a).
 
+### D17. Code review de B1–B7 e decisões da etapa 4 (tech-lead, 2026-11-03)
+
+**Ajuste pedido (frontend, antes do merge):** `TETO_HIS_109` em `scripts/testes/camadas.test.mjs` passa de 8 para **7**
+enquanto o bloco `provisorio/arquivos-em-outras-historias` existir. Com 8, o bloco esconde o efeito do `casa.ts` e
+sobra uma vaga: um efeito novo (como o da HIS-111) passa no CI hoje e só quebra a 003a depois. Quem tirar o bloco sobe
+o teto para 8 no mesmo commit. O resto de B1–B7 está aprovado: camadas, D4–D7, C10, `OBRIGATORIOS` (apagar um caso
+acusa o id) e o CI conferem com o desenho.
+
+**(a) Efeito novo da HIS-111 em `aplicacao/casa.ts:58` (`useDistribuidoraAtualizada`): correção pedida, sem 9ª linha.**
+O teto existe para só diminuir, e esse efeito não precisa copiar estado. Forma sugerida: calcular a `troca` no render
+(`trocaDeDistribuidora` é pura); guardar a troca da visita ajustando o estado **no render**, com guarda (`if (troca &&
+vista?.para !== troca.para) setVista(...)`, o padrão do React para "informação do render anterior"); e deixar no
+`useEffect` só a regravação no store, com dependências primitivas (`troca?.para`). Medido numa sonda: `pnpm lint` limpo
+com essa forma; com o `setState` dentro do efeito, `set-state-in-effect` acusa. No rebase sobre a 002b, a HIS-111 faz o
+`pnpm lint --fix` da ordem dos imports (10 arquivos) num commit só de formatação, como o B2.
+
+**(b) Bloco provisório: sai com a HIS-003a.** Os dois arquivos do bloco (`infraestrutura/armazenamento/casa.ts` e
+`packages/dados/src/escrever.ts`) só mudam na 003a (conferido com `git diff main...his-111-tarifas-vencidas`: a
+HIS-111 não os toca). Quem integrar **por último** entre 002b e 003a tira o bloco no rebase, antes do merge, num commit
+só: o 8º comentário da HIS-109 no `useCasaCarregada` (frontend), o `--fix` no `escrever.ts` (backend) e o teto 8.
+Pela ordem do quadro, a 002b entra antes, então isso fica na **003a** e eu confiro no code review dela. O critério 11
+desta história ("exatamente 8") fica aceito com 7 + o bloco até lá.
+
+**Para a documentacao (`docs/arquitetura.md`):**
+
+1. Seção "Verificador de camadas": trocar "Node puro, sem dependência" e a lista de regras pela divisão do ADR-001
+   (ESLint no `pnpm lint`; script com o parser do TypeScript no `pnpm typecheck`; casos no `pnpm test`).
+2. Saída do script: agora `Camadas: tudo certo (N arquivos; M comentário(s) da HIS-109)`. O exemplo `ui/Botao.tsx →
+   @/aplicacao/casa` passa a ser erro do ESLint (`ui só importa @/ui, @/config e @ee/core (ADR-001, regra 4)`).
+3. Tirar o parágrafo "Limites conhecidos": as lacunas foram fechadas nesta história.
+4. Mapa das pastas (linhas 46–52): `ui/tiposDeTransicao` (constantes de transição, saíram do `Movimento`) e
+   `aplicacao/identificador` (`novoId`, saiu de `aplicacao/casa`).
+
+**Observações que não bloqueiam:** o `test:camadas` leva cerca de 37 s aqui (os 41 casos do script abrem um processo
+cada); se o job `verificar` passar de 2 min, rodar esses casos em paralelo. O `pnpm audit` tem 2 moderadas de
+desenvolvimento (`minimatch`, via eslint), sem alta nem crítica. A falha intermitente de "terminar o cadastro" também
+acontece no `main`: vai para o qa registrar fora desta história.
+
 ## Ameaças
 
 _(seguranca)_ Análise desta parte: dependências do ESLint (`eslint`, `eslint-config-next`, `eslint-plugin-import-x`,
@@ -628,6 +666,34 @@ controles; o resumo "N casos: X no ESLint, Y no script".
 7. B6 sem mudança para quem usa: e2e da HIS-002a verde (inclusive a transição `/sobre` → `/`, P-qa-1 da HIS-002a) e
    peso de JS dentro do limite.
 
+### Resultado da etapa 5 (qa, 2026-11-03, `01e7df0`, cópia própria)
+
+| # | Mutação plantada | Resultado (vermelho, com o id/mensagem) |
+| --- | --- | --- |
+| V1 | sem `...camada("ui", …)` | 17 casos da `ui` falham com o id (`I7-01`, `I7-08/09`, `R13-01/02`, `S1-a/c/e/e-sufixo`, `seguranca-09/10/11/17/20/27`, `nega-ui-servidor-node`, `nega-core-caminho-interno`) |
+| V2 | `permitidos` da `ui` = `(?!)` e sem `@ee/core` | `permite-ui-ui`, `permite-ui-config`, `permite-ui-core`, `controle-seguranca-01` e `seguranca-09` (mensagem mudou) |
+| V3 | sem o caso `I7-13` | "faltando caso obrigatório: I7-13" |
+| V4 | sem o ramo `isSymbolicLink` (C4) | `C4` e `S1-d`: "esperava código 1" |
+| V5 | domínio lido de `packages/core/srcx` e sem a C3 | `controle-repositorio` ("leu um número de arquivos diferente do git ls-files"), `C3`, `S1-c-script`; **V5b** (só a pasta errada): `pnpm camadas` código 1, "nenhum arquivo lido" |
+| V6 | `lint` sem `--max-warnings 0` | `controle-linha-de-comando`: "`<img>` sem alt deveria reprovar" |
+| V7 | `node_modules/typescript` renomeado | script e `pnpm camadas` código 1, `ERR_MODULE_NOT_FOUND`, nenhum "tudo certo" |
+| V8 | 9º `eslint-disable-next-line react-hooks/set-state-in-effect` sem motivo em `ui/Botao.tsx` | `controle-repositorio` e `controle-outra-pasta` (C10, `Botao.tsx:3`); **V8b** (8º **com** motivo válido): "8 comentários da HIS-109; o teto é 7" (D17) |
+
+Os 21 da seguranca conferidos um a um contra a tabela de "Ameaças" (arquivo, código, barreira, regra e trecho): iguais.
+Saídas e roteiro (`mutacoes.sh`) fora do git, em `…/scratchpad/qa-002b/`.
+
+**DEF-002b-1 · Fluxo principal falha às vezes em "terminar o cadastro" (13 transições em vez de 14) — pré-existente,
+não bloqueia a 002b.** Gravidade: média para o CI (`retries: 0`, o job `e2e` fica vermelho sem mudança no código);
+baixa para quem usa (falta só a animação de entrada no painel). Para: **frontend**. Sugestão: história própria.
+- Passos: `PORTA_E2E=34xx npx playwright test e2e/fluxo-principal.spec.ts --repeat-each=10` (build de produção).
+- Esperado: depois de "Pular, não tenho a conta agora", 14 chamadas de `startViewTransition`. Obtido: 13, com a URL
+  `/casa` e "Sua conta estimada por mês" na tela; sem erro de console e sem recarregar a página (o trace mostra só o
+  pedido RSC de `/casa`, sem prefetch, e nenhum documento novo).
+- Medido pelo qa: branch `01e7df0` 1 em 20 (celular); `main` `0cef6c1` 2 em 30 (computador), mesmo passo e mesmo 13 ≠ 14. Frontend: 2/19 aqui, 1/16 no `main`. Nos arquivos
+  do caminho (`Cadastro`, `Casca`, `Movimento`, `app/casa`, `app/comecar`) a 002b só move imports (`ENTRAR_NO_PAINEL` igual).
+- Pista, não confirmada: o `router.push("/casa")` do `concluir` não tem prefetch e a `Casca` monta primeiro o
+  esqueleto (`useCasaCarregada` começa `false`), sem `TransicaoTela`; vale medir antes de mudar o teste ou o site.
+
 ## Perguntas abertas
 
 - [x] `[para: seguranca]` (scrum-master, 2026-10-29 — **bloqueia a implementação (etapa 4)**, não o desenho; movida da
@@ -735,3 +801,46 @@ ficam na [HIS-002a](HIS-002-qualidade-automatica.md), "Conversa da equipe", e va
   forma da HIS-109 com motivo e recusa sem motivo, motivo curto e outra regra.
 - Para o próximo: implementação (frontend com o tech-lead) **só depois da HIS-002a no `main`**, seguindo o D16; **qa**
   — a lista `OBRIGATORIOS` inclui `C10`, `seguranca-01` a `30`, `14b` e `controle-seguranca-01`.
+
+### [frontend] 2026-11-03 — etapa 4: B1–B7 implementados (B8 fica com tech-lead e documentacao)
+- O que fiz: 7 commits (`7427be6` B1 … `1062111` B7): ESLint do D4 e `pnpm lint` no CI; `import-x/order` em commit só de formatação; `scripts/testes/` com 145 casos (104 no ESLint, 41 no script) + 4 controles, `OBRIGATORIOS` conferido nos dois sentidos; script com o parser do TS (C4, C5, C8, C9, C10, `--raiz`, teto de 8 da HIS-109); correção S2/T3 do D7.
+- Arquivos de outras histórias (não mexi): `infraestrutura/armazenamento/casa.ts:132` (8º efeito da HIS-109) e `packages/dados/src/escrever.ts` (ordem dos imports) ficam no bloco `provisorio/arquivos-em-outras-historias` do `eslint.config.mjs`, só com essas 2 regras. Por isso hoje há **7** linhas HIS-109, não 8: o critério 11 fecha quando o bloco sair. Na branch da HIS-111, o lint acusa a ordem em 10 arquivos (`--fix` resolve) e um efeito novo em `aplicacao/casa.ts:58`, que seria o 9º e passaria do teto.
+- Desvios: `settings.next.rootDir` passou a usar `import.meta.dirname`, porque o caminho relativo dava aviso fora da raiz. `eslint -c` chamado de outra pasta não lê nada no ESLint 10 (a base é a pasta atual); sem `-c` o resultado é o mesmo (Rb9). `pnpm audit` mostra 2 moderadas novas (`minimatch`, via eslint) e 0 alta ou crítica.
+- Como verifiquei: lint, typecheck, test e build verdes. V1–V4 e V6–V8 ficaram vermelhos com o id (teste avulso). A C8 acusa exatamente `VOLTAR` e `novoId` no código de antes do B6. e2e numa cópia (porta 3341): 106 ✓, peso de `/sobre` −54 B; capturas de `/sobre` → `/` em 390/1280 px sem erro no console.
+- Achado anterior a esta história: o fluxo principal às vezes falha em "terminar o cadastro" (13 transições em vez de 14). Aconteceu 2 vezes em 19 execuções aqui e 1 em 16 no `main` de controle.
+- Para o próximo: **tech-lead**: B8 (ADR-001), o bloco provisório e o efeito da HIS-111. **documentacao**: `docs/arquitetura.md` ainda diz "Node puro". Depois, **qa** (etapa 5) e **seguranca** (Rb1–Rb9).
+
+### [tech-lead] 2026-11-03 — B8 e code review de B1–B7: devolvido para 1 ajuste de uma linha; decisões (a) e (b) no D17
+1. **Devolvido ao frontend só por isto:** `TETO_HIS_109` = 7 enquanto o bloco provisório existir (com 8, um efeito novo passa hoje sem ser visto). Fora isso, B1–B7 aprovados (D17).
+2. **(a) HIS-111:** correção pedida, sem 9ª linha da HIS-109. Estado ajustado no render e efeito só com a regravação (forma medida no D17). No rebase, `--fix` da ordem num commit só de formatação.
+3. **(b) Bloco provisório:** sai na **003a** (os dois arquivos são dela, não da 111). Quem integrar por último tira o bloco e sobe o teto para 8. O critério 11 fica aceito com 7 até lá.
+4. **B8:** ADR-001 revisado (o que fica no ESLint e o que fica no script; valor compartilhado mora em arquivo sem diretiva). A lista para o `docs/arquitetura.md` está no D17.
+5. Como verifiquei: numa cópia, `pnpm lint`, `typecheck`, `test` (152 passam) e `build` verdes. `pnpm audit` sem alta. Apaguei um caso obrigatório e o teste acusou o id. Também conferi a C10 num comentário de JSX e a sonda do (a).
+6. Próximo: **frontend** (item 1), depois **qa** (etapa 5) ‖ **seguranca** (Rb1–Rb9) e **documentacao** (D17). Quem orquestra leva o (a) à HIS-111 e o (b) à 003a.
+
+### [qa] 2026-11-03 — etapa 5: aprovado (DEF-002b-1 pré-existente, fora desta história)
+1. Numa cópia de `01e7df0` com git próprio: `pnpm lint`, `typecheck` ("66 arquivos; 7 comentário(s) da HIS-109"), `test` (152; "145 casos: 104 no ESLint, 41 no script") e `build` verdes; `pnpm audit --audit-level high` sem alta (2 moderadas).
+2. V1–V8 (+V5b e V8b, o teto 7 do D17) vermelhos com o id e a mensagem certa; tabela em "Resultado da etapa 5". Todos os ids obrigatórios presentes e verdes; os 21 da seguranca iguais à lista de "Ameaças".
+3. Critério 8: C8 acusa `VOLTAR` e `novoId`; critério 10: o B2 (`e8ffa7a`) só tem linhas de import fora do `eslint.config.mjs`; critério 11: 7 linhas da HIS-109 com motivo + bloco provisório (aceito no D17).
+4. e2e completo (porta 3451): 107 ✓, 6 pendentes, 0 falha, peso de JS no limite, `/sobre` → `/` ok, sem erro de console.
+5. **Defeitos: DEF-002b-1** (fluxo principal, 13 em vez de 14 transições ao terminar o cadastro): **pré-existente** — 1/20 aqui, 2/30 no `main` `0cef6c1`; não bloqueia. Detalhe e passos em "Resultado da etapa 5". Nenhum defeito desta história.
+6. Para o próximo: **seguranca** (Rb1–Rb9) e fechamento; quem orquestra leva o DEF-002b-1 ao **frontend** como história própria.
+
+### [seguranca] 2026-11-03 — etapa 6 (Rb1–Rb9): aprovado com ressalvas (baixo)
+1. **Rb1/Rb2:** os 4 pacotes estão com versão exata. A integridade de `eslint`, `eslint-config-next` e `import-x` no lockfile é igual à do `npm view`. Não há `tarball`/`git`, e o único script de instalação é o do `esbuild`. O audit não tem nada alto. Ficam 2 moderadas, as duas do aviso GHSA-g3hv-75wg-m249: o `minimatch` 10.2.6 (via eslint) e o 3.1.5 (via `eslint-plugin-import`). É negação de serviço que só acontece com um padrão de glob nosso, e só em ferramenta de desenvolvimento, por isso fica **aceito**. O Dependabot da 003a sobe a versão.
+2. **Rb3–Rb7:** numa cópia de `57eb736` com git próprio, o `test:camadas` passou 152/152 e o `camadas` deu 66 arquivos e 7 comentários da HIS-109. O `grep` encontrou só essas 7 linhas, e o bloco provisório está aceito no D17. Os ignores estão ancorados. O script só lê (`fs` e `typescript`). O teste usa `execFileSync` com `shell: false` e `mkdtemp`, e confere o prefixo antes de apagar.
+3. **Rb8 (sondas novas):** 22 de 26 acusam. Entre elas: `dangerouslySetInnerHTML`, `eval` (também via `window` e `globalThis`), `new Function`/`Function()`, `innerHTML`/`+=`/`outerHTML` no site e no core, `document.write`, `setHTMLUnsafe`, `srcDoc`, `javascript:`, `_blank` sem `rel`, `any`, `@ts-ignore` e `"use server"`.
+4. **Ressalva baixa (tech-lead, backlog):** passam `{...{ dangerouslySetInnerHTML }}`, `e["innerHTML"]`, `Object.assign(e, { innerHTML })` e `Reflect.set(e, "innerHTML", …)`. Proposta de seletor: `Property[key.name=/^(dangerouslySetInnerHTML|innerHTML|outerHTML)$/], Literal[value=/^(dangerouslySetInnerHTML|innerHTML|outerHTML)$/]`, medindo antes que dá 0 achados. `setTimeout(texto)` também passa, mas a CSP sem `unsafe-eval` barra isso em produção.
+5. **Rb9:** `eslint` chamado da raiz, de `apps/web` e de `/tmp` deu o mesmo resultado: 67 arquivos e a sonda `innerHTML` acusada.
+6. **ci.yml:** a única mudança é o `pnpm lint`. `contents: read` no topo, actions por SHA e `persist-credentials: false` continuam. O `--cache` não é restaurado no CI.
+
+### [documentacao] 2026-11-03 — D17 aplicado; pronta para a Definição de Pronto
+- Mudaram: `docs/arquitetura.md` (verificador dividido em ESLint, script e casos; sem "Node puro" nem "Limites conhecidos"; mapa com `tiposDeTransicao` e `identificador`), `docs/sistema/desenvolvimento.md` (`pnpm lint`, regra de camadas, comentários e bloco provisório), `README.md`, `CHANGELOG.md` (2 partes) e o índice de ADRs.
+- O bloco provisório e o teto 7 estão escritos como "saem na HIS-003a". Números conferidos no código: 66 arquivos, 7 comentários, 145 casos.
+- **scrum-master:** a história está pronta para a conferência da Definição de Pronto.
+
+### [scrum-master] 2026-11-03 — Definição de Pronto conferida (etapa 9): **Pronto**, com ressalvas
+- Conferi pelas notas registradas, sem rodar nada: critérios 1, 5, 7, 8, 10 e 11 (qa, etapa 5); `typecheck`, `test` (152), `build`, `lint` e e2e (107 ✓) verdes; sem mudança visível (capturas de `/sobre` em 390 e 1280 px, sem erro de console); tech-lead (D17, teto 7), seguranca (baixas), qa e documentação (`df4bf99`) aprovados; CHANGELOG e `arquitetura.md` atualizados.
+- Ressalvas: (1) critério 11 fica com 7 linhas + bloco provisório, que sai na **HIS-003a** (quem integra por último confere, D17-b); (2) seguranca item 4 → **HIS-113**; (3) **DEF-002b-1**, pré-existente, no backlog (frontend + qa); (4) 2 moderadas de `minimatch` em dev, aceitas, o Dependabot da 003a sobe.
+- Pendência do dono: conferir que os 2 checks do CI seguem obrigatórios na proteção do `main` (não verifico daqui).
+- Próximo: quem orquestra integra ao `main`; depois a etapa 4 da HIS-003a (com rebase sobre a 002b e retirada do bloco provisório).

@@ -4,12 +4,14 @@ import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2 } from "lucide-react"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
+import { useCasa, useCasaCarregada, useDistribuidoraAtualizada } from "@/aplicacao/casa";
 import { useResumo } from "@/aplicacao/resumo";
-import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
-import { Marca } from "@/ui/Marca";
-import { IR_ADIANTE, TransicaoTela, VOLTAR } from "@/ui/Movimento";
 import { Aviso } from "@/ui/Aviso";
 import { BotaoLink } from "@/ui/Botao";
+import { Marca } from "@/ui/Marca";
+import { TransicaoTela } from "@/ui/Movimento";
+import { IR_ADIANTE, VOLTAR } from "@/ui/tiposDeTransicao";
+import { AvisoTrocaDistribuidora } from "./AvisoTrocaDistribuidora";
 
 const ITENS: { href: string; rotulo: string; curto?: string; Icone: typeof Lightbulb }[] = [
   { href: "/casa", rotulo: "Acompanhamento", curto: "Acompanhar", Icone: ChartNoAxesColumn },
@@ -23,7 +25,8 @@ export function Casca({ children }: { children: ReactNode }) {
   const caminho = usePathname();
   const carregada = useCasaCarregada();
   const residencia = useCasa((s) => s.residencia);
-  const { arquivo } = useResumo();
+  const { arquivo, preco } = useResumo();
+  const troca = useDistribuidoraAtualizada();
   const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
   // Ir para uma aba à direita desliza para a esquerda, e vice-versa.
   const direcao = (i: number) => (i >= indiceAtual ? IR_ADIANTE : VOLTAR);
@@ -70,6 +73,11 @@ export function Casca({ children }: { children: ReactNode }) {
             <Aviso tom="faisca">Estes são dados de exemplo para testes. As tarifas reais da ANEEL entram na próxima atualização automática.</Aviso>
           </div>
         )}
+        {/* Região sempre presente e vazia: o leitor de tela anuncia o aviso quando ele entra (HIS-003). */}
+        <div role="status">
+          {/* Com a conta de luz, o preço vem da conta e não muda com a troca: não há o que avisar (F1). */}
+          {troca && <AvisoTrocaDistribuidora troca={troca} mostrar={preco.origem === "aneel"} />}
+        </div>
         {!carregada ? (
           <div className="space-y-4" aria-busy aria-label="Carregando">
             <div className="h-40 animate-pulse rounded-[var(--radius-cartao)] bg-papel" />

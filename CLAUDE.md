@@ -24,7 +24,7 @@ O site **não** menciona instituição de ensino: é um projeto independente.
 
 | Camada | Tecnologia |
 | --- | --- |
-| Monorepo | pnpm 10 (workspaces), Node 22, TypeScript 5.9 em modo estrito (`noUncheckedIndexedAccess`) |
+| Monorepo | pnpm 10 (workspaces), Node 26 LTS, TypeScript 5.9 em modo estrito (`noUncheckedIndexedAccess`) |
 | Site | Next.js 16.4 (App Router, Turbopack, `transitionTypes`), React 19.3 (`<ViewTransition>`), Tailwind CSS 4.3 (`@theme`, `@utility`) |
 | Estado local | Zustand 5 com `persist` (localStorage, versão + `migrate`) |
 | Domínio | `packages/core`: TypeScript puro, sem React e sem acesso a rede/armazenamento |

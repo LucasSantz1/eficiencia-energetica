@@ -10,6 +10,12 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-002b · Definição de Pronto conferida; Pronto com ressalvas
+- O que fiz: conferi a Definição de Pronto pelas notas de tech-lead (D17), qa, seguranca e documentação; marquei Pronto; pus DEF-002b-1 e HIS-113 (ressalva 4 da seguranca) no backlog da E0; revi a ordem do quadro e criei a linha da HIS-112.
+- Decisões e porquê: critério 11 aceito com 7 linhas + bloco provisório (D17-b), que sai na 003a; ordem HIS-111 → 002b → 003a sem paralelo, porque 002b e 003a mexem no `eslint.config.mjs`/`ci.yml`; HIS-112 só rascunho até o dono aprovar; não verifiquei os checks obrigatórios do `main` (sem acesso), fica com o dono.
+- Arquivos: `HIS-002b-lint-e-camadas.md`, `docs/planejamento.md`, `docs/equipe/quadro.md`, este diário e o `contexto.md`.
+- Próximos passos: orquestração integra a 002b; 003a faz o rebase e tira o bloco provisório.
+
 ## 2026-10-30 · HIS-002a · Pronto com a ressalva Ra9; HIS-110 com os `<dd>`; HIS-206 criada
 - O que fiz: conferi a Definição de Pronto (qa, seguranca, tech-lead e ux aprovaram; documentação no `35f5e61`,
   conferido no reflog) e marquei Pronto. Pus a correção dos 2 `<dd>` na HIS-110. Criei a HIS-206 a partir do modelo.

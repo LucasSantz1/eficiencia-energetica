@@ -9,10 +9,13 @@
 
 ## Estado atual
 
-- **Sprint 0 (Fundação)**: HIS-001 **Pronto** (2026-10-29) → **HIS-002a** testes no navegador (**Pronto** em
-  2026-10-30, com a ressalva Ra9; arquivo `HIS-002-qualidade-automatica.md`; falta integrar ao `main`) → **HIS-003a** dados quebrados (Preparada; arquivo
-  `HIS-003-base-de-seguranca.md`) ‖ **HIS-002b** lint e camadas (Preparada) → **HIS-003b** campos com limite
-  (Preparada; `HIS-003b-campos-com-limite.md`).
+- **Sprint 0 (Fundação)**, ordem de 2026-11-03: HIS-001 **Pronto** → HIS-002a **Pronto** (ressalva Ra9) →
+  **HIS-111** → **HIS-002b** (**Pronto** em 2026-11-03, com ressalvas; falta integrar ao `main`) → **HIS-003a** dados
+  quebrados (Preparada; `HIS-003-base-de-seguranca.md`; tira o bloco provisório do `eslint.config.mjs` e sobe o teto
+  da HIS-109 para 8) → **HIS-003b** (Preparada; `HIS-003b-campos-com-limite.md`).
+- **HIS-112** layout para computador: rascunho no quadro, sem arquivo, à espera da aprovação do dono.
+- Backlog novo da 002b: **DEF-002b-1** (13 × 14 transições, pré-existente) e **HIS-113** (seletor de HTML por nome
+  calculado), ambos no `planejamento.md` (E0), sem sprint.
 - **HIS-111** tarifas vencidas (E2, defeito com número errado no ar em 227 cidades): **Sprint 0, prioridade 1**,
   Preparada, um corte só, branch própria saindo do `main`, em paralelo com o fim da 002a; antes do a3 da 003a (sem
   bloquear o a3 se travar). Critérios 12 (V7) e 13 (Pronto só depois do h8) criados por mim.
@@ -64,7 +67,9 @@
   cada distribuidora. Se passar de ~10 cidades, reavaliar o tamanho. Começa depois da HIS-111 no `main`.
 - Dono do projeto, ao fechar a HIS-002a: checks "Lint, tipos e testes" e "Navegador (e2e, axe e peso)" obrigatórios na
   proteção do `main`. No fechamento da HIS-002b, conferir que continuam obrigatórios.
-- HIS-002b: etapa 4 depois da 002a no `main`.
+- HIS-002b: quem orquestra integra ao `main`. Dono: conferir que os 2 checks do CI seguem obrigatórios. Na 003a,
+  conferir que o bloco provisório saiu e o teto virou 8 (D17-b).
+- HIS-112: dono aprova; depois refinar com a ux. DEF-002b-1 e HIS-113: priorizar na refinação da Sprint 1.
 - HIS-003a: P-tl-1 (seguranca, bloqueia a2) e P-tl-2 (dominio-energia, bloqueia a3) abertas; etapa 4 depois da 002a.
 - HIS-003b: qa escrever o "Plano de testes"; etapa 4 depois da 003a no `main`.
 - HIS-111: seguranca (workflow do T3 e V8; bloqueia o h0) ‖ ux (aviso do D7; bloqueia o h6). Quem orquestra faz o

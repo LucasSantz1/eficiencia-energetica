@@ -7,6 +7,7 @@
   "scripts": {
     "atualizar": "tsx src/atualizar.ts",
     "exemplo": "tsx src/exemplo.ts",
+    "diagnosticar": "tsx src/diagnosticar.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -15,7 +16,7 @@
     "csv-parse": "7.0.3"
   },
   "devDependencies": {
-    "@types/node": "22.20.5",
+    "@types/node": "26.6.6",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
     "vitest": "5.0.5"

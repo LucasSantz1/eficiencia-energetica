@@ -2,11 +2,6 @@
 
 import { useEffect, useRef, useState, ViewTransition, type ReactNode } from "react";
 
-/** Tipos de transição entre telas (usados em <Link transitionTypes> e router.push). */
-export const IR_ADIANTE = ["nav-forward"];
-export const VOLTAR = ["nav-back"];
-export const ENTRAR_NO_PAINEL = ["entrar-painel"];
-
 const MAPA = { "nav-forward": "nav-forward", "nav-back": "nav-back", "entrar-painel": "entrar-painel", default: "none" };
 
 /**
@@ -36,6 +31,7 @@ export function useValorAnimado(valor: number, { duracao = 900, inicio = 0, ativ
     if (!ativo) return;
     if (prefereMenosMovimento()) {
       anterior.current = valor;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- com movimento reduzido, mostra o valor final de uma vez (HIS-109)
       setMostrado(valor);
       return;
     }
@@ -74,6 +70,7 @@ export function useVisivel<T extends Element>(margem = "0px 0px -12% 0px") {
     const el = ref.current;
     if (!el || visivel) return;
     if (typeof IntersectionObserver === "undefined") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sem IntersectionObserver, mostra o conteúdo de uma vez (HIS-109)
       setVisivel(true);
       return;
     }

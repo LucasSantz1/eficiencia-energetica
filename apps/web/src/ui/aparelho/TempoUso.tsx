@@ -1,7 +1,7 @@
 "use client";
 
-import { aplicarVariantes, formatarTempo, FREQUENCIAS, frequenciaMaisProxima, TEMPOS_RAPIDOS, type Aparelho, type ItemCatalogo } from "@ee/core";
 import { useState } from "react";
+import { aplicarVariantes, formatarTempo, FREQUENCIAS, frequenciaMaisProxima, TEMPOS_RAPIDOS, type Aparelho, type ItemCatalogo } from "@ee/core";
 import { Contador } from "@/ui/Contador";
 import { Pilulas } from "@/ui/Pilulas";
 

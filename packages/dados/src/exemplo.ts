@@ -56,6 +56,7 @@ async function main() {
     bandeiras,
     vinculos,
     localidades,
+    hoje,
     geradoEm: new Date().toISOString(),
     origem: "exemplo",
     fontes: ["Dados fictícios gerados por pnpm dados:exemplo"],
