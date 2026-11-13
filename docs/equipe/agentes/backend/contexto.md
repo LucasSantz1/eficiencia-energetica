@@ -13,6 +13,12 @@
 - Resultado atual: 114 distribuidoras e 5.561 de 5.571 municípios com distribuidora.
 - O resumo da rotina sai como anotação `::notice` no job (lido pela API de check-runs).
 - Ainda não há banco nem servidor próprio.
+- **HIS-003a (2026-11-03, branch `his-003a-dados-quebrados`, sem push):** a1, a2, a3 e a6 feitos.
+  - Core: `limites.ts` (único lugar dos limites), `entrada.ts`, `estados.ts`, `casa-salva.ts`, `arquivos-publicos.ts`
+    e `leitura-segura.ts` (apoio, fora do `index.ts`). `DadosCasa` mora em `tipos.ts`.
+  - Rotina: `formato.ts` (`conferirFormato`), chamado dentro do `escreverArquivos`; qualquer descarte impede a gravação,
+    mesmo com `--forcar`. O `dados:exemplo` também passa por ele.
+  - `atualizar-dados.yml` em dois jobs (`gerar` só leitura; `publicar` sem instalar nada, só no `main`).
 - **HIS-111 (2026-10-30), h0–h5 feitos na branch `his-111-tarifas-vencidas`** (ainda não no `main`):
   - `fontes.ts` lê as fontes; `rotina.ts` monta, confere e grava (`executarAtualizacao`, testável numa pasta
     temporária); `atualizar.ts` é só a linha de comando.
@@ -41,6 +47,10 @@
 - Ler a ANEEL direto (a tarifas-energia-api usa só a TE e bandeiras fixas).
 - A API do IBGE falha nos runners do GitHub: usar a cópia em `packages/dados/base`.
 - Supabase planejado com RLS em todas as tabelas e só consultas parametrizadas.
+- (HIS-003a) Na casa salva, medida confere só o limite físico (sem `inteiro` nem `casas`); contagem (quantidade, banho,
+  pessoas) confere inteiro. Tela nova usa a faixa completa. Leitor sem `try/catch` próprio: o `merge` pega, sem regravar.
+- (HIS-003a) Todo leitor tem a lista de campos com `listaCompleta<keyof T>()`: campo novo no tipo quebra o `typecheck`,
+  e o teste de chaves reprova se o leitor não devolver o campo.
 - (HIS-111, ADR-005) Mesmo CNPJ = mesma empresa: fica a vigência mais recente, e a sigla antiga (não vigente) vira
   renomeação em `substituidas`. CNPJ diferente só troca com uma linha de `base/sucessoes.json` (ato + fonte https),
   revisada pelo dominio-energia por PR. A rotina nunca escreve em `base/` (R4). Coincidência de datas só aparece como
@@ -60,14 +70,15 @@
 
 ## Pendências
 
-- **HIS-111:** no `main`; h8 na branch `his-111-h8` (12/11), falta o PR. No rebase da 003a: o `lerArquivoTarifas`
-  lê `substituidas` (P8 com 501 entradas) e o job `gerar` mantém o `sed` do `\r`. Perguntas abertas: Guarapuava
+- **HIS-111:** no `main`; h8 na branch `his-111-h8` (12/11), falta o PR. O main (com o h8) já está junto na 003a
+  (`7ee7448`), com o `\r` e o P8 conferidos. Perguntas abertas: Guarapuava
   (dominio-energia) e Nova Santa Rita PI (história futura, scrum-master).
 - Para a a6 da HIS-003 (fora da HIS-111): o passo "Publicar resumo" do `atualizar-dados.yml` põe as últimas 120
   linhas numa anotação, e isso escapa de novo as linhas `::notice` da rotina. É só aparência; quem reescrever o
   workflow pode tirar essas linhas do resumo.
-- HIS-003a: no a3, o corte da `tarifas.ts` passa a usar `LIMITES.tarifaKwh`. Entra também um alerta para bandeira
-  acima de 0,15 (pedido do dominio-energia).
+- HIS-003a: rebase sobre a HIS-111 quando ela entrar. Conflito só nos imports da `tarifas.ts`; depois, ler
+  `substituidas` no `lerArquivoTarifas` pelo contrato P8 da 111 (o `typecheck` vai exigir) e rodar os testes da rotina
+  da 111, que passam a gravar pelo `conferirFormato`.
 
 - HIS-205 (mais nomes comerciais de distribuidoras) e HIS-202 (impostos) com o especialista em energia.
 - Épico E4 (Supabase) a partir da Sprint 6.

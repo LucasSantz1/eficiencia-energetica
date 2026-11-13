@@ -1,3 +1,4 @@
+import { LIMITES, validarFaixa } from "@ee/core";
 import { umaLinha } from "../anotacoes";
 import { acharColuna, dataISO, diaSeguinte, normalizar, numeroBR, semValor, subtrairMeses, type Linha } from "../util";
 
@@ -186,7 +187,7 @@ export function selecionarTarifasVigentes(linhas: Linha[], c: ColunasTarifas, ho
     const cnpjs = [...new Set(daVigencia.map((t) => t.cnpj).filter((c): c is string => c !== undefined))].sort();
     if (valores.size > 1 || cnpjs.length > 1) comMaisDeUmValor.push({ sigla, cnpj: escolhida.cnpj, valores: valores.size, ...(cnpjs.length > 1 ? { cnpjs } : {}) });
     const total = escolhida.teKwh + escolhida.tusdKwh;
-    if (total <= 0.05 || total > 5) {
+    if (validarFaixa(LIMITES.tarifaKwh, total) === "fora") {
       descartadas.push(`${sigla}: tarifa fora do esperado (R$ ${total.toFixed(4)}/kWh)`);
       continue;
     }

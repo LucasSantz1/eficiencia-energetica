@@ -32,6 +32,8 @@ As rotas são finas: não têm `"use client"` nem regra de negócio, só devolve
 | `casa/ajustes/page.tsx` | servidor | `TelaAjustes` |
 | `casa/aparelhos/page.tsx` | redirecionamento | endereço antigo: leva para `/casa/comodos`. A página é estática, então o servidor responde **200** com o redirecionamento dentro do conteúdo (`NEXT_REDIRECT`), e quem troca de endereço é o navegador |
 | `sobre/page.tsx` | servidor, estático | conteúdo fixo, sem estado (fica na própria rota) |
+| `global-error.tsx` | cliente | tela de erro geral (T3): `TelaDeErro` com `<html>` e `<body>` próprios, porque substitui o documento inteiro. É o único limite de erro: não há `error.tsx` por rota, que pesaria cerca de 1,3 kB em toda rota |
+| `not-found.tsx` | servidor | página não encontrada (T4): "Não achamos esta página" e "Voltar ao início" |
 | `manifest.ts`, `icon.svg` | — | instalação como aplicativo |
 | `globals.css` | — | tokens, utilidades de animação e regras de transição |
 
@@ -46,11 +48,15 @@ Uma pasta por funcionalidade. Uma funcionalidade não importa outra; o que é us
 | `inicio/Simulador.tsx` | simulador rápido da página inicial |
 | `inicio/BotaoComecar.tsx`, `inicio/CasaIlustrada.tsx` | botão de começar ("Ver a minha casa" para quem já cadastrou) e a ilustração da casa por cômodos |
 | `cadastro/Cadastro.tsx` | assistente de cadastro, uma pergunta por tela |
+| `cadastro/porQuePerguntamos.ts` | os textos do painel "Por que perguntamos" no computador, um por passo |
 | `cadastro/rascunho.ts` | a casa antes de ser criada: `ajustarComodos`, `rascunhoParaCasa`, `itemDoCatalogoParaComodo` |
+| `casca/AvisoTrocaDistribuidora.tsx` | aviso "O preço da luz foi atualizado" quando a empresa de luz salva mudou de nome ou foi incorporada (HIS-111); só na visita em que a troca acontece, até "Entendi"; não aparece se a casa tem conta de luz informada |
+| `inicio/AvisoDaCasaNoInicio.tsx` | o aviso T1 na página inicial, para quem abre o site por ela |
 | `casca/Casca.tsx` | moldura da área da casa: marca, cidade, navegação de 4 seções (embaixo no celular, no topo no computador), transição entre telas; espera a casa carregar e mostra "Vamos cadastrar" a quem ainda não tem casa |
 | `acompanhamento/PainelAcompanhamento.tsx` | tela `/casa`: conta estimada, cômodos, quem mais gasta, economia do plano |
 | `acompanhamento/Acompanhamento.tsx` | contas de luz e leituras do relógio, com gráficos |
-| `comodos/TelaComodos.tsx` | cômodos em sanfona, editor de aparelho, painel geral, novo cômodo |
+| `comodos/TelaComodos.tsx` | cômodos (sanfona no celular, lista e painel no computador), editor de aparelho, painel geral, novo cômodo |
+| `comodos/ComodosNoComputador.tsx`, `comodos/ConteudoDoComodo.tsx` | o desenho de lista e painel a partir de 1024 px, e o miolo de um cômodo, comum aos dois desenhos |
 | `dicas/TelaDicas.tsx` | dicas e plano de economia |
 | `ajustes/TelaAjustes.tsx` | minha casa: onde mora, benefício, tipo de ligação, conta de luz e "Apagar todos os meus dados" |
 
@@ -72,6 +78,11 @@ de retorno. Podem chamar funções puras do `@ee/core` (formatação, catálogo,
 | `Barras.tsx`, `Etiqueta.tsx` | gráfico de barras; a barra em seta nas cores do INMETRO, legenda e selo da bandeira |
 | `BuscaCidade.tsx` | busca de cidade sem acento e sem diferenciar maiúsculas |
 | `Marca.tsx`, `Icone.tsx` | marca do site; ícone por nome |
+| `AvisoDaCasaSalva.tsx` | aviso T1 de que parte da casa salva foi tirada (3 versões: parte, sem cidade e empresa de luz, nada aproveitável); `listaDoQueSaiu` monta "2 aparelhos e 1 conta de luz". O `role="status"` fica na página vazio e o texto chega depois da leitura da casa |
+| `AvisoFalhaDeCarga.tsx` | aviso T2 quando `tarifas.json` ou `municipios/{UF}.json` não carregam: "Tentar de novo" (com `aria-disabled` enquanto carrega), versão "sem internet" e frase extra a partir da 2ª falha seguida |
+| `TelaDeErro.tsx` | tela T3, usada só pelo `global-error`: texto fixo, sem mensagem técnica, foco no título, aviso da 2ª falha |
+| `foco.ts`, `estilosDeBotao.ts` | `focarTitulo()` leva o foco ao `h1` quando o botão que o tinha some; classes de botão reaproveitadas pelos links |
+| `telaLarga.ts` | `useTelaLarga()`: diz se a janela tem 1024 px ou mais (`useSyncExternalStore`) |
 | `EspacoReservado.tsx` | espaço reservado desligado (não renderiza nada) |
 
 ### Componentes de aparelho (`ui/aparelho/`)
@@ -92,12 +103,12 @@ Usados pelo cadastro, pelo acompanhamento e pelos cômodos.
 
 A porta das telas para os dados. As telas nunca importam `infraestrutura/` direto.
 
-- **`casa.ts`** — reexporta `useCasa`, `useCasaCarregada`, `DadosCasa` e `novoId`; define `useEdicaoDeAparelho()`, que
+- **`casa.ts`** — reexporta `useCasa`, `useCasaCarregada`, `useHaDadosGuardados`, `DadosCasa` e `novoId`; define `useAvisoDaCasaSalva()` (o aviso T1, que só existe depois de a casa ser lida e pode ser dispensado) e `useDistribuidoraAtualizada()` (a troca de empresa de luz da visita, para o aviso da `Casca`); e `useEdicaoDeAparelho()`, que
   liga o `EditorAparelho` à casa (salvar com id atualiza, sem id cria; remover usa a ação do store, que também tira o
   aparelho do plano).
-- **`resumo.ts`** — `useResumo`: junta casa + tarifa + bandeira do mês e chama `resumirCasa`, `gerarDicas` e
+- **`resumo.ts`** — `useResumo`: junta casa + tarifa + bandeira do mês (e expõe `falhasSeguidas`, `semInternet` e `tentarDeNovo` para o `AvisoFalhaDeCarga`) e chama `resumirCasa`, `gerarDicas` e
   `simularPlano`; também `tarifaMedia` (simulador da página inicial) e `nomeDistribuidora`.
-- **`dados-publicos.ts`** — reexporta `useTarifas` e `useMunicipios`.
+- **`dados-publicos.ts`** — reexporta `useTarifas` e `useMunicipios`, que agora devolvem também `falhasSeguidas`, `semInternet` e `tentarDeNovo`.
 - **`numeros-do-inicio.servidor.ts`** — só servidor: `carregarNumerosDoInicio()` devolve distribuidoras, cidades
   atendidas e bandeira do mês para a página inicial; se qualquer leitura falhar, devolve `undefined` e a página mostra
   números aproximados.
@@ -110,12 +121,18 @@ A porta das telas para os dados. As telas nunca importam `infraestrutura/` diret
   - Ações: `criarCasa`, `definirResidencia`, `atualizarResidencia`, `adicionarComodo`, `renomearComodo`, `removerComodo`,
     `adicionarDoCatalogo`, `adicionarAparelho`, `atualizarAparelho`, `removerAparelho`, `salvarConta`, `removerConta`,
     `salvarLeitura`, `removerLeitura`, `alternarNoPlano`, `apagarTudo`.
+  - Leitura segura (HIS-003a, ADR-004): o `merge` do `persist` passa a casa pelo `lerCasaSalva`, descarta só o inválido e
+    guarda o `avisoDaCasaSalva`; `dispensarAvisoDaCasaSalva` fecha o aviso. Se o leitor lançar, a gravação trava
+    (`textoGuardadoSemLer`) e o cadastro novo guarda a cópia `casa-ilegivel`. `apagarTudo` tira as duas chaves e solta a trava.
   - Migração da versão 1: acrescenta `contas`, `leituras` e `plano` vazios.
   - `useCasaCarregada()` evita mostrar a tela vazia antes de ler o armazenamento.
+- **`armazenamento/armazenamento-local.ts`** — `criarArmazenamentoSeguro`: o `storage` do `persist`, que nunca lança
+  (nem com a memória cheia ou bloqueada) e tem `travarGravacao`, `liberarGravacao`, `copiarTextoUmaVez` e `existe`.
+  `hidratacao.ts` liga o leitor do core à trava.
 - **`identificador.ts`** — `novoId()`: id local para cômodos, aparelhos, contas e leituras (`crypto.randomUUID`, ou
   data + número aleatório em navegadores antigos). Não é segredo.
 - **`dados-publicos/navegador.ts`** — `useTarifas` e `useMunicipios`: buscam `/dados/tarifas.json` e
-  `/dados/municipios/{UF}.json`, com cache em memória (uma busca por arquivo; se falhar, tenta de novo na próxima vez).
+  `/dados/municipios/{UF}.json`, com cache em memória (uma busca por arquivo). O arquivo passa por `lerArquivoTarifas`/`lerArquivoMunicipios` e a sigla do estado por `ehUf`. Se falhar, conta `falhasSeguidas` e `tentarDeNovo` busca com `no-cache`.
 - **`dados-publicos/arquivos.servidor.ts`** — só servidor (`import "server-only"`): lê `public/dados/tarifas.json` e
   `relatorio.json` do disco para a página inicial. É o único arquivo do site que usa `node:fs`.
 
@@ -124,6 +141,30 @@ Regra: qualquer mudança no formato salvo exige versão nova e `migrate` testado
 ## Configuração (`src/config/recursos.ts`)
 
 `RECURSOS.espacosReservados = false`. Chaves para ligar e desligar recursos sem mexer nas telas.
+
+## Layout no computador (a partir de 1024 px)
+
+Abaixo de 1024 px (`lg` do Tailwind, 64rem) nada mudou: é o desenho do celular. A partir daí, quase tudo é só CSS com
+classes `lg:`, e a ordem do código (e do foco do teclado) é a mesma do celular.
+
+- **Largura:** a `Casca` e o `/comecar` passam de `max-w-4xl` (e `max-w-2xl`) para `75rem` (1200 px), com margem de 2rem.
+- **Coluna que acompanha a rolagem:** a utilidade `lateral-fixa` (`globals.css`) só vale a partir de `lg`. Fica presa ao
+  topo (`sticky`), com no máximo a altura da janela e rolagem própria se passar.
+- **Texto corrido** tem no máximo 68 caracteres de largura (`max-w-[68ch]`).
+
+| Tela | Como fica |
+| --- | --- |
+| `/casa` | a conta em cima: o número à esquerda e a explicação (bandeira, tarifa, Tarifa Social) à direita. Abaixo, "Seus cômodos" à esquerda e, numa coluna lateral de 23,5rem, "Quem mais gasta" e a dica de economia. O "Mês a mês" fica sob os cômodos e a nota final ocupa a largura toda. A lateral não usa `lateral-fixa`: com muitos aparelhos ela passava da janela |
+| `/casa/comodos` | lista de cômodos à esquerda, o cômodo aberto à direita; trocar de cômodo não rola a página nem move o foco. O `#comodo-id` na barra de endereço abre aquele cômodo. O painel geral perde a rolagem lateral a partir de 1280 px |
+| `/casa/dicas` | dicas em 2 colunas (3 a partir de 1280 px) e o resumo do plano numa coluna lateral de 22rem, que acompanha a rolagem |
+| `/casa/ajustes` | duas colunas: as quatro seções de ajuste à esquerda e "Seus dados" à direita |
+| `/comecar` | o passo à esquerda (até 34rem) e, à direita, o painel "Por que perguntamos", que só explica (`cadastro/porQuePerguntamos.ts`; um texto por passo). Fica oculto por CSS no celular |
+
+`/casa/comodos` é a única tela que troca de desenho por JavaScript: `ui/telaLarga.ts` exporta `useTelaLarga()`, que usa a
+mesma consulta do `lg` (`(width >= 64rem)`). Abaixo dela, `TelaComodos` mostra as sanfonas (`CartaoComodo`); acima,
+mostra `ComodosNoComputador`. Os dois usam o mesmo miolo, `ConteudoDoComodo`, então a regra de lâmpada e sugestão não é
+copiada. Ao dar zoom e cruzar os 1024 px, o foco vai para o título se o elemento focado sumiu. Peso: ver
+`apps/web/e2e/peso-js.json`.
 
 ## Aparência
 

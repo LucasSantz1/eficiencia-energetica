@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { distribuidorasDaCidade, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type Ligacao, type Municipio } from "@ee/core";
+import { distribuidorasDaCidade, ehUf, ESTADOS, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type Ligacao, type Municipio } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
+import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { Botao } from "@/ui/Botao";
 import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Campo } from "@/ui/Campo";
@@ -30,12 +31,11 @@ const LIGACOES: { id: Ligacao; titulo: string; descricao: string }[] = [
 ];
 
 export function TelaAjustes() {
-  const router = useRouter();
   const { residencia, arquivo, distribuidora } = useResumo();
   const atualizar = useCasa((s) => s.atualizarResidencia);
-  const apagarTudo = useCasa((s) => s.apagarTudo);
+  const definirResidencia = useCasa((s) => s.definirResidencia);
+  const temCasaSemCidade = useCasa((s) => s.comodos.length > 0 || s.aparelhos.length > 0);
   const [mudandoCidade, setMudandoCidade] = useState(false);
-  const [confirmarApagar, setConfirmarApagar] = useState(false);
   const [kwh, setKwh] = useState(residencia?.contaReferencia ? String(residencia.contaReferencia.kwh).replace(".", ",") : "");
   const [valor, setValor] = useState(residencia?.contaReferencia ? residencia.contaReferencia.valor.toFixed(2).replace(".", ",") : "");
   const [contaSalva, setContaSalva] = useState(false);
@@ -45,136 +45,135 @@ export function TelaAjustes() {
   // Com o id de hoje no lugar do antigo (HIS-111): um municipios/{UF}.json antigo no cache ainda pode trazer rge-sul.
   const opcoesDistribuidora = arquivo && municipioAtual ? distribuidorasDaCidade(arquivo, municipioAtual.distribuidoras) : [];
 
-  if (!residencia) return null;
-
-  const salvarConta = () => {
-    const k = Number(kwh.replace(",", "."));
-    const v = Number(valor.replace(/\./g, "").replace(",", "."));
-    atualizar({ contaReferencia: k > 0 && v > 0 ? { kwh: k, valor: v } : undefined });
-    setContaSalva(true);
-  };
-
-  return (
-    <div className="space-y-12">
-      <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
-
-      <Secao titulo="Onde você mora">
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-controle)] bg-papel px-4 py-4">
-          <div>
-            <p className="text-lg font-extrabold">
-              {residencia.municipioNome} – {residencia.uf}
-            </p>
-            <p className="text-tinta-suave">
-              Distribuidora: {nomeDistribuidora(distribuidora)}
-              {distribuidora && `, tarifa de ${formatarReais(distribuidora.tarifaKwh)} por kWh sem impostos`}
-            </p>
-          </div>
-          <Botao variante="secundario" onClick={() => setMudandoCidade(true)}>
-            Mudar cidade
-          </Botao>
+  if (!residencia) {
+    // T1b: a cidade saiu e os aparelhos ficaram. Só "Onde você mora"; a escolha cria a residência de novo, sem apagar
+    // os aparelhos (o /comecar apagaria, D5). Benefício e ligação voltam para "não sei" até a pessoa escolher.
+    return (
+      <div className="space-y-12">
+          <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
+          {temCasaSemCidade && (
+            <Secao titulo="Onde você mora">
+              <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
+            </Secao>
+          )}
+          <SeusDados />
+          <TrocarCidade
+            aberta={mudandoCidade}
+            aoFechar={() => setMudandoCidade(false)}
+            estados={arquivo?.estados ?? []}
+            arquivo={arquivo}
+            aoEscolher={(m, distribuidoraId) => {
+              definirResidencia({ uf: m.uf, municipioIbge: m.ibge, municipioNome: m.nome, distribuidoraId, beneficio: "nao-sei", ligacao: "nao-sei" });
+              setMudandoCidade(false);
+            }}
+          />
         </div>
-        {opcoesDistribuidora.length > 1 && (
-          <div className="mt-5 space-y-2">
-            <p className="font-bold">Mais de uma empresa atende a sua cidade. Qual manda a sua conta?</p>
-            {opcoesDistribuidora.map((d) => (
-              <Opcao key={d.id} selecionada={residencia.distribuidoraId === d.id} onClick={() => atualizar({ distribuidoraId: d.id })} descricao={`${formatarReais(d.tarifaKwh)} por kWh, sem impostos`}>
-                {nomeDistribuidora(d)}
+      );
+    }
+
+    const salvarConta = () => {
+      const k = Number(kwh.replace(",", "."));
+      const v = Number(valor.replace(/\./g, "").replace(",", "."));
+      atualizar({ contaReferencia: k > 0 && v > 0 ? { kwh: k, valor: v } : undefined });
+      setContaSalva(true);
+    };
+
+    // No computador (HIS-112, L6): a casa e a conta à esquerda, "Seus dados" à direita. Mesma ordem do código do celular.
+    return (
+      <div className="space-y-12 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-8 lg:space-y-0">
+        <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight lg:col-span-2">Minha casa</h1>
+
+        <div className="space-y-12">
+        <Secao titulo="Onde você mora">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-controle)] bg-papel px-4 py-4">
+            <div>
+              <p className="text-lg font-extrabold">
+                {residencia.municipioNome} – {residencia.uf}
+              </p>
+              <p className="text-tinta-suave">
+                Distribuidora: {nomeDistribuidora(distribuidora)}
+                {distribuidora && `, tarifa de ${formatarReais(distribuidora.tarifaKwh)} por kWh sem impostos`}
+              </p>
+            </div>
+            <Botao variante="secundario" onClick={() => setMudandoCidade(true)}>
+              Mudar cidade
+            </Botao>
+          </div>
+          {opcoesDistribuidora.length > 1 && (
+            <div className="mt-5 space-y-2">
+              <p className="font-bold">Mais de uma empresa atende a sua cidade. Qual manda a sua conta?</p>
+              {opcoesDistribuidora.map((d) => (
+                <Opcao key={d.id} selecionada={residencia.distribuidoraId === d.id} onClick={() => atualizar({ distribuidoraId: d.id })} descricao={`${formatarReais(d.tarifaKwh)} por kWh, sem impostos`}>
+                  {nomeDistribuidora(d)}
+                </Opcao>
+              ))}
+            </div>
+          )}
+        </Secao>
+
+        <Secao titulo="Benefício na conta de luz">
+          <div className="space-y-2">
+            {BENEFICIOS.map((b) => (
+              <Opcao key={b.id} selecionada={residencia.beneficio === b.id} onClick={() => atualizar({ beneficio: b.id })} descricao={b.descricao}>
+                {b.titulo}
               </Opcao>
             ))}
           </div>
-        )}
-      </Secao>
+          <p className="mt-3 text-[0.95rem] text-tinta-suave">Para ter direito, a família precisa estar no CadÚnico. A inscrição é feita no CRAS da sua cidade. O desconto vem sozinho quando o CadÚnico está em dia e a conta está no nome de alguém da família. Quem precisa de aparelho para a saúde pede na distribuidora, com atestado médico.</p>
+        </Secao>
 
-      <Secao titulo="Benefício na conta de luz">
-        <div className="space-y-2">
-          {BENEFICIOS.map((b) => (
-            <Opcao key={b.id} selecionada={residencia.beneficio === b.id} onClick={() => atualizar({ beneficio: b.id })} descricao={b.descricao}>
-              {b.titulo}
-            </Opcao>
-          ))}
-        </div>
-        <p className="mt-3 text-[0.95rem] text-tinta-suave">Para ter direito, a família precisa estar no CadÚnico. A inscrição é feita no CRAS da sua cidade. O desconto vem sozinho quando o CadÚnico está em dia e a conta está no nome de alguém da família. Quem precisa de aparelho para a saúde pede na distribuidora, com atestado médico.</p>
-      </Secao>
-
-      <Secao titulo="Tipo de ligação" id="ligacao">
-        <div className="space-y-2">
-          {LIGACOES.map((l) => (
-            <Opcao key={l.id} selecionada={residencia.ligacao === l.id} onClick={() => atualizar({ ligacao: l.id })} descricao={l.descricao}>
-              {l.titulo}
-            </Opcao>
-          ))}
-        </div>
-      </Secao>
-
-      <Secao titulo="Sua conta de luz" id="conta">
-        <p className="mb-5 max-w-[56ch] text-tinta-suave">Com o consumo e o valor de uma conta, usamos o preço real do kWh na sua cidade, já com impostos. Fica bem mais perto do que você paga.</p>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Campo rotulo="Consumo do mês" id="aj-kwh" ajuda="“Consumo (kWh)” na conta.">
-            <Entrada id="aj-kwh" inputMode="decimal" sufixo="kWh" placeholder="Ex.: 150" value={kwh} onChange={(e) => (setKwh(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
-          </Campo>
-          <Campo rotulo="Valor total" id="aj-valor" ajuda="O valor a pagar.">
-            <Entrada id="aj-valor" inputMode="decimal" prefixo="R$" placeholder="Ex.: 135,90" value={valor} onChange={(e) => (setValor(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
-          </Campo>
-        </div>
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <Botao onClick={salvarConta} disabled={!kwh || !valor}>
-            Usar estes valores
-          </Botao>
-          {residencia.contaReferencia && (
-            <Botao
-              variante="fantasma"
-              onClick={() => {
-                atualizar({ contaReferencia: undefined });
-                setKwh("");
-                setValor("");
-              }}
-            >
-              Voltar para a tarifa da ANEEL
-            </Botao>
-          )}
-        </div>
-        {contaSalva && residencia.contaReferencia && (
-          <div className="mt-4">
-            {precoKwh(residencia, distribuidora, undefined).origem === "conta" ? (
-              <Aviso>Pronto. O kWh na sua conta sai por {formatarReais(precoKwh(residencia, distribuidora, undefined).valor)}, e o resumo já usa esse valor.</Aviso>
-            ) : (
-              <Aviso tom="faisca">Com a Tarifa Social, quase todo o consumo dessa conta foi isento, então ela não mostra o preço do kWh. Continuamos usando a tarifa da ANEEL.</Aviso>
-            )}
+        <Secao titulo="Tipo de ligação" id="ligacao">
+          <div className="space-y-2">
+            {LIGACOES.map((l) => (
+              <Opcao key={l.id} selecionada={residencia.ligacao === l.id} onClick={() => atualizar({ ligacao: l.id })} descricao={l.descricao}>
+                {l.titulo}
+              </Opcao>
+            ))}
           </div>
-        )}
-      </Secao>
+        </Secao>
 
-      <Secao titulo="Seus dados">
-        <p className="max-w-[56ch] text-tinta-suave">Tudo o que você cadastrou fica guardado só neste navegador. Se limpar os dados do navegador, as informações são apagadas.</p>
-        <div className="mt-4">
-          {!confirmarApagar ? (
-            <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
-              Apagar todos os meus dados
+        <Secao titulo="Sua conta de luz" id="conta">
+          <p className="mb-5 max-w-[56ch] text-tinta-suave">Com o consumo e o valor de uma conta, usamos o preço real do kWh na sua cidade, já com impostos. Fica bem mais perto do que você paga.</p>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Campo rotulo="Consumo do mês" id="aj-kwh" ajuda="“Consumo (kWh)” na conta.">
+              <Entrada id="aj-kwh" inputMode="decimal" sufixo="kWh" placeholder="Ex.: 150" value={kwh} onChange={(e) => (setKwh(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
+            </Campo>
+            <Campo rotulo="Valor total" id="aj-valor" ajuda="O valor a pagar.">
+              <Entrada id="aj-valor" inputMode="decimal" prefixo="R$" placeholder="Ex.: 135,90" value={valor} onChange={(e) => (setValor(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
+            </Campo>
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Botao onClick={salvarConta} disabled={!kwh || !valor}>
+              Usar estes valores
             </Botao>
-          ) : (
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="font-bold">Apagar a casa e todos os aparelhos?</span>
+            {residencia.contaReferencia && (
               <Botao
-                variante="perigo"
+                variante="fantasma"
                 onClick={() => {
-                  apagarTudo();
-                  router.push("/");
+                  atualizar({ contaReferencia: undefined });
+                  setKwh("");
+                  setValor("");
                 }}
               >
-                Sim, apagar
+                Voltar para a tarifa da ANEEL
               </Botao>
-              <Botao variante="fantasma" onClick={() => setConfirmarApagar(false)}>
-                Cancelar
-              </Botao>
+            )}
+          </div>
+          {contaSalva && residencia.contaReferencia && (
+            <div className="mt-4">
+              {precoKwh(residencia, distribuidora, undefined).origem === "conta" ? (
+                <Aviso>Pronto. O kWh na sua conta sai por {formatarReais(precoKwh(residencia, distribuidora, undefined).valor)}, e o resumo já usa esse valor.</Aviso>
+              ) : (
+                <Aviso tom="faisca">Com a Tarifa Social, quase todo o consumo dessa conta foi isento, então ela não mostra o preço do kWh. Continuamos usando a tarifa da ANEEL.</Aviso>
+              )}
             </div>
           )}
-        </div>
-        <p className="mt-6">
-          <Link href="/sobre" className="font-bold text-energia underline underline-offset-4">
-            De onde vêm as tarifas e como o cálculo é feito
-          </Link>
-        </p>
-      </Secao>
+        </Secao>
+      </div>
+
+      <div className="lg:self-start">
+        <SeusDados />
+      </div>
 
       <TrocarCidade
         aberta={mudandoCidade}
@@ -188,6 +187,49 @@ export function TelaAjustes() {
         }}
       />
     </div>
+  );
+}
+
+/**
+ * "Apagar todos os meus dados" (LGPD). Aparece em toda Minha casa, também sem cidade e quando a casa guardada não deu
+ * para ler (D-3a-1 do qa): a Casca só abre esta tela sem cidade quando há algum dado guardado.
+ */
+function SeusDados() {
+  const router = useRouter();
+  const apagarTudo = useCasa((s) => s.apagarTudo);
+  const [confirmarApagar, setConfirmarApagar] = useState(false);
+  return (
+    <Secao titulo="Seus dados">
+      <p className="max-w-[56ch] text-tinta-suave">Tudo o que você cadastrou fica guardado só neste navegador. Se limpar os dados do navegador, as informações são apagadas.</p>
+      <div className="mt-4">
+        {!confirmarApagar ? (
+          <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
+            Apagar todos os meus dados
+          </Botao>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-bold">Apagar a casa e todos os aparelhos?</span>
+            <Botao
+              variante="perigo"
+              onClick={() => {
+                apagarTudo();
+                router.push("/");
+              }}
+            >
+              Sim, apagar
+            </Botao>
+            <Botao variante="fantasma" onClick={() => setConfirmarApagar(false)}>
+              Cancelar
+            </Botao>
+          </div>
+        )}
+      </div>
+      <p className="mt-6">
+        <Link href="/sobre" className="font-bold text-energia underline underline-offset-4">
+          De onde vêm as tarifas e como o cálculo é feito
+        </Link>
+      </p>
+    </Secao>
   );
 }
 
@@ -212,12 +254,14 @@ function TrocarCidade({
 }: {
   aberta: boolean;
   aoFechar: () => void;
-  ufAtual: string;
+  ufAtual?: string;
   estados: { uf: string; nome: string; distribuidoras: string[] }[];
   arquivo: ArquivoParaBusca | undefined;
   aoEscolher: (m: Municipio, distribuidoraId: string) => void;
 }) {
-  const [uf, setUf] = useState(ufAtual);
+  const [ufEscolhida, setUf] = useState(ufAtual);
+  // Sem cidade salva (T1b), começa pelo primeiro estado da lista, que é o que o seletor mostra.
+  const uf = ufEscolhida ?? estados[0]?.uf;
   const [escolhido, setEscolhido] = useState<Municipio>();
   const municipios = useMunicipios(uf);
 
@@ -248,6 +292,16 @@ function TrocarCidade({
               ))}
             </select>
           </Campo>
+          <div className="empty:hidden">
+            <AvisoFalhaDeCarga
+              assunto={{ tipo: "cidades", estado: ehUf(uf) ? ESTADOS[uf] : "" }}
+              fraseDeSeguranca="Sua casa continua salva."
+              falhasSeguidas={municipios.falhasSeguidas}
+              semInternet={municipios.semInternet}
+              carregando={municipios.carregando}
+              aoTentarDeNovo={municipios.tentarDeNovo}
+            />
+          </div>
           {municipios.dados && (
             <BuscaCidade
               autoFocus={false}

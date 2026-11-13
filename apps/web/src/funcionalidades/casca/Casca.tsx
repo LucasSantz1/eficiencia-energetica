@@ -4,9 +4,10 @@ import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2 } from "lucide-react"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
-import { useCasa, useCasaCarregada, useDistribuidoraAtualizada } from "@/aplicacao/casa";
+import { useAvisoDaCasaSalva, useCasa, useCasaCarregada, useDistribuidoraAtualizada, useHaDadosGuardados } from "@/aplicacao/casa";
 import { useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
+import { AvisoDaCasaSalva } from "@/ui/AvisoDaCasaSalva";
 import { BotaoLink } from "@/ui/Botao";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
@@ -25,6 +26,11 @@ export function Casca({ children }: { children: ReactNode }) {
   const caminho = usePathname();
   const carregada = useCasaCarregada();
   const residencia = useCasa((s) => s.residencia);
+  // T1b: a cidade saiu, mas cômodos ou aparelhos ficaram. Mandar para o /comecar apagaria tudo (criarCasa).
+  const temCasaSemCidade = useCasa((s) => !s.residencia && (s.comodos.length > 0 || s.aparelhos.length > 0));
+  const { aviso, dispensar } = useAvisoDaCasaSalva();
+  // Sem cidade, a Minha casa abre sempre que houver qualquer dado guardado: é lá que fica "Apagar todos os meus dados".
+  const abrirMinhaCasa = useHaDadosGuardados() && caminho === "/casa/ajustes";
   const { arquivo, preco } = useResumo();
   const troca = useDistribuidoraAtualizada();
   const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
@@ -34,7 +40,7 @@ export function Casca({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh pb-28 sm:pb-12">
       <header className="border-b border-linha bg-papel" style={{ viewTransitionName: "topo" }}>
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:max-w-[75rem] lg:px-8">
           <Marca href="/" />
           {residencia && (
             <Link href="/casa/ajustes" className="max-w-[58%] truncate rounded-full px-3 py-2 text-right text-[0.95rem] font-bold text-tinta-suave hover:bg-fundo">
@@ -42,7 +48,7 @@ export function Casca({ children }: { children: ReactNode }) {
             </Link>
           )}
         </div>
-        <nav aria-label="Seções" className="mx-auto hidden max-w-4xl gap-1 px-4 sm:flex sm:px-6">
+        <nav aria-label="Seções" className="mx-auto hidden max-w-4xl gap-1 px-4 sm:flex sm:px-6 lg:max-w-[75rem] lg:px-8">
           {ITENS.map(({ href, rotulo, Icone }, i) => {
             const ativo = caminho === href;
             return (
@@ -67,7 +73,8 @@ export function Casca({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 pt-6 sm:px-6 sm:pt-8">
+      <main className="mx-auto max-w-4xl px-4 pt-6 sm:px-6 sm:pt-8 lg:max-w-[75rem] lg:px-8">
+        <AvisoDaCasaSalva aviso={aviso} aoEntender={dispensar} className="mb-6" naTelaDaCidade={caminho === "/casa/ajustes"} />
         {arquivo?.origem === "exemplo" && (
           <div className="mb-6">
             <Aviso tom="faisca">Estes são dados de exemplo para testes. As tarifas reais da ANEEL entram na próxima atualização automática.</Aviso>
@@ -79,11 +86,25 @@ export function Casca({ children }: { children: ReactNode }) {
           {troca && <AvisoTrocaDistribuidora troca={troca} mostrar={preco.origem === "aneel"} />}
         </div>
         {!carregada ? (
-          <div className="space-y-4" aria-busy aria-label="Carregando">
-            <div className="h-40 animate-pulse rounded-[var(--radius-cartao)] bg-papel" />
+          // No computador o esqueleto tem a forma da /casa (conta em cima; cômodos e coluna lateral embaixo), para a
+          // tela não pular quando os dados chegam (HIS-112, L2).
+          <div className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0" aria-busy aria-label="Carregando">
+            <div className="h-40 animate-pulse rounded-[var(--radius-cartao)] bg-papel lg:col-span-2" />
             <div className="h-64 animate-pulse rounded-[var(--radius-cartao)] bg-papel" />
+            <div className="hidden h-64 animate-pulse rounded-[var(--radius-cartao)] bg-papel lg:block" />
           </div>
-        ) : !residencia ? (
+        ) : !residencia && temCasaSemCidade && !abrirMinhaCasa ? (
+          // Enquanto o aviso T1b está na tela, ele já tem o mesmo texto e o botão: nada se repete embaixo.
+          aviso?.tipo === "sem-residencia" ? null : (
+          <div className="py-10">
+            <h1 className="text-[2rem] leading-tight font-extrabold">Não conseguimos abrir sua cidade e sua empresa de luz.</h1>
+            <p className="mt-3 max-w-[48ch] text-lg text-tinta-suave">Seus aparelhos continuam salvos. Escolha a cidade de novo para ver os valores.</p>
+            <BotaoLink href="/casa/ajustes" className="mt-8">
+              Escolher minha cidade
+            </BotaoLink>
+          </div>
+          )
+        ) : !residencia && !temCasaSemCidade && !abrirMinhaCasa ? (
           <div className="py-10">
             <h1 className="text-[2rem] leading-tight font-extrabold">Vamos cadastrar a sua casa</h1>
             <p className="mt-3 max-w-[48ch] text-lg text-tinta-suave">Leva uns dois minutos. Precisamos saber a sua cidade e quais aparelhos você tem.</p>

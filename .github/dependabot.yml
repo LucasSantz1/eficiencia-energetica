@@ -1,0 +1,38 @@
+# Atualizações de dependências (critério 6 da HIS-003). O PR do Dependabot passa pelo CI normal (token só de leitura,
+# nunca pull_request_target) e o merge é à mão. O cooldown espera 7 dias depois da publicação: versão maliciosa
+# costuma ser descoberta e retirada em poucas horas (A13).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    # Mantém a versão exata do package.json (sem ^ nem ~).
+    versioning-strategy: increase
+    open-pull-requests-limit: 5
+    ignore:
+      # Casa com o Chromium do ambiente de nuvem (ADR-003): sobe junto, à mão.
+      - dependency-name: "@playwright/test"
+      # Segue o Node 22 do projeto.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    groups:
+      desenvolvimento:
+        dependency-type: development
+        update-types: [minor, patch]
+      site:
+        dependency-type: production
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]

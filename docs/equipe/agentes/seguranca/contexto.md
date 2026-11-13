@@ -9,12 +9,13 @@
 
 | Risco | Situação | História |
 | --- | --- | --- |
-| localStorage: JSON quebrado prende o site no carregamento (P1, provado); mesma versão não passa pelo `migrate` (P2, provado) | alta, aberto; desenho na história (storage próprio + `merge`, descarte por item, retorno com contagem) | HIS-003 |
-| JSON de `/dados` lido sem validação (`navegador.ts`, `arquivos.servidor.ts` com `as`); `uf` do localStorage monta o caminho do `fetch` | médio/baixo, aberto | HIS-003 |
-| Sem `app/error.tsx`: exceção de render vira tela branca | aberto | HIS-003 |
-| Sem cabeçalhos de segurança (CSP, HSTS, etc.) em `next.config.ts` | aberto; valores exatos na HIS-003 | HIS-003 |
-| Sem `pnpm audit` nem Dependabot no CI; `atualizar-dados.yml` com token de escrita durante o `pnpm install` e actions por etiqueta | médio, aberto; dois jobs + SHA | HIS-003 |
-| Links externos sem `rel="noopener noreferrer"` (`funcionalidades/inicio/PaginaInicial.tsx` l. 275, `app/sobre/page.tsx` l. 44–56); sem `target="_blank"`, então baixo | aberto (baixo) | HIS-003 |
+| localStorage: JSON quebrado prende o site no carregamento (P1, provado); mesma versão não passa pelo `migrate` (P2, provado) | **resolvido** na HIS-003a (`13cbd30`, etapa 6 aprovada com ressalvas baixas): storage que não lança, `merge` com leitor, trava da gravação | HIS-003a |
+| JSON de `/dados` lido sem validação; `uf` do localStorage monta o caminho do `fetch` | **resolvido** na HIS-003a (leitores do core, `ehUf`; R7 provado no navegador) | HIS-003a |
+| Trava da gravação e cópia `eficiencia-energetica:casa-ilegivel` (D10 2) | aceito: só no aparelho, ninguém lê, uma chave, só se o leitor lançar, sai com "Apagar tudo". Ressalva baixa: quem a ler no futuro passa pelo `lerCasaSalva` e apaga a chave | HIS-003a |
+| Exceção de render vira tela branca | **resolvido**: só `global-error.tsx` (D10 1a), texto fixo; prova final no `erros.spec` (a7) | HIS-003a |
+| Cabeçalhos de segurança | **resolvido**: 7 cabeçalhos exatos em todas as rotas (R1, `13cbd30`) | HIS-003a |
+| `pnpm audit`, Dependabot, `atualizar-dados.yml` | **resolvido** na HIS-003a (dois jobs, SHA, `permissions: {}`). Ressalva baixa: o `::notice` (l. 61) não escapa `\r` | HIS-003a |
+| Links externos sem `rel` | **resolvido** (4 links com `rel`, R12) | HIS-003a |
 | Refatoração em camadas: perda da casa salva, código de servidor no cliente, script de camadas com falso negativo | etapa 6 **aprovada com ressalvas (baixo)** em `182f355`: R1–R15 ok | HIS-001 |
 | `verificar-camadas.mjs` com lacunas que pedem escrita deliberada (S1: `from"x"` sem espaço, `.js/.jsx` não lidos, link simbólico pulado em silêncio, caminho absoluto/`?sufixo`, `getBuiltinModule`, `"use server"` livre) | **resolvido** (parser do TS + ESLint; etapa 6 aprovada com ressalvas baixas em `57eb736`) | HIS-002b |
 | Constante (`VOLTAR`) importada de módulo `"use client"` por componente de servidor (`app/sobre/page.tsx`) — armadilha A7, funciona hoje (S2) | aberto (baixo, pré-existente); correção no D7 | HIS-002b |
@@ -93,12 +94,13 @@
 - **HIS-002b:** etapa 6 feita em `57eb736` (aprovado com ressalvas, baixo). As 2 moderadas do `minimatch` foram aceitas (só
   em desenvolvimento): conferir o PR do Dependabot. As sondas estão em `scratchpad/seg-his002b/roteiro/sondas-xss.mjs`. No rebase
   da 003a, o bloco provisório sai e o teto vira 8.
-- **HIS-003a (etapa 6):** R1–R13 + R4b, R4c, R4d da história; rodar `scratchpad/seg-his003/prova-hidratacao.mjs`
-  contra o storage novo (se sumir: P1/P2 na história explicam o caso). Conferir que o ADR-004 passou para aceito.
-  A HIS-003 foi dividida: T5/T6 e `campos.spec.ts` estão na `HIS-003b-campos-com-limite.md` (revisar lá também).
+- **HIS-003a:** etapa 6 feita em `13cbd30` (aprovado com ressalvas, baixo). Falta: conferir no rebase o bloco
+  provisório saindo e o teto 8 da HIS-109 (D17 da 002b), o `\r` no `::notice` e o `erros.spec` (a7) provando T2/T3.
+  Roteiro do navegador: `scratchpad/seg-his003a/roteiro/r.cjs`. HIS-003b (T5/T6, `campos.spec.ts`) ainda por revisar.
 - **HIS-111:** etapa 6 feita em 2026-10-31 (aprovado com ressalvas, baixo). S1 fechada em `0cc072a` (conferida). Falta: no h8, rodar sem `--forcar` e trocar o
   gatilho `push` por `pull_request`. Na a3: leitor do `tarifas.json` com `Object.fromEntries`, limite de 500 (caso 501
   no P8) e `distribuidoras: [null]` sem lançar. Sondas em `scratchpad/seg-his111/` (`sondas.ts`, `rodar-ruim.mts`).
+- **HIS-112:** nota de 2026-11-12: frase do painel e textos Empresa e Conta pedem ajuste (ver história).
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

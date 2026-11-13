@@ -1,28 +1,13 @@
 "use client";
 
 import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import {
-  agregarAparelhos,
-  COMODOS_PADRAO,
-  ehLampada,
-  formatarKwh,
-  formatarReais,
-  ILUMINACAO_PADRAO,
-  itemDoCatalogo,
-  SUGESTOES_COMODO,
-  type Aparelho,
-  type Comodo as TipoComodoCasa,
-  type TipoComodo,
-} from "@ee/core";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { agregarAparelhos, COMODOS_PADRAO, formatarKwh, formatarReais, itemDoCatalogo, type Aparelho, type Comodo as TipoComodoCasa, type TipoComodo } from "@ee/core";
 import { useCasa, useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { useResumo } from "@/aplicacao/resumo";
-import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
-import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
 import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
 import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
-import type { ItemComodo } from "@/ui/aparelho/tipos";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
 import { Entrada } from "@/ui/Entrada";
@@ -30,6 +15,9 @@ import { Folha } from "@/ui/Folha";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
+import { useTelaLarga } from "@/ui/telaLarga";
+import { ComodosNoComputador } from "./ComodosNoComputador";
+import { ConteudoDoComodo } from "./ConteudoDoComodo";
 
 export function TelaComodos() {
   const { resumo, preco, comodos, aparelhos } = useResumo();
@@ -48,12 +36,24 @@ export function TelaComodos() {
     if (new URLSearchParams(window.location.search).get("visao") === "geral") setVisao("geral");
   }, []);
 
+  // No computador, um desenho por vez (lista + painel); no celular, a sanfona de sempre (HIS-112, L4).
+  const telaLarga = useTelaLarga();
+  const titulo = useRef<HTMLHeadingElement>(null);
+  const ultimoFoco = useRef<Element>(null);
+  // Ao cruzar os 1024 px (zoom) com o foco dentro do desenho que saiu, o foco cairia no body: leva ao h1. Só quando o
+  // elemento focado sumiu de fato, para nunca puxar o foco ao abrir a tela. Só lê o DOM e uma ref, sem copiar estado (HIS-109).
+  useEffect(() => {
+    if (document.activeElement === document.body && ultimoFoco.current?.isConnected === false) titulo.current?.focus();
+  }, [telaLarga]);
+
   const totalUnidades = aparelhos.reduce((s, a) => s + a.quantidade, 0);
 
   return (
-    <div>
-      <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Cômodos e aparelhos</h1>
-      <p className="mt-1 text-lg text-tinta-suave">
+    <div onFocus={(e) => (ultimoFoco.current = e.target)}>
+      <h1 ref={titulo} tabIndex={-1} className="text-[2rem] leading-tight font-extrabold tracking-tight">
+        Cômodos e aparelhos
+      </h1>
+      <p className="mt-1 text-lg text-tinta-suave lg:max-w-[68ch]">
         {comodos.length} cômodos, {totalUnidades} aparelhos e lâmpadas. Use o + e o − para mudar quantidades, e toque no tempo de uso para ajustar.
       </p>
       <div className="mt-5">
@@ -68,7 +68,19 @@ export function TelaComodos() {
         />
       </div>
 
-      {visao === "comodos" ? (
+      {visao === "comodos" && telaLarga ? (
+        <ComodosNoComputador
+          comodos={comodos}
+          aparelhos={aparelhos}
+          valores={resumo.comodos}
+          // A mesma soma do "Total" do painel geral: fecha com a lista de cômodos.
+          totalMes={resumo.aparelhos.reduce((s, a) => s + a.valorMes, 0)}
+          aoAdicionarAparelho={setSeletorPara}
+          aoDetalhes={setDetalhes}
+          aoEditar={setEditandoComodo}
+          aoNovoComodo={() => setNovoComodo(true)}
+        />
+      ) : visao === "comodos" ? (
         <>
           <div className="mt-6 space-y-4">
             {comodos.map((c, i) => (
@@ -133,10 +145,6 @@ function CartaoComodo({
   aoDetalhes: (a: Aparelho) => void;
   aoEditarNome: () => void;
 }) {
-  const { preco } = useResumo();
-  const atualizar = useCasa((s) => s.atualizarAparelho);
-  const remover = useCasa((s) => s.removerAparelho);
-  const adicionarDoCatalogo = useCasa((s) => s.adicionarDoCatalogo);
   const [aberto, setAberto] = useState(abertoInicial);
 
   useEffect(() => {
@@ -147,32 +155,8 @@ function CartaoComodo({
     }
   }, [comodo.id]);
 
-  const lampadas = aparelhos.filter(ehLampada);
-  const lampadaPrincipal = lampadas[0];
-  const outros = [...aparelhos.filter((a) => !ehLampada(a)), ...lampadas.slice(1)];
   const icone = COMODOS_PADRAO.find((c) => c.tipo === comodo.tipo)?.icone;
-  const sugestoes = SUGESTOES_COMODO[comodo.tipo].filter((s) => !aparelhos.some((a) => a.catalogoId === s.catalogoId));
   const unidades = aparelhos.reduce((s, a) => s + a.quantidade, 0);
-
-  const luzPadrao = ILUMINACAO_PADRAO[comodo.tipo];
-  const lampadaVirtual: ItemComodo = lampadaPrincipal ?? {
-    id: "nova",
-    catalogoId: "lampada-led",
-    nome: "Lâmpada de LED",
-    quantidade: 0,
-    potenciaW: itemDoCatalogo("lampada-led")!.potenciaW,
-    minutosPorDia: luzPadrao.minutosPorDia,
-    diasPorSemana: 7,
-  };
-
-  const mudarLampada = (p: Partial<ItemComodo>) => {
-    if (!lampadaPrincipal) {
-      if ((p.quantidade ?? 0) > 0) adicionarDoCatalogo("lampada-led", { comodoId: comodo.id, quantidade: p.quantidade, minutosPorDia: luzPadrao.minutosPorDia });
-      return;
-    }
-    if (p.quantidade === 0) remover(lampadaPrincipal.id);
-    else atualizar(lampadaPrincipal.id, p);
-  };
 
   return (
     <section id={`comodo-${comodo.id}`} aria-labelledby={`titulo-${comodo.id}`} className="surgir scroll-mt-28 overflow-hidden rounded-[var(--radius-cartao)] bg-papel" style={{ animationDelay: `${indice * 60}ms` }}>
@@ -199,48 +183,7 @@ function CartaoComodo({
       <div className="sanfona" data-aberta={aberto}>
         <div inert={!aberto}>
         <div className="border-t border-linha bg-fundo/60 p-3 sm:p-4">
-          <BlocoIluminacao lampada={lampadaVirtual} aoMudar={mudarLampada} preco={preco} />
-          <ul className="mt-3 space-y-2">
-            {outros.map((a) => (
-              <LinhaAparelho
-                key={a.id}
-                item={a}
-                preco={preco}
-                minimo={0}
-                aoAbrirDetalhes={() => aoDetalhes(a)}
-                aoMudar={(p) => {
-                  if (p.quantidade === 0) remover(a.id);
-                  else atualizar(a.id, p);
-                }}
-              />
-            ))}
-          </ul>
-          {outros.length === 0 && <p className="px-1 py-3 text-tinta-suave">Nenhum aparelho aqui ainda.</p>}
-
-          {sugestoes.length > 0 && (
-            <div className="mt-4">
-              <p className="mb-2 px-1 text-[0.95rem] font-bold text-tinta-suave">Também é comum ter aqui:</p>
-              <div className="flex flex-wrap gap-2">
-                {sugestoes.map((s) => {
-                  const item = itemDoCatalogo(s.catalogoId)!;
-                  return (
-                    <button
-                      key={s.catalogoId}
-                      type="button"
-                      onClick={() => adicionarDoCatalogo(s.catalogoId, { comodoId: comodo.id, ...(s.minutosPorDia ? { minutosPorDia: s.minutosPorDia } : {}) })}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-linha bg-papel px-3 font-bold hover:border-energia"
-                    >
-                      <Plus className="size-4 text-energia" aria-hidden />
-                      {item.nome}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          <button type="button" onClick={aoAdicionar} className="mt-3 inline-flex min-h-12 items-center gap-2 rounded-full px-2 font-bold text-energia hover:bg-energia-claro">
-            <Plus className="size-5" aria-hidden /> Outro aparelho
-          </button>
+          <ConteudoDoComodo comodo={comodo} aparelhos={aparelhos} aoAdicionar={aoAdicionar} aoDetalhes={aoDetalhes} />
         </div>
         </div>
       </div>
@@ -265,7 +208,7 @@ function PainelGeral() {
 
       {/* Em 390 px a tabela passa da tela e rola para o lado: a região entra no Tab para as setas rolarem (WCAG 2.1.1,
           texto da ux no D-A5-2). Sempre focável, também sem rolagem; o contorno é o :focus-visible padrão. */}
-      <div role="region" aria-label="Tabela com todos os aparelhos da casa" tabIndex={0} className="mt-6 overflow-x-auto rounded-[var(--radius-cartao)] bg-papel">
+      <div role="region" aria-label="Tabela com todos os aparelhos da casa" tabIndex={0} className="mt-6 overflow-x-auto rounded-[var(--radius-cartao)] bg-papel xl:overflow-x-visible">
         <table className="w-full min-w-[34rem] text-left">
           <caption className="sr-only">Todos os aparelhos da casa, juntando os iguais de todos os cômodos</caption>
           <thead className="border-b border-linha text-[0.9rem] text-tinta-suave">
@@ -317,7 +260,7 @@ function PainelGeral() {
           </tfoot>
         </table>
       </div>
-      <p className="mt-3 text-[0.95rem] text-tinta-suave">Uso médio é quanto tempo cada unidade fica ligada por dia, em média no mês. Geladeiras e freezers contam as 24 horas.</p>
+      <p className="mt-3 text-[0.95rem] text-tinta-suave lg:max-w-[68ch]">Uso médio é quanto tempo cada unidade fica ligada por dia, em média no mês. Geladeiras e freezers contam as 24 horas.</p>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { conferirFormato } from "./formato";
 import type { Montagem } from "./montar";
 
 /** Os arquivos ficam em apps/web/public/dados — o site serve como estáticos e o app baixa da mesma URL. */
@@ -17,8 +18,14 @@ function assinatura(m: Montagem): string {
 /**
  * Grava os arquivos. Se nada mudou desde a última vez, não grava nada (assim a rotina diária
  * só cria um commit quando a ANEEL publica algo novo).
+ * Antes de tudo, confere o formato com os leitores do site (HIS-003a): se o site recusaria algo, nada é gravado,
+ * mesmo com `--forcar` (que nem chega aqui como opção).
  */
 export async function escreverArquivos(m: Montagem, pasta = PASTA_SAIDA): Promise<{ escritos: string[]; mudou: boolean }> {
+  const problemas = conferirFormato(m);
+  if (problemas.length > 0) {
+    throw new Error(`Formato inválido; nada foi gravado (não passa com --forcar): ${problemas.join(" | ")}`);
+  }
   const nova = assinatura(m);
   const anterior = await readFile(join(pasta, "relatorio.json"), "utf8")
     .then((t) => (JSON.parse(t) as { assinatura?: string }).assinatura)

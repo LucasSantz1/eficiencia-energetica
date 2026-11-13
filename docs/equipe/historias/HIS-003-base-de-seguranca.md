@@ -6,7 +6,7 @@
 | Sprint | 0 |
 | Tamanho | M (≈ 3 dias com o qa: passos a1–a7 do D9) |
 | Papéis principais | seguranca, backend, frontend, tech-lead |
-| Status | Preparada (a2 espera a P-tl-1; a3 espera a P-tl-2; etapa 4 depois da 002a no `main`) |
+| Status | **Pronto** (2026-11-13), com ressalvas baixas: R-3a-1 (ADR-004, leitura futura da `casa-ilegivel`), R-3a-2 (`site.md` da documentação) e teto da HIS-109 em 7; ver a nota final do scrum-master |
 | Branch | `his-003-seguranca` (sai do `main` **depois** da integração da HIS-002a) |
 
 > **Origem:** dividida da HIS-003 pelo scrum-master em 2026-10-30, a partir da proposta D9 do tech-lead (P-tl-3). A
@@ -664,6 +664,56 @@ Ela começa depois da 003a no `main`.
 6. **Memória do navegador cheia.** O `setItem` não salva e não avisa. Vai para o backlog: "avisar quando não der para
    salvar".
 
+### D10. Decisões da etapa 4: peso, trava da gravação e ordem de integração (tech-lead, 2026-11-03)
+
+**Medição** (cópia do `5c5f171`, contra um build do `main` na mesma máquina; JS do HTML em gzip; detalhes em
+`scratchpad/tl-his003a-peso/`, que não é guardado):
+
+| Experimento | `/` | `/comecar` | `/casa` | `/casa/ajustes` | `/sobre` |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `5c5f171` como está | +8 249 | +11 590 | +11 699 | +11 828 | +2 141 |
+| sem o leitor dos arquivos no navegador (só medida) | −1 018 | −1 004 | −1 211 | −1 019 | 0 |
+| sem `app/error.tsx` (só o `global-error`) | −1 300 | −1 286 | −1 493 | −1 301 | −1 285 |
+| `/* @__PURE__ */` nos `CAMPOS_*` | −266 | −252 | −459 | −267 | 0 |
+| os dois cortes pedidos juntos | **+6 698** | **+10 053** | **+9 955** | **+10 276** | **+856** |
+
+O que sobra é o custo da própria história, quase todo no chunk do `@ee/core` + store (+4,8 kB: leitor da casa,
+limites, `leitura-segura`, armazenamento) e nos avisos T1 e T2. O `"sideEffects": false` no `@ee/core` não muda nada
+(medido). O leitor dos arquivos fica no navegador: tirar poupa só cerca de 1 kB e desfaz o ADR-004.
+
+**1. Peso: cortar 2 coisas e aceitar o resto, com teto.**
+
+- (a) **frontend:** tirar `app/error.tsx` e deixar só o `global-error.tsx`, que já usa a mesma `TelaDeErro`. Pela
+  documentação do Next 16 (`error.md`), o `global-error` é o limite de erro da raiz e pega também o erro de uma tela.
+  Isso poupa cerca de 1,3 kB em **toda** rota. Só vale se o `erros.spec.ts` (a7) provar o T3, o foco no `h1`, a 2ª falha
+  e o "Tentar de novo" com o erro numa tela. Se não provar, o `error.tsx` volta e o teto sobe 1,3 kB.
+- (b) **backend:** marcar os `listaCompleta()()` dos `CAMPOS_*` (casa e arquivos) com `/* @__PURE__ */`, com um
+  comentário do porquê: são só para o `typecheck` (R4c) e saem do bundle. Os testes do R4c continuam iguais.
+- (c) **Teto aceito:** até **+10,5 kB** por rota no 11a (e +1 kB na `/sobre`) contra a referência `06be352`. Acima
+  disso, falar comigo. O **qa** atualiza o `peso-js.json` no a7, num commit próprio medido no último commit de código,
+  com a tabela na nota. Em 3G (cerca de 50 kB/s) são cerca de 0,2 s a mais. Em troca, a casa da família não se perde e a
+  tela não fica branca.
+- (d) **Backlog:** carregar o `AvisoDaCasaSalva` e o `AvisoFalhaDeCarga` só quando aparecem (cerca de 1,5 kB) quando
+  existir a regra de `import()` dinâmico. Hoje a 002b o proíbe.
+
+**2. Trava da gravação: solta com "Apagar tudo" e com o cadastro novo confirmado.** Hoje o "Apagar tudo" com a trava
+ligada não apaga nada, porque só faz `set` e o `setItem` está travado. Os dados ilegíveis voltam na próxima visita e o T1c
+aparece de novo. Isso fura o "opção de apagar tudo" da LGPD. Decisão (frontend, com teste no `apps/web/test/`):
+
+- "Apagar tudo" chama `removeItem` da chave **e** solta a trava;
+- `criarCasa` (cadastro confirmado) solta a trava, mas antes guarda uma cópia do texto bruto em `eficiencia-energetica:casa-ilegivel`,
+  uma vez só e sem sobrescrever. É o que permite que uma versão corrigida leia a casa depois. Se a cópia falhar
+  (memória cheia), grava assim mesmo: o trabalho novo da pessoa vale mais que um texto que não conseguimos ler;
+- "Apagar tudo" também apaga a `eficiencia-energetica:casa-ilegivel`. O formato da casa não muda (é outra chave, sem `version`).
+
+`[para: seguranca]` confirmar: a cópia bruta fica só no aparelho, não é lida por nada e some com "Apagar tudo".
+
+**3. Ordem de integração.** A HIS-111 entra primeiro quando estiver pronta (prioridade 1, número errado no ar), já
+com o efeito reescrito sem comentário da HIS-109 (D17 da 002b). Depois entra a 002b. A **003a entra por último**: no
+rebase, ela lê o `substituidas` (nota do backend), roda o `pnpm lint --fix` num commit só de formatação e, num commit
+só, tira o bloco `provisorio/arquivos-em-outras-historias` e sobe o `TETO_HIS_109` para 8. Se a 002b ficar pronta antes
+da 111, a ordem é 002b, 111, 003a, e a 111 faz o próprio `--fix` no rebase.
+
 ## Ameaças
 
 _(seguranca, 2026-10-30)_ Ativo: a casa salva no aparelho (não tem dado pessoal, mas perder é perder o trabalho da
@@ -1014,6 +1064,12 @@ Sucessoras prováveis, porque o fim de uma vigência e o começo da outra caem e
 - `[para: ux-acessibilidade]` (não bloqueia; para o frontend saber o que fazer):
   - o T2b também entra no `TrocarCidade` dos ajustes, com a frase "Sua casa continua salva.";
   - o T1b leva para `/casa/ajustes`, que passa a abrir sem cidade (D5).
+- [x] `[para: tech-lead]` **P-qa-3a-1** (não bloqueia o a7). O D10 1c aceita até +10,5 kB no 11a; o 11b (total com
+  prefetch) subiu +11 431 B em `/` e `/comecar`, +13 252 B em `/casa*`, +11 952 B em `/casa` com casa e +6 819 B em
+  `/sobre`. Já está no `peso-js.json` novo. Confirmar que o aceite vale também para o 11b.
+  — **Resposta (tech-lead, 2026-11-03):** aceito. Teto do 11b nesta história: **+13,5 kB** por rota e +7 kB na `/sobre`,
+  contra a referência `06be352`. O 11b soma de novo o mesmo chunk do core e os chunks das rotas dos `<Link>`, e o
+  prefetch roda depois que a página abriu (critério da HIS-001). Não há corte novo: o que sobra é o D10d (backlog).
 
 ## Conversa da equipe
 
@@ -1240,3 +1296,103 @@ aceito, com R4c e R4d nas consequências.
 - **Proposta:** D1 a D7, com a barreira V1 a V6, em `HIS-111-tarifas-vencidas.md`.
 - **Não muda a HIS-003a.** A HIS-111 começa depois do a3, porque mexe nos mesmos `tarifas.ts` e `validar`.
 - **Para o próximo:** dominio-energia confirma as sucessões. Ver as perguntas na HIS-111.
+
+### [backend] 2026-11-03 — etapa 4: a1, a2, a3 e a6 prontos (4 commits, sem push)
+- **O que fiz:** a1 `limites.ts`, `entrada.ts`, `estados.ts`, regra de 1.800 kWh/dia; a2 `casa-salva.ts`, `leitura-segura.ts`, `DadosCasa` no core; a3 `arquivos-publicos.ts`, `conferirFormato` dentro do `escreverArquivos` (sem `--forcar`), corte da `tarifas.ts` com `LIMITES.tarifaKwh`, alerta de bandeira > 0,15 no `validar`; a6 audit no CI, `dependabot.yml`, rotina em dois jobs (SHA reconferidos hoje), `.env.example`.
+- **Decisões:** (1) na casa salva, medidas (potência, minutos, leitura, kWh e R$ da conta) conferem só o limite físico, sem `inteiro`/`casas`, porque as telas antigas salvavam "12340,5" e "135,905" (risco 1); quantidade, banho e pessoas seguem inteiros. (2) `lerCasaSalva` não tem `try/catch`: um bug viraria "ilegível" e o `onRehydrate` regravaria a casa vazia; quem pega é o `merge` do D3, sem regravar. (3) O job `publicar` só roda no `main` e sai sem commit se o `main` já tiver os dados.
+- **Como verifiquei:** `pnpm typecheck`, `pnpm test` (core 197, dados 17) e `pnpm build`; R4c com mutação (tirar `kwhMesInformado` do leitor reprova 25 testes); 2 × 1.000 valores com semente fixa, nenhum lança; publicados e `dados:exemplo` com 0 descartes.
+- **Rebase com a HIS-111:** só os imports da `tarifas.ts` conflitam. O `typecheck` vai exigir ler `substituidas` (P8 da 111) no `lerArquivoTarifas`; faço no rebase.
+- **Para o próximo:** frontend no a4/a5 (`lerCasaSalva`, `avisoDaCasaSalva`, `lerArquivoTarifas`/`Municipios`, `ehUf`, `lerNumeroDigitado`). `[para: seguranca]` conferir R4c, R4d, R10, R11 e a decisão (1).
+
+### [seguranca] 2026-11-03 — decisões (1) e (2) da etapa 4: aceito, com 2 pedidos para o a4
+- **Aceito (1), medidas só com limite físico.** `NaN`/`Infinity` e `1e308` caem em `validarFaixa` (finito + `max`); `JSON.parse` nem produz `NaN`. Nenhuma faixa perde teto, então não há conta gigante nova; `1e-300` passa só em kWh/R$ de conta (mín. 0) e é inofensivo. Sobra o teto somado (500 aparelhos × 75 kW): a tela deve mostrar "Confere?" e nunca estourar o layout.
+- **Aceito (2) só se o `merge` do D3 existir como descrito.** Hoje ele não existe (vem no a4); `lerCasaSalva` em si não lança com valor de `JSON.parse` (`ehObjeto`, `Object.hasOwn`, listas limitadas).
+- **Pedido 1 (médio):** se o `merge` pegar um erro e devolver casa vazia, a próxima ação do store regrava a casa vazia por cima da salva. Ao pegar, o `merge` deve travar a gravação (ou guardar cópia da chave bruta) e mostrar o aviso "nada aproveitável". Teste: `lerCasaSalva` forçado a lançar, `merge` sem exceção, `setItem` não chamado.
+- **Pedido 2 (teste a mais, core):** em `casa-salva.test.ts`, "12340,5" e "135,905" mantidos; `1e308`, `-1`, `1e400` (vira `Infinity` só em memória) e `"12"` como texto saem; quantidade/banho/pessoas `2.5` saem.
+
+### [frontend] 2026-11-03 — etapa 4: a4 e a5 prontos (2 commits, sem push)
+- **O que fiz:** a4 `9be1f4c`: armazenamento que nunca lança, `merge` com `lerCasaSalva`, regravação limpa, ações pelos leitores, `useAvisoDaCasaSalva`; `/dados` pelos leitores, `falhasSeguidas`/`semInternet`, `no-cache`, `ehUf`, servidor sem `catch`. a5 `017281f`: T1 em 3 lugares, T1b, T2 em 3 lugares, T3/T4, `focarTitulo`, `rel` nos links, D6.
+- **Pedido 1 da seguranca:** se o leitor lançar, o `merge` trava a gravação (o `setItem` não grava até a página ser aberta de novo) e mostra o T1c. Está testado com vitest no site (`apps/web/test/`, vitest 5.0.5 que já estava no lockfile; entra só a linha do importer). Efeito colateral: enquanto a gravação estiver travada, nem um cadastro novo é salvo.
+- **Desvios:** as telas de erro e a 404 entram em toda rota. Por isso "Voltar ao início" no `error.tsx` é `<a>`, a 404 usa `Link` com as classes do botão e o ícone é um SVG próprio, o que tirou cerca de 8 kB. Sem cidade, as outras abas mostram o texto do T1b com "Escolher minha cidade" em vez de "Vamos cadastrar", que mandaria ao `/comecar`. `useCasaCarregada` ganhou o 8º comentário da HIS-109; ao integrar a 002b, o bloco provisório sai.
+- **`[para: tech-lead]` Peso acima do D8:** +8,2 a +11,8 kB por rota no 11a. O a4 soma +4,8 kB (leitores do core); o a5 soma +2,6 kB das 2 telas de erro, +1,5 kB do framework e o resto dos avisos. O `peso-js.spec` falha até a referência mudar; decidir antes do a7.
+- **Como verifiquei:** typecheck, test (core 207, web 10, dados 17) e build verdes, todas as rotas continuam estáticas. e2e numa cópia (3351): 106 ✓, só o peso ✗. Roteiro avulso em 390 e 1280 px (porta 3353): T1a, T1b, T1c, T2, T2c, T3 (com a 2ª falha) e T4 com foco certo, nenhum pedido com `../x`, os 7 cabeçalhos e nenhum erro de console além dos provocados.
+- **Para o próximo:** **tech-lead**: peso. **qa**: a7 (para o T3, fazer o `format` lançar pelo descritor, `get.call(this)`). **seguranca**: R1–R13.
+
+### [tech-lead] 2026-11-03 — pergunta do peso, trava da gravação e ordem de integração decididas (D10)
+1. **Peso:** dois cortes medidos, **frontend** tira o `app/error.tsx` (−1,3 kB em toda rota, se o `erros.spec` provar o T3) e **backend** põe `/* @__PURE__ */` nos `CAMPOS_*` (−0,3 kB). O resto fica aceito até +10,5 kB por rota, e o **qa** atualiza o `peso-js.json` no a7.
+2. **Trava:** "Apagar tudo" hoje não apaga com a trava ligada (fura a LGPD). Ela solta com "Apagar tudo" (`removeItem`) e com o `criarCasa`, que antes guarda uma cópia bruta, uma vez só. `[para: seguranca]` confirmar.
+3. **Ordem:** HIS-111 → 002b → **003a por último**. No rebase, a 003a tira o bloco provisório e sobe o teto da HIS-109 para 8 num commit só.
+4. Como verifiquei: builds da `5c5f171` e do `main` em cópias, com 4 experimentos medidos (tabela no D10).
+5. Próximo: frontend (1 e 2) ‖ backend (1b) → seguranca (item 2 e R1–R13) → qa (a7).
+
+### [frontend] 2026-11-03 — D10 feito (3 commits, sem push)
+- `3f60fe4`: tirei o `app/error.tsx`. Numa execução avulsa em 390/1280 com o erro em `/casa`, o `global-error` mostra o T3 com foco no `h1`, a 2ª falha e a tela de volta depois do retry; o `erros.spec` (a7) ainda precisa provar o mesmo. `040ddd4`: `/* @__PURE__ */` nos `CAMPOS_*`, −249 B por rota.
+- `1b235d5`: "Apagar tudo" tira a chave e a `casa-ilegivel` e solta a trava; o cadastro novo copia o texto bruto uma vez só, sem sobrescrever (se não couber, grava assim mesmo), e solta a trava. São 5 testes novos em `apps/web/test/` (web 15 ✓), com mutação conferida.
+- **Peso no 11a, contra `06be352`:** de +6 819 a +10 382 B por rota (máximo em `/casa/ajustes`); `/sobre` +856 B, dentro do teto. e2e numa cópia (3355): 106 ✓ e só o peso ✗ até o qa atualizar o `peso-js.json` no a7. typecheck, test e build verdes.
+- **Para o próximo:** **qa** (a7), **seguranca** (confirmar a cópia bruta, D10 2).
+
+### [seguranca] 2026-11-03 — etapa 6 (R1–R13 e D10 2): aprovado com ressalvas (baixo)
+1. **D10 2 confirmado.** A `casa-ilegivel` fica só no aparelho: o único `fetch` é `/dados` da mesma origem, a CSP tem `connect-src 'self'`, e o roteiro em 390/1280 px fez 0 pedidos para fora. Nada lê a chave (só `copiarTextoUmaVez` e `removeItem`). Ela some com "Apagar tudo": no navegador o localStorage ficou vazio. Não cresce: é uma chave só, gravada só se não existir, do tamanho do original no máximo, e nasce só quando o leitor lança (bug). JSON quebrado comum não cria cópia.
+2. **R1–R13 ok** numa cópia de `13cbd30` (typecheck; test com core 207, web 15 e dados 17; build). R1: os 7 cabeçalhos exatos em `/`, `/casa`, `/sobre`, json, chunk e 404. R3: tudo estático, sem `proxy.ts`. R5: sem `as`. R7: nenhum `fetch` de `../x`. R10: SHA e `permissions` por job. R11: audit high limpo; no lockfile só a linha do importer do vitest 5.0.5, que já estava lá. R12: os 4 com `rel`. R13: sem segredo.
+3. **Telas de erro:** o texto é fixo, sem `error`/`digest` e sem HTML cru (0 `dangerouslySetInnerHTML`/`innerHTML`/`eval` em `src`). Nas 24 combinações de rota × casa (quebrada, `uf` `../x`, válida) não houve tela branca nem texto técnico, e a CSP não registrou nenhuma violação. O T2/T3 completo (R6/R8) ainda depende do `erros.spec` do a7 (qa).
+4. **Ressalva baixa, para o backend no rebase:** `atualizar-dados.yml` l. 61 escapa `%` e `\n`, mas não `\r`. Acrescentar `s/\r/%0D/g` (pré-existente).
+5. **Ressalva baixa, para o tech-lead (ADR-004):** quem um dia ler a `casa-ilegivel` passa pelo `lerCasaSalva` e apaga a chave depois de recuperar a casa.
+
+### [qa] 2026-11-03 — a7 feito: aprovado, com 3 defeitos baixos (não bloqueiam)
+1. **Testes:** `cabecalhos` (R1), `casa-salva` (R4 a–g, R7, trava do D10 2; (h) `fixme` HIS-111), `dados-publicos` (R6, T2a/b/c, 2ª falha, foco), `erros` (T3 só com o `global-error`: foco no `h1`, 2ª falha, retry volta à tela; T4), 7 telas novas no axe, `errosEsperados` + N9 e N10 (CSP). e2e numa cópia: 178 ✓, 8 pendentes, 0 ✗ (novos com `--repeat-each=3`: 156 ✓); typecheck, test e build verdes.
+2. **D10 1a provado:** o `error.tsx` pode ficar fora. À mão, com `throw` no layout raiz (só na cópia): T3 completo em 390/1280. Trava: 3 mutações plantadas morrem.
+3. **Peso:** `peso-js.json` regravado com `decisao` (D10 1c); 11a de +856 a +10 382 B, tabela no `diario.md` do qa. `[para: tech-lead]` o 11b sobe até +13 252 B (`/casa*`) e o D10 só fala do 11a: confirmar.
+4. **D-3a-1 (baixa, frontend/ux):** no T1b, `/casa/ajustes` não oferece "Apagar todos os meus dados" (LGPD): só depois de escolher a cidade. No estado da trava, só depois de um cadastro.
+5. **D-3a-2 (baixa, ux):** no T1b em `/casa/ajustes`, o aviso tem o link "Escolher minha cidade" para a própria página (não faz nada) e, abaixo, um botão com o mesmo nome que abre a folha.
+6. **D-3a-3 (baixa, frontend):** "Tiramos 9500 aparelhos" sem ponto de milhar; e com zoom de 200% o texto do `<a>` "Voltar ao início" do T3 fica à esquerda (falta `text-center`).
+7. **Evidências** (fora do git): `scratchpad/qa-his003a/` (`e2e-completo.txt`, `capturas/`). **Próximo:** tech-lead (11b) ‖ fechamento.
+
+### [tech-lead] 2026-11-03 — P-qa-3a-1 respondida: 11b aceito com teto de +13,5 kB por rota (+7 kB na `/sobre`)
+- O 11b repete o chunk do core e soma as rotas do prefetch, que roda depois da abertura. Os cortes do D10 já valem para os dois números. O `peso-js.json` do `8e486fb` fica como está.
+- Acima desse teto, falar comigo. Próximo: o qa segue o a7.
+
+### [frontend] 2026-11-03 — D-3a-1 a D-3a-3 corrigidos (1 commit, sem push)
+- D-3a-1: a Minha casa abre sem cidade sempre que houver dado guardado (também a casa travada e a `casa-ilegivel`) e mostra "Seus dados". D-3a-2: na Minha casa, o aviso T1b fica sem o link para a própria página. D-3a-3: `formatarQuantidade` no core ("9.500") e `text-center` nos botões.
+- e2e para cada um (`casa-salva`, `erros`), mais testes de unidade; e2e numa cópia (3356): 187 ✓, e o fluxo principal falhou uma vez no "terminar o cadastro" (instabilidade conhecida, passou 4 vezes em seguida). Peso dentro da referência.
+
+### [tech-lead] 2026-11-03 — code review final (etapa 7): aprovado
+1. **Aprovado** (`0cef6c1..ab0838a`). Camadas certas (`aplicacao/` é a única porta, a `ui/` só chama funções puras do core). Nenhum `as` nem `any` no código novo. A fronteira segue o ADR-004: `lerX(unknown)` no core, o navegador descarta, o servidor lança, a rotina recusa e nada é corrigido. A trava e o "Apagar tudo" seguem o D10.
+2. Como verifiquei: numa cópia, typecheck (80 arquivos), test (core 209, web 16, dados 17), build e `pnpm audit` limpos. Rodei peso, casa-salva, erros, dados-publicos e cabeçalhos: 71 passam e 2 ficam pulados. Peso dentro do D10 e da P-qa-3a-1 (11a até +10 382 B, 11b até +13 252 B).
+3. Ajuste pequeno, que não bloqueia: em `casa-salva.ts` e `arquivos-publicos.ts`, o `//` do `@__PURE__` separa o JSDoc do `CAMPOS_*`. Juntar os dois num JSDoc só, no rebase.
+4. **No rebase** (D10, item 3): `pnpm lint --fix` num commit só de formatação; depois, num commit só, tirar o bloco provisório da 002b e subir o `TETO_HIS_109` para 8. Confiro isso antes do merge.
+5. Próximo: documentacao e scrum-master (fechamento), na ordem HIS-111 → 002b → 003a.
+
+
+### [qa] 2026-11-03 — D-3a-1, D-3a-2 e D-3a-3 conferidos: aprovado
+1. Cópia de `ab0838a`: typecheck, test (core 209, web 16, dados 17) e build verdes; `casa-salva`, `erros`, `peso-js`, `ajustes`, axe, `migracao`, `rotas`, `teclado` e `fluxo-principal` com 131 ✓ e 0 ✗ (6 pendentes já conhecidos).
+2. "Apagar tudo" aparece sem cidade, com a trava e só com a cópia ilegível, e tira as duas chaves; o aviso T1b não tem mais o link na própria Minha casa; aparece "9.500" e os botões do T3 ficam centralizados com zoom de 200%. Os testes novos afirmam cada correção. Peso contra a referência nova: +3 a +210 B (11a), dentro do limite.
+
+### [frontend] 2026-11-12 — main integrado (merge `4cc37bc`) e D10 3 fechado; peso acima do teto
+- Merge do `deed1f7`, resolvido à mão: D17-a e `useDistribuidoraAtualizada` ficam junto com o T1; `acharDistribuidora` entra no `useResumo`; o lockfile é o do main mais a linha do vitest. O `lerArquivoTarifas` agora lê `substituidas` (P8/V8, com o caso de 501 entradas). `ac4fee4` tira o bloco provisório e roda o `lint --fix`. O `<a>` do `global-error` virou exceção na configuração. O caso (h) deixou de ser `fixme`.
+- **`TETO_HIS_109` ficou em 7, não em 8:** o `navegador.ts` perdeu o seu comentário e o `casa.ts` ganhou o dele. Com 8, sobraria vaga para um efeito novo entrar sem ser visto (D17). Mudar para 8 é uma linha.
+- `40ba7e1`: o e2e da troca agora olha a 2ª região de status. Com o V8 no site, `substituidas` em laço sai inteiro, e um `substituidas` que não é objeto mostra o T2.
+- **`[para: tech-lead]` Peso (`9abcd0a`, `peso-js.json`):** contra o 06be352, o 11a sobe até +12 018 B e o 11b até +14 714 B. Só a 003a sobre o main novo: +10 993 B e +13 880 B, cerca de 0,5 kB e 0,4 kB acima do teto. É preciso decidir antes do merge.
+- **Barreira:** lint, typecheck, test (core 236, web 16, dados 98, camadas 152) e build verdes. O e2e numa cópia (3357) deu 188 ✓; as falhas da troca já estão corrigidas (20 ✓ ao repetir, teclado incluído). Só o peso depende da referência nova.
+
+### [tech-lead] 2026-11-13 — peso depois da integração aceito; teto da HIS-109 em 7 confirmado
+1. **Peso aceito, sem corte.** Conta só o que é da 003a sobre o `main` novo (a 111 e a 002b já foram aceitas nas suas histórias). O teto passa a ser +11 264 B no 11a e +14 336 B no 11b, e hoje está em +10 993 e +13 880 B. A sobra sobre o D10 vem do D-3a-1 (LGPD: "Apagar tudo" sempre à mão) e da leitura do `substituidas`, os dois necessários. O frontend troca o "Aguarda decisão" do campo `decisao` do `peso-js.json` por "aceito pelo tech-lead em 2026-11-13".
+2. **`TETO_HIS_109` = 7 confirmado.** É o número de hoje: o efeito de `navegador.ts` saiu, e o de `casa.ts` entrou. O bloco provisório já saiu. O teto só desce (D17).
+3. **Atenção:** o `git merge origin/main` (h8 da 111, PR #9) dá conflito em `.github/workflows/atualizar-dados.yml` e nos diários e contexto do backend e do qa. Não resolvi. Fica com o backend (o workflow) antes do merge da 003a.
+
+### [backend] 2026-11-13 — main com o h8 da 111 junto na 003a (`7ee7448`)
+- **Conflitos à mão:** no `atualizar-dados.yml` ficam os dois jobs da a6 (o `gerar` sem credencial). Do main entram o fim do `--forcar` (sem a entrada e sem o `FORCAR`) e o escape `%`→`\r`→`\n` sobre o log em `$RUNNER_TEMP`, ou seja, o `\r` está conferido. Nos diários entram os dois lados; no contexto do qa sai a pendência do h8, já aprovado.
+- **Item 7 do h8:** já estava feito na integração anterior (`4cc37bc`). O teste confere que 500 entradas passam, 501 dão `ErroDeFormato` e `distribuidoras: [null]` não lança: a entrada sai e conta.
+- **`peso-js.json`:** o campo `decisao` traz a decisão do tech-lead (`24480da`).
+- **Verifiquei:** lint, typecheck, test (core 239, web 16, dados 104, camadas 152), build e o e2e inteiro numa cópia, na porta 3311: 204 passam e 6 ficam pulados, o `peso-js` incluído.
+
+### [documentacao] 2026-11-13 — documentação da HIS-003a pronta
+- Mudaram: `privacidade-e-seguranca.md` (trava, `casa-ilegivel`, "Apagar tudo", telas de erro), `guia-de-uso.md` (T1 a T4), `dados.md` (conferência de formato, jobs `gerar`/`publicar`), `arquitetura.md` (leitores do ADR-004, bloco provisório fora), `desenvolvimento.md` e `CHANGELOG.md`. Índice de ADRs sem mudança (ADR-004 já listado).
+- Conferi no código: cabeçalhos, `apagarTudo`, textos T1–T4, workflow, `formato.ts`, contagens (camadas 85 arquivos e 152 testes; e2e 210).
+- Pendente: `site.md` (pasta `ui/` nova e validação de fronteira) fica para a próxima rodada.
+- `[para: scrum-master]` a história está pronta para conferência da Definição de Pronto.
+
+### [scrum-master] 2026-11-13 — Definição de Pronto conferida: **Pronto**, com ressalvas baixas
+1. **Critérios 1–7:** cobertos pelo e2e (204 ✓, 6 pulados) em `main` integrado (`7ee7448`); barreira (lint, typecheck, test, build) verde; capturas 390/1280 px e axe feitos pelo qa.
+2. **Revisões:** qa (a7 e D-3a-1 a D-3a-3, conferidos), seguranca (R1–R13 e D10 2, baixo), tech-lead (code review, D10, peso `24480da`), documentação (`41bad99`, `fe4bb81`). Compatibilidade: formato salvo e `version` inalterados.
+3. **Ressalvas:** (a) `\r` no escape do workflow: feita (`7ee7448`); (b) @__PURE__/JSDoc: feita; (c) **R-3a-1**, quem um dia ler a `casa-ilegivel` passa pelo `lerCasaSalva` e apaga a chave depois de recuperar: nota no ADR-004 / HIS-114; (d) **R-3a-2**: `site.md` fica sem a pasta `ui/` e a validação de fronteira; (e) `TETO_HIS_109` ficou em 7, não 8 (decisão do tech-lead).
+4. **Backlog:** HIS-114 (aviso de memória cheia, risco 6) e HIS-115 (recuperar a `casa-ilegivel`, R-3a-1) em `planejamento.md`. Próximo: quem orquestra faz o merge da PR #10; depois, 003b.

@@ -12,7 +12,8 @@ const COMODOS = [
   { id: "lavanderia", nome: "Lavanderia", icones: ["washing-machine"], valor: 5.23, parte: 0.05, maior: "a máquina de lavar", classe: "col-span-2" },
 ];
 
-const corDaParte = (p: number) => (p >= 0.25 ? "bg-faixa-e text-white" : p >= 0.15 ? "bg-faixa-d text-white" : p >= 0.08 ? "bg-faixa-c text-tinta" : "bg-faixa-a text-white");
+// O texto de cada faixa segue a regra de contraste de ui/Etiqueta.tsx (A e E com branco; B, C e D com tinta, HIS-110).
+const corDaParte = (p: number) => (p >= 0.25 ? "bg-faixa-e text-white" : p >= 0.15 ? "bg-faixa-d text-tinta" : p >= 0.08 ? "bg-faixa-c text-tinta" : "bg-faixa-a text-white");
 const reais = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 /**

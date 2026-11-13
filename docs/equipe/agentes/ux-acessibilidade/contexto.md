@@ -47,8 +47,14 @@
   - Sem preço (`indisponivel`), a tela nunca mostra R$ 0,00. Mostra "Falta o preço da luz" e leva para a conta de luz.
     Nada de "tarifa vencida", "vigência" ou "ANEEL" na tela.
 
+- Layout de computador (HIS-112, desenho pronto): corte em `lg` (1024 px), container 75rem; celular intocado; ordem do
+  código = ordem do celular (grid-areas só mudam o lugar); cômodos: lista + painel, um desenho por vez via media query;
+  `sticky` só se couber na janela; painel "Por que perguntamos" só no computador, nunca com instrução obrigatória.
+
 ## Pendências
 
+- HIS-112: o dono ver as maquetes (`scratchpad/maquete-computador/casa.html` e `comodos.html`); revisar capturas
+  depois do frontend; conferir com o frontend os passos do `Cadastro` x tabela de textos do painel.
 - HIS-111: respostas do tech-lead (nome do id antigo, `{ de, para }` durante a visita, `Aviso` sem `role` próprio) e
   do dominio-energia (nomes de EDEVP, CNEE, EEB, CFLO, CERR). Revisar as capturas do h7. R$ 0,00 nos cômodos sem preço
   e o caminho "A minha não está aqui" no cadastro: com o scrum-master.

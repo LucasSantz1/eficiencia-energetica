@@ -127,7 +127,11 @@ const idSalvo = async (pagina: Page) => {
   const residencia = (await casaSalva(pagina))?.state.residencia;
   return typeof residencia === "object" && residencia !== null && "distribuidoraId" in residencia ? residencia.distribuidoraId : undefined;
 };
-const regiaoStatus = (pagina: Page) => pagina.locator("main > [role=status]");
+/**
+ * A região do aviso da troca. Desde a HIS-003a o `main` da Casca tem duas regiões `role="status"` sempre presentes:
+ * a primeira é a do aviso da casa salva (T1), a segunda é esta.
+ */
+const regiaoStatus = (pagina: Page) => pagina.locator("main > [role=status]").last();
 
 test.describe("troca de distribuidora (HIS-111, critério 8)", () => {
   test("rge-sul sem conta de luz: preço da RGE desde a primeira tela, uma gravação, aviso até \"Entendi\"", async ({ page, context }, info) => {
@@ -237,21 +241,34 @@ test.describe("troca de distribuidora (HIS-111, critério 8)", () => {
   test("substituidas malformado ou em laço não quebra a tela nem regrava sem parar (R5, R6)", async ({ page, context }) => {
     await semearCasa(context, CASA_RGE_SUL);
     await vigiarCasaETela(context);
-    // rge-sul → rge e rge → rge-sul: a troca acontece uma vez (rge está publicada), e a volta não (rge-sul não está).
+    // rge-sul → rge com rge → rge-sul: desde o leitor da HIS-003a (a3, V8 no site), entrada cujo valor também é chave
+    // sai, assim como chave que é id publicado. O laço inteiro sai: nada é trocado nem regravado, e a tela abre.
     await servirDados(context, { ...TARIFAS_NOVAS, substituidas: { "rge-sul": "rge", rge: "rge-sul", constructor: "rge" } });
     await page.goto("/casa");
-    await expect.poll(() => idSalvo(page)).toBe("rge");
+    await expect(page.getByText("Sua conta estimada por mês")).toBeVisible();
     await page.waitForTimeout(500);
-    expect(await gravacoes(page), "uma gravação, sem laço").toHaveLength(1);
+    expect(await idSalvo(page), "laço não troca").toBe("rge-sul");
+    expect(await gravacoes(page), "sem laço de gravação").toHaveLength(0);
+    await expect(regiaoStatus(page)).toHaveText("");
 
-    for (const malformado of [null, [], 1, { "rge-sul": 2 }]) {
+    const recomecar = async (substituidas: unknown) => {
       await context.unroute("**/dados/tarifas.json");
-      await servirDados(context, { ...TARIFAS_NOVAS, substituidas: malformado });
+      await servirDados(context, { ...TARIFAS_NOVAS, substituidas });
       await page.evaluate((chave) => localStorage.removeItem(chave), CHAVE_CASA);
       await page.evaluate(({ chave, valor }) => localStorage.setItem(chave, valor), { chave: CHAVE_CASA, valor: JSON.stringify(CASA_RGE_SUL) });
       await page.reload();
-      await expect(page.getByText("Sua conta estimada por mês"), `substituidas = ${JSON.stringify(malformado)}`).toBeVisible();
-      await page.waitForTimeout(300);
+    };
+    // Entrada fora do formato: só ela sai; a tela abre e nada é trocado.
+    await recomecar({ "rge-sul": 2 });
+    await expect(page.getByText("Sua conta estimada por mês")).toBeVisible();
+    await page.waitForTimeout(300);
+    expect(await idSalvo(page)).toBe("rge-sul");
+    await expect(regiaoStatus(page)).toHaveText("");
+    // `substituidas` que não é objeto: o arquivo inteiro está fora do formato (contrato P8 da a3). A tela mostra o T2
+    // com "Tentar de novo", sem tela branca e sem trocar nada.
+    for (const malformado of [null, [], 1]) {
+      await recomecar(malformado);
+      await expect(page.getByText("Não conseguimos carregar os preços da luz."), `substituidas = ${JSON.stringify(malformado)}`).toBeVisible();
       expect(await idSalvo(page), `substituidas = ${JSON.stringify(malformado)} não troca`).toBe("rge-sul");
       await expect(regiaoStatus(page)).toHaveText("");
     }

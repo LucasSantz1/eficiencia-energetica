@@ -1,10 +1,12 @@
 /*
  * Entradas diretas na tela de cômodos (P-qa-3; cobertura 20, 21 e 23 do plano do qa), em 390 e 1280 px:
  * o link de cada cômodo no acompanhamento (`#comodo-<id>`) abre aquele cômodo expandido e na tela, pelo link e
- * direto pelo endereço; `?visao=geral` abre no "Painel geral".
+ * direto pelo endereço; `?visao=geral` abre no "Painel geral". A partir de 1024 px (HIS-112, L4) "aberto" é o painel
+ * à direita com o cômodo marcado na lista; `esperarComodoAberto` confere o desenho certo para a largura (q1).
  */
 import type { Page } from "@playwright/test";
 import { lerFixture, semearCasa } from "./apoio/casa";
+import { esperarComodoAberto } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 
 const casa = lerFixture("casa-v2.json");
@@ -13,16 +15,11 @@ const alvo = casa.state.comodos.find((c) => c.nome === "Quarto 2");
 if (!alvo) throw new Error("a fixture casa-v2.json precisa ter o cômodo Quarto 2");
 const ancora = `comodo-${alvo.id}`;
 
-async function esperarComodoAbertoNaTela(pagina: Page): Promise<void> {
-  const secao = pagina.locator(`section[id="${ancora}"]`);
-  await expect(secao).toBeVisible();
-  await expect(secao.locator("button[aria-expanded]").first()).toHaveAttribute("aria-expanded", "true");
-  await expect(secao).toBeInViewport();
-}
+const esperarComodoAbertoNaTela = (pagina: Page) => esperarComodoAberto(pagina, alvo.nome);
 
 /** Distância do topo da seção ao topo da janela, em px. */
 const topoDaSecao = (pagina: Page) =>
-  pagina.locator(`section[id="${ancora}"]`).evaluate((s) => Math.round(s.getBoundingClientRect().top));
+  pagina.getByRole("region", { name: alvo.nome, exact: true }).evaluate((s) => Math.round(s.getBoundingClientRect().top));
 
 test.beforeEach(async ({ context }) => {
   await semearCasa(context, casa);

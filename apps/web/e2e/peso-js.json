@@ -1,36 +1,37 @@
 {
-  "medidoNoCommit": "6e2f6da",
+  "medidoNoCommit": "daef13f",
+  "decisao": "HIS-112, L8 (tech-lead, 2026-11-12; revisto em c9e9fbd, 2026-11-13): contra a referência da 003a, 11a até +2 048 B na /casa/comodos (medido +1 998) e +1 024 B nas outras rotas (medido até +694 no /comecar); 11b até +4 096 B (medido até +3 143). Medido com o código do daef13f.",
   "rotas": {
     "/": {
-      "jsDoHtml": 164734,
-      "totalComPrefetch": 184856
+      "jsDoHtml": 172199,
+      "totalComPrefetch": 197627
     },
     "/comecar": {
-      "jsDoHtml": 173027,
-      "totalComPrefetch": 184856
+      "jsDoHtml": 184493,
+      "totalComPrefetch": 197627
     },
     "/casa": {
-      "jsDoHtml": 176004,
-      "totalComPrefetch": 233316
+      "jsDoHtml": 187057,
+      "totalComPrefetch": 250339
     },
     "/casa/comodos": {
-      "jsDoHtml": 173981,
-      "totalComPrefetch": 233316
+      "jsDoHtml": 186393,
+      "totalComPrefetch": 250339
     },
     "/casa/dicas": {
-      "jsDoHtml": 167073,
-      "totalComPrefetch": 233316
+      "jsDoHtml": 177736,
+      "totalComPrefetch": 250339
     },
     "/casa/ajustes": {
-      "jsDoHtml": 164988,
-      "totalComPrefetch": 233316
+      "jsDoHtml": 176146,
+      "totalComPrefetch": 250339
     },
     "/sobre": {
-      "jsDoHtml": 139546,
-      "totalComPrefetch": 168801
+      "jsDoHtml": 140398,
+      "totalComPrefetch": 176266
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 213194
+      "totalComPrefetch": 228219
     }
   }
 }

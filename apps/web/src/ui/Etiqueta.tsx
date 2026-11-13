@@ -11,7 +11,14 @@ export function faixaDoPeso(participacao: number): Faixa {
   return "a";
 }
 
-const COR: Record<Faixa, string> = {
+/*
+ * Texto sobre a cor de uma faixa (HIS-110, medido pela ux contra o mínimo de 4,5:1 do WCAG 1.4.3):
+ *   A e E com branco (4,72:1 e 5,21:1; com tinta dariam 3,32 e 3,01);
+ *   B, C e D com tinta (5,80, 8,45 e 5,50:1; com branco dariam 2,70, 1,85 e 2,85).
+ * Hoje só a pílula da casa ilustrada (`corDaParte`, em inicio/CasaIlustrada.tsx) põe texto sobre faixa.
+ */
+// Classe de fundo de cada faixa (exportada para as barras de cômodo usarem as mesmas cores).
+export const COR_FAIXA: Record<Faixa, string> = {
   a: "bg-faixa-a",
   b: "bg-faixa-b",
   c: "bg-faixa-c",
@@ -39,7 +46,7 @@ export function BarraEtiqueta({ relativo, participacao, children, atraso = 0 }: 
     <div className="flex h-9 items-center gap-2.5" title={DESCRICAO_FAIXA[faixa]}>
       {/* Cresce da esquerda ao aparecer; depois, muda de tamanho suavemente quando o valor muda. */}
       <div
-        className={`seta-etiqueta cresce-x h-full shrink-0 transition-[width,background-color] duration-500 ${COR[faixa]}`}
+        className={`seta-etiqueta cresce-x h-full shrink-0 transition-[width,background-color] duration-500 ${COR_FAIXA[faixa]}`}
         style={{ width: `max(1.6rem, calc((100% - 7rem) * ${fracao}))`, animationDelay: `${atraso}ms` }}
       />
       {children && (
@@ -58,7 +65,7 @@ export function LegendaEtiqueta() {
       <span>Pesa pouco</span>
       <span className="flex h-3 flex-1 overflow-hidden rounded-full">
         {(["a", "b", "c", "d", "e"] as const).map((f) => (
-          <span key={f} className={`flex-1 ${COR[f]}`} />
+          <span key={f} className={`flex-1 ${COR_FAIXA[f]}`} />
         ))}
       </span>
       <span>Pesa muito</span>

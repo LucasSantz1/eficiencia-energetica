@@ -6,6 +6,7 @@ import { BarraEtiqueta } from "@/ui/Etiqueta";
 import { Icone } from "@/ui/Icone";
 import { Marca } from "@/ui/Marca";
 import { Contagem, Revelar, TransicaoTela } from "@/ui/Movimento";
+import { AvisoDaCasaNoInicio } from "./AvisoDaCasaNoInicio";
 import { BotaoComecar } from "./BotaoComecar";
 import { CasaIlustrada } from "./CasaIlustrada";
 import { Simulador } from "./Simulador";
@@ -68,6 +69,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
           </nav>
           <BotaoComecar compacto estilo="contorno" />
         </header>
+        <AvisoDaCasaNoInicio />
 
         <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pt-14 pb-16 sm:px-8 lg:min-h-[calc(92dvh-4.5rem)] lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pt-10">
           <div>
@@ -202,12 +204,12 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
                 <dd className="titulo-largo mt-2 text-[2.6rem]">80 kWh grátis</dd>
                 {/* Quem pode ter: Lei 12.212/2010, art. 2º, I, II e § 1º (HIS-103, R1). Os 80 kWh são de energia: ICMS,
                     iluminação pública e parcelas continuam (ANEEL, página "Tarifa Social"; HIS-103, R5 e D2). */}
-                <dd className="mt-2 text-white/85">Para famílias com renda de até meio salário mínimo por pessoa, ou que recebem o BPC. Também para quem tem alguém que precisa de aparelho elétrico ligado para a saúde, com renda de até 3 salários mínimos na família. Impostos e iluminação pública podem continuar na conta.</dd>
+                <dd className="mt-2 text-white">Para famílias com renda de até meio salário mínimo por pessoa, ou que recebem o BPC. Também para quem tem alguém que precisa de aparelho elétrico ligado para a saúde, com renda de até 3 salários mínimos na família. Impostos e iluminação pública podem continuar na conta.</dd>
               </Revelar>
               <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={220}>
                 <dt className="text-lg font-bold">Desconto Social</dt>
                 <dd className="titulo-largo mt-2 text-[2.6rem]">até 120 kWh</dd>
-                <dd className="mt-2 text-white/85">Com desconto para famílias com renda entre meio e um salário mínimo por pessoa.</dd>
+                <dd className="mt-2 text-white">Com desconto para famílias com renda entre meio e um salário mínimo por pessoa.</dd>
               </Revelar>
             </dl>
             <p className="flex gap-3 text-white/85">
@@ -278,7 +280,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
                 </Link>
               </li>
               <li>
-                <a href="https://dadosabertos.aneel.gov.br" className="hover:text-white">
+                <a href="https://dadosabertos.aneel.gov.br" rel="noopener noreferrer" className="hover:text-white">
                   Dados abertos da ANEEL
                 </a>
               </li>

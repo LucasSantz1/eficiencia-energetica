@@ -3,8 +3,8 @@
 import { ArrowLeft, ChevronDown, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { agregarAparelhos, COMODOS_PADRAO, distribuidorasDaCidade, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
-import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
+import { agregarAparelhos, COMODOS_PADRAO, distribuidorasDaCidade, ehUf, ESTADOS, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
+import { useAvisoDaCasaSalva, useCasa, useCasaCarregada } from "@/aplicacao/casa";
 import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora } from "@/aplicacao/resumo";
 import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
@@ -12,7 +12,8 @@ import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
 import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
 import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
 import type { ItemComodo } from "@/ui/aparelho/tipos";
-import { Aviso } from "@/ui/Aviso";
+import { AvisoDaCasaSalva } from "@/ui/AvisoDaCasaSalva";
+import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Campo } from "@/ui/Campo";
@@ -24,6 +25,7 @@ import { TransicaoTela } from "@/ui/Movimento";
 import { Opcao } from "@/ui/Opcao";
 import { Pilulas } from "@/ui/Pilulas";
 import { ENTRAR_NO_PAINEL } from "@/ui/tiposDeTransicao";
+import { NADA_SAI_DA_CASA, textoDoPasso } from "./porQuePerguntamos";
 import { ajustarComodos, itemDoCatalogoParaComodo, rascunhoParaCasa, type ComodoRascunho } from "./rascunho";
 
 type Passo = "estado" | "cidade" | "distribuidora" | "beneficio" | "pessoas" | "comodos" | `comodo:${number}` | "revisao" | "conta";
@@ -202,6 +204,7 @@ export function Cadastro() {
 
   return (
     <Moldura
+      lado={<PorQuePerguntamos {...textoDoPasso(passo)} />}
       progresso={
         <div className="flex items-center gap-3">
           <button type="button" onClick={voltar} className="inline-flex min-h-11 items-center gap-1.5 rounded-full pr-3 font-bold text-energia hover:bg-energia-claro">
@@ -218,14 +221,27 @@ export function Cadastro() {
     >
       <TransicaoTela chave={passo}>
       <div>
-      {tarifas.erro && (
-        <Aviso tom="alerta">
-          Não conseguimos carregar as tarifas. Confira sua internet.{" "}
-          <button className="font-bold underline" onClick={tarifas.tentarDeNovo}>
-            Tentar de novo
-          </button>
-        </Aviso>
-      )}
+      {/* T2: os dois ficam montados (sem falha não mostram nada) para levar o foco ao título quando voltar a dar certo. */}
+      <div className="mb-6 empty:hidden">
+        <AvisoFalhaDeCarga
+          assunto={{ tipo: "precos" }}
+          fraseDeSeguranca="Suas respostas não se perdem."
+          falhasSeguidas={tarifas.falhasSeguidas}
+          semInternet={tarifas.semInternet}
+          carregando={tarifas.carregando}
+          aoTentarDeNovo={tarifas.tentarDeNovo}
+        />
+      </div>
+      <div className="mb-6 empty:hidden">
+        <AvisoFalhaDeCarga
+          assunto={{ tipo: "cidades", estado: ehUf(uf) ? ESTADOS[uf] : "" }}
+          fraseDeSeguranca="Suas respostas não se perdem."
+          falhasSeguidas={municipios.falhasSeguidas}
+          semInternet={municipios.semInternet}
+          carregando={municipios.carregando}
+          aoTentarDeNovo={municipios.tentarDeNovo}
+        />
+      </div>
 
       {passo === "estado" && (
         <>
@@ -534,15 +550,44 @@ export function Cadastro() {
   );
 }
 
-function Moldura({ children, progresso }: { children: React.ReactNode; progresso?: React.ReactNode }) {
+/** T1 no /comecar: o cadastro também lê a casa salva, e esta pode ser a primeira tela que a pessoa abre. */
+function AvisoDaCasaNoCadastro() {
+  const { aviso, dispensar } = useAvisoDaCasaSalva();
+  return <AvisoDaCasaSalva aviso={aviso} aoEntender={dispensar} className="mb-6" />;
+}
+
+/**
+ * No computador (HIS-112, L7) o passo fica à esquerda (até 34rem) e o `lado` (o painel "Por que perguntamos") à direita,
+ * depois do passo no código. O painel some por CSS abaixo de 1024 px: o cadastro renderiza já na hidratação, e um hook
+ * o faria aparecer depois, com pulo.
+ */
+function Moldura({ children, progresso, lado }: { children: React.ReactNode; progresso?: React.ReactNode; lado?: React.ReactNode }) {
   return (
-    <div className="mx-auto min-h-dvh max-w-2xl px-4 pt-4 pb-10 sm:px-6">
+    <div className="mx-auto min-h-dvh max-w-2xl px-4 pt-4 pb-10 sm:px-6 lg:max-w-[75rem] lg:px-8">
       <header className="flex items-center justify-between">
         <Marca />
       </header>
-      {progresso && <div className="mt-6">{progresso}</div>}
-      <main className="mt-6">{children}</main>
+      {progresso && <div className="mt-6 lg:max-w-[34rem]">{progresso}</div>}
+      <main className="mt-6 lg:grid lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:gap-x-12">
+        <div>
+          <AvisoDaCasaNoCadastro />
+          {children}
+        </div>
+        {lado}
+      </main>
     </div>
+  );
+}
+
+function PorQuePerguntamos({ titulo, texto }: { titulo: string; texto: string }) {
+  return (
+    <aside aria-labelledby="titulo-por-que-perguntamos" className="lateral-fixa hidden rounded-[var(--radius-cartao)] bg-energia-claro p-6 lg:block">
+      <h2 id="titulo-por-que-perguntamos" className="text-xl font-extrabold">
+        {titulo}
+      </h2>
+      <p className="mt-2 max-w-[68ch] text-lg">{texto}</p>
+      <p className="mt-4 border-t border-energia/20 pt-4 text-tinta-suave">{NADA_SAI_DA_CASA}</p>
+    </aside>
   );
 }
 

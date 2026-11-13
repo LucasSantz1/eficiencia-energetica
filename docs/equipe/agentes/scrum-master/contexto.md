@@ -9,6 +9,17 @@
 
 ## Estado atual
 
+- **Atualização de 2026-11-13 (tarde):** HIS-112 **Pronto** com ressalvas (branch `his-112-layout-computador`, falta PR);
+  HIS-116 (esqueleto da `Casca`) no backlog. HIS-110 no `main` (PR #11); HIS-003a na PR #10; HIS-103 com os textos do ar
+  corrigidos, à espera de PR. **Rotina de dados da ANEEL bloqueada desde 12/11**, decisão do dono pendente. HIS-112
+  ganhou linha no `planejamento.md` (E1). O item "HIS-112 rascunho sem arquivo" abaixo está superado.
+
+- **Atualização de 2026-11-13:** HIS-111 **Pronto** e no `main` (PRs #5, #8, #9). HIS-003a **Pronto** (PR #10, ressalvas
+  baixas: HIS-114 aviso de memória cheia e HIS-115 recuperar `casa-ilegivel` no backlog; `site.md` pendente;
+  `TETO_HIS_109` = 7). HIS-112 aprovada pelo dono (f1–f3 feitos; f4–f7 depois do merge da 003a). HIS-110 na PR #11;
+  HIS-103 em preparação pelo domínio. **Sprint 1 começou.** Falta: 003b (depois do merge da 003a). Os itens abaixo, de
+  2026-11-03, estão superados onde conflitarem.
+
 - **Sprint 0 (Fundação)**, ordem de 2026-11-03: HIS-001 **Pronto** → HIS-002a **Pronto** (ressalva Ra9) →
   **HIS-111** → **HIS-002b** (**Pronto** em 2026-11-03, com ressalvas; falta integrar ao `main`) → **HIS-003a** dados
   quebrados (Preparada; `HIS-003-base-de-seguranca.md`; tira o bloco provisório do `eslint.config.mjs` e sobe o teto
@@ -80,6 +91,13 @@
   integrar. A correção dos 2 `<dd>` já está na linha do planejamento. Falta decidir `corDaParte` × `faixaDoPeso`.
 - Refinar HIS-107 (critério verificável: em 390 px com zoom 200%, `scrollWidth <= clientWidth` em todas as rotas) antes da Sprint 1.
 - Preparar o roteiro do teste com famílias (HIS-106) com a UX.
+
+- 2026-11-13: quem orquestra faz o merge da PR #10; depois liberar a 003b e os passos f4–f7 da HIS-112. Refinar HIS-103
+  (com dominio-energia e ux) e HIS-107; priorizar DEF-002b-1 e HIS-113 na Sprint 1; documentação fecha o `site.md`.
+
+- 2026-11-13 (tarde): dono decide sobre a rotina de dados da ANEEL (bloqueada desde 12/11). Orquestração: PR da HIS-112 e
+  da HIS-103; merge da PR #10. Condição da ux na HIS-112: controle da lateral da `/casa` não muda a coluna esquerda sem
+  aviso (conferir em história futura que mexa ali). CHANGELOG: mover a entrada da 112 quando a 110 entrar.
 
 ## Orientações do responsável
 

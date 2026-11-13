@@ -11,7 +11,7 @@
  */
 import type { Page } from "@playwright/test";
 import { casaSalva } from "./apoio/casa";
-import { aba, dataEmBrasilia, dialogoAberto, mesAtras } from "./apoio/telas";
+import { aba, abrirComodo, dataEmBrasilia, dialogoAberto, mesAtras } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 import { contarTransicoes, transicoesAteAgora } from "./apoio/transicoes";
 
@@ -143,16 +143,15 @@ test("fluxo principal: cadastro → acompanhamento → cômodos → dicas → mi
     await expect(page.getByText("Cômodos e aparelhos").first()).toBeVisible();
     await transicoes(1, "aba Cômodos");
 
-    const comodos = page.locator('section[id^="comodo-"]');
+    // Sanfona no celular, lista + painel no computador (HIS-112): `abrirComodo` serve aos dois (q1).
     const antes = await aparelhosGuardados(page);
-    await comodos.first().getByRole("button", { name: "Geladeira de 1 porta", exact: true }).click();
+    await (await abrirComodo(page, "Cozinha")).getByRole("button", { name: "Geladeira de 1 porta", exact: true }).click();
     await expect(dialogoAberto(page)).toBeVisible();
     await dialogoAberto(page).getByRole("button", { name: "Salvar mudanças" }).click();
     await expect(dialogoAberto(page)).toHaveCount(0);
     expect(await aparelhosGuardados(page), "salvar pelos cômodos sem mudar nada").toEqual(antes);
 
-    const sala = comodos.nth(1);
-    await sala.locator("button[aria-expanded]").first().click();
+    const sala = await abrirComodo(page, "Sala");
     await sala.getByRole("button", { name: "TV LED até 32 polegadas", exact: true }).click();
     await expect(dialogoAberto(page)).toBeVisible();
     await dialogoAberto(page).getByRole("button", { name: "Remover este aparelho" }).click();

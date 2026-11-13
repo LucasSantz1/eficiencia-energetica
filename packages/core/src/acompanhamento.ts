@@ -1,4 +1,5 @@
 import { DIAS_NO_MES } from "./calculos";
+import { KWH_POR_DIA_ENTRE_LEITURAS } from "./limites";
 import type { ContaMensal, LeituraRelogio } from "./tipos";
 
 export interface PeriodoLeitura {
@@ -20,7 +21,8 @@ function diasEntre(a: string, b: string): number {
 /**
  * Transforma leituras do relógio de luz em consumo por período.
  * Ex.: dia 1 marcava 12.340 e dia 8 marcava 12.375 → 35 kWh em 7 dias = 5 kWh por dia.
- * Leituras no mesmo dia ou que diminuem (erro de digitação ou troca do relógio) são ignoradas.
+ * Leituras no mesmo dia ou que diminuem (erro de digitação ou troca do relógio) são ignoradas. Também é ignorada a
+ * leitura que daria mais de 1.800 kWh por dia, o máximo físico de uma casa (`KWH_POR_DIA_ENTRE_LEITURAS`).
  */
 export function periodosDeLeitura(leituras: LeituraRelogio[]): { periodos: PeriodoLeitura[]; ignoradas: LeituraRelogio[] } {
   const ordenadas = [...leituras].sort((x, y) => x.data.localeCompare(y.data));
@@ -34,7 +36,7 @@ export function periodosDeLeitura(leituras: LeituraRelogio[]): { periodos: Perio
     }
     const dias = diasEntre(anterior.data, atual.data);
     const kwh = atual.valorKwh - anterior.valorKwh;
-    if (dias <= 0 || kwh < 0) {
+    if (dias <= 0 || kwh < 0 || kwh / dias > KWH_POR_DIA_ENTRE_LEITURAS.maximo) {
       ignoradas.push(atual);
       continue;
     }

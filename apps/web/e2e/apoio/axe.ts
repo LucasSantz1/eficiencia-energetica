@@ -11,7 +11,10 @@ export type ResultadoAxe = Awaited<ReturnType<AxeBuilder["analyze"]>>;
 export type ViolacaoAxe = ResultadoAxe["violations"][number];
 type NoDaViolacao = ViolacaoAxe["nodes"][number];
 
-/** As 24 telas que o axe confere (D10 + P-qa-4): o nome do teste é "axe · <página> · <estado>". */
+/**
+ * As 31 telas que o axe confere (D10 + P-qa-4 da HIS-002a; as 7 últimas são os avisos e erros da HIS-003a, D8): o
+ * nome do teste é "axe · <página> · <estado>".
+ */
 export const TELAS_AXE = [
   { pagina: "/", estado: "sem casa" },
   { pagina: "/comecar", estado: "sem casa" },
@@ -37,6 +40,13 @@ export const TELAS_AXE = [
   { pagina: "/casa", estado: "folha editor de aparelho" },
   { pagina: "/casa", estado: "folha anotar conta" },
   { pagina: "/casa", estado: "folha anotar leitura" },
+  { pagina: "/casa", estado: "aviso T1a" },
+  { pagina: "/casa", estado: "aviso T1b" },
+  { pagina: "/casa", estado: "aviso T1c" },
+  { pagina: "/casa", estado: "falha T2a" },
+  { pagina: "/comecar", estado: "falha T2b" },
+  { pagina: "/casa", estado: "erro T3" },
+  { pagina: "/nao-existe", estado: "T4" },
 ] as const;
 
 export type TelaAxe = (typeof TELAS_AXE)[number];

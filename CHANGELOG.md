@@ -1,5 +1,117 @@
 # Registro de mudanças
 
+## 2026-11-13 · Layout para computador (HIS-112)
+
+**Para quem usa**
+- No computador (janela de 1024 px ou mais), as telas aproveitam a largura em vez de ficarem numa coluna estreita no meio.
+- Na tela da casa, a conta fica em cima, com a explicação ao lado; embaixo, os cômodos de um lado e "Quem mais gasta" e a
+  dica de economia do outro.
+- Em Cômodos, a lista fica à esquerda e o cômodo aberto à direita. Trocar de cômodo não leva você para o alto da página.
+- Em Dicas, as dicas ficam em colunas e o resumo do plano fica ao lado. Em Minha casa, "Seus dados" fica ao lado das
+  outras opções.
+- No cadastro, ao lado de cada pergunta aparece "Por que perguntamos", só com a explicação. Nada essencial fica só nele.
+- No celular nada mudou.
+
+**Técnico**
+- Só CSS com classes `lg:` (64rem) e container de 75rem na `Casca` e no `Cadastro`; a ordem do JSX e do foco não muda.
+  Nova utilidade `lateral-fixa` em `globals.css`. Nenhuma dependência nova.
+- `ui/telaLarga.ts` (`useTelaLarga`, `useSyncExternalStore`) só para `/casa/comodos`: `ConteudoDoComodo` (miolo comum) e
+  `ComodosNoComputador` (lista e painel). Textos do painel em `cadastro/porQuePerguntamos.ts`.
+- A lateral da `/casa` não usa `lateral-fixa`, e o "Mês a mês" ficou sob os cômodos (A-112-1).
+- Testes: `layout-computador.spec.ts` e o helper `abrirComodo`. 390 e 800 px com 0 pixel de diferença contra o `main`.
+  Peso: 11a até +1 998 B na `/casa/comodos` e +694 B nas outras; 11b até +3 143 B (tetos 2 048, 1 024 e 4 096 B).
+
+## 2026-11-13 · HIS-110 · Contraste das cores
+
+**Para quem usa**
+- O número de cada cômodo na casa ilustrada da página inicial e os valores dos cartões da Tarifa Social ficaram mais
+  fáceis de ler, inclusive no sol.
+
+**Técnico**
+- Faixa D da casa ilustrada com `text-tinta` (5,50:1) e `<dd>` da Tarifa Social com `text-white` (4,77:1); nenhum
+  token mudou. A regra de texto sobre cada faixa está comentada em `ui/Etiqueta.tsx`.
+- `apps/web/e2e/excecoes-axe.ts` ficou vazio: o axe agora reprova qualquer contraste abaixo de AA.
+
+## 2026-11-13 · Dados quebrados não travam o site (HIS-003a)
+
+**Para quem usa**
+- Se os dados da sua casa neste celular estiverem estragados, o site não fica mais em branco. Ele tira só o que está
+  errado (por exemplo, um aparelho com potência negativa), mantém o resto e avisa em linguagem simples: "Tiramos 2
+  aparelhos e 1 conta de luz. O resto da sua casa continua salvo."
+- Se a cidade e a empresa de luz saírem, os aparelhos continuam salvos e o aviso leva a "Escolher minha cidade". Se nada
+  der para usar, o aviso leva a "Cadastrar minha casa".
+- Se os preços da luz ou a lista de cidades não carregarem, aparece "Tentar de novo". Sem internet, o aviso diz isso.
+  A sua casa e as suas respostas continuam salvas.
+- Se algo inesperado acontecer, aparece "Algo deu errado nesta tela. Não foi culpa sua", com "Tentar de novo" e
+  "Voltar ao início". Uma página que não existe mostra "Não achamos esta página".
+- "Apagar todos os meus dados" agora aparece também quando a casa não pôde ser lida, e apaga tudo o que o site guardou.
+- O número grande de aparelhos aparece com ponto de milhar ("9.500").
+
+**Técnico**
+- Leitores no `@ee/core` (ADR-004): `limites.ts`, `leitura-segura.ts`, `casa-salva.ts` (`lerCasaSalva`, `avisoDaCasaSalva`),
+  `arquivos-publicos.ts` (`lerArquivoTarifas`, `lerArquivoMunicipios`, `lerRelatorioDosDados`, `ErroDeFormato`),
+  `entrada.ts` e `estados.ts`. Escritos à mão, sem zod; nunca lançam para dado ruim e não corrigem nada.
+- `infraestrutura/armazenamento/`: storage próprio que nunca lança e `merge` do `persist` que usa o `lerCasaSalva`. Se o
+  leitor lançar, a gravação trava (a casa salva não é sobrescrita). O cadastro novo guarda uma cópia do texto em
+  `eficiencia-energetica:casa-ilegivel` (uma vez só, só no aparelho) e solta a trava; `apagarTudo` remove as duas chaves.
+- `/dados` passa pelos leitores no navegador e no servidor (`useResumo` expõe `tentarDeNovo`, `falhasSeguidas` e
+  `semInternet`); o `lerArquivoTarifas` lê também `substituidas` (HIS-111). A sigla do estado é conferida com `ehUf`.
+- Telas: `app/global-error.tsx` (sem `app/error.tsx`, que pesava 1,3 kB em toda rota), `app/not-found.tsx`, `ui/TelaDeErro`,
+  `ui/AvisoDaCasaSalva`, `ui/AvisoFalhaDeCarga` e foco no título (`ui/foco.ts`).
+- Sete cabeçalhos de segurança em toda resposta (`next.config.ts`; CSP sem `unsafe-eval` em produção), `pnpm audit
+  --audit-level high` no CI, `.github/dependabot.yml` (npm e Actions, espera de 7 dias) e `apps/web/.env.example`.
+- Rotina de dados em dois jobs: `gerar` (só leitura) e `publicar` (escrita, só no `main`, sem rodar código do projeto).
+  `conferirFormato` (`packages/dados/src/formato.ts`) usa os mesmos leitores antes de gravar e não passa com `--forcar`.
+  O log do resumo escapa `%`, `\r` e `\n`.
+- O bloco provisório do `eslint.config.mjs` saiu; a exceção por arquivo hoje é só `app/global-error.tsx`. O teto da
+  HIS-109 ficou em 7 (decisão do tech-lead).
+- Testes: core 239, web 16 (vitest), dados 104, camadas 152 e 210 no navegador (204 rodam, 6 pendentes), com
+  `cabecalhos`, `casa-salva`, `dados-publicos` e `erros` novos. Peso de JS aceito pelo tech-lead (`peso-js.json`).
+
+## 2026-11-12 · Cada cidade com a distribuidora de hoje (HIS-111)
+
+**Para quem usa**
+- Em 227 cidades (RS 127, SP 62, RR 14, MG 13, PB 9, PR 1, RJ 1), o site usava o preço de uma empresa de luz que já não
+  existia, comprada ou juntada com outra entre 2017 e 2023. A conta estimada saía de 11% a 55% menor do que a real. Agora
+  essas cidades usam o preço da empresa de hoje, o mesmo que vem na conta de luz.
+- Quem já tinha a casa salva com a empresa antiga vê um aviso: "O preço da luz foi atualizado. A CPFL Mococa hoje é a
+  CPFL Santa Cruz. A gente ainda usava o preço antigo..." Toque em "Entendi" para fechar. O aviso só aparece uma vez e não
+  aparece para quem informou a própria conta de luz, porque aí o preço já vinha da conta.
+- Se uma empresa de luz deixar de existir no futuro, o site não volta a usar o preço antigo em silêncio.
+
+**Técnico**
+- Rotina de dados (ADR-005): não publica tarifa vencida há mais de 6 meses; uma empresa só vira outra pelo mesmo CNPJ ou
+  por uma linha de `packages/dados/base/sucessoes.json` com ato e fonte oficiais; na dúvida a rotina para e nada é gravado
+  (regras V1 a V10). O `tarifas.json` ganha `substituidas` (id antigo → id de hoje).
+- `@ee/core`: `acharDistribuidora` e `distribuidorasDaCidade` seguem `substituidas`; `idDaSigla` é a regra única do id.
+  No site, `useDistribuidoraAtualizada` regrava o id uma vez e alimenta o `AvisoTrocaDistribuidora` da `Casca`.
+- h8 (PR #9): o `atualizar-dados.yml` roda sem `--forcar` (nem aceita a flag), o diagnóstico roda em `pull_request` sem
+  permissão de escrita, o `\r` do log é escapado e o teste dos arquivos publicados (`publicados.test.ts`) entra no `pnpm test`.
+- Conferido pelo qa nos arquivos publicados no `main`: mudam exatamente 227 cidades, nenhuma ficou com tarifa vencida, 10
+  seguem sem distribuidora, como antes. Teste de unidade: core 56, dados 98, camadas 152. Peso de JS: +38 B por rota.
+
+## 2026-11-03 · Lint e camadas conferidos sozinhos (HIS-002b)
+
+**Para quem usa**
+- Nada muda na tela. Por dentro, o projeto passou a conferir sozinho, a cada mudança, se o código segue o padrão e as
+  regras de segurança. Isso ajuda a manter o site rápido e seguro para todas as famílias.
+
+**Técnico**
+- `pnpm lint` (ESLint 10.13.0, `eslint-config-next` 16.4.3, `eslint-plugin-import-x` 4.17.1; `eslint.config.mjs`, com
+  `--max-warnings 0`) e novo passo no job "Lint, tipos e testes" do `ci.yml`. Regras: matriz de camadas por
+  `no-restricted-imports`, `zustand` e módulos do Node só onde o ADR-001 permite, `no-explicit-any`, `ban-ts-comment`,
+  `react/no-danger`, `eval`/`new Function`, `innerHTML` e afins, `"use server"`, link `target="_blank"` sem `rel`,
+  `import-x/order` (ordem dos imports corrigida em commit só de formatação).
+- `scripts/verificar-camadas.mjs` passou a usar o parser do TypeScript e ficou com o que depende de outro arquivo: `.servidor`,
+  `"use client"`, valor importado de módulo `"use client"` por arquivo sem diretiva (S2), destino do import, link simbólico,
+  comentário `eslint-disable` (só a forma da HIS-109, com teto de 7). Saída: `Camadas: tudo certo (N arquivos; M comentário(s) da HIS-109)`.
+- 145 casos negativos em `scripts/testes/` (104 no ESLint, 41 no script), rodados no `pnpm test`; apagar um caso obrigatório reprova.
+- Correção S2: `ui/tiposDeTransicao.ts` (constantes de transição, antes no `Movimento`) e `aplicacao/identificador.ts`
+  (`novoId`, antes em `aplicacao/casa`), para valor compartilhado morar em arquivo sem diretiva.
+- Bloco provisório `provisorio/arquivos-em-outras-historias` no `eslint.config.mjs`: saiu na HIS-003a (o teto da HIS-109 ficou em 7).
+- `pnpm audit`: sem alta ou crítica; 2 moderadas de `minimatch` (só ferramenta de desenvolvimento, aceitas).
+- ADR-001 revisado (onde cada regra é conferida); `docs/arquitetura.md` e `docs/sistema/desenvolvimento.md` atualizados.
+
 ## 2026-10-31 · Node 26 (LTS)
 
 **Para quem usa**
