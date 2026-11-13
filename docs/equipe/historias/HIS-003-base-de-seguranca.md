@@ -1366,3 +1366,10 @@ aceito, com R4c e R4d nas consequências.
 ### [qa] 2026-11-03 — D-3a-1, D-3a-2 e D-3a-3 conferidos: aprovado
 1. Cópia de `ab0838a`: typecheck, test (core 209, web 16, dados 17) e build verdes; `casa-salva`, `erros`, `peso-js`, `ajustes`, axe, `migracao`, `rotas`, `teclado` e `fluxo-principal` com 131 ✓ e 0 ✗ (6 pendentes já conhecidos).
 2. "Apagar tudo" aparece sem cidade, com a trava e só com a cópia ilegível, e tira as duas chaves; o aviso T1b não tem mais o link na própria Minha casa; aparece "9.500" e os botões do T3 ficam centralizados com zoom de 200%. Os testes novos afirmam cada correção. Peso contra a referência nova: +3 a +210 B (11a), dentro do limite.
+
+### [frontend] 2026-11-12 — main integrado (merge `4cc37bc`) e D10 3 fechado; peso acima do teto
+- Merge do `deed1f7`, resolvido à mão: D17-a e `useDistribuidoraAtualizada` ficam junto com o T1; `acharDistribuidora` entra no `useResumo`; o lockfile é o do main mais a linha do vitest. O `lerArquivoTarifas` agora lê `substituidas` (P8/V8, com o caso de 501 entradas). `ac4fee4` tira o bloco provisório e roda o `lint --fix`. O `<a>` do `global-error` virou exceção na configuração. O caso (h) deixou de ser `fixme`.
+- **`TETO_HIS_109` ficou em 7, não em 8:** o `navegador.ts` perdeu o seu comentário e o `casa.ts` ganhou o dele. Com 8, sobraria vaga para um efeito novo entrar sem ser visto (D17). Mudar para 8 é uma linha.
+- `40ba7e1`: o e2e da troca agora olha a 2ª região de status. Com o V8 no site, `substituidas` em laço sai inteiro, e um `substituidas` que não é objeto mostra o T2.
+- **`[para: tech-lead]` Peso (`9abcd0a`, `peso-js.json`):** contra o 06be352, o 11a sobe até +12 018 B e o 11b até +14 714 B. Só a 003a sobre o main novo: +10 993 B e +13 880 B, cerca de 0,5 kB e 0,4 kB acima do teto. É preciso decidir antes do merge.
+- **Barreira:** lint, typecheck, test (core 236, web 16, dados 98, camadas 152) e build verdes. O e2e numa cópia (3357) deu 188 ✓; as falhas da troca já estão corrigidas (20 ✓ ao repetir, teclado incluído). Só o peso depende da referência nova.

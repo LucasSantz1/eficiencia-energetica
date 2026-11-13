@@ -10,6 +10,14 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-12 · HIS-003a · main integrado por merge; bloco provisório fora; peso medido de novo
+- O que fiz: merge `4cc37bc` (resolvido à mão, `substituidas` no leitor), `ac4fee4` (bloco fora, `lint --fix`, JSDoc),
+  `40ba7e1` (e2e da troca), `9abcd0a` (peso). Diários e contextos com as entradas dos dois lados.
+- Decisões e porquê: teto da HIS-109 em 7 (é o número de hoje; 8 deixaria vaga); `<a>` do `global-error` como
+  exceção na configuração; laço em `substituidas` sai inteiro (V8), sem troca.
+- Verificação: barreira verde; e2e 188 ✓ e as falhas da troca corrigidas (20 ✓); peso acima do teto por ~0,5 kB.
+- Aprendizado: um merge que mudou os diários "pelo lado de fora" do conflito também apaga entradas; juntar por título.
+
 ## 2026-11-03 · HIS-003a · D10: só o global-error, CAMPOS_* puros e a trava que solta
 - O que fiz: `3f60fe4` (sem `app/error.tsx`, T3 conferido com o `global-error`), `040ddd4` (`/* @__PURE__ */`, −249 B),
   `1b235d5` ("Apagar tudo" e cadastro novo soltam a trava; cópia bruta uma vez só; 5 testes).

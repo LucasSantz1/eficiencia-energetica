@@ -61,17 +61,14 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
   "Quem mais gasta" e região focável da tabela do painel geral). Com isso, o axe passa nos 2 projetos. Falta o qa trocar o seletor
   `^${nome}: ` de `e2e/aparelhos.spec.ts:43` pelo nome novo. Achado para a HIS-110: 2 `dd` `text-white/85` nos cartões
   da Tarifa Social também falham `color-contrast`.
-- HIS-002b: B1–B7 feitos (2026-11-03, `7427be6`…`1062111`); aguarda tech-lead (B8, bloco provisório do
-  `eslint.config.mjs` para `infraestrutura/armazenamento/casa.ts` e `packages/dados/src/escrever.ts`), qa e seguranca.
-  Ao integrar a HIS-003a/HIS-111: `pnpm lint --fix`, pôr o 8º comentário da HIS-109 em `casa.ts:132`, tirar o bloco;
-  o efeito novo de `aplicacao/casa.ts` da HIS-111 passaria do teto de 8.
+- HIS-002b: no main. O bloco provisório saiu no merge da 003a (`ac4fee4`, 2026-11-12); `TETO_HIS_109` = 7 (7 linhas hoje).
 - Teste instável anterior: fluxo principal, "terminar o cadastro" às vezes conta 13 transições em vez de 14 (também no `main`).
 - HIS-111: h6 feito (30/10); o D1 do h7 (peso de JS) foi corrigido em 31/10: o 11a de `/casa*` ficou em até +998 B (folga de
   26 B). Aguarda o qa refazer o h7. O `React.lazy` piora o peso com o Turbopack: não usar para economizar bytes.
   O F2 (cidade sem preço: cadastro, cartão de cima do painel, Minha casa) não entrou: mexe no `PainelAcompanhamento`
   da 002a.
-- HIS-003a: a4 `9be1f4c`, a5 `017281f` e D10 (`3f60fe4`, `040ddd4`, `1b235d5`) feitos; peso no 11a até +10 382 B
-  (teto +10,5 kB). Faltam qa (a7, atualiza o `peso-js.json`) e seguranca. HIS-003b (limites nas telas, "Confere?") vem depois.
+- HIS-003a: main integrado (2026-11-12, `4cc37bc`…`9abcd0a`, com push). Falta o tech-lead decidir o peso (11a até
+  +10 993 B sobre o main novo; teto +10,5 kB) e o teto 7 × 8 da HIS-109. HIS-003b (limites nas telas) vem depois.
 
 ## Orientações do responsável
 
