@@ -31,7 +31,7 @@ export default function Sobre() {
             O custo é o consumo multiplicado pelo preço do kWh: <strong>Custo = Energia × Tarifa</strong>. A tarifa é a soma da TE (energia) com a TUSD (uso da rede) da sua distribuidora, mais o adicional da bandeira do mês. Com tarifa de R$ 0,65 por
             kWh, aquela geladeira custa R$ 35,10 por mês.
           </p>
-          <p>Também consideramos o consumo mínimo cobrado pela distribuidora (30, 50 ou 100 kWh, conforme a ligação) e a Tarifa Social, que isenta os primeiros 80 kWh das famílias de baixa renda.</p>
+          <p>Também consideramos o consumo mínimo cobrado pela distribuidora (30, 50 ou 100 kWh, conforme a ligação) e a Tarifa Social (a energia dos primeiros 80 kWh de graça). O Desconto Social ainda não entra no cálculo.</p>
           <p>
             As tarifas da ANEEL não incluem ICMS, PIS/COFINS nem a taxa de iluminação pública, que mudam por cidade. Por isso a conta real costuma ser maior. Se você informar uma conta de luz, usamos o preço real do kWh que você paga.
           </p>
