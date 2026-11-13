@@ -455,3 +455,9 @@ Conferido no código: casa só em `localStorage` (`casa.ts`), único `fetch` é 
 Atualizei `site.md` (seção "Layout no computador", tabelas de telas e de `ui/`), `guia-de-uso.md` (uma linha), `arquitetura.md` (`useTelaLarga`) e `CHANGELOG.md` (duas partes). Conferido no código, incluindo o A-112-1 (Mês a mês sob os cômodos).
 O CHANGELOG não tinha entrada da HIS-110: a da HIS-112 ficou no topo, acima da HIS-003a; mover quando a 110 entrar.
 Próximo: **scrum-master** (conferir a Definição de Pronto).
+
+### [tech-lead] 2026-11-13 — code review final (etapa 7): aprovado
+1. **Aprovado** (f1–f7, q1–q5 e A-112-1; a 003a ficou de fora da revisão). Camadas certas: `ui/telaLarga.ts` sem diretiva, e os cômodos só importam o core, a `ui/` e o `./`. JS novo só nos cômodos: o `useTelaLarga` e o hash, os dois por `useSyncExternalStore`, mais um efeito de foco que só lê o DOM. Continuam **7** linhas da HIS-109, as mesmas da 003a. O `lg:`/`xl:` está coerente nas 5 telas, sem `md:` novo, e o A-112-1 muda só o CSS, com o DOM igual.
+2. Como verifiquei: numa cópia, lint, typecheck (89 arquivos), test (239 + 16 + 104 + 152) e build verdes. O celular igual a 390 e 800 px e o peso vêm do qa (q3, q5), dentro do L8 revisto.
+3. Ajuste pequeno, que não bloqueia: no esqueleto da `Casca`, o bloco `hidden lg:block` é o último filho, e o `space-y-4` dá 1rem a mais embaixo do 2º bloco no celular, só enquanto carrega. Pôr o bloco do `lg:` antes do 2º bloco, ou usar `max-lg:` no espaçamento, na próxima vez que a `Casca` for mexida.
+4. Próximo: **seguranca** (se faltar) e o fechamento (documentacao → scrum-master).

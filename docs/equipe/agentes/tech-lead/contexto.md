@@ -126,7 +126,7 @@
 
 ## Pendências
 
-- HIS-112 (desenho L1–L12, 2026-11-12): no code review, conferir que o celular fica idêntico (q3), que o único JS novo
+- HIS-112: **code review aprovado em 2026-11-13**. Fica o ajuste do esqueleto da `Casca` (nota). Itens conferidos: que o celular fica idêntico (q3), que o único JS novo
   é o `useTelaLarga` com `useSyncExternalStore`, a ausência de `id` repetido nos cômodos, o peso do L8 e o rebase sobre
   a 003a (f4–f7 só depois dela).
 - HIS-003a: **code review aprovado em 2026-11-03**. Falta conferir no rebase o `--fix`, o bloco fora e o teto 8.
