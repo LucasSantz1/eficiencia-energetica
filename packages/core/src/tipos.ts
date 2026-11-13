@@ -81,9 +81,11 @@ export interface ArquivoMunicipios {
 }
 
 /**
- * Benefícios da conta de luz para famílias de baixa renda (Lei 15.235/2025):
- * - tarifa-social: CadÚnico com renda por pessoa de até meio salário mínimo, BPC, indígenas e quilombolas.
- *   Isenção total até 80 kWh/mês.
+ * Benefícios da conta de luz para famílias de baixa renda (Lei 12.212/2010 atualizada pela Lei 15.235/2025):
+ * - tarifa-social: CadÚnico com renda por pessoa de até meio salário mínimo, ou BPC, ou renda total de até 3 salários
+ *   mínimos com alguém que precisa de aparelho elétrico para a saúde (art. 2º, I, II e § 1º). Indígenas e quilombolas
+ *   não são um caminho à parte: também precisam da renda ou do BPC (art. 2º, § 4º; HIS-103, R2).
+ *   Energia de graça até 80 kWh/mês (impostos e iluminação pública continuam).
  * - desconto-social: CadÚnico com renda por pessoa entre meio e um salário mínimo.
  *   Desconto (isenção da CDE) até 120 kWh/mês.
  */
