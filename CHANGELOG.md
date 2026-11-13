@@ -21,6 +21,17 @@
 - Testes: `layout-computador.spec.ts` e o helper `abrirComodo`. 390 e 800 px com 0 pixel de diferença contra o `main`.
   Peso: 11a até +1 998 B na `/casa/comodos` e +694 B nas outras; 11b até +3 143 B (tetos 2 048, 1 024 e 4 096 B).
 
+## 2026-11-13 · HIS-110 · Contraste das cores
+
+**Para quem usa**
+- O número de cada cômodo na casa ilustrada da página inicial e os valores dos cartões da Tarifa Social ficaram mais
+  fáceis de ler, inclusive no sol.
+
+**Técnico**
+- Faixa D da casa ilustrada com `text-tinta` (5,50:1) e `<dd>` da Tarifa Social com `text-white` (4,77:1); nenhum
+  token mudou. A regra de texto sobre cada faixa está comentada em `ui/Etiqueta.tsx`.
+- `apps/web/e2e/excecoes-axe.ts` ficou vazio: o axe agora reprova qualquer contraste abaixo de AA.
+
 ## 2026-11-13 · Dados quebrados não travam o site (HIS-003a)
 
 **Para quem usa**
