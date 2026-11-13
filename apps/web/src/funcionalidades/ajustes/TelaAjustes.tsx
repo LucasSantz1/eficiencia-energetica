@@ -16,7 +16,7 @@ import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
 
 const BENEFICIOS: { id: Beneficio; titulo: string; descricao: string }[] = [
-  { id: "tarifa-social", titulo: "Tarifa Social", descricao: "CadÚnico com renda de até meio salário mínimo por pessoa, BPC, ou alguém que precisa de aparelho elétrico para a saúde. A energia dos primeiros 80 kWh é de graça." },
+  { id: "tarifa-social", titulo: "Tarifa Social", descricao: "CadÚnico com renda de até meio salário mínimo por pessoa, BPC, ou CadÚnico com renda de até 3 salários mínimos e alguém que precisa de aparelho elétrico para a saúde. A energia dos primeiros 80 kWh é de graça." },
   { id: "desconto-social", titulo: "Desconto Social", descricao: "CadÚnico com renda entre meio e um salário mínimo por pessoa. Desconto até 120 kWh." },
   { id: "nenhum", titulo: "Não tenho benefício", descricao: "A conta vem com a tarifa normal." },
   { id: "nao-sei", titulo: "Não sei", descricao: "Calculamos com a tarifa normal." },

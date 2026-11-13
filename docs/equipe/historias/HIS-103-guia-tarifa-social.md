@@ -198,6 +198,11 @@ _(qa)_ Unidade com C1–C13; e2e do guia em 390 px e 1280 px; conferir D1–D8 c
 - Como verifiquei: fontes oficiais lidas em 13/11/2026; REN 1.147 só pela notícia da ANEEL (cedoc fora do ar daqui).
 - Para o próximo: **scrum-master** (refino e decisão sobre D1–D6) ‖ **ux-acessibilidade** (textos das perguntas).
 
+### [dominio-energia] 2026-11-13 — revisão dos textos D1–D9: aprovado com 2 ajustes
+- Aprovados: `PaginaInicial.tsx:116, 190, 205, 210`, `PainelAcompanhamento.tsx:87-88`, `TelaAjustes.tsx:96`, `sobre/page.tsx:34`, `dicas.ts:357` e `tipos.ts:85`.
+- Ajuste obrigatório (o texto promete mais do que a lei dá, porque falta o limite de 3 salários mínimos e o CadÚnico da R1-c): em `TelaAjustes.tsx:19`, usar "CadÚnico com renda de até meio salário mínimo por pessoa, BPC, ou CadÚnico com renda de até 3 salários mínimos e alguém que precisa de aparelho elétrico para a saúde. A energia dos primeiros 80 kWh é de graça."
+- Em `Cadastro.tsx:32`, usar "Família no CadÚnico com renda de até meio salário mínimo por pessoa, alguém recebe o BPC, ou renda de até 3 salários mínimos com alguém que precisa de aparelho elétrico para a saúde."
+
 ### [frontend] 2026-11-13 — D1–D6, D8 e D9 corrigidos, só texto (`f54b0e3`…`4cf4fa6`, um commit por arquivo)
 - `/` (D1–D3), Minha casa (D3, D4), cadastro (D3), dica e comentário do core (D3, D9), acompanhamento (D5, D6), Sobre (D8), com a fonte (Lei 12.212, art. 2º) no código. O caminho da saúde cita a renda de até 3 salários mínimos (R1-c), para não prometer a mais. Nenhum e2e conferia esses textos. O link do D4 para o guia espera a página do guia; o D7 fica para o guia.
 - Lint, typecheck, test, build e e2e (121) verdes, sem erro no console. Capturas a 390 px em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his103/`.

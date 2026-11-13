@@ -29,7 +29,7 @@ import { ajustarComodos, itemDoCatalogoParaComodo, rascunhoParaCasa, type Comodo
 type Passo = "estado" | "cidade" | "distribuidora" | "beneficio" | "pessoas" | "comodos" | `comodo:${number}` | "revisao" | "conta";
 
 const BENEFICIOS: { id: Beneficio; titulo: string; descricao: string }[] = [
-  { id: "tarifa-social", titulo: "Sim, tenho Tarifa Social", descricao: "Família no CadÚnico com renda de até meio salário mínimo por pessoa, alguém recebe o BPC, ou alguém precisa de aparelho elétrico para a saúde." },
+  { id: "tarifa-social", titulo: "Sim, tenho Tarifa Social", descricao: "Família no CadÚnico com renda de até meio salário mínimo por pessoa, alguém recebe o BPC, ou renda de até 3 salários mínimos com alguém que precisa de aparelho elétrico para a saúde." },
   { id: "desconto-social", titulo: "Sim, com renda até 1 salário mínimo por pessoa", descricao: "Família no CadÚnico com renda entre meio e um salário mínimo por pessoa." },
   { id: "nenhum", titulo: "Não", descricao: "A conta vem com a tarifa normal." },
   { id: "nao-sei", titulo: "Não sei", descricao: "Sem problema. No fim mostramos como descobrir se você tem direito." },
