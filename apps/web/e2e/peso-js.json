@@ -1,37 +1,37 @@
 {
-  "medidoNoCommit": "40ba7e1",
-  "decisao": "HIS-003a, integração do main (2026-11-12): medido contra o main novo (6e2f6da, com HIS-111 e 002b). Contra 06be352: 11a até +12 018 B (/casa/ajustes) e 11b até +14 714 B, acima do teto do D10 (+10,5 kB / +13,5 kB); só a 003a sobre o main novo: 11a até +10 993 B e 11b até +13 880 B, ainda 0,5 kB e 0,4 kB acima. Aceito pelo tech-lead em 2026-11-13 (24480da): o teto conta só o incremento da 003a sobre o main novo, +11 264 B no 11a e +14 336 B no 11b.",
+  "medidoNoCommit": "daef13f",
+  "decisao": "HIS-112, L8 (tech-lead, 2026-11-12; revisto em c9e9fbd, 2026-11-13): contra a referência da 003a, 11a até +2 048 B na /casa/comodos (medido +1 998) e +1 024 B nas outras rotas (medido até +694 no /comecar); 11b até +4 096 B (medido até +3 143). Medido com o código do daef13f.",
   "rotas": {
     "/": {
-      "jsDoHtml": 172162,
-      "totalComPrefetch": 196933
+      "jsDoHtml": 172199,
+      "totalComPrefetch": 197627
     },
     "/comecar": {
-      "jsDoHtml": 183799,
-      "totalComPrefetch": 196933
+      "jsDoHtml": 184493,
+      "totalComPrefetch": 197627
     },
     "/casa": {
-      "jsDoHtml": 186659,
-      "totalComPrefetch": 247196
+      "jsDoHtml": 187057,
+      "totalComPrefetch": 250339
     },
     "/casa/comodos": {
-      "jsDoHtml": 184395,
-      "totalComPrefetch": 247196
+      "jsDoHtml": 186393,
+      "totalComPrefetch": 250339
     },
     "/casa/dicas": {
-      "jsDoHtml": 177487,
-      "totalComPrefetch": 247196
+      "jsDoHtml": 177736,
+      "totalComPrefetch": 250339
     },
     "/casa/ajustes": {
-      "jsDoHtml": 175981,
-      "totalComPrefetch": 247196
+      "jsDoHtml": 176146,
+      "totalComPrefetch": 250339
     },
     "/sobre": {
       "jsDoHtml": 140398,
-      "totalComPrefetch": 176229
+      "totalComPrefetch": 176266
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 225733
+      "totalComPrefetch": 228219
     }
   }
 }

@@ -25,6 +25,7 @@ import { TransicaoTela } from "@/ui/Movimento";
 import { Opcao } from "@/ui/Opcao";
 import { Pilulas } from "@/ui/Pilulas";
 import { ENTRAR_NO_PAINEL } from "@/ui/tiposDeTransicao";
+import { NADA_SAI_DA_CASA, textoDoPasso } from "./porQuePerguntamos";
 import { ajustarComodos, itemDoCatalogoParaComodo, rascunhoParaCasa, type ComodoRascunho } from "./rascunho";
 
 type Passo = "estado" | "cidade" | "distribuidora" | "beneficio" | "pessoas" | "comodos" | `comodo:${number}` | "revisao" | "conta";
@@ -203,6 +204,7 @@ export function Cadastro() {
 
   return (
     <Moldura
+      lado={<PorQuePerguntamos {...textoDoPasso(passo)} />}
       progresso={
         <div className="flex items-center gap-3">
           <button type="button" onClick={voltar} className="inline-flex min-h-11 items-center gap-1.5 rounded-full pr-3 font-bold text-energia hover:bg-energia-claro">
@@ -554,18 +556,38 @@ function AvisoDaCasaNoCadastro() {
   return <AvisoDaCasaSalva aviso={aviso} aoEntender={dispensar} className="mb-6" />;
 }
 
-function Moldura({ children, progresso }: { children: React.ReactNode; progresso?: React.ReactNode }) {
+/**
+ * No computador (HIS-112, L7) o passo fica à esquerda (até 34rem) e o `lado` (o painel "Por que perguntamos") à direita,
+ * depois do passo no código. O painel some por CSS abaixo de 1024 px: o cadastro renderiza já na hidratação, e um hook
+ * o faria aparecer depois, com pulo.
+ */
+function Moldura({ children, progresso, lado }: { children: React.ReactNode; progresso?: React.ReactNode; lado?: React.ReactNode }) {
   return (
-    <div className="mx-auto min-h-dvh max-w-2xl px-4 pt-4 pb-10 sm:px-6">
+    <div className="mx-auto min-h-dvh max-w-2xl px-4 pt-4 pb-10 sm:px-6 lg:max-w-[75rem] lg:px-8">
       <header className="flex items-center justify-between">
         <Marca />
       </header>
-      {progresso && <div className="mt-6">{progresso}</div>}
-      <main className="mt-6">
-        <AvisoDaCasaNoCadastro />
-        {children}
+      {progresso && <div className="mt-6 lg:max-w-[34rem]">{progresso}</div>}
+      <main className="mt-6 lg:grid lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:gap-x-12">
+        <div>
+          <AvisoDaCasaNoCadastro />
+          {children}
+        </div>
+        {lado}
       </main>
     </div>
+  );
+}
+
+function PorQuePerguntamos({ titulo, texto }: { titulo: string; texto: string }) {
+  return (
+    <aside aria-labelledby="titulo-por-que-perguntamos" className="lateral-fixa hidden rounded-[var(--radius-cartao)] bg-energia-claro p-6 lg:block">
+      <h2 id="titulo-por-que-perguntamos" className="text-xl font-extrabold">
+        {titulo}
+      </h2>
+      <p className="mt-2 max-w-[68ch] text-lg">{texto}</p>
+      <p className="mt-4 border-t border-energia/20 pt-4 text-tinta-suave">{NADA_SAI_DA_CASA}</p>
+    </aside>
   );
 }
 

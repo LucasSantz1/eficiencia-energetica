@@ -58,7 +58,17 @@
   com `…/scratchpad/criterio13.cjs <repo> <antes> <depois>` (mudam 227, 10 sem distribuidora, 0 vencidas). O teste dos
   publicados reprova as 5 mutações. Na cópia sem `.git`, o `test:camadas` falha (usa `git ls-files`): rodar no worktree.
 
+- **HIS-112, q1–q5 (2026-11-13): aprovado, sem defeito.** `layout-computador.spec.ts` (só `computador`, largura por
+  teste), helper `abrirComodo` em `apoio/telas.ts`, 11b +4 096 B no código e `peso-js.json` novo. Critério 2 por
+  `…/scratchpad/qa-his112/q3.cjs` + `comparar.cjs` (PNG + caixas do DOM, base `d324b66`): 0 px. Achado A-112-1 (vão na
+  `/casa` a 1440 px) com ux/frontend.
+
 ## Decisões em vigor
+
+- Comparar capturas: sempre parar as animações antes (`reducedMotion` ou esperar `getAnimations()`) e tirar a captura
+  2 vezes do mesmo build como controle de ruído. Com isso a 390/800 px deu 0 px, sem a tolerância de 16/255.
+- Telas com desenho por largura (HIS-112): o e2e escolhe a largura com `setViewportSize` em `layout-computador.spec.ts`;
+  nos cômodos, usar `abrirComodo` (serve à sanfona e a lista + painel), nunca `section[id^="comodo-"]`.
 
 - Erro provocado de propósito: `errosEsperados.push(/…/)` no teste (fixture nova a cada teste). Cada padrão precisa
   aparecer; o resto reprova; "pedido para fora do site" nunca é esperado. A violação da CSP no Chromium do PW 1.63 diz

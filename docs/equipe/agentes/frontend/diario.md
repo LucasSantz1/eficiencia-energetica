@@ -10,6 +10,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-112 · f4–f7: Casca de 75rem, /casa em áreas, Minha casa em 2 colunas e painel do cadastro
+- O que fiz: merge da 003a (só diários em conflito); f4–f7 em um commit cada; o painel "Por que perguntamos" com os textos da seguranca.
+- Decisões: a lateral da `/casa` sem `lateral-fixa` (passa da janela e vira rolagem interna); `progresso` do cadastro limitado a 34rem; grade da `Moldura` com o passo numa `div` própria.
+- Aprendizado: pixel a pixel pode diferir por anti-aliasing mesmo com as caixas iguais; comparar também a posição de cada elemento.
+- Arquivos: `casca/Casca.tsx`, `acompanhamento/PainelAcompanhamento.tsx`, `ajustes/TelaAjustes.tsx`, `cadastro/{Cadastro.tsx,porQuePerguntamos.ts}`, a história.
+
+## 2026-11-12 · HIS-112 · f1–f3: hook de tela larga, cômodos em lista + painel e dicas em grade no computador
+- O que fiz: `useTelaLarga` e `lateral-fixa` (f1); `ConteudoDoComodo` + `ComodosNoComputador` (f2); grade de dicas e plano ao lado (f3). 390 e 800 px iguais pixel a pixel ao `b07454e`.
+- Decisões: hash por `useSyncExternalStore` (o Next grava o endereço depois do render); foco ao `h1` só se o elemento focado sumiu (um efeito só no `telaLarga` puxava o foco ao abrir a tela, numa corrida); `COR_FAIXA` exportada do `ui/Etiqueta`; cartão de dica empilha o ícone no `lg:`.
+- Aprendizado: o `next start` antigo continua no ar depois de um build novo; matar pelo `cwd` do processo. O 11b das abas `/casa*` soma o chunk dos cômodos.
+- Arquivos: `ui/telaLarga.ts`, `app/globals.css`, `ui/Etiqueta.tsx`, `funcionalidades/comodos/*`, `funcionalidades/dicas/TelaDicas.tsx`, a história.
+
 ## 2026-11-12 · HIS-003a · main integrado por merge; bloco provisório fora; peso medido de novo
 - O que fiz: merge `4cc37bc` (resolvido à mão, `substituidas` no leitor), `ac4fee4` (bloco fora, `lint --fix`, JSDoc),
   `40ba7e1` (e2e da troca), `9abcd0a` (peso). Diários e contextos com as entradas dos dois lados.

@@ -10,6 +10,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-112 · q1–q5: layout para computador — aprovado, sem defeito, 1 achado
+- O que fiz: q1 `abrirComodo`/`esperarComodoAberto` e 3 e2e de 1280 px; q2/q4 `layout-computador.spec.ts` (container,
+  áreas da `/casa`, cômodos sem rolar e com `aria-current`, Tab, `#comodo-`, ids únicos, dicas 2/3 colunas, ajustes,
+  painel do cadastro, ordem de foco 390 × 1440, 68ch por linha, reduzido, zoom 720/360, axe 1024/1440); q3 por script
+  (PNG + caixas) contra `d324b66`; q5 11b +4 096 B e `peso-js.json`. e2e completo 226 ✓.
+- Decisões e porquê: base do q3 = `d324b66` (main + 003a), porque o `main` ainda não tem a 003a e o critério exclui o
+  que outra história muda; 68ch medido por linha (`Range.getClientRects`), não pela caixa do `p`; ordem de foco só
+  dentro do `main` (a navegação do celular fica embaixo desde antes).
+- Arquivos: `apps/web/e2e/{layout-computador.spec.ts,apoio/telas.ts,apoio/peso.ts,comodos.spec.ts,fluxo-principal.spec.ts,
+  sanidade.spec.ts,peso-js.json}`, `playwright.config.ts`, a história, `contexto.md`.
+- Próximos passos: A-112-1 com ux/frontend; ficar de olho no `fluxo-principal` do celular (13 × 14 transições, uma vez).
+
 ## 2026-11-12 · HIS-111 · h8: critério 13 nos publicados, teste dos publicados e e2e — aprovado
 - O que fiz: cópia própria de `3812399` (Node 26); barreiras; critério 13 com script contra `6cfdb74` × `deed1f7`;
   5 mutações no `publicados.test.ts`; `troca-distribuidora` + `peso-js` 3× e a suíte inteira na porta 3701; nomes com acento.

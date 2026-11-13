@@ -1,3 +1,6 @@
+## 2026-11-12 · HIS-112 · textos de privacidade do painel de /comecar
+Conferi frase fixa e 9 textos contra o código: 3 pedidos de ajuste (frase "Nada sai", "Não sei" inexistente, Conta não recalibra). Arquivos: história, contexto.
+
 # Diário · Segurança
 
 Uma entrada por tarefa, da mais nova para a mais antiga. Formato:

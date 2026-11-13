@@ -135,14 +135,14 @@ test.describe("peso de JS (N6, função pura compararPeso)", () => {
     expect(maisLeve.anotacoes).toHaveLength(1);
   });
 
-  test("N6 · negativo: JS do HTML 1 B acima do limite (+1 025) reprova", () => {
+  test(`N6 · negativo: JS do HTML 1 B acima do limite (+${LIMITE_JS_DO_HTML + 1}) reprova`, () => {
     test.fail(true, "compararPeso precisa reprovar o 11a acima do limite");
-    expect(compararPeso(REFERENCIA, medir(100_000 + 1025, 200_000)).erros).toEqual([]);
+    expect(compararPeso(REFERENCIA, medir(100_000 + LIMITE_JS_DO_HTML + 1, 200_000)).erros).toEqual([]);
   });
 
-  test("N6 · negativo: total com prefetch 1 B acima do limite (+2 049) reprova", () => {
+  test(`N6 · negativo: total com prefetch 1 B acima do limite (+${LIMITE_TOTAL_COM_PREFETCH + 1}) reprova`, () => {
     test.fail(true, "compararPeso precisa reprovar o 11b acima do limite");
-    expect(compararPeso(REFERENCIA, medir(100_000, 200_000 + 2049)).erros).toEqual([]);
+    expect(compararPeso(REFERENCIA, medir(100_000, 200_000 + LIMITE_TOTAL_COM_PREFETCH + 1)).erros).toEqual([]);
   });
 
   test("N6 · negativo: rota medida sem referência reprova", () => {

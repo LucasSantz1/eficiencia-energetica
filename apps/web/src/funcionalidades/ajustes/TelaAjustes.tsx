@@ -50,125 +50,130 @@ export function TelaAjustes() {
     // os aparelhos (o /comecar apagaria, D5). Benefício e ligação voltam para "não sei" até a pessoa escolher.
     return (
       <div className="space-y-12">
-        <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
-        {temCasaSemCidade && (
-          <Secao titulo="Onde você mora">
-            <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
-          </Secao>
-        )}
-        <SeusDados />
-        <TrocarCidade
-          aberta={mudandoCidade}
-          aoFechar={() => setMudandoCidade(false)}
-          estados={arquivo?.estados ?? []}
-          arquivo={arquivo}
-          aoEscolher={(m, distribuidoraId) => {
-            definirResidencia({ uf: m.uf, municipioIbge: m.ibge, municipioNome: m.nome, distribuidoraId, beneficio: "nao-sei", ligacao: "nao-sei" });
-            setMudandoCidade(false);
-          }}
-        />
-      </div>
-    );
-  }
-
-  const salvarConta = () => {
-    const k = Number(kwh.replace(",", "."));
-    const v = Number(valor.replace(/\./g, "").replace(",", "."));
-    atualizar({ contaReferencia: k > 0 && v > 0 ? { kwh: k, valor: v } : undefined });
-    setContaSalva(true);
-  };
-
-  return (
-    <div className="space-y-12">
-      <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
-
-      <Secao titulo="Onde você mora">
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-controle)] bg-papel px-4 py-4">
-          <div>
-            <p className="text-lg font-extrabold">
-              {residencia.municipioNome} – {residencia.uf}
-            </p>
-            <p className="text-tinta-suave">
-              Distribuidora: {nomeDistribuidora(distribuidora)}
-              {distribuidora && `, tarifa de ${formatarReais(distribuidora.tarifaKwh)} por kWh sem impostos`}
-            </p>
-          </div>
-          <Botao variante="secundario" onClick={() => setMudandoCidade(true)}>
-            Mudar cidade
-          </Botao>
+          <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
+          {temCasaSemCidade && (
+            <Secao titulo="Onde você mora">
+              <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
+            </Secao>
+          )}
+          <SeusDados />
+          <TrocarCidade
+            aberta={mudandoCidade}
+            aoFechar={() => setMudandoCidade(false)}
+            estados={arquivo?.estados ?? []}
+            arquivo={arquivo}
+            aoEscolher={(m, distribuidoraId) => {
+              definirResidencia({ uf: m.uf, municipioIbge: m.ibge, municipioNome: m.nome, distribuidoraId, beneficio: "nao-sei", ligacao: "nao-sei" });
+              setMudandoCidade(false);
+            }}
+          />
         </div>
-        {opcoesDistribuidora.length > 1 && (
-          <div className="mt-5 space-y-2">
-            <p className="font-bold">Mais de uma empresa atende a sua cidade. Qual manda a sua conta?</p>
-            {opcoesDistribuidora.map((d) => (
-              <Opcao key={d.id} selecionada={residencia.distribuidoraId === d.id} onClick={() => atualizar({ distribuidoraId: d.id })} descricao={`${formatarReais(d.tarifaKwh)} por kWh, sem impostos`}>
-                {nomeDistribuidora(d)}
+      );
+    }
+
+    const salvarConta = () => {
+      const k = Number(kwh.replace(",", "."));
+      const v = Number(valor.replace(/\./g, "").replace(",", "."));
+      atualizar({ contaReferencia: k > 0 && v > 0 ? { kwh: k, valor: v } : undefined });
+      setContaSalva(true);
+    };
+
+    // No computador (HIS-112, L6): a casa e a conta à esquerda, "Seus dados" à direita. Mesma ordem do código do celular.
+    return (
+      <div className="space-y-12 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-8 lg:space-y-0">
+        <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight lg:col-span-2">Minha casa</h1>
+
+        <div className="space-y-12">
+        <Secao titulo="Onde você mora">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-controle)] bg-papel px-4 py-4">
+            <div>
+              <p className="text-lg font-extrabold">
+                {residencia.municipioNome} – {residencia.uf}
+              </p>
+              <p className="text-tinta-suave">
+                Distribuidora: {nomeDistribuidora(distribuidora)}
+                {distribuidora && `, tarifa de ${formatarReais(distribuidora.tarifaKwh)} por kWh sem impostos`}
+              </p>
+            </div>
+            <Botao variante="secundario" onClick={() => setMudandoCidade(true)}>
+              Mudar cidade
+            </Botao>
+          </div>
+          {opcoesDistribuidora.length > 1 && (
+            <div className="mt-5 space-y-2">
+              <p className="font-bold">Mais de uma empresa atende a sua cidade. Qual manda a sua conta?</p>
+              {opcoesDistribuidora.map((d) => (
+                <Opcao key={d.id} selecionada={residencia.distribuidoraId === d.id} onClick={() => atualizar({ distribuidoraId: d.id })} descricao={`${formatarReais(d.tarifaKwh)} por kWh, sem impostos`}>
+                  {nomeDistribuidora(d)}
+                </Opcao>
+              ))}
+            </div>
+          )}
+        </Secao>
+
+        <Secao titulo="Benefício na conta de luz">
+          <div className="space-y-2">
+            {BENEFICIOS.map((b) => (
+              <Opcao key={b.id} selecionada={residencia.beneficio === b.id} onClick={() => atualizar({ beneficio: b.id })} descricao={b.descricao}>
+                {b.titulo}
               </Opcao>
             ))}
           </div>
-        )}
-      </Secao>
+          <p className="mt-3 text-[0.95rem] text-tinta-suave">Para ter direito, a família precisa estar no CadÚnico. A inscrição é feita no CRAS da sua cidade, e a distribuidora aplica o desconto automaticamente.</p>
+        </Secao>
 
-      <Secao titulo="Benefício na conta de luz">
-        <div className="space-y-2">
-          {BENEFICIOS.map((b) => (
-            <Opcao key={b.id} selecionada={residencia.beneficio === b.id} onClick={() => atualizar({ beneficio: b.id })} descricao={b.descricao}>
-              {b.titulo}
-            </Opcao>
-          ))}
-        </div>
-        <p className="mt-3 text-[0.95rem] text-tinta-suave">Para ter direito, a família precisa estar no CadÚnico. A inscrição é feita no CRAS da sua cidade, e a distribuidora aplica o desconto automaticamente.</p>
-      </Secao>
+        <Secao titulo="Tipo de ligação" id="ligacao">
+          <div className="space-y-2">
+            {LIGACOES.map((l) => (
+              <Opcao key={l.id} selecionada={residencia.ligacao === l.id} onClick={() => atualizar({ ligacao: l.id })} descricao={l.descricao}>
+                {l.titulo}
+              </Opcao>
+            ))}
+          </div>
+        </Secao>
 
-      <Secao titulo="Tipo de ligação" id="ligacao">
-        <div className="space-y-2">
-          {LIGACOES.map((l) => (
-            <Opcao key={l.id} selecionada={residencia.ligacao === l.id} onClick={() => atualizar({ ligacao: l.id })} descricao={l.descricao}>
-              {l.titulo}
-            </Opcao>
-          ))}
-        </div>
-      </Secao>
-
-      <Secao titulo="Sua conta de luz" id="conta">
-        <p className="mb-5 max-w-[56ch] text-tinta-suave">Com o consumo e o valor de uma conta, usamos o preço real do kWh na sua cidade, já com impostos. Fica bem mais perto do que você paga.</p>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Campo rotulo="Consumo do mês" id="aj-kwh" ajuda="“Consumo (kWh)” na conta.">
-            <Entrada id="aj-kwh" inputMode="decimal" sufixo="kWh" placeholder="Ex.: 150" value={kwh} onChange={(e) => (setKwh(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
-          </Campo>
-          <Campo rotulo="Valor total" id="aj-valor" ajuda="O valor a pagar.">
-            <Entrada id="aj-valor" inputMode="decimal" prefixo="R$" placeholder="Ex.: 135,90" value={valor} onChange={(e) => (setValor(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
-          </Campo>
-        </div>
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <Botao onClick={salvarConta} disabled={!kwh || !valor}>
-            Usar estes valores
-          </Botao>
-          {residencia.contaReferencia && (
-            <Botao
-              variante="fantasma"
-              onClick={() => {
-                atualizar({ contaReferencia: undefined });
-                setKwh("");
-                setValor("");
-              }}
-            >
-              Voltar para a tarifa da ANEEL
+        <Secao titulo="Sua conta de luz" id="conta">
+          <p className="mb-5 max-w-[56ch] text-tinta-suave">Com o consumo e o valor de uma conta, usamos o preço real do kWh na sua cidade, já com impostos. Fica bem mais perto do que você paga.</p>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Campo rotulo="Consumo do mês" id="aj-kwh" ajuda="“Consumo (kWh)” na conta.">
+              <Entrada id="aj-kwh" inputMode="decimal" sufixo="kWh" placeholder="Ex.: 150" value={kwh} onChange={(e) => (setKwh(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
+            </Campo>
+            <Campo rotulo="Valor total" id="aj-valor" ajuda="O valor a pagar.">
+              <Entrada id="aj-valor" inputMode="decimal" prefixo="R$" placeholder="Ex.: 135,90" value={valor} onChange={(e) => (setValor(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
+            </Campo>
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Botao onClick={salvarConta} disabled={!kwh || !valor}>
+              Usar estes valores
             </Botao>
-          )}
-        </div>
-        {contaSalva && residencia.contaReferencia && (
-          <div className="mt-4">
-            {precoKwh(residencia, distribuidora, undefined).origem === "conta" ? (
-              <Aviso>Pronto. O kWh na sua conta sai por {formatarReais(precoKwh(residencia, distribuidora, undefined).valor)}, e o resumo já usa esse valor.</Aviso>
-            ) : (
-              <Aviso tom="faisca">Com a Tarifa Social, quase todo o consumo dessa conta foi isento, então ela não mostra o preço do kWh. Continuamos usando a tarifa da ANEEL.</Aviso>
+            {residencia.contaReferencia && (
+              <Botao
+                variante="fantasma"
+                onClick={() => {
+                  atualizar({ contaReferencia: undefined });
+                  setKwh("");
+                  setValor("");
+                }}
+              >
+                Voltar para a tarifa da ANEEL
+              </Botao>
             )}
           </div>
-        )}
-      </Secao>
+          {contaSalva && residencia.contaReferencia && (
+            <div className="mt-4">
+              {precoKwh(residencia, distribuidora, undefined).origem === "conta" ? (
+                <Aviso>Pronto. O kWh na sua conta sai por {formatarReais(precoKwh(residencia, distribuidora, undefined).valor)}, e o resumo já usa esse valor.</Aviso>
+              ) : (
+                <Aviso tom="faisca">Com a Tarifa Social, quase todo o consumo dessa conta foi isento, então ela não mostra o preço do kWh. Continuamos usando a tarifa da ANEEL.</Aviso>
+              )}
+            </div>
+          )}
+        </Secao>
+      </div>
 
-      <SeusDados />
+      <div className="lg:self-start">
+        <SeusDados />
+      </div>
 
       <TrocarCidade
         aberta={mudandoCidade}

@@ -126,6 +126,9 @@
 
 ## Pendências
 
+- HIS-112 (desenho L1–L12, 2026-11-12): no code review, conferir que o celular fica idêntico (q3), que o único JS novo
+  é o `useTelaLarga` com `useSyncExternalStore`, a ausência de `id` repetido nos cômodos, o peso do L8 e o rebase sobre
+  a 003a (f4–f7 só depois dela).
 - HIS-003a: **code review aprovado em 2026-11-03**. Falta conferir no rebase o `--fix`, o bloco fora e o teto 8.
   Itens do D10 já conferidos: o `app/error.tsx` fora (ou de volta, com o teto +1,3 kB), os
   `/* @__PURE__ */`, o teto de +10,5 kB por rota no `peso-js.json` do qa, que "Apagar tudo" faz `removeItem` e solta a

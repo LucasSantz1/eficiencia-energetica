@@ -10,6 +10,25 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-12 · HIS-112 · desenho técnico do layout para computador (L1–L12)
+- **O que fiz:** juntei o `origin/main` (`deed1f7`) na branch e li a história, as maquetes e as 5 telas. Escrevi L1–L12
+  (container, cada tela, foco, peso, rebase, tarefas e e2e).
+- **Decisões e porquê:**
+  - Só CSS em `lg:`, porque o celular fica idêntico e o JS não cresce.
+  - Nos cômodos, um desenho por vez com `useSyncExternalStore`, para não haver `id` repetido nem efeito que copia estado.
+  - O critério 1 vence os 64rem do `/comecar`.
+- **Arquivos:** `HIS-112-layout-computador.md`, `contexto.md` e este diário.
+- **Próximos passos:** frontend f1–f3 já; f4–f7 depois da 003a; depois o code review.
+
+## 2026-10-30 · HIS-111 · code review do h6 (frontend) aprovado
+- **O que fiz:** revisei o `10166f5` (core, `aplicacao/casa.ts`, `Casca`, `AvisoTrocaDistribuidora`, `Aviso`,
+  `Cadastro`, `TelaAjustes`) e rodei typecheck, test (core 53, dados 87) e build numa cópia
+  (`scratchpad/tl-his111-h6/copia`): verdes. O ESLint ainda não existe nesta branch (vem com a 002b).
+- **Decisões e porquê:** aprovado. A regravação não entra em laço porque `trocaDeDistribuidora` só troca para um id
+  publicado. A `Casca` fica no layout, então o par da visita dura até "Entendi". `idDaSigla` duplicado vai para o h8.
+- **Arquivos:** `HIS-111-tarifas-vencidas.md` (nota), `contexto.md` e este diário.
+- **Próximos passos:** qa (h7) com o e2e da troca e as capturas; h8 com os itens das duas notas.
+
 ## 2026-11-03 · HIS-003a · code review final aprovado (etapa 7)
 - **O que fiz:** revisei `0cef6c1..ab0838a` (a1–a7, cortes do D10, trava, D-3a-1 a 3). Numa cópia
   (`scratchpad/tl-his003a-rev/`), typecheck, test, build e audit verdes. Rodei 5 specs de e2e (71 passam, 2 pulados);

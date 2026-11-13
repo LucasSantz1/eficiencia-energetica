@@ -10,6 +10,15 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-112 · layout para computador (1024 px ou mais)
+- O que fiz: criei a história, desenhei `/casa`, `/casa/comodos`, `/casa/dicas`, `/casa/ajustes` e `/comecar` e fiz maquetes
+  estáticas de `/casa` e `/casa/comodos`.
+- Decisões e porquê: corte em `lg`; container 75rem; grid-areas sem mudar a ordem do código; cômodos em lista + painel
+  com um desenho por vez (evita `id` repetido e foco pulando); `sticky` só se couber (WCAG 2.4.11); painel de `/comecar`
+  é extra, só no computador.
+- Arquivos: `docs/equipe/historias/HIS-112-layout-computador.md`, esta pasta, maquetes no scratchpad.
+- Próximos passos: dono aprova as maquetes; depois frontend.
+
 ## 2026-10-30 · HIS-002 · `excecoes-axe.ts` revisado pela ux
 - O que fiz: conferi as 8 exceções `color-contrast` da `/` (4 por estado): 1 elemento cada, todas da HIS-110.
 - Decisões e porquê: os 2 `<dd>` dos cartões da Tarifa Social passam a `text-white` (3,92:1 → 4,77:1); faltava essa

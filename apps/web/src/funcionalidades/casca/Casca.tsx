@@ -40,7 +40,7 @@ export function Casca({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh pb-28 sm:pb-12">
       <header className="border-b border-linha bg-papel" style={{ viewTransitionName: "topo" }}>
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:max-w-[75rem] lg:px-8">
           <Marca href="/" />
           {residencia && (
             <Link href="/casa/ajustes" className="max-w-[58%] truncate rounded-full px-3 py-2 text-right text-[0.95rem] font-bold text-tinta-suave hover:bg-fundo">
@@ -48,7 +48,7 @@ export function Casca({ children }: { children: ReactNode }) {
             </Link>
           )}
         </div>
-        <nav aria-label="Seções" className="mx-auto hidden max-w-4xl gap-1 px-4 sm:flex sm:px-6">
+        <nav aria-label="Seções" className="mx-auto hidden max-w-4xl gap-1 px-4 sm:flex sm:px-6 lg:max-w-[75rem] lg:px-8">
           {ITENS.map(({ href, rotulo, Icone }, i) => {
             const ativo = caminho === href;
             return (
@@ -73,7 +73,7 @@ export function Casca({ children }: { children: ReactNode }) {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 pt-6 sm:px-6 sm:pt-8">
+      <main className="mx-auto max-w-4xl px-4 pt-6 sm:px-6 sm:pt-8 lg:max-w-[75rem] lg:px-8">
         <AvisoDaCasaSalva aviso={aviso} aoEntender={dispensar} className="mb-6" naTelaDaCidade={caminho === "/casa/ajustes"} />
         {arquivo?.origem === "exemplo" && (
           <div className="mb-6">
@@ -86,9 +86,12 @@ export function Casca({ children }: { children: ReactNode }) {
           {troca && <AvisoTrocaDistribuidora troca={troca} mostrar={preco.origem === "aneel"} />}
         </div>
         {!carregada ? (
-          <div className="space-y-4" aria-busy aria-label="Carregando">
-            <div className="h-40 animate-pulse rounded-[var(--radius-cartao)] bg-papel" />
+          // No computador o esqueleto tem a forma da /casa (conta em cima; cômodos e coluna lateral embaixo), para a
+          // tela não pular quando os dados chegam (HIS-112, L2).
+          <div className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0" aria-busy aria-label="Carregando">
+            <div className="h-40 animate-pulse rounded-[var(--radius-cartao)] bg-papel lg:col-span-2" />
             <div className="h-64 animate-pulse rounded-[var(--radius-cartao)] bg-papel" />
+            <div className="hidden h-64 animate-pulse rounded-[var(--radius-cartao)] bg-papel lg:block" />
           </div>
         ) : !residencia && temCasaSemCidade && !abrirMinhaCasa ? (
           // Enquanto o aviso T1b está na tela, ele já tem o mesmo texto e o botão: nada se repete embaixo.
