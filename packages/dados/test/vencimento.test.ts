@@ -72,6 +72,34 @@ describe("V7: mais de um valor B1 na vigência", () => {
     expect(selecionarTarifasVigentes(linhas, colunas, "2026-10-30").comMaisDeUmValor).toEqual([{ sigla: "ESS", cnpj: "07282377000120", valores: 2 }]);
   });
 
+  // h8 (tech-lead): a mesma sigla com dois CNPJs na mesma vigência são duas empresas, não um preço por área.
+  describe("mesma sigla com dois CNPJs", () => {
+    const colunas = mapearColunasTarifas(["SigAgente", "NumCNPJDistribuidora", "DatInicioVigencia", "DatFimVigencia", "VlrTUSD", "VlrTE"]);
+    const linha = (cnpj: string, inicio: string, fim: string, tusd = "560,00"): Linha => ({
+      SigAgente: "RGE",
+      NumCNPJDistribuidora: cnpj,
+      DatInicioVigencia: inicio,
+      DatFimVigencia: fim,
+      VlrTUSD: tusd,
+      VlrTE: "384,61",
+    });
+
+    it("na mesma vigência, entra no V7 com os dois CNPJs, mesmo com o valor igual, e a escolha não depende da ordem", () => {
+      const linhas = [linha("02016440000162", "2026-06-19", "2027-06-18"), linha("02016439000138", "2026-06-19", "2027-06-18")];
+      const r = selecionarTarifasVigentes(linhas, colunas, "2026-10-30");
+      expect(r.comMaisDeUmValor).toEqual([{ sigla: "RGE", cnpj: "02016439000138", valores: 1, cnpjs: ["02016439000138", "02016440000162"] }]);
+      expect(selecionarTarifasVigentes([...linhas].reverse(), colunas, "2026-10-30").tarifas).toEqual(r.tarifas);
+      const comValorDiferente = selecionarTarifasVigentes([linhas[0] ?? {}, linha("02016439000138", "2026-06-19", "2027-06-18", "500,00")], colunas, "2026-10-30");
+      expect(comValorDiferente.comMaisDeUmValor).toEqual([{ sigla: "RGE", cnpj: "02016439000138", valores: 2, cnpjs: ["02016439000138", "02016440000162"] }]);
+    });
+
+    it("em vigências diferentes (a RGE antiga até 2019), fica a mais nova e nada vai para o V7", () => {
+      const r = selecionarTarifasVigentes([linha("02016439000138", "2018-04-19", "2019-04-18"), linha("02016440000162", "2026-06-19", "2027-06-18")], colunas, "2026-10-30");
+      expect(r.tarifas.map((t) => [t.sigla, t.cnpj])).toEqual([["RGE", "02016440000162"]]);
+      expect(r.comMaisDeUmValor).toEqual([]);
+    });
+  });
+
   it("não conta vigência antiga nem linha repetida com o mesmo valor", async () => {
     const { linhas, colunas } = await lerTarifas("tarifas.csv");
     const repetidas = [...linhas, ...linhas];

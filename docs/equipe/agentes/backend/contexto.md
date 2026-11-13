@@ -63,18 +63,16 @@
 - (HIS-111, ADR-005 item 2) A sigla só liga um vínculo a uma tarifa quando um dos lados não tem CNPJ ou os dois têm a
   mesma raiz (8 dígitos). Nome igual com outra raiz fica sem tarifa (V5) e entra em `ligacoesPelaSiglaRecusadas`.
 - (HIS-111) V4 = sucessora publicada (vigente ou dentro dos 6 meses do D4). Pergunta aberta ao tech-lead.
+- (HIS-111, h8) O id publicado sai do `idDaSigla` do core (o `slug` da rotina é ele). A rotina do Actions não aceita
+  `--forcar`; publicar com barreira reclamando só por PR, rodando na máquina.
 - (HIS-111) Texto de fora no log do Actions: `anotacao()` para `::notice`/`::warning` e `umaLinha()` para o resto.
   O resumo do job usa `celulaMarkdown()` e `limitarResumo()`.
 
 ## Pendências
 
-- **HIS-111:**
-  - o diagnóstico precisa rodar de novo (push da branch). Esperado: portão (d) com 0, "ainda com uma" = 0, "mudam"
-    perto de 227, "mesma sigla, outro CNPJ: nenhuma", coerência e validação "ok";
-  - perguntas abertas na história: Guarapuava (ordem, dominio-energia), Nova Santa Rita PI com `certaja` (história
-    futura, scrum-master), D3 novo no T2/ADR-005 (tech-lead);
-  - no h8: rodar o `atualizar-dados.yml` sem `--forcar`; trocar o gatilho `push` do `diagnosticar-dados.yml` por
-    `pull_request` com `paths: [packages/dados/**]` (R4); ligar o teste dos publicados (V1, V2, V3, V8).
+- **HIS-111:** no `main`; h8 na branch `his-111-h8` (12/11), falta o PR. No rebase da 003a: o `lerArquivoTarifas`
+  lê `substituidas` (P8 com 501 entradas) e o job `gerar` mantém o `sed` do `\r`. Perguntas abertas: Guarapuava
+  (dominio-energia) e Nova Santa Rita PI (história futura, scrum-master).
 - Para a a6 da HIS-003 (fora da HIS-111): o passo "Publicar resumo" do `atualizar-dados.yml` põe as últimas 120
   linhas numa anotação, e isso escapa de novo as linhas `::notice` da rotina. É só aparência; quem reescrever o
   workflow pode tirar essas linhas do resumo.

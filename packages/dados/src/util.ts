@@ -1,3 +1,5 @@
+import { idDaSigla } from "@ee/core";
+
 /** Remove acentos, deixa minúsculo e junta espaços — para comparar textos da ANEEL com segurança. */
 export function normalizar(texto: string | undefined): string {
   return (texto ?? "")
@@ -8,12 +10,11 @@ export function normalizar(texto: string | undefined): string {
     .trim();
 }
 
-/** "CEMIG-D" → "cemig-d"; "LIGHT SESA" → "light-sesa" */
-export function slug(texto: string): string {
-  return normalizar(texto)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+/**
+ * Id publicado de uma sigla ("CEMIG-D" → "cemig-d"; "LIGHT SESA" → "light-sesa"). A regra mora no core (`idDaSigla`) e
+ * é a mesma que o site usa para achar o nome de um id antigo (h8 da HIS-111: uma regra só).
+ */
+export const slug = idDaSigla;
 
 /** Converte números no formato brasileiro ("1.234,56" ou "289,45") ou internacional ("289.45"). */
 export function numeroBR(valor: string | undefined): number | undefined {

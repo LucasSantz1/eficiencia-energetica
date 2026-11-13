@@ -1,4 +1,5 @@
 import { acharDistribuidora, nomeDaDistribuidora, NOMES_COMERCIAIS, type ArquivoParaBusca } from "./distribuidoras";
+import { idDaSigla } from "./ids";
 
 /**
  * Nome comercial de um id que pode já ter saído do `tarifas.json` (ex.: `rge-sul` → "RGE Sul"), para o aviso da troca
@@ -6,10 +7,7 @@ import { acharDistribuidora, nomeDaDistribuidora, NOMES_COMERCIAIS, type Arquivo
  * vê as chaves próprias da tabela, então "constructor" e "__proto__" não acham nada.
  */
 export function nomeComercialDoId(id: string): string | undefined {
-  // A sigla vira id pela regra do `slug` de `packages/dados/src/util.ts`, sem tirar acentos nem cortar hífens nas pontas:
-  // as siglas que já saíram do arquivo não têm acento. Uma sigla com acento ("Âmbar Roraima") não acha o próprio id, e o
-  // aviso sai sem o nome antigo, como manda o F1 quando não sabemos o nome.
-  const idDaSigla = (sigla: string) => sigla.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  // A sigla vira id pela mesma regra da rotina (`idDaSigla`): uma sigla com acento ("Âmbar Roraima") acha o próprio id.
   return Object.entries(NOMES_COMERCIAIS).find(([sigla]) => idDaSigla(sigla) === id)?.[1];
 }
 

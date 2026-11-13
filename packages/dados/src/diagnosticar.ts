@@ -9,7 +9,7 @@
  * Sai com 1 só quando não consegue baixar ou ler os dados.
  */
 import { appendFile } from "node:fs/promises";
-import { anotacoesDoResumo, limitarResumo, linhasDoErro, umaLinha } from "./anotacoes";
+import { anotacao, anotacoesDoResumo, limitarResumo, linhasDoErro, umaLinha } from "./anotacoes";
 import { diagnosticar } from "./diagnostico";
 import { PASTA_SAIDA } from "./escrever";
 import { arquivosNaPasta, PASTA_CACHE } from "./fontes";
@@ -35,5 +35,7 @@ async function main() {
 main().catch((erro) => {
   // S1: a mensagem pode trazer texto da ANEEL; uma linha por chamada, sem quebra.
   for (const linha of linhasDoErro(erro)) console.error(linha);
+  // Na Action, o erro também vira anotação: o log dá 403 fora do GitHub, e sem isso a falha fica muda para a equipe.
+  if (process.env.GITHUB_ACTIONS === "true") console.log(anotacao("error", "Diagnóstico falhou", linhasDoErro(erro).slice(0, 12).join("\n")));
   process.exit(1);
 });

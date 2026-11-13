@@ -18,7 +18,7 @@ export const CAMINHO_SUCESSOES = fileURLToPath(new URL("../base/sucessoes.json",
 
 /** Cadeia mais longa aceita (A → B → … ). Mais que isso é quase certo erro de digitação (T2). */
 export const MAXIMO_DE_SALTOS = 5;
-/** Linhas demais no arquivo indicam arquivo errado; hoje são 10. */
+/** Linhas demais no arquivo indicam arquivo errado (são 12 em 11/2026; cresce uma por incorporação). */
 const MAXIMO_DE_LINHAS = 200;
 /** Diferença entre `desde` e o fim da última tarifa da antiga que vira aviso no relatório (R3). */
 const DIAS_DE_FOLGA_DO_DESDE = 366;

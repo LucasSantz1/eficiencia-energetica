@@ -10,6 +10,14 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-12 · HIS-111 · h8: sem --forcar no Actions, diagnóstico em PR, teste dos publicados, idDaSigla no core
+- O que fiz: 7 commits na `his-111-h8` (um por item). Conferi os publicados do `main` contra os de 29/10: mudam 227 e
+  10 cidades ficam sem distribuidora, como no diagnóstico 4.
+- Decisões: o V1 dos publicados conta do `geradoEm`, para um dia sem rotina não deixar o CI vermelho. No empate de
+  vigência, fica o menor CNPJ, para o arquivo não mudar à toa. O `idDaSigla` completo custa 38 B e devolve o nome antigo
+  de Âmbar e Neoenergia Brasília.
+- Próximo: PR; rebase da 003a (item 7 e o `sed` do `\r`).
+
 ## 2026-11-03 · HIS-003a · leitores no core, conferência de formato na rotina e CI (a1, a2, a3, a6)
 - O que fiz:
   - a1: `limites.ts`, `entrada.ts`, `estados.ts` e o período acima de 1.800 kWh/dia ignorado.

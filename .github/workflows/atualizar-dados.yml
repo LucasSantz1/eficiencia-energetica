@@ -8,15 +8,12 @@ name: Atualizar tarifas e bandeiras
 # artefato, confere que é só apps/web/public/dados e faz o push.
 # Actions fixadas pelo SHA do commit, com a versão em comentário (ADR-003). Para subir:
 # git ls-remote --tags https://github.com/<action> (usar a linha ^{} quando houver).
+# Sem --forcar (HIS-111, h8): se uma barreira reclamar, nada é gravado e os dados do dia anterior ficam no ar. Quem
+# quiser publicar mesmo assim roda `pnpm dados:atualizar --forcar` na própria máquina e abre um PR com o diff.
 on:
   schedule:
     - cron: "17 9 * * *" # 06:17 em Brasília
-  workflow_dispatch:
-    inputs:
-      forcar:
-        description: "Gravar mesmo se a validação de variação reclamar (formato inválido nunca é gravado)"
-        type: boolean
-        default: false
+  workflow_dispatch: {}
 
 # Nada no topo: cada job pede só o que precisa.
 permissions: {}
@@ -44,21 +41,17 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Atualizar dados
-        # A entrada passa por env: nunca ${{ }} dentro do run (injeção de comando).
-        env:
-          FORCAR: ${{ inputs.forcar }}
         run: |
           set -o pipefail
-          extra=""
-          if [ "$FORCAR" = "true" ]; then extra="--forcar"; fi
-          pnpm dados:atualizar $extra 2>&1 | tee "$RUNNER_TEMP/atualizacao.log"
+          pnpm dados:atualizar 2>&1 | tee "$RUNNER_TEMP/atualizacao.log"
       - name: Publicar resumo da atualização
         if: always()
         run: |
           # Mostra o resumo como anotação (aparece na página da execução e pode ser lido pela API).
           log="$RUNNER_TEMP/atualizacao.log"
           if [ -f "$log" ]; then
-            resumo=$(tail -n 120 "$log" | cut -c1-400 | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+            # Escapa %, \r e \n, nessa ordem, para nada do log virar comando do runner (R2; ressalva 4 da seguranca na 003a).
+            resumo=$(tail -n 120 "$log" | cut -c1-400 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
             echo "::notice title=Resumo da atualização::${resumo}"
           fi
       - name: Conferir o que mudou
