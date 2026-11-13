@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 | --- | --- |
-| Épico | a definir (scrum-master) |
-| Sprint | a definir pelo scrum-master (proposta: logo depois da HIS-111) |
+| Épico | E1 · Inclusão |
+| Sprint | Sprint 1 (entregue em 2026-11-13, junto com a 003a) |
 | Tamanho | M |
 | Papéis principais | ux-acessibilidade (desenho feito), frontend (qa confere) |
-| Status | Maquetes aprovadas pelo dono; desenho técnico pronto (L1–L12) |
+| Status | **Pronto** (2026-11-13), com ressalvas: esqueleto da `Casca` (HIS-116) e PR a integrar |
 | Branch | `his-112-layout-computador` (sai do `main`) |
 
 ## Problema e valor
@@ -390,13 +390,12 @@ rolagem horizontal.
 
 ## Perguntas abertas
 
-- [para: scrum-master] Qual a sprint? Integrar a HIS-111 antes, porque as duas mexem na `Casca`.
-- [para: dono do projeto] Aprovar as maquetes (`/casa` e `/casa/comodos`) antes de implementar. As outras três telas estão
-  só descritas.
+- [x] [para: scrum-master] Qual a sprint? — **Resposta:** Sprint 1, depois da HIS-111 e da 003a no `main`; entregue.
+- [x] [para: dono do projeto] Aprovar as maquetes — **Resposta:** aprovadas.
 - [x] [para: frontend] Os passos do `Cadastro` batem com a tabela de textos do painel? O que faltar, voltar ao ux.
   — **Resposta (tech-lead, 2026-11-12):** batem os 9, um a um (L7). Um `Record` fechado faz o `typecheck` reprovar
   passo novo sem texto.
-- [para: seguranca] Conferir a frase "Nada sai do seu aparelho sem você aceitar." contra o que o site faz hoje.
+- [x] [para: seguranca] (respondida em 2026-11-12, textos corrigidos em `f259306`) Conferir a frase "Nada sai do seu aparelho sem você aceitar." contra o que o site faz hoje.
 - [x] [para: tech-lead] Peso 11b (L8): com f1–f3, `/casa (com casa)` dá +2 084 B e as abas `/casa*` +2 036 B (limite +2 048).
   O 11b de toda aba soma o chunk da `/casa/comodos` (11a +1 889 B, dentro do limite dela), então o teto de 11b não fecha
   com o de 11a, e f4–f7 ainda vão somar. Subir o 11b só para a HIS-112 ou cortar algo?
@@ -446,3 +445,23 @@ Conferido no código: casa só em `localStorage` (`casa.ts`), único `fetch` é 
 4. **Achado A-112-1 (ux, frontend; não reprova o critério 3):** a 1440 px, na `/casa`, a coluna lateral (6 aparelhos e a dica) mede cerca de 1 060 px, e "Seus cômodos" cerca de 420 px. Sobra um vão de cerca de 640 px embaixo dos cômodos, antes do "Mês a mês" (captura `scratchpad/qa-his112/capturas/1440_casa.png`).
 5. **Observação:** uma vez, no e2e completo antes das minhas mudanças, o `fluxo-principal` no celular contou 13 transições em vez de 14 ao terminar o cadastro. Não se repetiu em 3 rodadas isoladas nem no e2e completo final; fica anotado como possível instabilidade.
 6. Evidências fora do git: `…/scratchpad/qa-his112/` (`q3/`, `q3m/`, `capturas/`, `e2e-completo.txt`). **Próximo:** ux e frontend (A-112-1) ‖ seguranca e tech-lead.
+
+### [ux] 2026-11-13 — A-112-1: aprovo a correção do `718c5b1` (opção a)
+1. WCAG 2.4.3 e 1.3.2: a ordem esquerda-topo, direita-topo, esquerda-baixo segue a leitura em Z e não muda o sentido; "Mês a mês" não depende de vir logo depois dos cômodos, e o foco nunca some nem pula sem aviso. O vão de 640 px era pior para quem usa lupa.
+2. Condição: nenhum controle da lateral pode abrir ou mudar algo na coluna esquerda sem aviso (hoje não muda). Se mudar, voltar a falar comigo. Próximo: **frontend** (merge).
+
+### [documentacao] 2026-11-13 — documentação fechada
+Atualizei `site.md` (seção "Layout no computador", tabelas de telas e de `ui/`), `guia-de-uso.md` (uma linha), `arquitetura.md` (`useTelaLarga`) e `CHANGELOG.md` (duas partes). Conferido no código, incluindo o A-112-1 (Mês a mês sob os cômodos).
+O CHANGELOG não tinha entrada da HIS-110: a da HIS-112 ficou no topo, acima da HIS-003a; mover quando a 110 entrar.
+Próximo: **scrum-master** (conferir a Definição de Pronto).
+
+### [tech-lead] 2026-11-13 — code review final (etapa 7): aprovado
+1. **Aprovado** (f1–f7, q1–q5 e A-112-1; a 003a ficou de fora da revisão). Camadas certas: `ui/telaLarga.ts` sem diretiva, e os cômodos só importam o core, a `ui/` e o `./`. JS novo só nos cômodos: o `useTelaLarga` e o hash, os dois por `useSyncExternalStore`, mais um efeito de foco que só lê o DOM. Continuam **7** linhas da HIS-109, as mesmas da 003a. O `lg:`/`xl:` está coerente nas 5 telas, sem `md:` novo, e o A-112-1 muda só o CSS, com o DOM igual.
+2. Como verifiquei: numa cópia, lint, typecheck (89 arquivos), test (239 + 16 + 104 + 152) e build verdes. O celular igual a 390 e 800 px e o peso vêm do qa (q3, q5), dentro do L8 revisto.
+3. Ajuste pequeno, que não bloqueia: no esqueleto da `Casca`, o bloco `hidden lg:block` é o último filho, e o `space-y-4` dá 1rem a mais embaixo do 2º bloco no celular, só enquanto carrega. Pôr o bloco do `lg:` antes do 2º bloco, ou usar `max-lg:` no espaçamento, na próxima vez que a `Casca` for mexida.
+4. Próximo: **seguranca** (se faltar) e o fechamento (documentacao → scrum-master).
+
+### [scrum-master] 2026-11-13 — Definição de Pronto conferida: **Pronto**, com ressalvas
+Conferido pelas notas, sem rodar testes: dono (maquetes), tech-lead (L1–L12; review em `16b4312`), qa (q1–q5, 226 e2e, 0 pixel a 390 e 800 px, peso dentro do L8 revisto), ux (A-112-1, ordem em Z), seguranca (textos de `/comecar`, `f259306`), documentação (`93a0c29`). Perguntas abertas todas respondidas.
+- **Ressalvas (não bloqueiam):** (1) esqueleto da `Casca` com 1rem a mais no celular só enquanto carrega, vira **HIS-116** no backlog; (2) condição da ux: nenhum controle da lateral da `/casa` pode mudar a coluna esquerda sem aviso; (3) CHANGELOG: mover a entrada da HIS-112 quando a 110 entrar; (4) instabilidade única de 13 × 14 transições já está no DEF-002b-1; (5) a branch ainda precisa de PR e merge (quem orquestra).
+Próximo: **quem orquestra** abre a PR da `his-112-layout-computador`.

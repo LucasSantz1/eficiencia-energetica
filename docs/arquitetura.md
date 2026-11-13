@@ -120,6 +120,10 @@ casa pelo `lerCasaSalva`. Na tela, `ui/AvisoDaCasaSalva` e `ui/AvisoFalhaDeCarga
 - **Componentes de `ui/` não leem estado.** Os dados entram por propriedades e as mudanças saem por funções de retorno.
   Exemplo: o `EditorAparelho` recebe `comodos`, `aoSalvar` e `aoRemover`; quem liga o editor à casa é o hook
   `useEdicaoDeAparelho()`, usado pelo acompanhamento e pelos cômodos.
+- **Layout largo é CSS; só os cômodos usam JavaScript.** A partir de 1024 px (`lg`) as telas usam classes `lg:` e a ordem
+  do código não muda. A exceção é `/casa/comodos`, que troca de desenho com `useTelaLarga()` (`ui/telaLarga.ts`,
+  `useSyncExternalStore`, sem estado nem efeito). No servidor o hook devolve `false`: o celular é o padrão. Detalhes em
+  [site.md](sistema/site.md#layout-no-computador-a-partir-de-1024-px).
 - **Código só de servidor termina em `.servidor.ts`** e começa com `import "server-only";`. Só esses arquivos, dentro de
   `infraestrutura/`, usam módulos do Node (`node:fs`). Hoje são dois: `infraestrutura/dados-publicos/arquivos.servidor.ts`
   (lê `public/dados/tarifas.json` e `relatorio.json`) e `aplicacao/numeros-do-inicio.servidor.ts` (monta os números da

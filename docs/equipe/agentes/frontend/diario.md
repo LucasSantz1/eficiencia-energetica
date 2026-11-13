@@ -62,6 +62,10 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
   `apps/web/postcss.config.mjs`, `ui/tiposDeTransicao.ts`, `aplicacao/identificador.ts`, 20 arquivos com imports
   reordenados, a história, este diário e `contexto.md`.
 - Próximos passos: tech-lead (B8 e o bloco provisório), documentacao, qa (etapa 5) e seguranca (Rb1–Rb9).
+## 2026-11-13 · HIS-110 · contraste da /: faixa D com tinta e os 2 <dd> da Tarifa Social em branco
+- O que fiz: criei a história; pílula da faixa D com `text-tinta`; `<dd>` com `text-white`; esvaziei o `excecoes-axe.ts`.
+- Decisões: opção (a) (sem trocar a escala da pílula), porque a (b) muda cor que a pessoa vê e espera o scrum-master. Nenhum token mudou.
+- Arquivos: `inicio/CasaIlustrada.tsx`, `inicio/PaginaInicial.tsx`, `ui/Etiqueta.tsx`, `e2e/excecoes-axe.ts`, a história.
 
 ## 2026-11-13 · HIS-110 · contraste da /: faixa D com tinta e os 2 <dd> da Tarifa Social em branco
 - O que fiz: criei a história; pílula da faixa D com `text-tinta`; `<dd>` com `text-white`; esvaziei o `excecoes-axe.ts`.

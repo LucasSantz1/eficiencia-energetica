@@ -17,7 +17,8 @@ export function faixaDoPeso(participacao: number): Faixa {
  *   B, C e D com tinta (5,80, 8,45 e 5,50:1; com branco dariam 2,70, 1,85 e 2,85).
  * Hoje só a pílula da casa ilustrada (`corDaParte`, em inicio/CasaIlustrada.tsx) põe texto sobre faixa.
  */
-const COR: Record<Faixa, string> = {
+// Classe de fundo de cada faixa (exportada para as barras de cômodo usarem as mesmas cores).
+export const COR_FAIXA: Record<Faixa, string> = {
   a: "bg-faixa-a",
   b: "bg-faixa-b",
   c: "bg-faixa-c",
