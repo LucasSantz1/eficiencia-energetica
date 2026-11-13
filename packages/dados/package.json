@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@ee/core": "workspace:*",
-    "csv-parse": "7.0.3"
+    "csv-parse": "7.0.3",
+    "undici": "8.12.4"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
