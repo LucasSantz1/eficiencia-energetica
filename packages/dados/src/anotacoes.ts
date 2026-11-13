@@ -18,7 +18,7 @@ export function escaparPropriedadeDeComando(texto: string): string {
 }
 
 /** Monta a linha `::notice title=…::texto` (ou `::warning`) já escapada. */
-export function anotacao(tipo: "notice" | "warning", titulo: string, texto: string): string {
+export function anotacao(tipo: "notice" | "warning" | "error", titulo: string, texto: string): string {
   return `::${tipo} title=${escaparPropriedadeDeComando(titulo)}::${escaparDadoDeComando(texto)}`;
 }
 
