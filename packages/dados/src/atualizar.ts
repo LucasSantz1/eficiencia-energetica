@@ -6,7 +6,8 @@
  *                                     a conferência de coerência (V1–V4, V7–V10) nunca é pulada
  *   pnpm dados:atualizar --sem-baixar reaproveita os CSVs já baixados (útil para depurar)
  *
- * Roda todo dia pela GitHub Action .github/workflows/atualizar-dados.yml. Só grava em apps/web/public/dados:
+ * Roda todo dia pela GitHub Action .github/workflows/atualizar-dados.yml, sempre sem --forcar (o --forcar é só para
+ * uso local, com PR). Só grava em apps/web/public/dados:
  * nunca em packages/dados/base (R4 da HIS-111).
  */
 import { linhasDoErro } from "./anotacoes";

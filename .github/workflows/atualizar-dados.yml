@@ -2,15 +2,12 @@ name: Atualizar tarifas e bandeiras
 
 # Baixa os dados abertos da ANEEL e do IBGE todo dia e grava em apps/web/public/dados.
 # Só cria um commit quando algo mudou de verdade.
+# Sem --forcar (HIS-111, h8): se uma barreira reclamar, nada é gravado e os dados do dia anterior ficam no ar. Quem
+# quiser publicar mesmo assim roda `pnpm dados:atualizar --forcar` na própria máquina e abre um PR com o diff.
 on:
   schedule:
     - cron: "17 9 * * *" # 06:17 em Brasília
-  workflow_dispatch:
-    inputs:
-      forcar:
-        description: "Gravar mesmo se a validação reclamar"
-        type: boolean
-        default: false
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -34,7 +31,7 @@ jobs:
       - name: Atualizar dados
         run: |
           set -o pipefail
-          pnpm dados:atualizar ${{ inputs.forcar && '--forcar' || '' }} 2>&1 | tee atualizacao.log
+          pnpm dados:atualizar 2>&1 | tee atualizacao.log
       - name: Publicar resumo da atualização
         if: always()
         run: |
