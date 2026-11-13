@@ -37,7 +37,8 @@ jobs:
         run: |
           # Mostra o resumo como anotação (aparece na página da execução e pode ser lido pela API).
           if [ -f atualizacao.log ]; then
-            resumo=$(tail -n 120 atualizacao.log | cut -c1-400 | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+            # Escapa %, \r e \n, nessa ordem, para nada do log virar comando do runner (R2; ressalva 4 da seguranca na 003a).
+            resumo=$(tail -n 120 atualizacao.log | cut -c1-400 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
             echo "::notice title=Resumo da atualização::${resumo}"
           fi
       - name: Salvar no repositório
