@@ -21,17 +21,6 @@ export interface ExcecaoAxe {
   motivo: string;
 }
 
-const PILULA_FAIXA_D = "texto branco sobre o laranja da faixa D (#ec7a1a), 2,85:1; a HIS-110 troca por text-tinta (5,50:1)";
-const DD_TARIFA_SOCIAL = "texto text-white/85 nos cartões da faixa \"Tarifa Social\"; corrigir a cor muda a tela";
-
-/** As mesmas 4 na `/` sem e com casa (a casa ilustrada e a faixa "Tarifa Social" são iguais para todos); confirmadas no A5 nos 2 projetos. */
-function contrasteDaPaginaInicial(estado: EstadoAxe): ExcecaoAxe[] {
-  return [
-    { regra: "color-contrast", pagina: "/", estado, alvo: 'button[aria-label^="Quarto,"] .numeros', historia: "HIS-110", motivo: `pílula do Quarto: ${PILULA_FAIXA_D}` },
-    { regra: "color-contrast", pagina: "/", estado, alvo: 'button[aria-label^="Cozinha,"] .numeros', historia: "HIS-110", motivo: `pílula da Cozinha: ${PILULA_FAIXA_D}` },
-    { regra: "color-contrast", pagina: "/", estado, alvo: "div.bg-white\\/10:nth-child(1) > dd.text-white\\/85", historia: "HIS-110", motivo: `cartão "Tarifa Social": ${DD_TARIFA_SOCIAL}` },
-    { regra: "color-contrast", pagina: "/", estado, alvo: "div.bg-white\\/10:nth-child(2) > dd.text-white\\/85", historia: "HIS-110", motivo: `cartão "Desconto Social": ${DD_TARIFA_SOCIAL}` },
-  ];
-}
-
-export const EXCECOES_AXE: readonly ExcecaoAxe[] = [...contrasteDaPaginaInicial("sem casa"), ...contrasteDaPaginaInicial("com casa")];
+// Vazia desde a HIS-110: as 8 exceções de contraste da `/` (pílulas da faixa D e os 2 <dd> da Tarifa Social, sem e
+// com casa) foram corrigidas, e o axe passa a provar. Exceção nova só com a história que a corrige.
+export const EXCECOES_AXE: readonly ExcecaoAxe[] = [];
