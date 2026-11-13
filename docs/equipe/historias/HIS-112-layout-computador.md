@@ -322,7 +322,7 @@ Limites contra a referência do `main`:
 
 - `/casa/comodos`: **até +2 048 B** no 11a. É a exceção, pelo desenho novo com o hook (estimo de 1,2 a 1,8 kB em gzip).
 - Demais rotas: até +1 024 B no 11a, como sempre. O `/comecar` leva os 9 textos, cerca de 0,5 kB.
-- 11b: até +2 048 B por rota.
+- 11b: até +4 096 B por rota (revisto em 2026-11-13: o 11b soma o prefetch das outras abas).
 
 Passou disso, falar comigo antes de mudar o `peso-js.json`. O qa atualiza o arquivo uma vez, no fim, medido no último
 commit de código.
@@ -397,7 +397,7 @@ rolagem horizontal.
   — **Resposta (tech-lead, 2026-11-12):** batem os 9, um a um (L7). Um `Record` fechado faz o `typecheck` reprovar
   passo novo sem texto.
 - [para: seguranca] Conferir a frase "Nada sai do seu aparelho sem você aceitar." contra o que o site faz hoje.
-- [para: tech-lead] Peso 11b (L8): com f1–f3, `/casa (com casa)` dá +2 084 B e as abas `/casa*` +2 036 B (limite +2 048).
+- [x] [para: tech-lead] Peso 11b (L8): com f1–f3, `/casa (com casa)` dá +2 084 B e as abas `/casa*` +2 036 B (limite +2 048).
   O 11b de toda aba soma o chunk da `/casa/comodos` (11a +1 889 B, dentro do limite dela), então o teto de 11b não fecha
   com o de 11a, e f4–f7 ainda vão somar. Subir o 11b só para a HIS-112 ou cortar algo?
 
@@ -427,3 +427,9 @@ Conferido no código: casa só em `localStorage` (`casa.ts`), único `fetch` é 
 - 390 e 800 px iguais pixel a pixel ao `b07454e`; lint, typecheck, test, build e axe verdes; 0 HIS-109 nova. Textos novos só os do "Fluxo": "Adicionar cômodo", "Editar cômodo", "Total por mês", "Nenhum cômodo ainda.". Sem f4, a 1440 px as 3 colunas de dica ficam apertadas no `max-w-4xl` (capturas com f4 simulado em `.../scratchpad/his112/com-f4/`).
 - **qa (q1):** quebram a 1280 px, pelo desenho novo: `comodos.spec.ts:31` e `:39` e `fluxo-principal.spec.ts:23` (procuram `section[id^="comodo-"]`). Peso: pergunta ao tech-lead acima.
 - Próximo: **tech-lead** (peso 11b) → frontend f4–f7 depois da 003a; **qa** q1.
+
+### [tech-lead] 2026-11-13 — peso 11b da HIS-112: aceito, com teto novo e sem corte
+1. O erro foi meu no L8: o 11b de cada aba soma o chunk das outras abas por prefetch, então não podia ter o mesmo +2 048 B do 11a. O `useTelaLarga` e o `ComodosNoComputador` só são importados pela `TelaComodos` (conferido com `git grep`), então não há o que cortar fora da `/casa/comodos`.
+2. **Teto da HIS-112 inteira (f1–f7):** os tetos do 11a não mudam e continuam sendo a barreira (+2 048 B na `/casa/comodos`, +1 024 B nas outras rotas). O 11b vai até **+4 096 B** por rota. O prefetch roda depois que a página abriu (critério da HIS-001).
+3. Passou disso, ou se uma rota que não é a de cômodos subir mais de 1 024 B no 11a, falar comigo antes de mudar o `peso-js.json`. O qa atualiza o arquivo uma vez, no fim (L8).
+
