@@ -99,6 +99,7 @@
 - **HIS-111:** etapa 6 feita em 2026-10-31 (aprovado com ressalvas, baixo). S1 fechada em `0cc072a` (conferida). Falta: no h8, rodar sem `--forcar` e trocar o
   gatilho `push` por `pull_request`. Na a3: leitor do `tarifas.json` com `Object.fromEntries`, limite de 500 (caso 501
   no P8) e `distribuidoras: [null]` sem lançar. Sondas em `scratchpad/seg-his111/` (`sondas.ts`, `rodar-ruim.mts`).
+- **HIS-112:** nota de 2026-11-12: frase do painel e textos Empresa e Conta pedem ajuste (ver história).
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

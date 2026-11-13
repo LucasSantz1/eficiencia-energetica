@@ -412,3 +412,10 @@ Próximo: dono do projeto (aprovar), depois frontend.
 - Peso: até +2 048 B na `/casa/comodos` e +1 024 B nas outras rotas (L8). Três pontos em que o critério vence o "Fluxo" estão no L9; o ux pode contestar.
 - Rebase (L10): f1–f3 começam já; f4–f7 (`Casca`, `/casa`, ajustes, cadastro) só depois da 003a no `main`. Respondi à pergunta do frontend: os 9 textos batem.
 - Próximo: **frontend** (f1–f3 já) ‖ **seguranca** (frase do painel) → **qa** (q1–q5, L12).
+
+### [seguranca] 2026-11-12 — frase do painel e 9 textos: pedido de ajuste (sem bloqueio de segurança)
+Conferido no código: casa só em `localStorage` (`casa.ts`), único `fetch` é GET de `/dados/*.json`, sem rastreador; "Apagar tudo" zera tudo e regrava vazio (verdadeiro).
+- **Frase fixa:** "Nada sai do seu aparelho" é falso à letra: o `fetch` de `/dados/municipios/UF.json` mostra o estado ao servidor do site. Use: "Suas respostas ficam só neste aparelho. Não enviamos nada sobre a sua casa."
+- **Empresa de luz:** não existe botão "Não sei" nem "a mais comum da cidade" (`Cadastro.tsx` l. 280–307). Troque o final por "Se não achar, peça a conta a alguém da casa ou veja no site da distribuidora."
+- **Conta:** só compara com a estimativa, não recalibra. Troque por "Comparamos o valor com a nossa estimativa, para você ver a diferença."
+
