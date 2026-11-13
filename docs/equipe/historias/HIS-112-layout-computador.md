@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 | --- | --- |
-| Épico | a definir (scrum-master) |
-| Sprint | a definir pelo scrum-master (proposta: logo depois da HIS-111) |
+| Épico | E1 · Inclusão |
+| Sprint | Sprint 1 (entregue em 2026-11-13, junto com a 003a) |
 | Tamanho | M |
 | Papéis principais | ux-acessibilidade (desenho feito), frontend (qa confere) |
-| Status | Maquetes aprovadas pelo dono; desenho técnico pronto (L1–L12) |
+| Status | **Pronto** (2026-11-13), com ressalvas: esqueleto da `Casca` (HIS-116) e PR a integrar |
 | Branch | `his-112-layout-computador` (sai do `main`) |
 
 ## Problema e valor
@@ -390,13 +390,12 @@ rolagem horizontal.
 
 ## Perguntas abertas
 
-- [para: scrum-master] Qual a sprint? Integrar a HIS-111 antes, porque as duas mexem na `Casca`.
-- [para: dono do projeto] Aprovar as maquetes (`/casa` e `/casa/comodos`) antes de implementar. As outras três telas estão
-  só descritas.
+- [x] [para: scrum-master] Qual a sprint? — **Resposta:** Sprint 1, depois da HIS-111 e da 003a no `main`; entregue.
+- [x] [para: dono do projeto] Aprovar as maquetes — **Resposta:** aprovadas.
 - [x] [para: frontend] Os passos do `Cadastro` batem com a tabela de textos do painel? O que faltar, voltar ao ux.
   — **Resposta (tech-lead, 2026-11-12):** batem os 9, um a um (L7). Um `Record` fechado faz o `typecheck` reprovar
   passo novo sem texto.
-- [para: seguranca] Conferir a frase "Nada sai do seu aparelho sem você aceitar." contra o que o site faz hoje.
+- [x] [para: seguranca] (respondida em 2026-11-12, textos corrigidos em `f259306`) Conferir a frase "Nada sai do seu aparelho sem você aceitar." contra o que o site faz hoje.
 - [x] [para: tech-lead] Peso 11b (L8): com f1–f3, `/casa (com casa)` dá +2 084 B e as abas `/casa*` +2 036 B (limite +2 048).
   O 11b de toda aba soma o chunk da `/casa/comodos` (11a +1 889 B, dentro do limite dela), então o teto de 11b não fecha
   com o de 11a, e f4–f7 ainda vão somar. Subir o 11b só para a HIS-112 ou cortar algo?
@@ -461,3 +460,8 @@ Próximo: **scrum-master** (conferir a Definição de Pronto).
 2. Como verifiquei: numa cópia, lint, typecheck (89 arquivos), test (239 + 16 + 104 + 152) e build verdes. O celular igual a 390 e 800 px e o peso vêm do qa (q3, q5), dentro do L8 revisto.
 3. Ajuste pequeno, que não bloqueia: no esqueleto da `Casca`, o bloco `hidden lg:block` é o último filho, e o `space-y-4` dá 1rem a mais embaixo do 2º bloco no celular, só enquanto carrega. Pôr o bloco do `lg:` antes do 2º bloco, ou usar `max-lg:` no espaçamento, na próxima vez que a `Casca` for mexida.
 4. Próximo: **seguranca** (se faltar) e o fechamento (documentacao → scrum-master).
+
+### [scrum-master] 2026-11-13 — Definição de Pronto conferida: **Pronto**, com ressalvas
+Conferido pelas notas, sem rodar testes: dono (maquetes), tech-lead (L1–L12; review em `16b4312`), qa (q1–q5, 226 e2e, 0 pixel a 390 e 800 px, peso dentro do L8 revisto), ux (A-112-1, ordem em Z), seguranca (textos de `/comecar`, `f259306`), documentação (`93a0c29`). Perguntas abertas todas respondidas.
+- **Ressalvas (não bloqueiam):** (1) esqueleto da `Casca` com 1rem a mais no celular só enquanto carrega, vira **HIS-116** no backlog; (2) condição da ux: nenhum controle da lateral da `/casa` pode mudar a coluna esquerda sem aviso; (3) CHANGELOG: mover a entrada da HIS-112 quando a 110 entrar; (4) instabilidade única de 13 × 14 transições já está no DEF-002b-1; (5) a branch ainda precisa de PR e merge (quem orquestra).
+Próximo: **quem orquestra** abre a PR da `his-112-layout-computador`.

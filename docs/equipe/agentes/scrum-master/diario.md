@@ -10,6 +10,12 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-112 · Definição de Pronto conferida; Pronto com ressalvas
+- O que fiz: conferi pelas notas (dono, tech-lead, qa, ux, seguranca, documentação); marquei Pronto, fechei as perguntas abertas, criei a linha da HIS-112 no `planejamento.md` (E1) e a HIS-116 (esqueleto da `Casca`) no backlog; atualizei o quadro (110 no `main`, 003a na PR #10, 103 à espera de PR, rotina de dados bloqueada desde 12/11).
+- Decisões e porquê: ajuste do tech-lead não bloqueia (só afeta o carregamento, 1rem); sem rodar testes, confiei nas evidências registradas. Não verifiquei a PR #11 no GitHub: usei o que me foi informado.
+- Arquivos: `HIS-112-layout-computador.md`, `planejamento.md`, `quadro.md`, `contexto.md` e este diário.
+- Próximos passos: PR da HIS-112 e da HIS-103; decisão do dono sobre a rotina de dados; merge da PR #10; 003b.
+
 ## 2026-11-13 · HIS-003a · Definição de Pronto conferida; Pronto com ressalvas baixas
 - O que fiz: conferi pelas notas de qa, seguranca, tech-lead e documentação (e2e 204 ✓, `main` integrado em `7ee7448`); marquei Pronto; criei HIS-114 (memória cheia) e HIS-115 (`casa-ilegivel`) no backlog da E0; atualizei o quadro (HIS-111 Pronto e no `main`; HIS-112 aprovada, f4–f7 depois da 003a; HIS-110 na PR #11; HIS-103 em preparação; Sprint 1 aberta).
 - Decisões e porquê: ressalvas baixas não bloqueiam; `TETO_HIS_109` em 7 aceito (decisão do tech-lead, o teto só desce); `site.md` fica como pendência da documentação, sem ID. Não rodei os testes: confiei nas evidências registradas.

@@ -10,9 +10,9 @@ A única mudança visível de propósito é a correção da HIS-111 (conta errad
 | [HIS-001 · Camadas](historias/HIS-001-camadas.md) | Pronto | Definição de Pronto conferida (etapa 9) | — (quem orquestra integra ao `main`) |
 | [HIS-002a · Testes no navegador no CI](historias/HIS-002-qualidade-automatica.md) | **Pronto** (ressalva Ra9) | Definição de Pronto conferida (etapa 9, 2026-10-30) | quem orquestra integra ao `main`; o dono confere o artefato (Ra9) e marca os 2 checks como obrigatórios; tabela de peso do runner (D14) |
 | [HIS-002b · Lint e camadas no CI](historias/HIS-002b-lint-e-camadas.md) | **Pronto** (ressalvas) | Definição de Pronto conferida (etapa 9, 2026-11-03): critério 11 com 7 + bloco provisório até a 003a; HIS-113 e DEF-002b-1 no backlog | quem orquestra integra ao `main`; a 003a tira o bloco provisório e sobe o teto para 8 |
-| [HIS-003a · Dados quebrados não travam o site](historias/HIS-003-base-de-seguranca.md) | **Pronto** (2026-11-13, ressalvas baixas) | Definição de Pronto conferida (etapa 9): `main` integrado (`7ee7448`), e2e 204 ✓; PR #10; ressalvas em HIS-114/HIS-115 e `site.md` | quem orquestra faz o merge da PR #10; depois 003b |
+| [HIS-003a · Dados quebrados não travam o site](historias/HIS-003-base-de-seguranca.md) | **Pronto** (2026-11-13, ressalvas baixas) | Definição de Pronto conferida (etapa 9): `main` integrado (`7ee7448`), e2e 204 ✓; **PR #10**; ressalvas em HIS-114/HIS-115 e `site.md` | quem orquestra faz o merge da PR #10; depois 003b |
 | [HIS-003b · Campos com limite e "Confere?"](historias/HIS-003b-campos-com-limite.md) | Preparada | textos (T5, T6) e desenho prontos; critério 8 (T6) novo; ≈ 1,5 dia | qa ("Plano de testes"); etapa 4 (frontend b1–b2, qa b3) **depois** do merge da 003a no `main` |
-| HIS-112 · Layout para computador | **Aprovada pelo dono** · f1–f3 feitos | f4–f7 só **depois** da 003a no `main` | frontend + ux retomam f4–f7 depois do merge da 003a |
+| [HIS-112 · Layout para computador](historias/HIS-112-layout-computador.md) | **Pronto** (2026-11-13, ressalvas) | Definição de Pronto conferida; qa 226 e2e, 0 pixel a 390 px; ressalva do esqueleto na HIS-116 | quem orquestra abre a PR da `his-112-layout-computador` |
 | HIS-004 · Sem menção a instituição; espaços reservados | Pronto | — | — |
 | [HIS-111 · Tarifas vencidas (número errado no ar)](historias/HIS-111-tarifas-vencidas.md) | **Pronto, no `main`** (PRs #5, #8 e #9) | h8 conferido nos arquivos publicados | — |
 
@@ -20,8 +20,8 @@ A única mudança visível de propósito é a correção da HIS-111 (conta errad
 
 | História | Status | Etapa atual | Próximo papel |
 | --- | --- | --- | --- |
-| HIS-110 · Contraste das cores padrão | Em revisão, **PR #11** | implementada, aguarda revisões | qa, seguranca e tech-lead revisam a PR #11 |
-| HIS-103 · Guia da Tarifa Social | Em preparação pelo domínio | regras de quem tem direito, com fonte | dominio-energia entrega as regras; depois ux (textos) e scrum-master (história e critérios) |
+| HIS-110 · Contraste das cores padrão | **No `main`** (PR #11) | integrada | — |
+| HIS-103 · Guia da Tarifa Social | Em preparação pelo domínio | textos do ar corrigidos, à espera de PR; regras de quem tem direito ainda com a dominio-energia | quem orquestra abre a PR; dominio-energia entrega as regras; depois ux (textos) e scrum-master (história e critérios) |
 | HIS-107 · Zoom de 200% | Backlog da sprint | falta critério verificável | scrum-master refina |
 | HIS-102 · Letra maior e alto contraste | Backlog da sprint (passa primeiro se não couber) | — | — |
 
@@ -54,6 +54,9 @@ scratchpad e porta própria (retro da HIS-001). A implementação (etapa 4) **n�
 
 ### Pendência do dono do projeto (quem orquestra leva)
 
+- **Rotina de dados da ANEEL bloqueada desde 12/11**, à espera de decisão do dono. Sem ela, os arquivos em
+  `apps/web/public/dados/` não se atualizam (tarifa e bandeira do mês podem ficar velhas). Dono decide como seguir.
+
 - HIS-002a (ressalva Ra9 da seguranca): baixar o `relatorio-e2e` da execução vermelha do `32f2cff` numa pasta vazia e
   seguir o roteiro da nota da seguranca de 2026-10-30. Se aparecer algo, apagar o artefato e chamar a seguranca.
 - Ao fechar a HIS-002a: marcar como **obrigatórios** na proteção do `main` (configurações do GitHub) os checks
@@ -82,9 +85,11 @@ scratchpad e porta própria (retro da HIS-001). A implementação (etapa 4) **n�
 
 - 2026-11-13 — HIS-111: **Pronto e no `main`** (PRs #5, #8 e #9). HIS-112 aprovada pelo dono (f1–f3 feitos; f4–f7 depois da 003a). HIS-110 na PR #11; HIS-103 em preparação pelo domínio. **HIS-003a: Pronto** (ressalvas baixas; HIS-114 e HIS-115 no backlog; `site.md` pendente na documentação). **Sprint 1 começou.**
 
+- 2026-11-13 — HIS-112: **Pronto** (etapa 9), com ressalvas; **HIS-116** (esqueleto da `Casca`) no backlog. HIS-110 no `main` (PR #11); HIS-003a na PR #10; HIS-103 com os textos do ar corrigidos, à espera de PR. Rotina de dados da ANEEL bloqueada desde 12/11, à espera do dono.
+
 ## Próximas (backlog priorizado)
 
-1. HIS-110 Contraste das cores padrão (P; Sprint 1, PR #11)
+1. ~~HIS-110 Contraste das cores padrão~~ (no `main`, PR #11)
 2. HIS-107 Zoom de 200% sem rolagem para o lado (antes da HIS-102: letra maior agrava o mesmo problema)
 3. HIS-102 Letra maior e alto contraste (se a Sprint 1 não couber, é ela que passa, não a HIS-103)
 4. HIS-103 Guia da Tarifa Social
@@ -97,6 +102,6 @@ scratchpad e porta própria (retro da HIS-001). A implementação (etapa 4) **n�
 11. HIS-105 Compartilhar e imprimir (Sprint 4)
 
 Sem sprint ainda: DEF-002b-1 (fluxo principal instável, frontend + qa), HIS-113 (lint de HTML por nome calculado,
-pode ir junto da 003a ou na Sprint 1) e HIS-112 (layout para computador, depende do dono).
+pode ir junto da 003a ou na Sprint 1) e HIS-116 (esqueleto da `Casca`, na próxima vez que ela for mexida).
 
 O backlog completo está em [`../planejamento.md`](../planejamento.md).
