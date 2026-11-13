@@ -1,5 +1,41 @@
 # Registro de mudanças
 
+## 2026-11-13 · Dados quebrados não travam o site (HIS-003a)
+
+**Para quem usa**
+- Se os dados da sua casa neste celular estiverem estragados, o site não fica mais em branco. Ele tira só o que está
+  errado (por exemplo, um aparelho com potência negativa), mantém o resto e avisa em linguagem simples: "Tiramos 2
+  aparelhos e 1 conta de luz. O resto da sua casa continua salvo."
+- Se a cidade e a empresa de luz saírem, os aparelhos continuam salvos e o aviso leva a "Escolher minha cidade". Se nada
+  der para usar, o aviso leva a "Cadastrar minha casa".
+- Se os preços da luz ou a lista de cidades não carregarem, aparece "Tentar de novo". Sem internet, o aviso diz isso.
+  A sua casa e as suas respostas continuam salvas.
+- Se algo inesperado acontecer, aparece "Algo deu errado nesta tela. Não foi culpa sua", com "Tentar de novo" e
+  "Voltar ao início". Uma página que não existe mostra "Não achamos esta página".
+- "Apagar todos os meus dados" agora aparece também quando a casa não pôde ser lida, e apaga tudo o que o site guardou.
+- O número grande de aparelhos aparece com ponto de milhar ("9.500").
+
+**Técnico**
+- Leitores no `@ee/core` (ADR-004): `limites.ts`, `leitura-segura.ts`, `casa-salva.ts` (`lerCasaSalva`, `avisoDaCasaSalva`),
+  `arquivos-publicos.ts` (`lerArquivoTarifas`, `lerArquivoMunicipios`, `lerRelatorioDosDados`, `ErroDeFormato`),
+  `entrada.ts` e `estados.ts`. Escritos à mão, sem zod; nunca lançam para dado ruim e não corrigem nada.
+- `infraestrutura/armazenamento/`: storage próprio que nunca lança e `merge` do `persist` que usa o `lerCasaSalva`. Se o
+  leitor lançar, a gravação trava (a casa salva não é sobrescrita). O cadastro novo guarda uma cópia do texto em
+  `eficiencia-energetica:casa-ilegivel` (uma vez só, só no aparelho) e solta a trava; `apagarTudo` remove as duas chaves.
+- `/dados` passa pelos leitores no navegador e no servidor (`useResumo` expõe `tentarDeNovo`, `falhasSeguidas` e
+  `semInternet`); o `lerArquivoTarifas` lê também `substituidas` (HIS-111). A sigla do estado é conferida com `ehUf`.
+- Telas: `app/global-error.tsx` (sem `app/error.tsx`, que pesava 1,3 kB em toda rota), `app/not-found.tsx`, `ui/TelaDeErro`,
+  `ui/AvisoDaCasaSalva`, `ui/AvisoFalhaDeCarga` e foco no título (`ui/foco.ts`).
+- Sete cabeçalhos de segurança em toda resposta (`next.config.ts`; CSP sem `unsafe-eval` em produção), `pnpm audit
+  --audit-level high` no CI, `.github/dependabot.yml` (npm e Actions, espera de 7 dias) e `apps/web/.env.example`.
+- Rotina de dados em dois jobs: `gerar` (só leitura) e `publicar` (escrita, só no `main`, sem rodar código do projeto).
+  `conferirFormato` (`packages/dados/src/formato.ts`) usa os mesmos leitores antes de gravar e não passa com `--forcar`.
+  O log do resumo escapa `%`, `\r` e `\n`.
+- O bloco provisório do `eslint.config.mjs` saiu; a exceção por arquivo hoje é só `app/global-error.tsx`. O teto da
+  HIS-109 ficou em 7 (decisão do tech-lead).
+- Testes: core 239, web 16 (vitest), dados 104, camadas 152 e 210 no navegador (204 rodam, 6 pendentes), com
+  `cabecalhos`, `casa-salva`, `dados-publicos` e `erros` novos. Peso de JS aceito pelo tech-lead (`peso-js.json`).
+
 ## 2026-10-31 · Node 26 (LTS)
 
 **Para quem usa**

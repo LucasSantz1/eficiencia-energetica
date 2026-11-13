@@ -1384,3 +1384,9 @@ aceito, com R4c e R4d nas consequências.
 - **Item 7 do h8:** já estava feito na integração anterior (`4cc37bc`). O teste confere que 500 entradas passam, 501 dão `ErroDeFormato` e `distribuidoras: [null]` não lança: a entrada sai e conta.
 - **`peso-js.json`:** o campo `decisao` traz a decisão do tech-lead (`24480da`).
 - **Verifiquei:** lint, typecheck, test (core 239, web 16, dados 104, camadas 152), build e o e2e inteiro numa cópia, na porta 3311: 204 passam e 6 ficam pulados, o `peso-js` incluído.
+
+### [documentacao] 2026-11-13 — documentação da HIS-003a pronta
+- Mudaram: `privacidade-e-seguranca.md` (trava, `casa-ilegivel`, "Apagar tudo", telas de erro), `guia-de-uso.md` (T1 a T4), `dados.md` (conferência de formato, jobs `gerar`/`publicar`), `arquitetura.md` (leitores do ADR-004, bloco provisório fora), `desenvolvimento.md` e `CHANGELOG.md`. Índice de ADRs sem mudança (ADR-004 já listado).
+- Conferi no código: cabeçalhos, `apagarTudo`, textos T1–T4, workflow, `formato.ts`, contagens (camadas 85 arquivos e 152 testes; e2e 210).
+- Pendente: `site.md` (pasta `ui/` nova e validação de fronteira) fica para a próxima rodada.
+- `[para: scrum-master]` a história está pronta para conferência da Definição de Pronto.
