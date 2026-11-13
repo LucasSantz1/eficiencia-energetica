@@ -6,7 +6,7 @@
 | Sprint | **Sprint 0, prioridade 1** (scrum-master, 2026-10-30): defeito com número errado no ar, não função nova |
 | Tamanho | M (≈ 3 dias: 2,25 backend, 0,25 frontend, 0,5 qa; T4) |
 | Papéis principais | backend, dominio-energia, qa; tech-lead (contrato do `tarifas.json`) e ux (um texto) |
-| Status | Em andamento: h0–h5 feitos pelo backend em 30/10; falta o resultado do passo 0 (push da branch), o h6 (frontend), o h7 (qa) e o h8 |
+| Status | No `main` (PR #5 e #8); h8 na branch `his-111-h8` (backend, 12/11), falta o PR |
 | Branch | `his-111-tarifas-vencidas` |
 
 > **Origem:** achado P-de-1 do dominio-energia na HIS-003 ("Achado: tarifas vencidas", 2026-10-30). Investigação e
@@ -1198,3 +1198,10 @@ resto igual.
 - **Sem regressão:** typecheck, test (53 + 87) e build verdes; e2e inteiro 121 ok + 6 `fixme` antigos; `peso-js` e `troca-distribuidora` 3× verdes; roteiro manual (teclado, zoom 200%, reduzido, nomes) 19/19, console limpo.
 - **Acentos:** os 12 ids de `substituidas` acham o mesmo nome de antes (`cnee` segue sem nome); só "Âmbar Amazonas", "Âmbar Roraima" e "Neoenergia Brasília" perdem o nome antigo, e as três estão publicadas. Se uma sair, o aviso usa o texto sem o nome antigo (F1). Nenhum nome sai trocado. Risco baixo, aceito.
 - Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-r2-*` (e2e, peso, capturas).
+
+### [backend] 2026-11-12 — h8 na branch `his-111-h8` (7 commits, `419d705..4dbfa1a`)
+- **Feito:** a rotina do Actions roda sem `--forcar`. O diagnóstico roda em `pull_request` e o teste dos publicados (V1, V2, V3, V8) entra no `pnpm test`. A mesma sigla com dois CNPJs agora aparece no V7. Os comentários velhos foram corrigidos e o `\r` do resumo é escapado. O id sai de uma regra só, o `idDaSigla` do core (+38 B em `/casa*`).
+- **Publicados no `main` (`deed1f7`) contra os de 29/10 (`6cfdb74`):** mudam **227** (RS 127, SP 62, RR 14, MG 13, PB 9, PR 1, RJ 1), 0 cidades com vencida e **10** sem distribuidora. O relatório não tem agente sem tarifa, vínculo extinto nem ligação recusada. As 9 cidades do critério 1 e de risco estão como no diagnóstico 4.
+- **Fora:** o item 7 (leitor com 501 entradas e `distribuidoras: [null]`) é meu, mas vive na branch da 003a. Faço no rebase dela, com o `sed` do `\r` no job `gerar`.
+- **Verifiquei:** lint, typecheck, test (core 56, dados 98, camadas 152), build, `peso-js` e `troca-distribuidora` (23/23).
+- **Próximo:** quem orquestra abre o PR; o qa confere o critério 13 nos publicados; a seguranca olha o gatilho novo.
