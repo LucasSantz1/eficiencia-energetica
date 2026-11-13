@@ -16,7 +16,7 @@ import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
 
 const BENEFICIOS: { id: Beneficio; titulo: string; descricao: string }[] = [
-  { id: "tarifa-social", titulo: "Tarifa Social", descricao: "CadÚnico com renda de até meio salário mínimo por pessoa, ou BPC. Os primeiros 80 kWh são de graça." },
+  { id: "tarifa-social", titulo: "Tarifa Social", descricao: "CadÚnico com renda de até meio salário mínimo por pessoa, BPC, ou alguém que precisa de aparelho elétrico para a saúde. A energia dos primeiros 80 kWh é de graça." },
   { id: "desconto-social", titulo: "Desconto Social", descricao: "CadÚnico com renda entre meio e um salário mínimo por pessoa. Desconto até 120 kWh." },
   { id: "nenhum", titulo: "Não tenho benefício", descricao: "A conta vem com a tarifa normal." },
   { id: "nao-sei", titulo: "Não sei", descricao: "Calculamos com a tarifa normal." },
@@ -93,7 +93,7 @@ export function TelaAjustes() {
             </Opcao>
           ))}
         </div>
-        <p className="mt-3 text-[0.95rem] text-tinta-suave">Para ter direito, a família precisa estar no CadÚnico. A inscrição é feita no CRAS da sua cidade, e a distribuidora aplica o desconto automaticamente.</p>
+        <p className="mt-3 text-[0.95rem] text-tinta-suave">Para ter direito, a família precisa estar no CadÚnico. A inscrição é feita no CRAS da sua cidade. O desconto vem sozinho quando o CadÚnico está em dia e a conta está no nome de alguém da família. Quem precisa de aparelho para a saúde pede na distribuidora, com atestado médico.</p>
       </Secao>
 
       <Secao titulo="Tipo de ligação" id="ligacao">
