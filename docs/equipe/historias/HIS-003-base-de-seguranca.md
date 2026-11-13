@@ -6,7 +6,7 @@
 | Sprint | 0 |
 | Tamanho | M (≈ 3 dias com o qa: passos a1–a7 do D9) |
 | Papéis principais | seguranca, backend, frontend, tech-lead |
-| Status | Preparada (a2 espera a P-tl-1; a3 espera a P-tl-2; etapa 4 depois da 002a no `main`) |
+| Status | **Pronto** (2026-11-13), com ressalvas baixas: R-3a-1 (ADR-004, leitura futura da `casa-ilegivel`), R-3a-2 (`site.md` da documentação) e teto da HIS-109 em 7; ver a nota final do scrum-master |
 | Branch | `his-003-seguranca` (sai do `main` **depois** da integração da HIS-002a) |
 
 > **Origem:** dividida da HIS-003 pelo scrum-master em 2026-10-30, a partir da proposta D9 do tech-lead (P-tl-3). A
@@ -1390,3 +1390,9 @@ aceito, com R4c e R4d nas consequências.
 - Conferi no código: cabeçalhos, `apagarTudo`, textos T1–T4, workflow, `formato.ts`, contagens (camadas 85 arquivos e 152 testes; e2e 210).
 - Pendente: `site.md` (pasta `ui/` nova e validação de fronteira) fica para a próxima rodada.
 - `[para: scrum-master]` a história está pronta para conferência da Definição de Pronto.
+
+### [scrum-master] 2026-11-13 — Definição de Pronto conferida: **Pronto**, com ressalvas baixas
+1. **Critérios 1–7:** cobertos pelo e2e (204 ✓, 6 pulados) em `main` integrado (`7ee7448`); barreira (lint, typecheck, test, build) verde; capturas 390/1280 px e axe feitos pelo qa.
+2. **Revisões:** qa (a7 e D-3a-1 a D-3a-3, conferidos), seguranca (R1–R13 e D10 2, baixo), tech-lead (code review, D10, peso `24480da`), documentação (`41bad99`, `fe4bb81`). Compatibilidade: formato salvo e `version` inalterados.
+3. **Ressalvas:** (a) `\r` no escape do workflow: feita (`7ee7448`); (b) @__PURE__/JSDoc: feita; (c) **R-3a-1**, quem um dia ler a `casa-ilegivel` passa pelo `lerCasaSalva` e apaga a chave depois de recuperar: nota no ADR-004 / HIS-114; (d) **R-3a-2**: `site.md` fica sem a pasta `ui/` e a validação de fronteira; (e) `TETO_HIS_109` ficou em 7, não 8 (decisão do tech-lead).
+4. **Backlog:** HIS-114 (aviso de memória cheia, risco 6) e HIS-115 (recuperar a `casa-ilegivel`, R-3a-1) em `planejamento.md`. Próximo: quem orquestra faz o merge da PR #10; depois, 003b.
