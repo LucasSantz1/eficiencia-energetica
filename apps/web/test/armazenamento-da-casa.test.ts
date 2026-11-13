@@ -1,5 +1,5 @@
-import type { DadosCasa, Residencia } from "@ee/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { DadosCasa, Residencia } from "@ee/core";
 import { criarArmazenamentoSeguro } from "@/infraestrutura/armazenamento/armazenamento-local";
 import { lerCasaNaHidratacao } from "@/infraestrutura/armazenamento/hidratacao";
 

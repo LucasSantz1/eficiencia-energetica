@@ -172,9 +172,8 @@ test("(g) o recipiente role=\"status\" já vem vazio no HTML do servidor", async
   }
 });
 
-test.fixme("HIS-111 · (h) distribuidora substituída: a casa com rge-sul mostra o preço da RGE e é regravada com rge", async ({ page, context }) => {
-  // Critério 8 da HIS-111: o `substituidas` entra no `lerArquivoTarifas` no rebase da 003a (nota do backend, D10 3).
-  // Quando entrar, trocar fixme por test.
+test("HIS-111 · (h) distribuidora substituída: a casa com rge-sul mostra o preço da RGE e é regravada com rge", async ({ page, context }) => {
+  // Critério 8 da HIS-111: o `substituidas` passa pelo `lerArquivoTarifas` do site desde a integração do main (D10 3).
   const casa = casaV2();
   const comRgeSul = comResidencia(casa, { uf: "RS", municipioIbge: 4314902, municipioNome: "Porto Alegre", distribuidoraId: "rge-sul" });
   await semearCasa(context, { ...comRgeSul, state: { ...comRgeSul.state, contas: [] } });

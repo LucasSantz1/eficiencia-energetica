@@ -1,7 +1,7 @@
 "use client";
 
-import { ehUf, lerArquivoMunicipios, lerArquivoTarifas, type ArquivoMunicipios, type ArquivoTarifas } from "@ee/core";
 import { useCallback, useEffect, useState } from "react";
+import { ehUf, lerArquivoMunicipios, lerArquivoTarifas, type ArquivoMunicipios, type ArquivoTarifas } from "@ee/core";
 
 /**
  * Os dados de tarifas e municípios são arquivos estáticos em /dados, atualizados todo dia

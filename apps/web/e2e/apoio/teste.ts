@@ -51,7 +51,7 @@ interface Vigilancia {
 }
 
 export const test = base.extend<Vigilancia>({
-  // eslint-disable-next-line no-empty-pattern -- a fixture não depende de nenhuma outra (forma pedida pelo Playwright)
+  // `{}`: a fixture não depende de nenhuma outra (forma pedida pelo Playwright; a configuração não liga no-empty-pattern).
   errosEsperados: async ({}, usar) => usar([]),
   vigiarConsoleErrosERede: [
     async ({ context, baseURL, errosEsperados }, usar, info) => {

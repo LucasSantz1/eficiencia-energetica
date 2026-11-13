@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import {
   aparelhoInicial,
   COMODOS_PADRAO,
@@ -21,9 +24,6 @@ import {
   type Residencia,
   type TipoComodo,
 } from "@ee/core";
-import { useEffect, useState } from "react";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { criarArmazenamentoSeguro } from "@/infraestrutura/armazenamento/armazenamento-local";
 import { dadosSalvaveis, lerCasaNaHidratacao } from "@/infraestrutura/armazenamento/hidratacao";
 import { novoId } from "@/infraestrutura/identificador";

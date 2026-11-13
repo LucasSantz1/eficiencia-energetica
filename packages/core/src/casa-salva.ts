@@ -40,8 +40,8 @@ const LIGACOES = listaCompleta<Ligacao>()(["monofasica", "bifasica", "trifasica"
 /**
  * Campos que cada leitor lê (R4c). O `typecheck` reprova se o tipo ganhar um campo que não está aqui, e o teste
  * `casa-salva.test.ts` reprova se o leitor não devolver todos eles. Assim um campo novo nunca some em silêncio.
+ * As listas só servem ao `typecheck` e aos testes: marcadas com `@__PURE__`, saem do JS do site (D10, 1b).
  */
-// `/* @__PURE__ */`: as listas só servem ao `typecheck` e aos testes (R4c); marcadas assim, saem do JS do site (D10, 1b).
 export const CAMPOS_DA_CASA_SALVA = {
   casa: /* @__PURE__ */ listaCompleta<keyof DadosCasa>()(["residencia", "comodos", "aparelhos", "contas", "leituras", "plano"]),
   residencia: /* @__PURE__ */ listaCompleta<keyof Residencia>()(["uf", "municipioIbge", "municipioNome", "distribuidoraId", "beneficio", "ligacao", "contaReferencia", "pessoas"]),
