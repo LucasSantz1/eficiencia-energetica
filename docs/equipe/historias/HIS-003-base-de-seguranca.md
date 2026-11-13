@@ -1373,3 +1373,8 @@ aceito, com R4c e R4d nas consequências.
 - `40ba7e1`: o e2e da troca agora olha a 2ª região de status. Com o V8 no site, `substituidas` em laço sai inteiro, e um `substituidas` que não é objeto mostra o T2.
 - **`[para: tech-lead]` Peso (`9abcd0a`, `peso-js.json`):** contra o 06be352, o 11a sobe até +12 018 B e o 11b até +14 714 B. Só a 003a sobre o main novo: +10 993 B e +13 880 B, cerca de 0,5 kB e 0,4 kB acima do teto. É preciso decidir antes do merge.
 - **Barreira:** lint, typecheck, test (core 236, web 16, dados 98, camadas 152) e build verdes. O e2e numa cópia (3357) deu 188 ✓; as falhas da troca já estão corrigidas (20 ✓ ao repetir, teclado incluído). Só o peso depende da referência nova.
+
+### [tech-lead] 2026-11-13 — peso depois da integração aceito; teto da HIS-109 em 7 confirmado
+1. **Peso aceito, sem corte.** Conta só o que é da 003a sobre o `main` novo (a 111 e a 002b já foram aceitas nas suas histórias). O teto passa a ser +11 264 B no 11a e +14 336 B no 11b, e hoje está em +10 993 e +13 880 B. A sobra sobre o D10 vem do D-3a-1 (LGPD: "Apagar tudo" sempre à mão) e da leitura do `substituidas`, os dois necessários. O frontend troca o "Aguarda decisão" do campo `decisao` do `peso-js.json` por "aceito pelo tech-lead em 2026-11-13".
+2. **`TETO_HIS_109` = 7 confirmado.** É o número de hoje: o efeito de `navegador.ts` saiu, e o de `casa.ts` entrou. O bloco provisório já saiu. O teto só desce (D17).
+3. **Atenção:** o `git merge origin/main` (h8 da 111, PR #9) dá conflito em `.github/workflows/atualizar-dados.yml` e nos diários e contexto do backend e do qa. Não resolvi. Fica com o backend (o workflow) antes do merge da 003a.
