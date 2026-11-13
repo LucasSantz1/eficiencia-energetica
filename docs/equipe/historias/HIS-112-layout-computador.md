@@ -450,3 +450,8 @@ Conferido no código: casa só em `localStorage` (`casa.ts`), único `fetch` é 
 ### [ux] 2026-11-13 — A-112-1: aprovo a correção do `718c5b1` (opção a)
 1. WCAG 2.4.3 e 1.3.2: a ordem esquerda-topo, direita-topo, esquerda-baixo segue a leitura em Z e não muda o sentido; "Mês a mês" não depende de vir logo depois dos cômodos, e o foco nunca some nem pula sem aviso. O vão de 640 px era pior para quem usa lupa.
 2. Condição: nenhum controle da lateral pode abrir ou mudar algo na coluna esquerda sem aviso (hoje não muda). Se mudar, voltar a falar comigo. Próximo: **frontend** (merge).
+
+### [documentacao] 2026-11-13 — documentação fechada
+Atualizei `site.md` (seção "Layout no computador", tabelas de telas e de `ui/`), `guia-de-uso.md` (uma linha), `arquitetura.md` (`useTelaLarga`) e `CHANGELOG.md` (duas partes). Conferido no código, incluindo o A-112-1 (Mês a mês sob os cômodos).
+O CHANGELOG não tinha entrada da HIS-110: a da HIS-112 ficou no topo, acima da HIS-003a; mover quando a 110 entrar.
+Próximo: **scrum-master** (conferir a Definição de Pronto).

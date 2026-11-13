@@ -48,13 +48,15 @@ Uma pasta por funcionalidade. Uma funcionalidade não importa outra; o que é us
 | `inicio/Simulador.tsx` | simulador rápido da página inicial |
 | `inicio/BotaoComecar.tsx`, `inicio/CasaIlustrada.tsx` | botão de começar ("Ver a minha casa" para quem já cadastrou) e a ilustração da casa por cômodos |
 | `cadastro/Cadastro.tsx` | assistente de cadastro, uma pergunta por tela |
+| `cadastro/porQuePerguntamos.ts` | os textos do painel "Por que perguntamos" no computador, um por passo |
 | `cadastro/rascunho.ts` | a casa antes de ser criada: `ajustarComodos`, `rascunhoParaCasa`, `itemDoCatalogoParaComodo` |
 | `casca/AvisoTrocaDistribuidora.tsx` | aviso "O preço da luz foi atualizado" quando a empresa de luz salva mudou de nome ou foi incorporada (HIS-111); só na visita em que a troca acontece, até "Entendi"; não aparece se a casa tem conta de luz informada |
 | `inicio/AvisoDaCasaNoInicio.tsx` | o aviso T1 na página inicial, para quem abre o site por ela |
 | `casca/Casca.tsx` | moldura da área da casa: marca, cidade, navegação de 4 seções (embaixo no celular, no topo no computador), transição entre telas; espera a casa carregar e mostra "Vamos cadastrar" a quem ainda não tem casa |
 | `acompanhamento/PainelAcompanhamento.tsx` | tela `/casa`: conta estimada, cômodos, quem mais gasta, economia do plano |
 | `acompanhamento/Acompanhamento.tsx` | contas de luz e leituras do relógio, com gráficos |
-| `comodos/TelaComodos.tsx` | cômodos em sanfona, editor de aparelho, painel geral, novo cômodo |
+| `comodos/TelaComodos.tsx` | cômodos (sanfona no celular, lista e painel no computador), editor de aparelho, painel geral, novo cômodo |
+| `comodos/ComodosNoComputador.tsx`, `comodos/ConteudoDoComodo.tsx` | o desenho de lista e painel a partir de 1024 px, e o miolo de um cômodo, comum aos dois desenhos |
 | `dicas/TelaDicas.tsx` | dicas e plano de economia |
 | `ajustes/TelaAjustes.tsx` | minha casa: onde mora, benefício, tipo de ligação, conta de luz e "Apagar todos os meus dados" |
 
@@ -80,6 +82,7 @@ de retorno. Podem chamar funções puras do `@ee/core` (formatação, catálogo,
 | `AvisoFalhaDeCarga.tsx` | aviso T2 quando `tarifas.json` ou `municipios/{UF}.json` não carregam: "Tentar de novo" (com `aria-disabled` enquanto carrega), versão "sem internet" e frase extra a partir da 2ª falha seguida |
 | `TelaDeErro.tsx` | tela T3, usada só pelo `global-error`: texto fixo, sem mensagem técnica, foco no título, aviso da 2ª falha |
 | `foco.ts`, `estilosDeBotao.ts` | `focarTitulo()` leva o foco ao `h1` quando o botão que o tinha some; classes de botão reaproveitadas pelos links |
+| `telaLarga.ts` | `useTelaLarga()`: diz se a janela tem 1024 px ou mais (`useSyncExternalStore`) |
 | `EspacoReservado.tsx` | espaço reservado desligado (não renderiza nada) |
 
 ### Componentes de aparelho (`ui/aparelho/`)
@@ -138,6 +141,30 @@ Regra: qualquer mudança no formato salvo exige versão nova e `migrate` testado
 ## Configuração (`src/config/recursos.ts`)
 
 `RECURSOS.espacosReservados = false`. Chaves para ligar e desligar recursos sem mexer nas telas.
+
+## Layout no computador (a partir de 1024 px)
+
+Abaixo de 1024 px (`lg` do Tailwind, 64rem) nada mudou: é o desenho do celular. A partir daí, quase tudo é só CSS com
+classes `lg:`, e a ordem do código (e do foco do teclado) é a mesma do celular.
+
+- **Largura:** a `Casca` e o `/comecar` passam de `max-w-4xl` (e `max-w-2xl`) para `75rem` (1200 px), com margem de 2rem.
+- **Coluna que acompanha a rolagem:** a utilidade `lateral-fixa` (`globals.css`) só vale a partir de `lg`. Fica presa ao
+  topo (`sticky`), com no máximo a altura da janela e rolagem própria se passar.
+- **Texto corrido** tem no máximo 68 caracteres de largura (`max-w-[68ch]`).
+
+| Tela | Como fica |
+| --- | --- |
+| `/casa` | a conta em cima: o número à esquerda e a explicação (bandeira, tarifa, Tarifa Social) à direita. Abaixo, "Seus cômodos" à esquerda e, numa coluna lateral de 23,5rem, "Quem mais gasta" e a dica de economia. O "Mês a mês" fica sob os cômodos e a nota final ocupa a largura toda. A lateral não usa `lateral-fixa`: com muitos aparelhos ela passava da janela |
+| `/casa/comodos` | lista de cômodos à esquerda, o cômodo aberto à direita; trocar de cômodo não rola a página nem move o foco. O `#comodo-id` na barra de endereço abre aquele cômodo. O painel geral perde a rolagem lateral a partir de 1280 px |
+| `/casa/dicas` | dicas em 2 colunas (3 a partir de 1280 px) e o resumo do plano numa coluna lateral de 22rem, que acompanha a rolagem |
+| `/casa/ajustes` | duas colunas: as quatro seções de ajuste à esquerda e "Seus dados" à direita |
+| `/comecar` | o passo à esquerda (até 34rem) e, à direita, o painel "Por que perguntamos", que só explica (`cadastro/porQuePerguntamos.ts`; um texto por passo). Fica oculto por CSS no celular |
+
+`/casa/comodos` é a única tela que troca de desenho por JavaScript: `ui/telaLarga.ts` exporta `useTelaLarga()`, que usa a
+mesma consulta do `lg` (`(width >= 64rem)`). Abaixo dela, `TelaComodos` mostra as sanfonas (`CartaoComodo`); acima,
+mostra `ComodosNoComputador`. Os dois usam o mesmo miolo, `ConteudoDoComodo`, então a regra de lâmpada e sugestão não é
+copiada. Ao dar zoom e cruzar os 1024 px, o foco vai para o título se o elemento focado sumiu. Peso: ver
+`apps/web/e2e/peso-js.json`.
 
 ## Aparência
 

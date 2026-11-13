@@ -1,5 +1,26 @@
 # Registro de mudanças
 
+## 2026-11-13 · Layout para computador (HIS-112)
+
+**Para quem usa**
+- No computador (janela de 1024 px ou mais), as telas aproveitam a largura em vez de ficarem numa coluna estreita no meio.
+- Na tela da casa, a conta fica em cima, com a explicação ao lado; embaixo, os cômodos de um lado e "Quem mais gasta" e a
+  dica de economia do outro.
+- Em Cômodos, a lista fica à esquerda e o cômodo aberto à direita. Trocar de cômodo não leva você para o alto da página.
+- Em Dicas, as dicas ficam em colunas e o resumo do plano fica ao lado. Em Minha casa, "Seus dados" fica ao lado das
+  outras opções.
+- No cadastro, ao lado de cada pergunta aparece "Por que perguntamos", só com a explicação. Nada essencial fica só nele.
+- No celular nada mudou.
+
+**Técnico**
+- Só CSS com classes `lg:` (64rem) e container de 75rem na `Casca` e no `Cadastro`; a ordem do JSX e do foco não muda.
+  Nova utilidade `lateral-fixa` em `globals.css`. Nenhuma dependência nova.
+- `ui/telaLarga.ts` (`useTelaLarga`, `useSyncExternalStore`) só para `/casa/comodos`: `ConteudoDoComodo` (miolo comum) e
+  `ComodosNoComputador` (lista e painel). Textos do painel em `cadastro/porQuePerguntamos.ts`.
+- A lateral da `/casa` não usa `lateral-fixa`, e o "Mês a mês" ficou sob os cômodos (A-112-1).
+- Testes: `layout-computador.spec.ts` e o helper `abrirComodo`. 390 e 800 px com 0 pixel de diferença contra o `main`.
+  Peso: 11a até +1 998 B na `/casa/comodos` e +694 B nas outras; 11b até +3 143 B (tetos 2 048, 1 024 e 4 096 B).
+
 ## 2026-11-13 · Dados quebrados não travam o site (HIS-003a)
 
 **Para quem usa**
