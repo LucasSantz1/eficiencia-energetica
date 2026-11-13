@@ -433,3 +433,8 @@ Conferido no código: casa só em `localStorage` (`casa.ts`), único `fetch` é 
 2. **Teto da HIS-112 inteira (f1–f7):** os tetos do 11a não mudam e continuam sendo a barreira (+2 048 B na `/casa/comodos`, +1 024 B nas outras rotas). O 11b vai até **+4 096 B** por rota. O prefetch roda depois que a página abriu (critério da HIS-001).
 3. Passou disso, ou se uma rota que não é a de cômodos subir mais de 1 024 B no 11a, falar comigo antes de mudar o `peso-js.json`. O qa atualiza o arquivo uma vez, no fim (L8).
 
+### [frontend] 2026-11-13 — f4–f7 prontas, sobre a 003a (`af04c87` merge; `eaf5d98`, `1f602b3`, `799730f`, `4d31a7b`)
+- f4 Casca em 75rem e esqueleto com a forma da `/casa`; f5 áreas da `/casa` e conta em 2 colunas; f6 Minha casa em 2 colunas; f7 painel "Por que perguntamos" (`porQuePerguntamos.ts`, `Record` fechado) com os 3 textos da seguranca. **Desvio do L3:** a lateral da `/casa` não usa `lateral-fixa` (com 6 aparelhos e a dica passa da janela e virava caixa com rolagem própria, escondendo a dica).
+- Lint, typecheck, test, build e e2e (200 passaram) e axe verdes, sem erro no console. 390 e 800 px: todas as caixas na mesma posição que em `af04c87`; o PNG difere em poucos pixels de anti-aliasing na `/casa` (390) e em `/casa/comodos` e `/casa/dicas` (800), sem caixa que mude (q3 confere).
+- Peso contra o `peso-js.json` da 003a: 11a `/casa/comodos` +1 998 B, `/comecar` +694, `/casa` +398; 11b +3 143 (teto +4 096). O spec ainda reprova o 11b, porque o teto no código continua em +2 048: **qa** (q5). Os 3 e2e de 1280 px do q1 seguem com o qa.
+- Capturas de 390, 1024 e 1440 px das 5 telas: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his112/f4-f7/`. Próximo: **qa** (q1–q5) ‖ **ux** (desvio do L3).

@@ -59,8 +59,8 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 
 ## Pendências
 
-- HIS-112: f1–f3 feitas (2026-11-12). f4–f7 (`Casca`, `/casa`, ajustes, cadastro) esperam a HIS-003a no `main`
-  (`git merge origin/main` antes). Pergunta ao tech-lead: o 11b das abas `/casa*` passou de +2 048 B (soma o chunk dos cômodos).
+- HIS-112: f1–f7 feitas (2026-11-12/13, sobre a 003a). Aguarda qa (q1–q5; o teto do 11b no spec ainda é +2 048) e o
+  ux sobre a lateral da `/casa` sem `lateral-fixa`. Quando a #10 entrar, quem orquestra junta o main por cima.
 
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
   em `/casa` sem casa, vindos da repetição de `ui/` nos chunks das abas pré-carregadas.
