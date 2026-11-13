@@ -6,6 +6,7 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { idDaSigla } from "@ee/core";
 import { lerMunicipiosPublicados } from "../src/diagnostico";
 import { conferirPublicacao, conferirSubstituidas, type Publicacao } from "../src/montar";
 
@@ -50,6 +51,11 @@ describe("arquivos publicados em apps/web/public/dados (HIS-111, critério 3)", 
     expect(publicacao.distribuidoras.length).toBeGreaterThan(40);
     expect(publicacao.municipios.length).toBeGreaterThan(5000);
     expect(conferirPublicacao(publicacao)).toEqual([]);
+  });
+
+  it("todo id publicado é o idDaSigla do core aplicado à sigla (uma regra só para a rotina e o site)", async () => {
+    const { tarifas } = await lerPublicacao();
+    expect(tarifas.distribuidoras.filter((d) => idDaSigla(d.sigla) !== d.id)).toEqual([]);
   });
 
   it("V8: substituidas aponta só para ids publicados, sem cadeia", async () => {
