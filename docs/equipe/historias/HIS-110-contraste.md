@@ -48,3 +48,8 @@ guardados como exceção em `apps/web/e2e/excecoes-axe.ts`. O escopo e as medida
 - `excecoes-axe.ts` ficou vazia (saíram as 8 entradas `HIS-110`). Lint, typecheck, test, build e e2e completos (121 passaram, com axe e peso), sem erro no console.
 - Capturas de 390 e 1280 px em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his110/`.
 - Próximo: **ux** (aprovar a cor da pílula) ‖ **qa**; scrum-master decide a opção (b) à parte.
+
+### [ux-acessibilidade] 2026-11-13 — aprovado
+- Capturas de 390 e 1280 px conferidas: a pílula laranja da faixa D com `text-tinta` (19% e 18%) lê bem e combina com o amarelo (tinta) e com o vermelho e o verde (branco); a regra A/E branco, B/C/D tinta aparece coerente. Os 2 `<dd>` da Tarifa Social ficaram legíveis e sem mudança de visual.
+- Opção (b) (`faixaDoPeso`, Lavanderia de A para B): **não é necessária** para o contraste, que já está resolvido. Fica para depois, só se o scrum-master quiser uma escala única; não bloqueia esta história.
+- Próximo: **qa**.
