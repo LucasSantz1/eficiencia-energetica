@@ -21,7 +21,10 @@ export interface VinculoMunicipio {
   /** Sigla do agente como aparece no conjunto. */
   agente?: string;
   cnpj?: string;
-  /** Último `AnoIndice` do conjunto em que esse dono apareceu (HIS-111, D3: conjunto que parou de reportar). */
+  /**
+   * Último `AnoIndice` do conjunto em que esse dono apareceu. O arquivo da ANEEL para em 2014, então o ano sozinho não
+   * diz que a empresa acabou: o D3 só usa ele para o vínculo que não chega a nenhuma tarifa publicada (HIS-111).
+   */
   ano?: number;
 }
 
