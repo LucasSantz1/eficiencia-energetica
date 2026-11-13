@@ -66,7 +66,7 @@ export function anotacoesDoRelatorio(r: Relatorio, avisosDasSucessoes: readonly 
     linhas.push(anotacao("warning", "Vínculos extintos mantidos (único da cidade)", ou(r.vinculosExtintosMantidos.map((c) => `${c.sigla}: ${c.municipios} municípios`), "")));
   }
   if (r.tarifasComMaisDeUmValor.length > 0) {
-    linhas.push(anotacao("warning", "Mais de um valor B1 na vigência (V7)", ou(r.tarifasComMaisDeUmValor.map((t) => `${t.sigla}: ${t.valores} valores`), "")));
+    linhas.push(anotacao("warning", "Mais de um valor B1 na vigência (V7)", ou(r.tarifasComMaisDeUmValor.map((t) => `${t.sigla}: ${t.valores} valores${t.cnpjs ? ` (CNPJs ${t.cnpjs.join(", ")})` : ""}`), "")));
   }
   if (r.sucessorasCandidatas.length > 0) {
     linhas.push(anotacao("notice", "Sucessoras candidatas (só informação)", ou(r.sucessorasCandidatas.map((c) => `${c.de} → ${c.candidatas.join("/")}`), "")));

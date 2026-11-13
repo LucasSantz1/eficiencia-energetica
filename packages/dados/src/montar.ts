@@ -39,7 +39,7 @@ export interface Relatorio {
   /** D4: vencidas há 6 meses ou menos, publicadas (aviso). */
   tarifasVencidasEmUso: TarifaVencida[];
   /** V7: mais de um valor B1 na vigência escolhida. */
-  tarifasComMaisDeUmValor: { sigla: string; cnpj?: string; valores: number }[];
+  tarifasComMaisDeUmValor: SelecaoDeTarifas["comMaisDeUmValor"];
   /** Só informação: vigências que começam no dia seguinte ao fim de uma vencida sem sucessão. Nunca troca sozinha. */
   sucessorasCandidatas: { de: string; fimVigencia: string; candidatas: string[] }[];
   /** Mesmo id antigo levando a dois ids diferentes (quebra o V8). */
