@@ -116,6 +116,18 @@ dialog[open].folha {
   }
 }
 
+/* Coluna lateral que gruda no computador (HIS-112, L1). Só gruda se couber na janela: o max-height e a rolagem
+   própria garantem que nada fica escondido atrás dela quando o foco passa (WCAG 2.4.11). Sticky não é movimento. */
+@utility lateral-fixa {
+  @media (width >= 64rem) {
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+  }
+}
+
 /* Títulos da página inicial: largos e pesados, com a fonte Archivo esticada. */
 @utility titulo-largo {
   font-family: var(--font-titulo);
