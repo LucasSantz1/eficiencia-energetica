@@ -6,7 +6,7 @@
 | Sprint | a definir pelo scrum-master (proposta: logo depois da HIS-111) |
 | Tamanho | M |
 | Papéis principais | ux-acessibilidade (desenho feito), frontend (qa confere) |
-| Status | Desenho pronto, falta o dono ver as maquetes |
+| Status | Maquetes aprovadas pelo dono; desenho técnico pronto (L1–L12) |
 | Branch | `his-112-layout-computador` (sai do `main`) |
 
 ## Problema e valor
@@ -224,8 +224,159 @@ Cômodos e aparelhos
 
 ## Desenho técnico
 
-A preencher pelo tech-lead e pelo frontend. Observação do ux: preferir classes do Tailwind em `lg:`, nada de
-componente novo além do hook de media query e do painel lateral de `/comecar`.
+_(tech-lead, 2026-11-12, sobre o `main` em `deed1f7`. Segue o "Fluxo e textos" da ux. Onde ele e os critérios
+discordam, valem os critérios, e o ponto está em L9.)_
+
+**L1. Regra geral: só CSS, com uma exceção.** Todo o layout largo usa classes `lg:` do Tailwind 4: `lg` vale 64rem, ou
+1024 px com a letra padrão. Nada muda abaixo de `lg`, e por isso a classe de hoje fica e só ganha a variante `lg:`. A
+ordem do JSX não muda. A grade usa `lg:grid` com `lg:[grid-template-areas:…]` e `lg:[grid-area:…]` nos filhos, e onde
+já existe `space-y-*` entra `lg:space-y-0 lg:gap-8`. Com a mesma margem no celular, a captura de 390 px fica idêntica
+(critério 2). Nenhum token novo e nenhuma dependência nova.
+
+- Texto corrido ganha `max-w-[68ch]` só onde hoje não tem limite (a nota final da `/casa`, por exemplo). Quem já tem
+  `48ch`, `52ch`, `56ch` ou `62ch` fica como está.
+- A coluna que gruda vira uma utilidade só, em `globals.css`:
+  `@utility lateral-fixa { @media (width >= 64rem) { position: sticky; top: 1rem; align-self: start; max-height: calc(100dvh - 2rem); overflow-y: auto; } }`.
+  Assim a regra do WCAG 2.4.11 do ux fica num lugar só.
+- **Exceção:** `/casa/comodos` troca de desenho, com um componente por vez (L4). É o único JS novo de comportamento.
+
+**L2. Container (critério 1).** Ele mora na `Casca` (`funcionalidades/casca/Casca.tsx`) e não no `app/casa/layout.tsx`,
+que continua fino. Os três `max-w-4xl` (o `div` do topo, a `nav` do computador e o `main`) ganham
+`lg:max-w-[75rem] lg:px-8`, e o logotipo, as abas e o conteúdo ficam alinhados. O esqueleto de carregamento da `Casca`
+ganha a forma da `/casa` no `lg:`: o bloco de cima inteiro e o de baixo em `lg:grid-cols-[minmax(0,1fr)_23.5rem]`. É a
+rota mais aberta, e assim a tela não pula quando os dados chegam. O `/comecar` usa o mesmo container (L7).
+
+**L3. `/casa` (`PainelAcompanhamento.tsx`).**
+
+- Raiz: `space-y-12 lg:grid lg:space-y-0 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_23.5rem]`, com as áreas
+  `"conta conta" "comodos lado" "acompanhamento acompanhamento" "nota nota"`.
+- Uma `div` nova envolve só o que já é vizinho no código: "Quem mais gasta", o `EspacoReservado` e a dica de economia.
+  Ela recebe `space-y-12 lg:[grid-area:lado] lateral-fixa`. No celular, a margem entre os três fica igual.
+- A grade dos cômodos passa de `lg:grid-cols-3` para `lg:grid-cols-2`. Hoje há `lg:grid-cols-3`, e o ux pede 2, com
+  razão.
+- Cartão da conta: a `section` ganha `lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-x-12`. O bloco de explicação
+  (a `div` com bandeira, tarifa e Tarifa Social) recebe `lg:col-start-2 lg:row-start-1 lg:row-span-4 lg:mt-0 lg:border-t-0 lg:pt-0`.
+  O número fica com `lg:text-[4.5rem]`. Nenhum texto muda.
+- O `Acompanhamento` e a nota final ocupam a largura toda, embaixo. O `EditorAparelho` é folha e não entra na grade.
+
+**L4. `/casa/comodos` (`TelaComodos.tsx`): dois desenhos, um por vez.**
+
+- **Hook:** `ui/telaLarga.ts`, sem diretiva, exporta `useTelaLarga(): boolean` com
+  `useSyncExternalStore(assinar, () => matchMedia(CONSULTA).matches, () => false)` e
+  `CONSULTA = "(width >= 64rem)"`. É a mesma sintaxe e o mesmo valor que o Tailwind 4 gera para o `lg`. Assim o zoom troca o CSS e o JS juntos, e um navegador que não entende a consulta cai no celular nos dois. É
+  `useSyncExternalStore`, e não `useState` + efeito: **nenhuma linha nova da HIS-109**. A tela só monta depois do
+  `useCasaCarregada` (a `Casca` segura até lá). Por isso não há a fase de hidratação, e o desenho certo já aparece no
+  primeiro render, sem piscar o do celular.
+- **Divisão de `CartaoComodo`:** o miolo dele (iluminação, aparelhos, "Também é comum ter aqui", "Outro aparelho") vira
+  `ConteudoDoComodo`. O celular continua com `CartaoComodo` (sanfona) usando esse miolo. O computador usa
+  `ComodosNoComputador`, no mesmo arquivo ou em `funcionalidades/comodos/ComodosNoComputador.tsx`, se passar de umas
+  120 linhas. A regra de lâmpada e sugestão não é copiada, porque fica no miolo.
+- **`ComodosNoComputador`:** a ordem no código é `nav aria-label="Cômodos"` > `ul` de botões (`aria-current="true"` no
+  aberto, nome, R$, barra e %), depois "Total por mês" e "Adicionar cômodo", e por fim a
+  `section aria-labelledby="titulo-painel-comodo"`. Esta tem o `h2` com o nome, o resumo, "Editar cômodo" (abre o mesmo
+  `EditarComodo`) e o `ConteudoDoComodo`. A coluna da lista usa `lateral-fixa`.
+- **Cômodo aberto:** fica num estado só dentro do `ComodosNoComputador`, que nasce de
+  `useState(() => idDoHash() ?? undefined)`. O `#comodo-id` vale também no computador, e ler o `window` aqui é seguro,
+  porque o componente só existe no navegador. O que aparece é derivado:
+  `comodos.find((c) => c.id === escolhido) ?? comodos[0]`. Se o cômodo for apagado, o painel passa ao primeiro sem
+  efeito nenhum. Tocar num cômodo só troca o estado, sem `scrollIntoView` e sem mover o foco (critério 4).
+- **`id` sem repetir:** `comodo-${id}` e `titulo-${id}` ficam só no celular. O painel usa `titulo-painel-comodo`.
+- **Troca de desenho com o foco dentro:** isso acontece ao dar zoom, quando a janela cruza os 1024 px. Um
+  `useEffect(…, [telaLarga])` que só lê o DOM (sem `setState`) leva o foco ao `h1` quando o `document.activeElement` virou
+  o `body`. É o pedido do ux ("o `h1` recebe foco quando o elemento focado some").
+- "Painel geral": a tabela perde a rolagem lateral a 1280 px (`xl:`), e o `role`, o `aria-label` e o `tabIndex` ficam.
+
+**L5. `/casa/dicas` (`TelaDicas.tsx`).**
+
+- Raiz: `lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-x-8`. O `h1` e o texto de abertura ficam com `lg:col-span-2`.
+- O resumo do plano já vem antes da lista no código e já é `sticky top-2` no celular. Ele ganha
+  `lg:col-start-2 lg:row-start-3 lg:mt-0 lg:shadow-none lateral-fixa`. A ordem de leitura continua a do celular: plano,
+  depois a lista.
+- Uma `div` nova envolve o que já é vizinho depois dele (a lista de `CartaoDica`, o espaço reservado e "Também ajuda").
+  Ela recebe `lg:col-start-1 lg:row-start-3`.
+- A lista (`ul`) vira `lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:items-stretch lg:gap-4 lg:space-y-0`.
+
+**L6. `/casa/ajustes` (`TelaAjustes.tsx`).** Uma `div space-y-12` nova envolve as seções "Onde você mora", "Benefício",
+"Tipo de ligação" e "Sua conta de luz". A raiz ganha `lg:grid lg:grid-cols-2 lg:gap-x-6 lg:space-y-0`, o `h1` fica com
+`lg:col-span-2`, e "Seus dados" (o `SeusDados` da 003a) vai para a coluna 2, com `lg:self-start`. O "Apagar tudo" fica
+como está hoje, com a confirmação na própria tela: trocar por `dialog` seria mudar o comportamento, e isso está fora do
+escopo (L9).
+
+**L7. `/comecar` (`Cadastro.tsx`).**
+
+- A `Moldura` ganha a prop `lado?: ReactNode` e passa de `max-w-2xl` para `max-w-2xl lg:max-w-[75rem] lg:px-8`. O
+  `main` vira `lg:grid lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:gap-x-12`, e o `lado` vem depois do passo no
+  código.
+- O painel é `aside aria-labelledby` com `h2`, `hidden lg:block`, `lateral-fixa`, e fundo e raio do ux. Fica oculto por
+  CSS e não por hook: o `Cadastro` renderiza já na hidratação, e o hook faria o painel aparecer depois, com pulo.
+- Os textos ficam em `funcionalidades/cadastro/porQuePerguntamos.ts`, como
+  `PORQUE_PERGUNTAMOS: Record<"estado" | "cidade" | "distribuidora" | "beneficio" | "pessoas" | "comodos" | "comodo" | "revisao" | "conta", { titulo: string; texto: string }>`,
+  mais `textoDoPasso(passo: Passo)` (`comodo:N` → `"comodo"`). Os 9 passos do `Cadastro` batem um a um com a tabela do
+  ux (resposta à pergunta `[para: frontend]`), e nenhum fica sem texto. O `Record` fechado faz o `typecheck` reprovar
+  passo novo sem texto. É texto de interface e não regra, por isso fica na funcionalidade.
+- As telas "Você já cadastrou" e "Apagar tudo e começar de novo?" não têm painel.
+- A linha "Nada sai do seu aparelho sem você aceitar." depende da pergunta à seguranca, que continua aberta.
+
+**L8. Peso (critério 11; regra da HIS-001).** CSS não entra no `peso-js`, mas as classes `lg:` ficam nas strings do JSX.
+Limites contra a referência do `main`:
+
+- `/casa/comodos`: **até +2 048 B** no 11a. É a exceção, pelo desenho novo com o hook (estimo de 1,2 a 1,8 kB em gzip).
+- Demais rotas: até +1 024 B no 11a, como sempre. O `/comecar` leva os 9 textos, cerca de 0,5 kB.
+- 11b: até +2 048 B por rota.
+
+Passou disso, falar comigo antes de mudar o `peso-js.json`. O qa atualiza o arquivo uma vez, no fim, medido no último
+commit de código.
+
+**L9. Onde o critério vence o "Fluxo".** (a) O `/comecar` usa 75rem e não 64rem: com 64rem, a 1200 px, sobram 88 px de
+cada lado, e o critério 1 permite 2rem. (b) O "Apagar tudo" não vira `dialog` (fora do escopo: nada muda além do
+layout). (c) O esqueleto da `Casca` segue a `/casa`. O ux pode contestar na nota dele, e eu ajusto.
+
+**L10. Ponto de rebase com a HIS-003a**, que entra antes e mexe na `Casca` (avisos T1 e "Minha casa" sem cidade), no
+`PainelAcompanhamento` (aviso T2), na `TelaAjustes` (`SeusDados`) e no `Cadastro` (avisos T2).
+
+- `TelaComodos.tsx`, `TelaDicas.tsx`, `ui/telaLarga.ts` e o `globals.css` não estão na 003a: o frontend **começa já**
+  por eles (f1–f3).
+- `Casca`, `PainelAcompanhamento`, `TelaAjustes` e `Cadastro` (f4–f7) **só depois** de a 003a estar no `main`, com
+  `git merge origin/main` antes de mexer.
+- Os avisos novos da 003a ficam acima da grade, ocupando a largura toda, no `role="status"` da `Casca`, que não entra na
+  grade.
+
+**L11. Tarefas.**
+
+| # | Quem | O que | Pronto quando |
+| --- | --- | --- | --- |
+| f1 | frontend | `ui/telaLarga.ts` e a `@utility lateral-fixa` | lint e camadas verdes; nenhum `eslint-disable` novo |
+| f2 | frontend | L4: `ConteudoDoComodo`, `ComodosNoComputador`, foco ao trocar de desenho, tabela | sanfona igual a 390 px; lista + painel a 1024 px |
+| f3 | frontend | L5 | grade de 2 e 3 colunas; plano à direita |
+| f4 | frontend | L2 (depois da 003a) | container de 75rem; esqueleto |
+| f5 | frontend | L3 | áreas da `/casa`; cartão da conta em 2 colunas |
+| f6 | frontend | L6 | 2 colunas |
+| f7 | frontend | L7 e `porQuePerguntamos.ts` | painel a 1024 px; ausente a 390 px |
+| q1 | qa | Ajustar os e2e que abrem a sanfona: o projeto `computador` (1280 px) passa a ver o desenho largo. Um helper `abrirComodo(page, nome)` que funciona nos dois | e2e de hoje verde |
+| q2 | qa | `layout-computador.spec.ts` (a seguir) | verde |
+| q3 | qa | Comparação única, numa cópia, dos 390 px do `main` contra os da branch, nas 5 telas (sem guardar imagem de referência no repositório: fonte e anti-aliasing variam) | 0 pixel diferente, fora a HIS-111 |
+| q4 | qa | axe nas 5 telas a 1280 e 1440 px; capturas de 390, 1024 e 1440 px e de zoom de 200% | nada novo; sem erro no console |
+| q5 | qa | Peso (L8) e atualização do `peso-js.json` | dentro de L8 |
+
+Estimativa: cerca de 2,5 dias (frontend 1,5 e qa 1).
+
+**L12. `layout-computador.spec.ts` (projeto `computador`, com viewport por teste).**
+
+- **Container (critério 1):** a 1024, 1200 e 1440 px, a largura do `main` é no máximo 1200 px, e de 1024 a 1200 px a
+  sobra até o container é de no máximo 32 px de cada lado.
+- **`/casa`:** a caixa da conta fica acima das outras; "Quem mais gasta" fica à direita de "Seus cômodos" (`x` maior).
+- **`/casa/comodos`:**
+  - tocar no 3º cômodo não muda o `scrollY`, o foco fica no botão e o `aria-current` vai para ele;
+  - Tab: "Por cômodo/Painel geral" → os botões da lista → "Adicionar cômodo" → painel;
+  - `#comodo-<id>` abre aquele cômodo;
+  - nenhum `id` repetido (`document.querySelectorAll('[id]')`).
+- **`/casa/dicas`:** 2 colunas a 1024 px e 3 a 1280 px (pelo `x` dos cartões).
+- **`/comecar`:** o `aside` fica visível a 1024 px e sem caixa a 390 px; o texto muda com o passo.
+- **Zoom (critério 10):** viewport de 720 px, o equivalente a 1440 px com zoom de 200%. Sem rolagem para o lado
+  (`scrollWidth <= clientWidth`) e com o desenho do celular. O mesmo vale para 360 px (400%).
+- **68 caracteres (critério 7):** a 1440 px, todo `p` do `main` com largura até `68 × largura do "0"`.
+- **Sem movimento novo (critério 9):** com `reducedMotion: "reduce"`, trocar de cômodo não dispara animação
+  (`getAnimations().length === 0` no painel).
 
 ## Ameaças
 
@@ -242,7 +393,9 @@ rolagem horizontal.
 - [para: scrum-master] Qual a sprint? Integrar a HIS-111 antes, porque as duas mexem na `Casca`.
 - [para: dono do projeto] Aprovar as maquetes (`/casa` e `/casa/comodos`) antes de implementar. As outras três telas estão
   só descritas.
-- [para: frontend] Os passos do `Cadastro` batem com a tabela de textos do painel? O que faltar, voltar ao ux.
+- [x] [para: frontend] Os passos do `Cadastro` batem com a tabela de textos do painel? O que faltar, voltar ao ux.
+  — **Resposta (tech-lead, 2026-11-12):** batem os 9, um a um (L7). Um `Record` fechado faz o `typecheck` reprovar
+  passo novo sem texto.
 - [para: seguranca] Conferir a frase "Nada sai do seu aparelho sem você aceitar." contra o que o site faz hoje.
 
 ## Conversa da equipe
@@ -252,3 +405,10 @@ Desenhei `/casa` e `/casa/comodos` em maquete e descrevi `/casa/dicas`, `/casa/a
 `lg` (1024 px); container de 75rem; o celular não muda. Ordem de foco igual à do celular, menos nos cômodos (lista, depois
 painel; um desenho por vez via media query). Faltam: o dono ver as maquetes, e o scrum-master escolher a sprint.
 Próximo: dono do projeto (aprovar), depois frontend.
+
+### [tech-lead] 2026-11-12 — desenho técnico pronto (L1–L12), sobre o `main` em `deed1f7`
+- Container de 75rem na `Casca` (não no layout de `/casa`), com corte no `lg:` (64rem). Tudo em CSS com a ordem do JSX intacta, mais a utilidade `lateral-fixa` para a coluna que gruda.
+- Único JS novo: `useTelaLarga` (`useSyncExternalStore`, sem linha da HIS-109), só para a `/casa/comodos`, que troca de desenho e reaproveita o `ConteudoDoComodo`.
+- Peso: até +2 048 B na `/casa/comodos` e +1 024 B nas outras rotas (L8). Três pontos em que o critério vence o "Fluxo" estão no L9; o ux pode contestar.
+- Rebase (L10): f1–f3 começam já; f4–f7 (`Casca`, `/casa`, ajustes, cadastro) só depois da 003a no `main`. Respondi à pergunta do frontend: os 9 textos batem.
+- Próximo: **frontend** (f1–f3 já) ‖ **seguranca** (frase do painel) → **qa** (q1–q5, L12).

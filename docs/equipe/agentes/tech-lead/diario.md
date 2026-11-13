@@ -10,6 +10,16 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-12 · HIS-112 · desenho técnico do layout para computador (L1–L12)
+- **O que fiz:** juntei o `origin/main` (`deed1f7`) na branch e li a história, as maquetes e as 5 telas. Escrevi L1–L12
+  (container, cada tela, foco, peso, rebase, tarefas e e2e).
+- **Decisões e porquê:**
+  - Só CSS em `lg:`, porque o celular fica idêntico e o JS não cresce.
+  - Nos cômodos, um desenho por vez com `useSyncExternalStore`, para não haver `id` repetido nem efeito que copia estado.
+  - O critério 1 vence os 64rem do `/comecar`.
+- **Arquivos:** `HIS-112-layout-computador.md`, `contexto.md` e este diário.
+- **Próximos passos:** frontend f1–f3 já; f4–f7 depois da 003a; depois o code review.
+
 ## 2026-10-30 · HIS-111 · code review do h6 (frontend) aprovado
 - **O que fiz:** revisei o `10166f5` (core, `aplicacao/casa.ts`, `Casca`, `AvisoTrocaDistribuidora`, `Aviso`,
   `Cadastro`, `TelaAjustes`) e rodei typecheck, test (core 53, dados 87) e build numa cópia

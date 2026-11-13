@@ -126,6 +126,10 @@
 
 ## Pendências
 
+- HIS-112 (desenho L1–L12, 2026-11-12): no code review, conferir que o celular fica idêntico (q3), que o único JS novo
+  é o `useTelaLarga` com `useSyncExternalStore`, a ausência de `id` repetido nos cômodos, o peso do L8 e o rebase sobre
+  a 003a (f4–f7 só depois dela).
+
 - HIS-003: levar as respostas da P-tl-1, da P-tl-2 e da P-tl-3 para o desenho. No a6, reconferir os SHA. No code
   review, conferir:
   - nenhum `as` sobre dado de fora;
