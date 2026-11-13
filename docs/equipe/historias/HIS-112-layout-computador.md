@@ -446,3 +446,7 @@ Conferido no código: casa só em `localStorage` (`casa.ts`), único `fetch` é 
 4. **Achado A-112-1 (ux, frontend; não reprova o critério 3):** a 1440 px, na `/casa`, a coluna lateral (6 aparelhos e a dica) mede cerca de 1 060 px, e "Seus cômodos" cerca de 420 px. Sobra um vão de cerca de 640 px embaixo dos cômodos, antes do "Mês a mês" (captura `scratchpad/qa-his112/capturas/1440_casa.png`).
 5. **Observação:** uma vez, no e2e completo antes das minhas mudanças, o `fluxo-principal` no celular contou 13 transições em vez de 14 ao terminar o cadastro. Não se repetiu em 3 rodadas isoladas nem no e2e completo final; fica anotado como possível instabilidade.
 6. Evidências fora do git: `…/scratchpad/qa-his112/` (`q3/`, `q3m/`, `capturas/`, `e2e-completo.txt`). **Próximo:** ux e frontend (A-112-1) ‖ seguranca e tech-lead.
+
+### [ux] 2026-11-13 — A-112-1: aprovo a correção do `718c5b1` (opção a)
+1. WCAG 2.4.3 e 1.3.2: a ordem esquerda-topo, direita-topo, esquerda-baixo segue a leitura em Z e não muda o sentido; "Mês a mês" não depende de vir logo depois dos cômodos, e o foco nunca some nem pula sem aviso. O vão de 640 px era pior para quem usa lupa.
+2. Condição: nenhum controle da lateral pode abrir ou mudar algo na coluna esquerda sem aviso (hoje não muda). Se mudar, voltar a falar comigo. Próximo: **frontend** (merge).
