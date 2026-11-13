@@ -18,14 +18,18 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 | `funcionalidades/cadastro/` | `Cadastro` (assistente em etapas; estado `concluindo` evita piscar no fim) e `rascunho.ts` |
 | `funcionalidades/casca/` | `Casca` (topo, abas, transições `topo`/`navegacao`/`aba-ativa`, "Vamos cadastrar") |
 | `funcionalidades/acompanhamento/` | `PainelAcompanhamento` (conta, cômodos, ranking, melhor dica) e `Acompanhamento` (contas e relógio) |
-| `funcionalidades/comodos/` · `dicas/` · `ajustes/` | `TelaComodos` (sanfona, painel geral, novo/editar cômodo) · `TelaDicas` (plano) · `TelaAjustes` (minha casa, apagar tudo) |
-| `ui/` | um componente por arquivo: `Botao` (+`BotaoLink`), `Opcao`, `Pilulas`, `Contador`, `Campo`, `Entrada`, `Folha`, `Aviso`, `Icone`, `Marca`, `Movimento`, `Barras`, `Etiqueta`, `EspacoReservado`, `BuscaCidade`; `tiposDeTransicao.ts` (`IR_ADIANTE`, `VOLTAR`, `ENTRAR_NO_PAINEL`, sem diretiva) |
+| `funcionalidades/comodos/` · `dicas/` · `ajustes/` | `TelaComodos` (sanfona no celular, painel geral, novo/editar cômodo), `ComodosNoComputador` (lista + painel a 1024 px+, HIS-112) e `ConteudoDoComodo` (miolo comum) · `TelaDicas` (plano; grade no `lg:`) · `TelaAjustes` (minha casa, apagar tudo) |
+| `ui/` | um componente por arquivo: `Botao` (+`BotaoLink`), `Opcao`, `Pilulas`, `Contador`, `Campo`, `Entrada`, `Folha`, `Aviso`, `Icone`, `Marca`, `Movimento`, `Barras`, `Etiqueta`, `EspacoReservado`, `BuscaCidade`; `tiposDeTransicao.ts` (`IR_ADIANTE`, `VOLTAR`, `ENTRAR_NO_PAINEL`, sem diretiva); `telaLarga.ts` (`useTelaLarga`, sem diretiva, HIS-112) |
 | `ui/aparelho/` | componentes de aparelho compartilhados, sem store: `tipos.ts` (`ItemComodo`), `textosDeUso.ts`, `LinhaAparelho`, `BlocoIluminacao`, `TempoUso`, `SeletorCatalogo`, `EditorAparelho` (props `comodos`/`aoSalvar`/`aoRemover`) |
 | `aplicacao/` | única porta para `infraestrutura/`: `casa.ts` (`useCasa`, `useCasaCarregada`, `novoId`, `useEdicaoDeAparelho`, `useDistribuidoraAtualizada`), `dados-publicos.ts` (`useTarifas`, `useMunicipios`), `resumo.ts` (`useResumo`, `tarifaMedia`, `nomeDistribuidora`), `numeros-do-inicio.servidor.ts` |
 | `infraestrutura/` | `armazenamento/casa.ts` (o único `create` do store: chave `eficiencia-energetica:casa`, versão 2 + `migrate`), `identificador.ts` (`novoId`), `dados-publicos/navegador.ts` (fetch de `/dados`), `dados-publicos/arquivos.servidor.ts` (único `node:fs`) |
 | `config/recursos.ts` | `RECURSOS.espacosReservados = false` |
 
 ## Decisões em vigor
+
+- Layout de computador (HIS-112): só `lg:` (64rem); abaixo disso a classe de hoje fica igual (conferir 390 e 800 px pixel a
+  pixel contra o `main`). Coluna que gruda = `lateral-fixa`. Hook de largura só onde o desenho muda (`useTelaLarga`). O
+  hash da URL numa tela que monta na navegação do cliente vem por `useSyncExternalStore`, não por inicializador de `useState`.
 
 - Camadas (ADR-001): telas importam estado e dados só de `aplicacao/`; `ui/` não lê estado; funcionalidade não importa
   outra; sem barris `index.ts`; `@/` entre pastas e `./` só na mesma pasta. Código só de servidor em `*.servidor.ts`
@@ -44,6 +48,9 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
   `role="status"` sempre presente, com `Aviso anunciar={false}`.
 
 ## Pendências
+
+- HIS-112: f1–f3 feitas (2026-11-12). f4–f7 (`Casca`, `/casa`, ajustes, cadastro) esperam a HIS-003a no `main`
+  (`git merge origin/main` antes). Pergunta ao tech-lead: o 11b das abas `/casa*` passou de +2 048 B (soma o chunk dos cômodos).
 
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
   em `/casa` sem casa, vindos da repetição de `ui/` nos chunks das abas pré-carregadas.

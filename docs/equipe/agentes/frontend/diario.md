@@ -10,6 +10,12 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-12 · HIS-112 · f1–f3: hook de tela larga, cômodos em lista + painel e dicas em grade no computador
+- O que fiz: `useTelaLarga` e `lateral-fixa` (f1); `ConteudoDoComodo` + `ComodosNoComputador` (f2); grade de dicas e plano ao lado (f3). 390 e 800 px iguais pixel a pixel ao `b07454e`.
+- Decisões: hash por `useSyncExternalStore` (o Next grava o endereço depois do render); foco ao `h1` só se o elemento focado sumiu (um efeito só no `telaLarga` puxava o foco ao abrir a tela, numa corrida); `COR_FAIXA` exportada do `ui/Etiqueta`; cartão de dica empilha o ícone no `lg:`.
+- Aprendizado: o `next start` antigo continua no ar depois de um build novo; matar pelo `cwd` do processo. O 11b das abas `/casa*` soma o chunk dos cômodos.
+- Arquivos: `ui/telaLarga.ts`, `app/globals.css`, `ui/Etiqueta.tsx`, `funcionalidades/comodos/*`, `funcionalidades/dicas/TelaDicas.tsx`, a história.
+
 ## 2026-10-31 · HIS-111 · D1 do h7: o peso de JS de /casa* voltou a ficar abaixo do limite
 - O que fiz: mantive o aviso no carregamento normal, mas mais leve. Ele cuida do próprio "Entendi" e do foco; os nomes foram para `core/trocas.ts`; tirei verificações repetidas. O 11a de `/casa*` ficou em até +998 B (limite +1 024), medido na junção com o `origin/main`.
 - Aprendizado: o `React.lazy` piora o peso com o Turbopack (ele parte os chunks compartilhados: `/comecar` +1 570 B). Para medir, aplique o diff (`git diff HEAD`) sobre a junção com o main; não copie o `src` inteiro, que leva o código velho da branch (isso me deu um axe falso). O gzip medido à mão não bate com o spec, que conta também os `preload`.
