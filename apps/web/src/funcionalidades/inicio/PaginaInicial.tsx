@@ -200,12 +200,12 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
               <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={100}>
                 <dt className="text-lg font-bold">Tarifa Social</dt>
                 <dd className="titulo-largo mt-2 text-[2.6rem]">80 kWh grátis</dd>
-                <dd className="mt-2 text-white/85">Para famílias com renda de até meio salário mínimo por pessoa, ou que recebem o BPC.</dd>
+                <dd className="mt-2 text-white">Para famílias com renda de até meio salário mínimo por pessoa, ou que recebem o BPC.</dd>
               </Revelar>
               <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={220}>
                 <dt className="text-lg font-bold">Desconto Social</dt>
                 <dd className="titulo-largo mt-2 text-[2.6rem]">até 120 kWh</dd>
-                <dd className="mt-2 text-white/85">Com desconto para famílias com renda entre meio e um salário mínimo por pessoa.</dd>
+                <dd className="mt-2 text-white">Com desconto para famílias com renda entre meio e um salário mínimo por pessoa.</dd>
               </Revelar>
             </dl>
             <p className="flex gap-3 text-white/85">

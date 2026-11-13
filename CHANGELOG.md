@@ -1,5 +1,16 @@
 # Registro de mudanças
 
+## 2026-11-13 · HIS-110 · Contraste das cores
+
+**Para quem usa**
+- O número de cada cômodo na casa ilustrada da página inicial e os valores dos cartões da Tarifa Social ficaram mais
+  fáceis de ler, inclusive no sol.
+
+**Técnico**
+- Faixa D da casa ilustrada com `text-tinta` (5,50:1) e `<dd>` da Tarifa Social com `text-white` (4,77:1); nenhum
+  token mudou. A regra de texto sobre cada faixa está comentada em `ui/Etiqueta.tsx`.
+- `apps/web/e2e/excecoes-axe.ts` ficou vazio: o axe agora reprova qualquer contraste abaixo de AA.
+
 ## 2026-10-31 · Node 26 (LTS)
 
 **Para quem usa**
