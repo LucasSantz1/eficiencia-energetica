@@ -10,6 +10,16 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-103 · regras do guia da Tarifa Social e 9 defeitos no ar
+- O que fiz: validei quem tem direito, descontos, inscrição automática, documentos, onde ir e reclamação (Lei 12.212
+  atualizada, Lei 15.235, ANEEL, MME, gov.br, Decretos 11.016/2022 e 12.797/2025). Rascunhei as perguntas e os casos
+  C1–C13. Conferi o site e achei D1–D9.
+- Decisões e porquê: "pode ter direito"; respostas não guardadas; salário mínimo com vigência; Desconto Social sem
+  percentual (sem fonte única).
+- Arquivos: `docs/equipe/historias/HIS-103-guia-tarifa-social.md`, minha pasta.
+- Próximos passos: scrum-master decide correção rápida de D1–D6; ux lapida as perguntas; eu confiro a REN 1.147
+  (custo de disponibilidade) quando o cedoc abrir.
+
 ## 2026-10-30 · HIS-111 · linha 12 (RGE antiga → RGE): confirmada, REA sem número
 - O que fiz: confirmei a linha 12 do `sucessoes.json`. Procurei o número da REA de dez/2018 (IstoÉ, Brasil Energia,
   fato relevante da RGE Sul, busca no cedoc): o site da ANEEL não abre daqui e nenhuma fonte aberta traz o número.

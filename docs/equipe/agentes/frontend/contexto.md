@@ -61,6 +61,7 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 
 ## Pendências
 
+- HIS-103: textos D1–D6, D8 e D9 corrigidos (2026-11-13, branch `his-103-guia-tarifa-social`). Falta o guia (D7 e o link do D4).
 - HIS-112: f1–f7 feitas (2026-11-12/13, sobre a 003a). Aguarda qa (q1–q5; o teto do 11b no spec ainda é +2 048) e o
   ux sobre a lateral da `/casa` sem `lateral-fixa`. Quando a #10 entrar, quem orquestra junta o main por cima.
 - HIS-110: feita (2026-11-13, opção (a)); `excecoes-axe.ts` vazia. Aguarda ux (cor da pílula) e qa. A opção (b)

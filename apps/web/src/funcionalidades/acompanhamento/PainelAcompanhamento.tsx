@@ -109,8 +109,8 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
               </Link>
             </p>
           )}
-          {residencia?.beneficio === "tarifa-social" && conta.economiaBeneficio > 0 && <p>A Tarifa Social já tirou {formatarReais(conta.economiaBeneficio)} da conta: os primeiros 80 kWh são de graça.</p>}
-          {residencia?.beneficio === "desconto-social" && <p>Com o Desconto Social, os primeiros 120 kWh saem mais baratos. Confira o desconto exato na sua conta.</p>}
+          {residencia?.beneficio === "tarifa-social" && conta.economiaBeneficio > 0 && <p>A Tarifa Social tira cerca de {formatarReais(conta.economiaBeneficio)} da conta: a energia dos primeiros 80 kWh é de graça.</p>}
+          {residencia?.beneficio === "desconto-social" && <p>Esta estimativa não tira o Desconto Social, porque o valor muda em cada distribuidora. A sua conta deve vir um pouco menor.</p>}
           {conta.cobradoPeloMinimo && (
             <p className="flex gap-2">
               <Info className="mt-0.5 size-4 shrink-0" aria-hidden /> Seu consumo ficou abaixo do mínimo que a distribuidora cobra ({conta.consumoMinimoKwh} kWh), então a conta vem pelo mínimo.

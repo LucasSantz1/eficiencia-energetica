@@ -10,6 +10,10 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-103 · textos da Tarifa Social que prometiam mais do que o site faz (D1–D6, D8, D9)
+- O que fiz: troquei os textos da `/`, Minha casa, cadastro, acompanhamento, Sobre e a dica/comentário do core pela correção do dominio-energia.
+- Decisões: o caminho da saúde leva a renda de até 3 salários mínimos (R1-c), mais honesto que a proposta curta; "cerca de" no desconto da Tarifa Social (estimativa).
+- Arquivos: `inicio/PaginaInicial.tsx`, `ajustes/TelaAjustes.tsx`, `cadastro/Cadastro.tsx`, `acompanhamento/PainelAcompanhamento.tsx`, `app/sobre/page.tsx`, `core/src/{dicas,tipos}.ts`, a história.
 ## 2026-11-13 · HIS-112 · f4–f7: Casca de 75rem, /casa em áreas, Minha casa em 2 colunas e painel do cadastro
 - O que fiz: merge da 003a (só diários em conflito); f4–f7 em um commit cada; o painel "Por que perguntamos" com os textos da seguranca.
 - Decisões: a lateral da `/casa` sem `lateral-fixa` (passa da janela e vira rolagem interna); `progresso` do cadastro limitado a 34rem; grade da `Moldura` com o passo numa `div` própria.
