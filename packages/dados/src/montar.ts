@@ -387,24 +387,8 @@ export function conferirCoerencia(m: Montagem, contexto: ContextoDaCoerencia): s
   const publicadas = m.tarifas.distribuidoras;
   const ids = new Set(publicadas.map((d) => d.id));
 
-  const limite = subtrairMeses(contexto.hoje, MESES_DE_TOLERANCIA_DA_TARIFA_VENCIDA);
-  for (const d of publicadas) {
-    if (d.fimVigencia !== undefined && d.fimVigencia < limite) erros.push(`V1: ${d.sigla} está publicada com tarifa vencida em ${d.fimVigencia} (limite ${limite}).`);
-  }
-
-  const siglasDoCnpj = new Map<string, string[]>();
-  for (const d of publicadas) if (d.cnpj) siglasDoCnpj.set(d.cnpj, [...(siglasDoCnpj.get(d.cnpj) ?? []), d.sigla]);
-  for (const [cnpj, siglas] of siglasDoCnpj) {
-    if (siglas.length > 1) erros.push(`V2: o CNPJ ${cnpj} aparece em ${siglas.length} distribuidoras publicadas (${siglas.join(", ")}). Áreas com preços diferentes: separar antes de publicar.`);
-  }
-
   const substituidas = m.tarifas.substituidas;
-  const ehSubstituida = (id: string) => Object.hasOwn(substituidas, id);
-  const municipiosComAntigo = m.municipiosPorUF.flatMap((a) => a.municipios).filter((x) => x.distribuidoras.some(ehSubstituida));
-  if (municipiosComAntigo.length > 0) {
-    const exemplos = municipiosComAntigo.slice(0, 5).map((x) => `${x.nome} (${x.uf})`);
-    erros.push(`V3: ${municipiosComAntigo.length} municípios listam um id substituído (ex.: ${exemplos.join(", ")}).`);
-  }
+  erros.push(...conferirPublicacao({ distribuidoras: publicadas, municipios: m.municipiosPorUF.flatMap((a) => a.municipios), substituidas, referencia: contexto.hoje }));
 
   const indice = indexarSucessoes(contexto.sucessoes);
   const porCnpj = new Map(publicadas.filter((d) => d.cnpj).map((d) => [d.cnpj, d]));
@@ -426,6 +410,41 @@ export function conferirCoerencia(m: Montagem, contexto: ContextoDaCoerencia): s
 
   erros.push(...conferirSubstituidas(substituidas, ids, m.relatorio.substituicoesEmConflito));
   erros.push(...conferirSucessoesNaAneel(contexto.sucessoes, contexto).erros);
+  return erros;
+}
+
+/** O que está (ou vai estar) no ar: o `tarifas.json` e a lista de cada município. */
+export interface Publicacao {
+  distribuidoras: readonly Pick<Distribuidora, "sigla" | "cnpj" | "fimVigencia">[];
+  municipios: readonly Pick<Municipio, "nome" | "uf" | "distribuidoras">[];
+  substituidas: Readonly<Record<string, string>>;
+  /** Data (AAAA-MM-DD) que conta para o V1: `hoje` na rotina; o dia do `geradoEm` no teste dos publicados. */
+  referencia: string;
+}
+
+/**
+ * V1, V2 e V3 (HIS-111, critério 3). A rotina chama antes de gravar (dentro de `conferirCoerencia`), e o teste dos
+ * arquivos publicados (h8) chama com o que está no `main`: a mesma regra nos dois lados.
+ */
+export function conferirPublicacao(p: Publicacao): string[] {
+  const erros: string[] = [];
+  const limite = subtrairMeses(p.referencia, MESES_DE_TOLERANCIA_DA_TARIFA_VENCIDA);
+  for (const d of p.distribuidoras) {
+    if (d.fimVigencia !== undefined && d.fimVigencia < limite) erros.push(`V1: ${d.sigla} está publicada com tarifa vencida em ${d.fimVigencia} (limite ${limite}).`);
+  }
+
+  const siglasDoCnpj = new Map<string, string[]>();
+  for (const d of p.distribuidoras) if (d.cnpj) siglasDoCnpj.set(d.cnpj, [...(siglasDoCnpj.get(d.cnpj) ?? []), d.sigla]);
+  for (const [cnpj, siglas] of siglasDoCnpj) {
+    if (siglas.length > 1) erros.push(`V2: o CNPJ ${cnpj} aparece em ${siglas.length} distribuidoras publicadas (${siglas.join(", ")}). Áreas com preços diferentes: separar antes de publicar.`);
+  }
+
+  const ehSubstituida = (id: string) => Object.hasOwn(p.substituidas, id);
+  const municipiosComAntigo = p.municipios.filter((x) => x.distribuidoras.some(ehSubstituida));
+  if (municipiosComAntigo.length > 0) {
+    const exemplos = municipiosComAntigo.slice(0, 5).map((x) => `${x.nome} (${x.uf})`);
+    erros.push(`V3: ${municipiosComAntigo.length} municípios listam um id substituído (ex.: ${exemplos.join(", ")}).`);
+  }
   return erros;
 }
 
