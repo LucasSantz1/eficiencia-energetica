@@ -10,6 +10,13 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-003a · junta o main com o h8 da HIS-111
+- O que fiz: `git merge origin/main` com conflitos resolvidos à mão (workflow, diários, contexto do qa); `decisao` do
+  `peso-js.json`; e2e inteiro numa cópia na porta 3311 (204 ok, 6 pulados).
+- Decisões: o workflow fica com os dois jobs da 003a e o "sem --forcar" e o `\r` do main. O item 7 do h8 já estava
+  feito (`4cc37bc`).
+- Próximo: merge da 003a no main.
+
 ## 2026-11-12 · HIS-111 · h8: sem --forcar no Actions, diagnóstico em PR, teste dos publicados, idDaSigla no core
 - O que fiz: 7 commits na `his-111-h8` (um por item). Conferi os publicados do `main` contra os de 29/10: mudam 227 e
   10 cidades ficam sem distribuidora, como no diagnóstico 4.

@@ -1378,3 +1378,9 @@ aceito, com R4c e R4d nas consequências.
 1. **Peso aceito, sem corte.** Conta só o que é da 003a sobre o `main` novo (a 111 e a 002b já foram aceitas nas suas histórias). O teto passa a ser +11 264 B no 11a e +14 336 B no 11b, e hoje está em +10 993 e +13 880 B. A sobra sobre o D10 vem do D-3a-1 (LGPD: "Apagar tudo" sempre à mão) e da leitura do `substituidas`, os dois necessários. O frontend troca o "Aguarda decisão" do campo `decisao` do `peso-js.json` por "aceito pelo tech-lead em 2026-11-13".
 2. **`TETO_HIS_109` = 7 confirmado.** É o número de hoje: o efeito de `navegador.ts` saiu, e o de `casa.ts` entrou. O bloco provisório já saiu. O teto só desce (D17).
 3. **Atenção:** o `git merge origin/main` (h8 da 111, PR #9) dá conflito em `.github/workflows/atualizar-dados.yml` e nos diários e contexto do backend e do qa. Não resolvi. Fica com o backend (o workflow) antes do merge da 003a.
+
+### [backend] 2026-11-13 — main com o h8 da 111 junto na 003a (`7ee7448`)
+- **Conflitos à mão:** no `atualizar-dados.yml` ficam os dois jobs da a6 (o `gerar` sem credencial). Do main entram o fim do `--forcar` (sem a entrada e sem o `FORCAR`) e o escape `%`→`\r`→`\n` sobre o log em `$RUNNER_TEMP`, ou seja, o `\r` está conferido. Nos diários entram os dois lados; no contexto do qa sai a pendência do h8, já aprovado.
+- **Item 7 do h8:** já estava feito na integração anterior (`4cc37bc`). O teste confere que 500 entradas passam, 501 dão `ErroDeFormato` e `distribuidoras: [null]` não lança: a entrada sai e conta.
+- **`peso-js.json`:** o campo `decisao` traz a decisão do tech-lead (`24480da`).
+- **Verifiquei:** lint, typecheck, test (core 239, web 16, dados 104, camadas 152), build e o e2e inteiro numa cópia, na porta 3311: 204 passam e 6 ficam pulados, o `peso-js` incluído.

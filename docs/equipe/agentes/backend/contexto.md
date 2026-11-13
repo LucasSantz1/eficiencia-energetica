@@ -70,8 +70,8 @@
 
 ## Pendências
 
-- **HIS-111:** no `main`; h8 na branch `his-111-h8` (12/11), falta o PR. No rebase da 003a: o `lerArquivoTarifas`
-  lê `substituidas` (P8 com 501 entradas) e o job `gerar` mantém o `sed` do `\r`. Perguntas abertas: Guarapuava
+- **HIS-111:** no `main`; h8 na branch `his-111-h8` (12/11), falta o PR. O main (com o h8) já está junto na 003a
+  (`7ee7448`), com o `\r` e o P8 conferidos. Perguntas abertas: Guarapuava
   (dominio-energia) e Nova Santa Rita PI (história futura, scrum-master).
 - Para a a6 da HIS-003 (fora da HIS-111): o passo "Publicar resumo" do `atualizar-dados.yml` põe as últimas 120
   linhas numa anotação, e isso escapa de novo as linhas `::notice` da rotina. É só aparência; quem reescrever o
