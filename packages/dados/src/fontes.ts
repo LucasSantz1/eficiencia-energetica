@@ -101,10 +101,10 @@ export async function lerFontes(opcoes: OpcoesDeLeitura): Promise<Fontes> {
   }
 
   if (opcoes.baixar) {
-    await etapa("Baixando tarifas das distribuidoras (ANEEL)", () => baixar(URL_TARIFAS, arquivos.tarifas));
-    await etapa("Baixando bandeiras tarifárias (ANEEL)", () => baixar(URL_BANDEIRAS, arquivos.bandeiras));
-    await etapa("Baixando municípios de cada conjunto elétrico (ANEEL)", () => baixar(URL_CONJUNTOS_MUNICIPIOS, arquivos.conjuntosMunicipios));
-    await etapa("Baixando distribuidora de cada conjunto elétrico (ANEEL)", () => baixar(URL_CONJUNTOS_DISTRIBUIDORAS, arquivos.conjuntosDistribuidoras));
+    await etapa("Baixando tarifas das distribuidoras (ANEEL)", () => baixar(URL_TARIFAS, arquivos.tarifas, { registrar }));
+    await etapa("Baixando bandeiras tarifárias (ANEEL)", () => baixar(URL_BANDEIRAS, arquivos.bandeiras, { registrar }));
+    await etapa("Baixando municípios de cada conjunto elétrico (ANEEL)", () => baixar(URL_CONJUNTOS_MUNICIPIOS, arquivos.conjuntosMunicipios, { registrar }));
+    await etapa("Baixando distribuidora de cada conjunto elétrico (ANEEL)", () => baixar(URL_CONJUNTOS_DISTRIBUIDORAS, arquivos.conjuntosDistribuidoras, { registrar }));
   }
 
   const tarifas = await etapa("Lendo tarifas residenciais B1", async () => {

@@ -7,7 +7,8 @@
 
 ## Estado atual
 
-- Rotina: baixa CSVs da ANEEL com 6 tentativas e espera crescente (`csv.ts`), detecta Latin-1/UTF-8, lê tarifas B1
+- Rotina: baixa CSVs da ANEEL com 4 tentativas (15, 30, 60 s; só rede e 5xx, nunca 4xx) e 45 s para conectar
+  (`csv.ts`, `undici` 8.12.4), detecta Latin-1/UTF-8, lê tarifas B1
   vigentes, bandeiras e municípios (IndQual Município × atributos dos conjuntos), usa cópia local do IBGE, valida
   (`montar.ts`), remove duplicados por slug e só grava se a assinatura mudou (`escrever.ts`).
 - Resultado atual: 114 distribuidoras e 5.561 de 5.571 municípios com distribuidora.

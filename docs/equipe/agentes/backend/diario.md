@@ -10,6 +10,16 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · dados · download da ANEEL resiliente (branch `dados-rede-resiliente`)
+- O que fiz: o diagnóstico dos PRs falhava com `UND_ERR_CONNECT_TIMEOUT` (o `fetch` do Node desiste de conectar em 10 s).
+  Agora são 45 s para conectar (`Agent` do `undici` 8.12.4) e 4 tentativas com espera de 15, 30 e 60 s, só em erro
+  de rede e 5xx. Cada tentativa vai para o log, o erro final mantém o `cause` e o pedaço de arquivo é apagado.
+  Testei com um fetch falso (10 casos) e com um servidor local.
+- Decisões: entrou a dependência `undici`, porque o `fetch` do Node não deixa mudar o tempo de conexão sem um
+  `dispatcher`. Ela é do próprio Node, com versão exata, e o `pnpm audit` está limpo. O 429 também não repete
+  (pedido: 4xx nunca).
+- Próximo: o diagnóstico da PR mostra se resolveu.
+
 ## 2026-11-12 · HIS-111 · h8: sem --forcar no Actions, diagnóstico em PR, teste dos publicados, idDaSigla no core
 - O que fiz: 7 commits na `his-111-h8` (um por item). Conferi os publicados do `main` contra os de 29/10: mudam 227 e
   10 cidades ficam sem distribuidora, como no diagnóstico 4.
