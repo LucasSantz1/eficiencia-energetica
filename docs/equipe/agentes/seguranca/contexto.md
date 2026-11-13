@@ -17,14 +17,14 @@
 | `pnpm audit`, Dependabot, `atualizar-dados.yml` | **resolvido** na HIS-003a (dois jobs, SHA, `permissions: {}`). Ressalva baixa: o `::notice` (l. 61) não escapa `\r` | HIS-003a |
 | Links externos sem `rel` | **resolvido** (4 links com `rel`, R12) | HIS-003a |
 | Refatoração em camadas: perda da casa salva, código de servidor no cliente, script de camadas com falso negativo | etapa 6 **aprovada com ressalvas (baixo)** em `182f355`: R1–R15 ok | HIS-001 |
-| `verificar-camadas.mjs` com lacunas que pedem escrita deliberada (S1: `from"x"` sem espaço, `.js/.jsx` não lidos, link simbólico pulado em silêncio, caminho absoluto/`?sufixo`, `getBuiltinModule`, `"use server"` livre) | etapa 3 aprovada: os 21 casos estão escritos na HIS-002b (20 ESLint, 1 script, medidos contra o D4) | HIS-002b |
+| `verificar-camadas.mjs` com lacunas que pedem escrita deliberada (S1: `from"x"` sem espaço, `.js/.jsx` não lidos, link simbólico pulado em silêncio, caminho absoluto/`?sufixo`, `getBuiltinModule`, `"use server"` livre) | **resolvido** (parser do TS + ESLint; etapa 6 aprovada com ressalvas baixas em `57eb736`) | HIS-002b |
 | Constante (`VOLTAR`) importada de módulo `"use client"` por componente de servidor (`app/sobre/page.tsx`) — armadilha A7, funciona hoje (S2) | aberto (baixo, pré-existente); correção no D7 | HIS-002b |
-| Comentário `eslint-disable`/`/* eslint … off */` derruba matriz, `innerHTML` e `"use server"` (medido) | médio; mitigação C10 no script, só a forma HIS-109 | HIS-002b (Ab3) |
-| `globalIgnores` com `**/build/**`, `**/out/**`, `**/test-results/**` tira pastas do site do lint (medido) | médio; ignores ancorados + controle de contagem | HIS-002b (Ab4) |
-| HTML a partir de texto fora da lista (`setHTMLUnsafe`, `createContextualFragment`, `srcdoc`/`srcDoc`) | baixo; 3 seletores propostos | HIS-002b (Ab6) |
+| Comentário `eslint-disable` derruba barreira (Ab3) | **resolvido**: C10 no script, só a forma HIS-109 (7 linhas + bloco provisório até a 003a) | HIS-002b |
+| Pastas do site fora do lint (Ab4) | **resolvido**: ignores ancorados + `controle-repositorio` | HIS-002b |
+| HTML a partir de texto por nome calculado (`e["innerHTML"]`, `Object.assign`, `Reflect.set`, spread de `dangerouslySetInnerHTML`) passa no lint (medido) | baixo, backlog; seletor `Property`/`Literal` proposto na nota da 002b | HIS-002b |
 | CI: `ci.yml` sem `permissions`, actions por etiqueta, `persist-credentials` padrão; artefato público 14 dias | **resolvido no `ci.yml`** (etapa 6 da HIS-002a aprovada com ressalva baixa em 2026-10-30: Ra1–Ra13 ok); falta: dono do projeto conferir o artefato no GitHub (Ra9) e o Dependabot de actions + `atualizar-dados.yml` (HIS-003) | HIS-002a / HIS-003 |
 | Site chamando terceiro sem a pessoa saber: sem barreira automática | **resolvido**: fixture do e2e reprova pedido fora de `127.0.0.1` (Ra10 plantada na `/sobre`: 3 vermelhos com a URL) | HIS-002a |
-| Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | médio; análise aprovada, V9/V10 no h1/h3; workflow de diagnóstico só leitura aprovado | HIS-111 |
+| Dados da ANEEL: 227 cidades com tarifa de empresa extinta (número errado no ar); troca de distribuidora por `sucessoes.json` sem barreira contra empresa ainda vigente (R3) | **mitigado**: etapa 6 aprovada com ressalvas (baixo) em `314555c`; V1–V4/V7–V10 sem `--forcar` e 0 arquivos com CSV ruim (provado). S1 (cabeçalho com `\n` no `console.error` do `main`) fechada em `0cc072a` | HIS-111 |
 | Server Actions (`"use server"`): cada uma vira endpoint POST público; nenhuma existe | regra a definir antes do E4 | E4 |
 | SQL injection | não se aplica ainda (sem banco); regra já vale para o E4 | E4 |
 | XSS | React escapa texto; não há `dangerouslySetInnerHTML`, `innerHTML`, `eval` nem `new Function` | — |
@@ -72,7 +72,8 @@
   fonte, antiga **sem** tarifa vigente e siglas que batem com o CNPJ (V9/V10, sem `--forcar`). A rotina diária nunca
   escreve em `packages/dados/base/` (ADR-005, HIS-111).
 - Texto de dado externo que vai para log do Actions (`::notice::`/`::warning::`) passa por escape de `%`, `\r`, `\n`;
-  no `$GITHUB_STEP_SUMMARY`, sem `|`/`<`/crase e com tamanho limitado.
+  no `$GITHUB_STEP_SUMMARY`, sem `|`/`<`/crase e com tamanho limitado. Vale também para mensagem de erro que sai
+  pelo `catch` do `main` (`console.error`), não só para `registrar` (S1 da HIS-111).
 - Funções do core que leem dado de rede (ex.: `substituidas`) são totais por conta própria; não dependem de o leitor
   da fronteira já existir.
 - Lint: o único `eslint-disable` aceito no site e no domínio é o da HIS-109; ignores do ESLint só com caminho ancorado;
@@ -90,16 +91,15 @@
 
 - **HIS-002a:** etapa 6 feita (aprovado com ressalvas, baixo). Fica só a Ra9 no GitHub, com o dono do projeto (roteiro
   na minha nota da história). Aa9 entrou no A6 (SHA); Dependabot de actions segue na HIS-003.
-- **HIS-002b (etapa 6):** Rb1–Rb9; rodar de novo os 21 + 9 casos numa cópia própria (roteiros em
-  `scratchpad/seg-his002/casos-eslint.mjs` e `propostas.mjs`; se sumirem, as tabelas estão na história) esperando 0
-  diferente; conferir C10 (Ab3) e ignores ancorados (Ab4).
+- **HIS-002b:** etapa 6 feita em `57eb736` (aprovado com ressalvas, baixo). As 2 moderadas do `minimatch` foram aceitas (só
+  em desenvolvimento): conferir o PR do Dependabot. As sondas estão em `scratchpad/seg-his002b/roteiro/sondas-xss.mjs`. No rebase
+  da 003a, o bloco provisório sai e o teto vira 8.
 - **HIS-003a:** etapa 6 feita em `13cbd30` (aprovado com ressalvas, baixo). Falta: conferir no rebase o bloco
   provisório saindo e o teto 8 da HIS-109 (D17 da 002b), o `\r` no `::notice` e o `erros.spec` (a7) provando T2/T3.
   Roteiro do navegador: `scratchpad/seg-his003a/roteiro/r.cjs`. HIS-003b (T5/T6, `campos.spec.ts`) ainda por revisar.
-- **HIS-111 (etapa 6):** R1–R9 da história. Conferir: `paths` do diagnóstico com `core` e lockfile; escape do log
-  com o teste `"X\n::add-mask::a"`; V9/V10 com fixture e sem `--forcar`; core total com os 5 formatos de
-  `substituidas`; regravação só com `de` fora e `para` dentro; `Object.fromEntries` + limite de 500 no leitor da a3;
-  h8 sem `--forcar` e gatilho `push` trocado por `pull_request`. Conferir que o ADR-005 passou para aceito com o R3.
+- **HIS-111:** etapa 6 feita em 2026-10-31 (aprovado com ressalvas, baixo). S1 fechada em `0cc072a` (conferida). Falta: no h8, rodar sem `--forcar` e trocar o
+  gatilho `push` por `pull_request`. Na a3: leitor do `tarifas.json` com `Object.fromEntries`, limite de 500 (caso 501
+  no P8) e `distribuidoras: [null]` sem lançar. Sondas em `scratchpad/seg-his111/` (`sondas.ts`, `rodar-ruim.mts`).
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

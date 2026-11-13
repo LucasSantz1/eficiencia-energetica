@@ -32,6 +32,8 @@ const LIMITES_DOS_ARQUIVOS = {
   /** O maior estado (MG) tem 853 municípios. */
   municipios: 2_000,
   distribuidorasPorLugar: 50,
+  /** O mesmo teto da rotina (`MAXIMO_DE_SUBSTITUIDAS` em `packages/dados/src/montar.ts`), que nunca publica mais. */
+  substituidas: 500,
 } as const;
 
 /** Mesmo formato do `slug` da rotina (`packages/dados`): minúsculas, números e hífen. */
@@ -44,7 +46,7 @@ const TIPOS_DE_BANDEIRA = listaCompleta<Bandeira>()(["verde", "amarela", "vermel
 /** Campos que cada leitor lê (R4c): o `typecheck` reprova campo novo no tipo que não esteja aqui. */
 // `/* @__PURE__ */`: as listas só servem ao `typecheck` e aos testes (R4c); marcadas assim, saem do JS do site (D10, 1b).
 export const CAMPOS_DOS_ARQUIVOS_PUBLICOS = {
-  tarifas: /* @__PURE__ */ listaCompleta<keyof ArquivoTarifas>()(["geradoEm", "origem", "fontes", "distribuidoras", "bandeiras", "estados"]),
+  tarifas: /* @__PURE__ */ listaCompleta<keyof ArquivoTarifas>()(["geradoEm", "origem", "fontes", "distribuidoras", "bandeiras", "estados", "substituidas"]),
   distribuidora: /* @__PURE__ */ listaCompleta<keyof Distribuidora>()(["id", "sigla", "cnpj", "ufs", "teKwh", "tusdKwh", "tarifaKwh", "inicioVigencia", "fimVigencia", "resolucao"]),
   bandeira: /* @__PURE__ */ listaCompleta<keyof BandeiraMes>()(["competencia", "bandeira", "nome", "adicionalKwh"]),
   estado: /* @__PURE__ */ listaCompleta<keyof Estado>()(["uf", "nome", "distribuidoras"]),
@@ -174,6 +176,29 @@ function lerMunicipio(bruto: unknown, ufPedida: Uf): Municipio | undefined {
   return { ibge, nome, uf: ufPedida, distribuidoras };
 }
 
+/**
+ * `substituidas` (id que saiu → id que ficou; HIS-111, P8 e V8). Ausente vira `{}`, sem descarte (arquivo antigo no
+ * cache). Presente e não objeto simples, ou com mais de 500 entradas: `ErroDeFormato`. Cada entrada que quebra o V8 sai
+ * e conta: chave e valor no formato de id; o valor é um id publicado; a chave não é id publicado; nenhum valor é chave.
+ * As regras olham o objeto original inteiro, não o que sobrou depois de cada descarte, e o resultado é montado com
+ * `Object.fromEntries` só no fim (R7 da seguranca na HIS-111): a ordem das entradas não muda o que fica.
+ */
+function lerSubstituidas(arquivo: Record<string, unknown>, publicados: ReadonlySet<string>, nomeDoArquivo: string): { substituidas: Record<string, string>; descartados: number } {
+  if (!temPropriedade(arquivo, "substituidas")) return { substituidas: {}, descartados: 0 };
+  const bruto = propriedade(arquivo, "substituidas");
+  if (!ehObjeto(bruto)) throw new ErroDeFormato(`${nomeDoArquivo}: "substituidas" não é um objeto.`);
+  const chaves = Object.keys(bruto);
+  if (chaves.length > LIMITES_DOS_ARQUIVOS.substituidas) throw new ErroDeFormato(`${nomeDoArquivo}: "substituidas" tem entradas demais.`);
+  const todasAsChaves = new Set(chaves);
+  const ficam: [string, string][] = [];
+  for (const chave of chaves) {
+    const de = lerIdDeDistribuidora(chave);
+    const para = lerIdDeDistribuidora(propriedade(bruto, chave));
+    if (de !== undefined && para !== undefined && publicados.has(para) && !publicados.has(de) && !todasAsChaves.has(para)) ficam.push([de, para]);
+  }
+  return { substituidas: Object.fromEntries(ficam), descartados: chaves.length - ficam.length };
+}
+
 /** `tarifas.json`. Lança `ErroDeFormato` se a estrutura estiver errada; entrada inválida sai e conta em `descartados`. */
 export function lerArquivoTarifas(bruto: unknown): { arquivo: ArquivoTarifas; descartados: number } {
   const nome = "tarifas.json";
@@ -182,9 +207,19 @@ export function lerArquivoTarifas(bruto: unknown): { arquivo: ArquivoTarifas; de
   const distribuidoras = lerEntradas(arquivo, "distribuidoras", LIMITES_DOS_ARQUIVOS.distribuidoras, lerDistribuidora, (d) => d.id, nome);
   const bandeiras = lerEntradas(arquivo, "bandeiras", LIMITES_DOS_ARQUIVOS.bandeiras, lerBandeiraMes, (b) => b.competencia, nome);
   const estados = lerEntradas(arquivo, "estados", 27, lerEstado, (e) => e.uf, nome);
+  // "Publicado" é o que ficou depois do leitor: um valor que aponta para uma distribuidora descartada também sai.
+  const substituidas = lerSubstituidas(arquivo, new Set(distribuidoras.itens.map((d) => d.id)), nome);
   return {
-    arquivo: { geradoEm, origem, fontes: fontes.itens, distribuidoras: distribuidoras.itens, bandeiras: bandeiras.itens, estados: estados.itens },
-    descartados: fontes.descartados + distribuidoras.descartados + bandeiras.descartados + estados.descartados,
+    arquivo: {
+      geradoEm,
+      origem,
+      fontes: fontes.itens,
+      distribuidoras: distribuidoras.itens,
+      bandeiras: bandeiras.itens,
+      estados: estados.itens,
+      substituidas: substituidas.substituidas,
+    },
+    descartados: fontes.descartados + distribuidoras.descartados + bandeiras.descartados + estados.descartados + substituidas.descartados,
   };
 }
 

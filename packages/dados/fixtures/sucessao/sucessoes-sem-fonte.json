@@ -1,0 +1,15 @@
+{
+  "sobre": "Critério 7: fonte sem https.",
+  "sucessoes": [
+    {
+      "cnpjAntigo": "07297359000111",
+      "siglaAntiga": "EDEVP",
+      "cnpjSucessor": "07282377000120",
+      "siglaSucessora": "ESS",
+      "desde": "2017-06-30",
+      "ato": "REA ANEEL nº 6.318/2017",
+      "fonte": "http://exemplo.gov.br/ato.pdf",
+      "consultadoEm": "2026-10-30"
+    }
+  ]
+}

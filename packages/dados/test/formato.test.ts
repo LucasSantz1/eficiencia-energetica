@@ -2,7 +2,7 @@ import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ehUf, lerArquivoMunicipios, lerArquivoTarifas, lerRelatorioDosDados, type ArquivoMunicipios, type ArquivoTarifas } from "@ee/core";
+import { ehUf, lerArquivoMunicipios, lerArquivoTarifas, lerRelatorioDosDados, type ArquivoMunicipios } from "@ee/core";
 import { afterEach, describe, expect, it } from "vitest";
 import { escreverArquivos } from "../src/escrever";
 import { conferirFormato } from "../src/formato";
@@ -13,19 +13,40 @@ const lerJson = async (caminho: string): Promise<unknown> => JSON.parse(await re
 
 /** Montagem pequena e válida, no formato que a rotina grava. */
 function montagemValida(): Montagem {
-  const tarifas: ArquivoTarifas = {
+  const tarifas: Montagem["tarifas"] = {
     geradoEm: "2026-10-29T13:55:43.455Z",
     origem: "aneel",
     fontes: ["ANEEL — Tarifas de aplicação"],
     distribuidoras: [{ id: "ess", sigla: "ESS", cnpj: "07282377000120", ufs: ["SP"], teKwh: 0.3, tusdKwh: 0.51424, tarifaKwh: 0.81424, inicioVigencia: "2026-07-12" }],
     bandeiras: [{ competencia: "2026-10", bandeira: "amarela", nome: "Amarela", adicionalKwh: 0.01885 }],
     estados: [{ uf: "SP", nome: "São Paulo", distribuidoras: ["ess"] }],
+    // A rotina sempre grava `substituidas` (HIS-111, D7), mesmo vazio.
+    substituidas: {},
   };
   const sp: ArquivoMunicipios = { uf: "SP", geradoEm: tarifas.geradoEm, origem: "aneel", municipios: [{ ibge: 3_541_406, nome: "Presidente Prudente", uf: "SP", distribuidoras: ["ess"] }] };
   return {
     tarifas,
     municipiosPorUF: [sp],
-    relatorio: { distribuidoras: 1, distribuidorasSemMunicipio: [], agentesSemTarifa: [], municipios: 1, municipiosSemDistribuidora: 0, municipiosComVariasDistribuidoras: 0 },
+    relatorio: {
+      distribuidoras: 1,
+      distribuidorasSemMunicipio: [],
+      agentesSemTarifa: [],
+      municipios: 1,
+      municipiosSemDistribuidora: 0,
+      municipiosComVariasDistribuidoras: 0,
+      // Campos da HIS-111 (D6), vazios: esta montagem não troca nada.
+      anoMaisRecenteDosConjuntos: 2025,
+      renomeacoesPorCnpj: [],
+      sucessoesAplicadas: [],
+      vinculosExtintosDescartados: [],
+      vinculosExtintosMantidos: [],
+      tarifasDescartadasPorVencimento: [],
+      tarifasVencidasEmUso: [],
+      tarifasComMaisDeUmValor: [],
+      sucessorasCandidatas: [],
+      substituicoesEmConflito: [],
+      ligacoesPelaSiglaRecusadas: [],
+    },
   };
 }
 

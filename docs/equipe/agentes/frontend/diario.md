@@ -28,6 +28,26 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Arquivos: ver o contexto (linha HIS-003a), a história e este diário.
 - Próximos passos: tech-lead decide o peso; qa no a7; seguranca nos R1–R13.
 
+## 2026-11-03 · HIS-002b · lint e camadas no CI: B1–B7 (ESLint, casos negativos, script com parser do TS, S2/T3)
+- O que fiz: um commit por passo (`7427be6` B1, `e8ffa7a` B2, `c602b73` B3, `7e25a8c` B4, `b0bd88c` B5, `666fe8c` B6,
+  `1062111` B7). 145 casos + 4 controles em `scripts/testes/`; script reescrito com `ts.createSourceFile`.
+- Decisões e porquê: `casa.ts` e `packages/dados` estão em outras histórias → bloco provisório na configuração (2
+  regras, 2 arquivos) em vez de mexer neles. `OBRIGATORIOS` conferido nos dois sentidos (caso novo também precisa entrar
+  na lista). Os comentários da C10 são lidos pelos tokens do parser, pulando texto de JSX, para `//` em texto não acusar.
+- Verificação: barreira verde; mutações V1–V4 e V6–V8 vermelhas com o id; e2e numa cópia (3341) e controle do `main`
+  (3342): a falha de transição em "terminar o cadastro" aparece nos dois, então não é desta história.
+- Aprendizado: num `sed` de mutação, conferir que o padrão casa só onde se quer (apagar `"I7-13", ` tirou também o id
+  do caso). E o ESLint 10 com `-c` usa a pasta atual como base.
+- Arquivos: `eslint.config.mjs`, `package.json`, `pnpm-lock.yaml`, `.github/workflows/ci.yml`, `scripts/**`,
+  `apps/web/postcss.config.mjs`, `ui/tiposDeTransicao.ts`, `aplicacao/identificador.ts`, 20 arquivos com imports
+  reordenados, a história, este diário e `contexto.md`.
+- Próximos passos: tech-lead (B8 e o bloco provisório), documentacao, qa (etapa 5) e seguranca (Rb1–Rb9).
+
+## 2026-10-31 · HIS-111 · D1 do h7: o peso de JS de /casa* voltou a ficar abaixo do limite
+- O que fiz: mantive o aviso no carregamento normal, mas mais leve. Ele cuida do próprio "Entendi" e do foco; os nomes foram para `core/trocas.ts`; tirei verificações repetidas. O 11a de `/casa*` ficou em até +998 B (limite +1 024), medido na junção com o `origin/main`.
+- Aprendizado: o `React.lazy` piora o peso com o Turbopack (ele parte os chunks compartilhados: `/comecar` +1 570 B). Para medir, aplique o diff (`git diff HEAD`) sobre a junção com o main; não copie o `src` inteiro, que leva o código velho da branch (isso me deu um axe falso). O gzip medido à mão não bate com o spec, que conta também os `preload`.
+- Arquivos: `casca/*`, `ui/Aviso.tsx`, `aplicacao/casa.ts`, `core/src/{distribuidoras,trocas,index}.ts`, teste do core, a história.
+
 ## 2026-10-30 · HIS-002 · D-A5-1 e D-A5-2: nome do "Quem mais gasta" e Tab na tabela do painel geral
 - O que fiz: commit `92e9fd9`. Coloquei o `aria-label` da ux nos 6 botões do ranking, com `{" "}` entre os blocos, e
   `role="region"`, nome e `tabIndex={0}` na região rolável da tabela do painel geral.
@@ -53,6 +73,20 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
   Playwright trava a `Contagem`. Validar o comparador com controle antes de confiar (retro da HIS-001 de novo).
 - Arquivos: `apps/web/src/funcionalidades/inicio/CasaIlustrada.tsx`, `PaginaInicial.tsx`, a história, este diário, `contexto.md`.
 - Próximos passos: qa no A5; os 2 `dd` com contraste baixo vão para a conversa da HIS-110.
+
+## 2026-10-30 · HIS-111 · h6: id de hoje nas telas e aviso da troca de distribuidora
+- O que fiz: `useResumo` com `acharDistribuidora`; `Cadastro` e `TelaAjustes` com `distribuidorasDaCidade`;
+  `useDistribuidoraAtualizada` (regrava uma vez por par); `AvisoTrocaDistribuidora` na `Casca` (textos do F1);
+  `Aviso` com `anunciar`; no core, 4 nomes do dominio-energia, `nomeComercialDoId`, `descreverTroca` e testes.
+- Decisões e porquê: nome do id antigo no core (os nomes têm fonte lá; `Map` evita "constructor"); o par da troca fica
+  só em memória (o aviso some na próxima visita sem gravar nada novo); F2 ficou de fora (arquivo da 002a).
+- Verificação: typecheck/test/build verdes; Playwright em 390 e 1280 px com `tarifas.json` de teste via `route`,
+  52 conferências, console limpo (`scratchpad/frontend-h6/conferir.cjs`).
+- Aprendizado: rodar `next start` numa porta já ocupada falha em silêncio no fundo e o teste bate no servidor velho;
+  conferir o log do servidor antes de testar.
+- Arquivos: `aplicacao/casa.ts`, `aplicacao/resumo.ts`, `ui/Aviso.tsx`, `funcionalidades/casca/*`, `Cadastro.tsx`,
+  `TelaAjustes.tsx`, `packages/core/src/distribuidoras.ts`, `packages/core/test/distribuidoras.test.ts`, a história.
+- Próximos passos: qa no h7; responder a revisão do tech-lead.
 
 ## 2026-10-29 · HIS-001 · camadas implementadas nos passos 1–8, sem mudança visível
 - O que fiz: `scripts/verificar-camadas.mjs` (ligado ao `pnpm typecheck`) e a reorganização inteira do `apps/web/src`

@@ -1,10 +1,10 @@
 "use client";
 
-import { CATALOGO_VISIVEL, CATEGORIAS } from "@ee/core";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Icone } from "@/ui/Icone";
+import { CATALOGO_VISIVEL, CATEGORIAS } from "@ee/core";
 import { Folha } from "@/ui/Folha";
+import { Icone } from "@/ui/Icone";
 
 const semAcento = (t: string) =>
   t

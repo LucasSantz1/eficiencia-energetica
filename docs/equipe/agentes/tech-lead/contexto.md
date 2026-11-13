@@ -14,8 +14,8 @@
 - Site em camadas (HIS-001, branch `his-001-camadas`, PR #1): `app/`, `funcionalidades/<nome>/`, `ui/` (+ `ui/aparelho/`),
   `aplicacao/`, `infraestrutura/`, `config/`. **Code review aprovado em 2026-10-29** (seção 12 do desenho); próximo:
   `documentacao` (etapa 8) e `scrum-master` (etapa 9). O `main` só muda quando a PR #1 for integrada.
-- Sem ESLint ainda (entra na HIS-002). As camadas são conferidas por `scripts/verificar-camadas.mjs` (`pnpm camadas`),
-  que roda dentro do `pnpm typecheck` (64 arquivos hoje). CI verde no `182f355`.
+- ESLint entra com a HIS-002b (`pnpm lint`, cerca de 13 s sem cache). O script de camadas usa o parser do TypeScript
+  (66 arquivos, 7 comentários da HIS-109). O `test:camadas` tem 145 casos e 4 controles, cerca de 37 s.
 - Next 16: o build não mostra mais "First Load JS"; para comparar peso, usar `.next/prerender-manifest.json`
   (`htmlSize`, `initialRevalidateSeconds`) e os bytes de script. A `/` hoje: `htmlSize` ≈ 66 kB, revalidate 86400.
 - JS do HTML depois da HIS-001 (gzip, sem `noModule`): `/` 164 212, `/comecar` 172 561, `/casa` 175 053,
@@ -35,8 +35,10 @@
   - Depende só da 002a no `main`.
   - Protótipo do `persist` em `scratchpad/tl-his003/persist/`; medição do zod em `scratchpad/tl-his003/zod/`.
 - **HIS-111 (tarifas vencidas, número errado no ar em 227 cidades):** desenho técnico pronto (T1–T7, 2026-10-30) e
-  ADR-005 proposto. Passos h0–h8, cerca de 3 dias. Recomendei que ela venha **antes do a3** da 003a, em paralelo com o
-  fim da 002a. Aguarda o scrum-master (sprint, critérios do T5), a seguranca (workflow do T3 e V8) e a ux (aviso do D7).
+  ADR-005 aceito. Passos h0–h8. **Code review do backend (h0–h5 + correções do passo 0) aprovado em 2026-10-30**,
+  com o diagnóstico 4 (`fcb4462`) passando todos os portões (227 cidades mudam, 10 sem distribuidora, (d)=0). Itens
+  não bloqueantes para o h8: seleção de tarifa ainda agrupa só pela sigla (comentar + teste de dois CNPJs no mesmo
+  início), 2 comentários velhos, `push` → `pull_request` no `diagnosticar-dados.yml`. **h6 (frontend, `10166f5`) aprovado em 2026-10-30**; itens: `idDaSigla` do core vira o `slug` da rotina no h8, `setState` no efeito vai para a HIS-109. Próximo: qa (h7).
 - CI: `ci.yml` da HIS-002a escrito no A6 (2026-10-30, branch `his-002-qualidade`). São dois checks em paralelo:
   "Lint, tipos e testes" e "Navegador (e2e, axe e peso)". Esses nomes valem para a proteção do `main` e a 002b não
   pode mudá-los. No runner (PR #3, 2026-10-30): job `e2e` ~2,8 min (Chromium 24 s, e2e ~1,9 min, 107 passam e 6
@@ -83,6 +85,8 @@
   parser do `typescript`. `import()` dinâmico e `"use server"` proibidos até haver regra. e2e em todo PR e push no
   `main`; sem cache do navegador no runner (rever se o passo passar de 60 s). Peso de JS com referência em
   `apps/web/e2e/peso-js.json`. `e2e-base` sai no fim da parte do navegador.
+- **Efeitos da HIS-109 (2026-11-03):** o teto só desce. Efeito novo que só copia estado não ganha comentário: usa
+  estado derivado ou ajustado no render, e o efeito fica só com o que fala com fora (store, rede, DOM).
 - **Builds de revisão** sempre numa cópia própria no scratchpad (`git archive HEAD` + `pnpm install --offline`), nunca no
   `apps/web/.next` do repositório: build em paralelo derruba o servidor de quem está testando (lição do qa na HIS-001).
 
@@ -110,6 +114,10 @@
   - id guardado é resolvido pelo core (`acharDistribuidora`, `distribuidorasDaCidade`) e regravado uma vez pelo
     `aplicacao/`, nunca pelo leitor da casa salva;
   - barreiras de número errado ou de contrato não passam com `--forcar`; as de cobertura passam.
+  - _(revisto depois do passo 0)_ nome igual não é a mesma empresa: a sigla só liga com a mesma raiz de CNPJ (8
+    dígitos) ou sem CNPJ; a empresa da tarifa é sigla + CNPJ; o ano do conjunto (arquivo parou em 2014) só tira
+    vínculo que não chega a tarifa publicada, e só se a cidade tiver outro;
+  - V4 = sucessora final publicada (com o V1, até 6 meses vencida), não "vigente" estrito.
 - **Diagnóstico da rotina na Action:** a ANEEL dá 403 daqui. Para ler os CSVs, usar um workflow só de leitura
   (`contents: read`, `persist-credentials: false`, sem gravar, último passo "nada mudou"). O `workflow_dispatch` só
   aparece com o arquivo no `main`; numa branch, usar um gatilho `push` limitado à branch.
@@ -132,8 +140,9 @@
   - o peso até cerca de +3 kB por rota (acima de +4 kB, conversar antes).
 - HIS-111: no code review, conferir que `lerCasaSalva` não conhece `substituidas`, que `Object.hasOwn` está no
   `acharDistribuidora`, que V1–V4 e V7–V10 ignoram o `--forcar`, que o h8 tirou o gatilho `push` do
-  `diagnosticar-dados.yml` e ligou o teste dos publicados. A branch `his-111-tarifas-vencidas` tem a cópia antiga do
-  ADR-005: no rebase, vale a versão aceita (a da `his-002-qualidade`).
+  `diagnosticar-dados.yml` e ligou o teste dos publicados. ~~Cópia antiga do ADR-005 na branch~~ trazida a versão
+  aceita (da `his-002-qualidade`; o `origin/main` ainda tem a proposta, porque o 4e58b5b não entrou no PR #3) e
+  revista em 2026-10-30. Pergunta F1 resolvida pelo h6 (nome no core, par só na memória, `anunciar` no `Aviso`).
 - HIS-003: no code review, conferir também que o leitor garante o cômodo de cada aparelho (sem ele, o `aria-label` do
   "Quem mais gasta" diria "em undefined").
 - Dívida T2 (e2e): `seletorDoNo` e `TelaAxe` exportados sem uso de fora (`e2e/apoio/axe.ts`).
@@ -150,7 +159,12 @@
 - ~~HIS-002a: code review na etapa 7~~ aprovado em 2026-10-30 (2 checks verdes, artefato no descartável, mesma lista).
   Resta o peso do runner × local: o verde só prova que está dentro do limite. Pedi a quem orquestra a tabela do resumo
   do job; se a diferença passar de ±100 B, a referência passa a ser a do CI (D14). Se o e2e passar de 10 min, rever os workers.
-- HIS-002b: implementação depois da 002a no `main`; no B8, a frase do ADR-001.
+- HIS-002b (branch `his-002b-lint-e-camadas`): B1–B7 revistos em 2026-11-03 e devolvidos só pelo `TETO_HIS_109` = 7
+  enquanto existir o bloco provisório (D17). B8 feito (ADR-001 revisado). Conferir de novo depois do ajuste.
+- HIS-111: o efeito novo em `aplicacao/casa.ts` (`useDistribuidoraAtualizada`) precisa sair sem 9ª linha da HIS-109,
+  com o estado ajustado no render (D17 da 002b). No rebase, o `--fix` da ordem vai num commit só de formatação.
+- HIS-003a: no rebase sobre a 002b, tirar o bloco `provisorio/arquivos-em-outras-historias` (o 8º comentário no
+  `useCasaCarregada`, o `--fix` no `escrever.ts` e o teto 8). Conferir isso no code review dela.
 - Dívida nova (HIS-109, se o scrum-master confirmar): 8 efeitos que copiam estado (`react-hooks/set-state-in-effect`)
   em `TelaComodos`, `armazenamento/casa`, `dados-publicos/navegador`, `Movimento`, `EditorAparelho` — reescrever com
   `key`, estado derivado ou `useSyncExternalStore`, com e2e conferindo.

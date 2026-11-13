@@ -25,6 +25,14 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
   `acessibilidade`, `sanidade`, `peso-js.spec.ts`, `peso-js.json`, `playwright.config.ts`, a história, `contexto.md`.
 - Próximos passos: tech-lead confirma o 11b; rebase (D10 3) tira o `fixme` (h).
 
+## 2026-10-31 · HIS-111 · h7 refeito: D1 fechado, aprovado
+- O que fiz: cópia limpa de `314555c` (main junto); barreiras; e2e inteiro (121 ok); `peso-js` + `troca-distribuidora` 3×;
+  roteiro exploratório 19/19; comparei a busca do nome antigo sem acentos com a antiga, para todas as siglas.
+- Decisões e porquê: aprovado. O 11a ficou abaixo do limite, e a mudança dos acentos não troca nenhum nome (só três
+  siglas publicadas perdem o nome antigo, e o aviso cai no texto sem nome).
+- Arquivos: HIS-111, `contexto.md`, este diário. Evidências em `…/scratchpad/qa-his111-r2-*`.
+- Próximos passos: h8.
+
 ## 2026-10-30 · HIS-002a · A5 fechado, A7 (tira o e2e-base) e etapa 5 aprovada
 - O que fiz: seletor do `aparelhos.spec.ts` pelo nome do D-A5-1 (`d5a4940`); `git rm -r apps/web/e2e-base` e 2
   comentários do `e2e/` (`020db92`); e2e completo e `--repeat-each=3` numa cópia própria; M1–M16 plantadas numa
@@ -47,6 +55,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Arquivos: `apps/web/e2e/**`, `apps/web/playwright.config.ts`, `apps/web/package.json`, `package.json`,
   `pnpm-lock.yaml`, `.gitignore`, `docs/planejamento.md` (HIS-110), a história, `contexto.md`, este diário.
 - Próximos passos: correção do frontend → A5 verde; etapa 5 (M1–M16, `--repeat-each=3`); A7.
+
+## 2026-10-30 · HIS-111 · h7: dados ok, critério 8 em e2e, devolvido pelo peso de JS
+- O que fiz: conferi os critérios 1, 2, 9 e 10 no diagnóstico 4; junção 111 + 002a por `merge-tree` numa cópia;
+  barreiras verdes; spec novo `troca-distribuidora.spec.ts` (7 testes × 2 larguras, estável em 3 repetições); e2e da
+  002a inteiro; roteiro exploratório (teclado, zoom 200%, reduzido, nomes acessíveis) com capturas.
+- Decisões e porquê: devolvido para frontend: o `peso-js.spec.ts` reprova só com o código da 111 (a 002a sozinha passa).
+  O spec fica na branch 111 sem a infraestrutura da 002a (não entra no tsconfig do site), para rodar quando as duas se
+  juntarem. Tarifas de teste derivadas do publicado em tempo de execução, para o teste valer antes e depois do h8.
+- Arquivos: `apps/web/e2e/troca-distribuidora.spec.ts`, `apps/web/e2e/fixtures/casa-v2-rge-sul.json`,
+  `apps/web/e2e/fixtures/substituidas-his111.json`, HIS-111, `contexto.md`, este diário. Evidências em
+  `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-capturas/`.
+- Próximos passos: reconferir o peso depois do frontend; h8.
 
 ## 2026-10-29 · HIS-002 · revisão do D9/D10 (002a) e do D6 (002b) e plano de testes das duas
 - O que fiz: li as duas histórias, o ADR-003, a retro e o §10/R13 e a etapa 5 da HIS-001; comparei o D9/D10 com o

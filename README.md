@@ -20,12 +20,13 @@ Projeto independente e gratuito, feito para as famílias que mais precisam econo
 
 ## Como rodar
 
-Requer Node 22 e pnpm 10.
+Requer Node 26 (LTS) e pnpm 10.
 
 ```bash
 pnpm install
 pnpm dev            # site em http://localhost:3000
 pnpm test           # testes dos cálculos e da leitura dos dados da ANEEL
+pnpm lint           # padrão do código, segurança e camadas (ESLint)
 pnpm typecheck      # organização em camadas e tipos
 pnpm build          # build de produção
 ```
@@ -37,7 +38,7 @@ apps/web          Site em Next.js 16 (React 19, Tailwind 4). Instalável no celu
 packages/core     Regras de negócio em TypeScript puro: cálculos, catálogo de aparelhos, dicas.
                   O mesmo pacote será usado pelo app de celular.
 packages/dados    Rotina que baixa os dados da ANEEL e gera os arquivos em apps/web/public/dados.
-scripts           verificar-camadas.mjs: confere a organização do código do site (pnpm camadas).
+scripts           verificar-camadas.mjs: confere a organização do código do site (pnpm camadas); testes/: casos negativos do lint e das camadas.
 ```
 
 O código do site é organizado em camadas (rotas, telas, componentes, casos de uso e acesso a dados), descritas em

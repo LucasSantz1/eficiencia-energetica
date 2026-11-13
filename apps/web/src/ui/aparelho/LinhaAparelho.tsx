@@ -1,13 +1,13 @@
 "use client";
 
-import { consumoMensalKwh, formatarReais, itemDoCatalogo, type PrecoKwh } from "@ee/core";
 import { useState } from "react";
+import { consumoMensalKwh, formatarReais, itemDoCatalogo, type PrecoKwh } from "@ee/core";
 import { Contador } from "@/ui/Contador";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
-import { descreverUso } from "./textosDeUso";
 import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
+import { descreverUso } from "./textosDeUso";
 import type { ItemComodo } from "./tipos";
 
 /**

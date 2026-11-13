@@ -66,10 +66,17 @@ Os papéis listados são os principais; QA, segurança, tech lead e documentaç�
 | --- | --- | --- | --- |
 | HIS-001 | ✅ Reorganizar o site em camadas (`funcionalidades/`, `ui/`, `aplicacao/`, `infraestrutura/`) sem mudar nada para quem usa | tech-lead, frontend | M |
 | HIS-002a | ✅ Testes no navegador no CI: fluxo principal com Playwright em 390 e 1280 px, axe nas páginas principais, artefatos do job e peso de JS com referência (critérios 2, 3, 4, 6, 9 da HIS-002; arquivo `HIS-002-qualidade-automatica.md`) | qa, tech-lead | M |
-| HIS-002b | Lint e camadas no CI: ESLint (config do Next 16), matriz de camadas no lint, casos negativos automáticos, regra S2 e ordem dos imports (critérios 1, 5, 7, 8 + T1 da HIS-002). Depende da HIS-002a | tech-lead, frontend, seguranca | M |
+| HIS-002b | ✅ Lint e camadas no CI: ESLint (config do Next 16), matriz de camadas no lint, casos negativos automáticos, regra S2 e ordem dos imports (critérios 1, 5, 7, 8 + T1 da HIS-002). Depende da HIS-002a | tech-lead, frontend, seguranca | M |
 | HIS-003a | Dados quebrados não travam o site: leitores da casa salva e dos JSON públicos no `@ee/core` (sem zod, ADR-004), `limites.ts`, avisos de dado descartado e de falha de carga, telas de erro e 404, cabeçalhos HTTP (CSP, HSTS...), `pnpm audit` e Dependabot no CI, `atualizar-dados.yml` em dois jobs, `.env.example` (critérios 1–4, 6, 7 e o 5 no domínio da HIS-003; arquivo `HIS-003-base-de-seguranca.md`). Depende da HIS-002a | seguranca, backend, frontend | M |
 | HIS-003b | Campos com limite e "Confere?": mensagem de campo fora do limite (T5), pergunta para valor raro (T6) e aviso de consumo alto da casa; sai o corte escondido de 30.000 W (critério 5 nas telas + critério 8). Depende da HIS-003a | frontend, ux, qa | M |
 | HIS-004 | ✅ Retirar menção a instituição de ensino e reservar espaços para parceiros (desligados) | — | P |
+
+Backlog vindo do fechamento da HIS-002b (2026-11-03; sem sprint ainda):
+
+| ID | Item | Papéis | Tam. |
+| --- | --- | --- | --- |
+| DEF-002b-1 | Defeito, pré-existente (qa: 1 em 20 execuções na branch e 2 em 30 no `main` `0cef6c1`): o fluxo principal às vezes dá 13 transições em vez de 14 ao terminar o cadastro. Instabilidade que pode ser da tela ou do próprio teste: o frontend investiga primeiro. **Pronto quando:** a causa está explicada e o fluxo passa 30 vezes seguidas, sem apagar a verificação das 14 transições. Detalhe em "Resultado da etapa 5" da HIS-002b. Prioridade: antes de o e2e virar check obrigatório com muita gente integrando; sem sprint ainda | frontend, qa | P |
+| HIS-113 | Lint: fechar o seletor de HTML por nome calculado (ressalva baixa 4 da seguranca na HIS-002b). Passam hoje `{...{ dangerouslySetInnerHTML }}`, `e["innerHTML"]`, `Object.assign(e, { innerHTML })` e `Reflect.set(e, "innerHTML", …)`. Proposta: `Property[key.name=/^(dangerouslySetInnerHTML\|innerHTML\|outerHTML)$/], Literal[value=/^(dangerouslySetInnerHTML\|innerHTML\|outerHTML)$/]` em `SINTAXE_PROIBIDA`, **medindo antes que dá 0 achados** e com um caso negativo por forma em `scripts/testes/`. `setTimeout(texto)` fica de fora (a CSP sem `unsafe-eval` barra). **Pronto quando:** os 4 casos acusam, o repositório fica com 0 achados novos e a seguranca aprova. Pode entrar junto da HIS-003a (que já mexe no bloco provisório do `eslint.config.mjs`) ou na Sprint 1 | tech-lead, seguranca | P |
 
 Critérios gerais da E0: nenhuma mudança visível para quem usa (exceto a tela de erro), CI verde, tudo documentado.
 

@@ -3,16 +3,25 @@
   "private": true,
   "description": "Sistema de Eficiência Energética — descubra quanto cada aparelho custa na sua conta de luz.",
   "packageManager": "pnpm@10.28.0",
-  "engines": { "node": ">=22" },
+  "engines": { "node": ">=26" },
   "scripts": {
     "dev": "pnpm --filter @ee/web dev",
     "build": "pnpm --filter @ee/web build",
     "start": "pnpm --filter @ee/web start",
-    "test": "pnpm -r --if-present test",
+    "lint": "eslint . --max-warnings 0 --cache --cache-location node_modules/.cache/eslint/",
+    "test": "pnpm -r --if-present test && pnpm test:camadas",
+    "test:camadas": "node --test --test-reporter=spec \"scripts/testes/**/*.test.mjs\"",
     "camadas": "node scripts/verificar-camadas.mjs",
     "typecheck": "pnpm camadas && pnpm -r --if-present typecheck",
     "test:e2e": "pnpm --filter @ee/web test:e2e",
     "dados:atualizar": "pnpm --filter @ee/dados atualizar",
-    "dados:exemplo": "pnpm --filter @ee/dados exemplo"
+    "dados:exemplo": "pnpm --filter @ee/dados exemplo",
+    "dados:diagnosticar": "pnpm --filter @ee/dados diagnosticar"
+  },
+  "devDependencies": {
+    "eslint": "10.13.0",
+    "eslint-config-next": "16.4.3",
+    "eslint-plugin-import-x": "4.17.1",
+    "typescript": "5.9.3"
   }
 }

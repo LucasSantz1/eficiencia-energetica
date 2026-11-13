@@ -43,10 +43,10 @@ funcionalidades/      uma pasta por funcionalidade, com as telas dela:
   acompanhamento/     PainelAcompanhamento (/casa) e Acompanhamento (contas e leituras)
   comodos/            TelaComodos   dicas/  TelaDicas   ajustes/  TelaAjustes
 ui/                   componentes genéricos: Botao, Opcao, Pilulas, Contador, Campo, Entrada, Folha, Aviso,
-                      Icone, Marca, Movimento, Barras, Etiqueta, BuscaCidade...
+                      Icone, Marca, Movimento, tiposDeTransicao (constantes de transição), Barras, Etiqueta, BuscaCidade...
   aparelho/           componentes de aparelho usados por mais de uma tela: LinhaAparelho, BlocoIluminacao,
                       TempoUso, SeletorCatalogo, EditorAparelho, tipos, textosDeUso
-aplicacao/            a porta das telas para os dados: casa (useCasa, useEdicaoDeAparelho, novoId), resumo
+aplicacao/            a porta das telas para os dados: casa (useCasa, useEdicaoDeAparelho), identificador (novoId), resumo
                       (useResumo), dados-publicos (useTarifas, useMunicipios), numeros-do-inicio.servidor
 infraestrutura/       acesso a dados: armazenamento/casa (Zustand persist), dados-publicos/navegador (/dados),
                       dados-publicos/arquivos.servidor (leitura de disco), identificador (novoId)
@@ -104,27 +104,31 @@ todas e não aparece no desenho. As regras, na ordem do ADR:
 
 ### Verificador de camadas
 
-As regras acima são conferidas pelo script `scripts/verificar-camadas.mjs` (Node puro, sem dependência). Ele roda
-sozinho com `pnpm camadas` e também dentro do `pnpm typecheck`, que o CI executa em todo push e pull request.
+As regras acima são conferidas em dois lugares, cada regra num lugar só ([ADR-001](equipe/decisoes/ADR-001-camadas.md)
+e [ADR-003](equipe/decisoes/ADR-003-qualidade-automatica.md)). Os dois rodam no CI de todo push e pull request.
 
-O script lê `apps/web/src` e `packages/core/src` e acusa: import que quebra a tabela acima; pasta antiga
-(`components/`, `lib/`) ou arquivo fora das camadas; `zustand` fora de `infraestrutura/`; módulo do Node fora de
-`infraestrutura/**/*.servidor.ts`; `.servidor.ts` sem `import "server-only"` como primeiro import; arquivo `"use client"`
-importando `.servidor`; `require(` e `import(` sem texto fixo; e qualquer import não relativo dentro do `@ee/core`.
-Se não ler nenhum arquivo, também falha: a barreira nunca diz "tudo certo" sem ter conferido.
+| Onde | Comando | O que confere |
+| --- | --- | --- |
+| ESLint (`eslint.config.mjs`) | `pnpm lint` | o que se decide olhando só o próprio arquivo: a tabela de quem importa quem (cada camada tem a lista do que pode; pasta nova já nasce proibida), sem `../`, `zustand` só em `infraestrutura/`, módulo do Node só em `infraestrutura/**/*.servidor.ts`, `server-only` só em `*.servidor.ts`, domínio só com `./`, e a sintaxe proibida (`require`, `import()`, `"use server"`, HTML a partir de texto, `eval`, `any`, `@ts-ignore`) |
+| Script (`scripts/verificar-camadas.mjs`) | `pnpm camadas`, dentro do `pnpm typecheck` | o que depende de outro arquivo ou da estrutura: arquivo `"use client"` não importa `.servidor`; todo `.servidor` começa com `import "server-only";`; arquivo sem diretiva só traz componentes (e tipos) de módulo `"use client"`; o destino do import existe; pasta antiga, arquivo fora das camadas e link simbólico são erro; comentário que muda regra do ESLint é erro, salvo a forma da HIS-109 |
+| Casos negativos | `pnpm test` | `scripts/testes/`: 145 casos (104 no ESLint, 41 no script) que provam que cada regra reprova o que deve; apagar um caso obrigatório também reprova |
 
-Sem problemas, a saída é `Camadas: tudo certo (64 arquivos)` e o código de saída é 0. Com problema, uma linha por
-import errado e o código 1, por exemplo:
+O script usa o parser do TypeScript só para ler a sintaxe, apenas lê arquivos e nunca diz "tudo certo" sem ter lido
+nenhum. Sem problemas, a saída é `Camadas: tudo certo (66 arquivos; 7 comentário(s) da HIS-109)` e o código de saída é 0
+(o número de arquivos cresce com o código).
 
-```
-apps/web/src/ui/Botao.tsx → @/aplicacao/casa: ui não pode importar aplicacao (ADR-001, regra 4)
-1 problema(s)
-```
+Um import proibido aparece como erro do ESLint, por exemplo `ui/Botao.tsx` importando `@/aplicacao/casa`:
+`ui só importa @/ui, @/config e @ee/core (ADR-001, regra 4)`. Um problema do script traz uma linha por caso e o
+código 1.
 
-Limites conhecidos (ficam para a [HIS-002b](equipe/historias/HIS-002b-lint-e-camadas.md), que traz o ESLint):
-o script usa expressões regulares, não segue imports indiretos e deixa passar formas raras escritas de propósito
-(por exemplo `from"x"` sem espaço). Na HIS-002b o ESLint assume as regras que dependem só do próprio arquivo, e o script
-continua com as que precisam olhar outro arquivo ou a estrutura de pastas.
+Os "comentário(s) da HIS-109" são os desligamentos da regra `react-hooks/set-state-in-effect` que a
+HIS-109 vai eliminar. O script conta e há um teto (hoje 7):
+o número só pode diminuir. Enquanto a HIS-003a não sai, um bloco
+provisório no `eslint.config.mjs` desliga duas regras (`set-state-in-effect` e a ordem dos imports) em
+`infraestrutura/armazenamento/casa.ts` e `packages/dados/src/escrever.ts`; a HIS-003a tira o bloco e sobe o teto para 8.
+
+Valor compartilhado entre servidor e cliente mora em arquivo sem diretiva: quem não é `"use client"` e importa um valor
+de um módulo `"use client"` recebe só uma referência de cliente, não o valor.
 
 ## Dados públicos
 

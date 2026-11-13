@@ -174,3 +174,62 @@ describe("entrada inválida sai e conta (faixas da P-tl-2)", () => {
     expect(Object.hasOwn(lido.arquivo, "extra")).toBe(false);
   });
 });
+
+describe("P8: substituidas (HIS-111, V8 no leitor do site)", () => {
+  const outra: Distribuidora = { ...distribuidora, id: "rge", sigla: "RGE" };
+  const comSubstituidas = (substituidas: unknown) => lerArquivoTarifas({ ...tarifas, distribuidoras: [distribuidora, outra], substituidas });
+
+  it("ausente vira {}, sem descarte", () => {
+    const lido = lerArquivoTarifas(tarifas);
+    expect(lido.arquivo.substituidas).toEqual({});
+    expect(lido.descartados).toBe(0);
+  });
+
+  it('{"rge-sul": "rge"} fica', () => {
+    const lido = comSubstituidas({ "rge-sul": "rge" });
+    expect(lido.arquivo.substituidas).toEqual({ "rge-sul": "rge" });
+    expect(lido.descartados).toBe(0);
+  });
+
+  it("valor que não está publicado, chave que é id publicado e valor fora do formato saem", () => {
+    const lido = comSubstituidas({ "rge-sul": "nao-existe", "ambar-amazonas": "rge", antiga: "RGE", outra: 2, certa: "rge" });
+    expect(lido.arquivo.substituidas).toEqual({ certa: "rge" });
+    expect(lido.descartados).toBe(4);
+  });
+
+  it('chave "__proto__" sai e o protótipo continua o normal', () => {
+    const lido = comSubstituidas(JSON.parse('{"__proto__": "rge", "rge-sul": "rge"}'));
+    expect(lido.arquivo.substituidas).toEqual({ "rge-sul": "rge" });
+    expect(Object.getPrototypeOf(lido.arquivo.substituidas)).toBe(Object.prototype);
+    expect(lido.descartados).toBe(1);
+  });
+
+  it("cadeia a → b + b → rge: sai a entrada cujo valor também é chave, olhando o objeto original", () => {
+    const lido = comSubstituidas({ a: "b", b: "rge" });
+    expect(lido.arquivo.substituidas).toEqual({ b: "rge" });
+    expect(lido.descartados).toBe(1);
+    // A ordem não muda o resultado (R7 da seguranca).
+    expect(comSubstituidas({ b: "rge", a: "b" }).arquivo.substituidas).toEqual({ b: "rge" });
+  });
+
+  it.each([
+    ["nulo", null],
+    ["lista", []],
+    ["número", 1],
+    ["texto", "rge"],
+  ])("não objeto simples (%s) lança", (_nome, substituidas) => {
+    expect(() => comSubstituidas(substituidas)).toThrow(ErroDeFormato);
+  });
+
+  it("500 entradas passam; 501 lançam", () => {
+    const entradas = (n: number) => Object.fromEntries(Array.from({ length: n }, (_, i) => [`antiga-${i}`, "rge"]));
+    expect(comSubstituidas(entradas(500)).descartados).toBe(0);
+    expect(() => comSubstituidas(entradas(501))).toThrow(ErroDeFormato);
+  });
+
+  it("distribuidoras: [null] não lança: a entrada sai e conta", () => {
+    const lido = lerArquivoTarifas({ ...tarifas, distribuidoras: [null] });
+    expect(lido.arquivo.distribuidoras).toEqual([]);
+    expect(lido.descartados).toBe(1);
+  });
+});

@@ -16,12 +16,12 @@ import {
   TELAS_AXE,
   violacoesQueReprovam,
 } from "./apoio/axe";
-import { EXCECOES_AXE, type ExcecaoAxe } from "./excecoes-axe";
 import { lerFixture, semearCasa } from "./apoio/casa";
 import { compararPeso, LIMITE_JS_DO_HTML, LIMITE_TOTAL_COM_PREFETCH } from "./apoio/peso";
 import { aba } from "./apoio/telas";
 import { expect, pedidoPermitido, test } from "./apoio/teste";
 import { contarTransicoes, duracoesDasTransicoes } from "./apoio/transicoes";
+import { EXCECOES_AXE, type ExcecaoAxe } from "./excecoes-axe";
 
 const PAGINA_LIMPA = `<!doctype html><html lang="pt-BR"><head><title>Ensaio</title></head>
 <body><main><h1>Ensaio das barreiras</h1><button type="button">Salvar conta</button></main></body></html>`;
