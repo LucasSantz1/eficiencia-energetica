@@ -10,6 +10,11 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-103 · textos da Tarifa Social que prometiam mais do que o site faz (D1–D6, D8, D9)
+- O que fiz: troquei os textos da `/`, Minha casa, cadastro, acompanhamento, Sobre e a dica/comentário do core pela correção do dominio-energia.
+- Decisões: o caminho da saúde leva a renda de até 3 salários mínimos (R1-c), mais honesto que a proposta curta; "cerca de" no desconto da Tarifa Social (estimativa).
+- Arquivos: `inicio/PaginaInicial.tsx`, `ajustes/TelaAjustes.tsx`, `cadastro/Cadastro.tsx`, `acompanhamento/PainelAcompanhamento.tsx`, `app/sobre/page.tsx`, `core/src/{dicas,tipos}.ts`, a história.
+
 ## 2026-10-31 · HIS-111 · D1 do h7: o peso de JS de /casa* voltou a ficar abaixo do limite
 - O que fiz: mantive o aviso no carregamento normal, mas mais leve. Ele cuida do próprio "Entendi" e do foco; os nomes foram para `core/trocas.ts`; tirei verificações repetidas. O 11a de `/casa*` ficou em até +998 B (limite +1 024), medido na junção com o `origin/main`.
 - Aprendizado: o `React.lazy` piora o peso com o Turbopack (ele parte os chunks compartilhados: `/comecar` +1 570 B). Para medir, aplique o diff (`git diff HEAD`) sobre a junção com o main; não copie o `src` inteiro, que leva o código velho da branch (isso me deu um axe falso). O gzip medido à mão não bate com o spec, que conta também os `preload`.

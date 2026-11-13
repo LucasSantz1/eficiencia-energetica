@@ -45,6 +45,8 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 
 ## Pendências
 
+- HIS-103: textos D1–D6, D8 e D9 corrigidos (2026-11-13, branch `his-103-guia-tarifa-social`). Falta o guia (D7 e o link do D4).
+
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
   em `/casa` sem casa, vindos da repetição de `ui/` nos chunks das abas pré-carregadas.
 - HIS-002a: A5 feito (`b0bff1c`, casa ilustrada e `<dl>`) e defeitos D-A5-1/D-A5-2 corrigidos (`92e9fd9`, nome do
