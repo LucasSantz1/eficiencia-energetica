@@ -1205,3 +1205,8 @@ resto igual.
 - **Fora:** o item 7 (leitor com 501 entradas e `distribuidoras: [null]`) é meu, mas vive na branch da 003a. Faço no rebase dela, com o `sed` do `\r` no job `gerar`.
 - **Verifiquei:** lint, typecheck, test (core 56, dados 98, camadas 152), build, `peso-js` e `troca-distribuidora` (23/23).
 - **Próximo:** quem orquestra abre o PR; o qa confere o critério 13 nos publicados; a seguranca olha o gatilho novo.
+
+### [seguranca] 2026-11-12 — h8 (`419d705..3812399`; o `14bae9f` pedido não existe, revisei até o HEAD): **aprovado com ressalvas (baixo)**
+1. **Diagnóstico em PR ok:** `pull_request` (nunca `_target`), `permissions: {}` + `contents: read`, `persist-credentials: false`, sem segredo, SHA iguais aos do `ci.yml`; PR de fork roda sem escrita. Concorrência por `github.ref` (`refs/pull/N/merge`) não mistura PRs.
+2. **`--forcar` ok:** o `atualizar-dados.yml` não tem `inputs` nem a flag, e só `workflow_dispatch: {}`; o Actions não consegue ligá-la. **\r ok:** provado `a\r::add-mask::x` → `a%0D::add-mask::x`. **idDaSigla ok:** igual à regra antiga; os 102 ids publicados saem iguais.
+3. **S2 (baixo, backend):** `atualizar-dados.yml` (único com `contents: write`) usa `checkout@v5`, `pnpm/action-setup@v4` e `setup-node@v5` por tag. Fixe nos mesmos SHA do `ci.yml`.
