@@ -28,9 +28,8 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 
 ## Decisões em vigor
 
-- Layout de computador (HIS-112): só `lg:` (64rem); abaixo disso a classe de hoje fica igual (conferir 390 e 800 px pixel a
-  pixel contra o `main`). Coluna que gruda = `lateral-fixa`. Hook de largura só onde o desenho muda (`useTelaLarga`). O
-  hash da URL numa tela que monta na navegação do cliente vem por `useSyncExternalStore`, não por inicializador de `useState`.
+- Texto sobre cor de faixa (HIS-110): A e E com branco; B, C e D com `text-tinta` (regra em `ui/Etiqueta.tsx`). Exceção
+  nova no `excecoes-axe.ts` só com a história que corrige; hoje a lista está vazia.
 
 - Camadas (ADR-001): telas importam estado e dados só de `aplicacao/`; `ui/` não lê estado; funcionalidade não importa
   outra; sem barris `index.ts`; `@/` entre pastas e `./` só na mesma pasta. Código só de servidor em `*.servidor.ts`
@@ -59,8 +58,8 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 
 ## Pendências
 
-- HIS-112: f1–f7 feitas (2026-11-12/13, sobre a 003a). Aguarda qa (q1–q5; o teto do 11b no spec ainda é +2 048) e o
-  ux sobre a lateral da `/casa` sem `lateral-fixa`. Quando a #10 entrar, quem orquestra junta o main por cima.
+- HIS-110: feita (2026-11-13, opção (a)); `excecoes-axe.ts` vazia. Aguarda ux (cor da pílula) e qa. A opção (b)
+  (`corDaParte` → `faixaDoPeso`) espera o scrum-master.
 
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
   em `/casa` sem casa, vindos da repetição de `ui/` nos chunks das abas pré-carregadas.
