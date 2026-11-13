@@ -397,6 +397,9 @@ rolagem horizontal.
   — **Resposta (tech-lead, 2026-11-12):** batem os 9, um a um (L7). Um `Record` fechado faz o `typecheck` reprovar
   passo novo sem texto.
 - [para: seguranca] Conferir a frase "Nada sai do seu aparelho sem você aceitar." contra o que o site faz hoje.
+- [para: tech-lead] Peso 11b (L8): com f1–f3, `/casa (com casa)` dá +2 084 B e as abas `/casa*` +2 036 B (limite +2 048).
+  O 11b de toda aba soma o chunk da `/casa/comodos` (11a +1 889 B, dentro do limite dela), então o teto de 11b não fecha
+  com o de 11a, e f4–f7 ainda vão somar. Subir o 11b só para a HIS-112 ou cortar algo?
 
 ## Conversa da equipe
 
@@ -419,3 +422,8 @@ Conferido no código: casa só em `localStorage` (`casa.ts`), único `fetch` é 
 - **Empresa de luz:** não existe botão "Não sei" nem "a mais comum da cidade" (`Cadastro.tsx` l. 280–307). Troque o final por "Se não achar, peça a conta a alguém da casa ou veja no site da distribuidora."
 - **Conta:** só compara com a estimativa, não recalibra. Troque por "Comparamos o valor com a nossa estimativa, para você ver a diferença."
 
+### [frontend] 2026-11-12 — f1, f2 e f3 prontas (`06f430b`, `3f0f8e8`, `4fb507e`)
+- f1 `ui/telaLarga.ts` + `@utility lateral-fixa`; f2 `ConteudoDoComodo` (miolo comum) + `ComodosNoComputador` (lista em `nav`, `aria-current`, painel `section`); o `#comodo-id` vem por `useSyncExternalStore` (o Next grava o endereço depois do render); foco ao `h1` só se o elemento focado sumiu; f3 grade 2/3 colunas, plano à direita; cartão de dica empilha o ícone no `lg:`.
+- 390 e 800 px iguais pixel a pixel ao `b07454e`; lint, typecheck, test, build e axe verdes; 0 HIS-109 nova. Textos novos só os do "Fluxo": "Adicionar cômodo", "Editar cômodo", "Total por mês", "Nenhum cômodo ainda.". Sem f4, a 1440 px as 3 colunas de dica ficam apertadas no `max-w-4xl` (capturas com f4 simulado em `.../scratchpad/his112/com-f4/`).
+- **qa (q1):** quebram a 1280 px, pelo desenho novo: `comodos.spec.ts:31` e `:39` e `fluxo-principal.spec.ts:23` (procuram `section[id^="comodo-"]`). Peso: pergunta ao tech-lead acima.
+- Próximo: **tech-lead** (peso 11b) → frontend f4–f7 depois da 003a; **qa** q1.
