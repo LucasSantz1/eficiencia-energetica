@@ -42,3 +42,9 @@ guardados como exceção em `apps/web/e2e/excecoes-axe.ts`. O escopo e as medida
 - [para: ux-acessibilidade] Aprovar a cor nova da pílula da faixa D (`text-tinta`) nas capturas.
 
 ## Conversa da equipe
+
+### [frontend] 2026-11-13 — critérios 1 a 5 feitos (`f1eb8b0`…, opção (a))
+- Pílula da faixa D com `text-tinta` (`CasaIlustrada`, regra A/E branco e B/C/D tinta comentada em `ui/Etiqueta.tsx`); os 2 `<dd>` da Tarifa Social com `text-white`. Nenhum token mudou.
+- `excecoes-axe.ts` ficou vazia (saíram as 8 entradas `HIS-110`). Lint, typecheck, test, build e e2e completos (121 passaram, com axe e peso), sem erro no console.
+- Capturas de 390 e 1280 px em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his110/`.
+- Próximo: **ux** (aprovar a cor da pílula) ‖ **qa**; scrum-master decide a opção (b) à parte.
