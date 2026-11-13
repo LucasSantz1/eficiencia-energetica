@@ -38,7 +38,11 @@ export function umaLinha(texto: string): string {
 export function linhasDoErro(erro: unknown): string[] {
   if (!(erro instanceof Error)) return [umaLinha(`Erro: ${String(erro)}`)];
   const pilha = (erro.stack ?? "").split("\n").filter((l) => /^\s+at /.test(l));
-  return [umaLinha(`${erro.name}: ${erro.message}`), ...pilha.map((l) => `  ${umaLinha(l.trim())}`)];
+  // O `fetch` do Node só diz "fetch failed"; o motivo de verdade (DNS, TLS, tempo esgotado) vem no `cause`.
+  const causa = erro.cause instanceof Error ? erro.cause : undefined;
+  const codigo = causa && "code" in causa && typeof causa.code === "string" ? ` [${causa.code}]` : "";
+  const linhaDaCausa = causa ? [umaLinha(`Causa: ${causa.name}: ${causa.message}${codigo}`)] : [];
+  return [umaLinha(`${erro.name}: ${erro.message}`), ...linhaDaCausa, ...pilha.map((l) => `  ${umaLinha(l.trim())}`)];
 }
 
 /** Maior pedaço de texto de uma célula do resumo do job (R2). */
