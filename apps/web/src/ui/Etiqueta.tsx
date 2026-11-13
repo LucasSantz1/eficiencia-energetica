@@ -11,6 +11,12 @@ export function faixaDoPeso(participacao: number): Faixa {
   return "a";
 }
 
+/*
+ * Texto sobre a cor de uma faixa (HIS-110, medido pela ux contra o mínimo de 4,5:1 do WCAG 1.4.3):
+ *   A e E com branco (4,72:1 e 5,21:1; com tinta dariam 3,32 e 3,01);
+ *   B, C e D com tinta (5,80, 8,45 e 5,50:1; com branco dariam 2,70, 1,85 e 2,85).
+ * Hoje só a pílula da casa ilustrada (`corDaParte`, em inicio/CasaIlustrada.tsx) põe texto sobre faixa.
+ */
 const COR: Record<Faixa, string> = {
   a: "bg-faixa-a",
   b: "bg-faixa-b",

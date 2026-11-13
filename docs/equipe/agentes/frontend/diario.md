@@ -51,6 +51,11 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
   reordenados, a história, este diário e `contexto.md`.
 - Próximos passos: tech-lead (B8 e o bloco provisório), documentacao, qa (etapa 5) e seguranca (Rb1–Rb9).
 
+## 2026-11-13 · HIS-110 · contraste da /: faixa D com tinta e os 2 <dd> da Tarifa Social em branco
+- O que fiz: criei a história; pílula da faixa D com `text-tinta`; `<dd>` com `text-white`; esvaziei o `excecoes-axe.ts`.
+- Decisões: opção (a) (sem trocar a escala da pílula), porque a (b) muda cor que a pessoa vê e espera o scrum-master. Nenhum token mudou.
+- Arquivos: `inicio/CasaIlustrada.tsx`, `inicio/PaginaInicial.tsx`, `ui/Etiqueta.tsx`, `e2e/excecoes-axe.ts`, a história.
+
 ## 2026-10-31 · HIS-111 · D1 do h7: o peso de JS de /casa* voltou a ficar abaixo do limite
 - O que fiz: mantive o aviso no carregamento normal, mas mais leve. Ele cuida do próprio "Entendi" e do foco; os nomes foram para `core/trocas.ts`; tirei verificações repetidas. O 11a de `/casa*` ficou em até +998 B (limite +1 024), medido na junção com o `origin/main`.
 - Aprendizado: o `React.lazy` piora o peso com o Turbopack (ele parte os chunks compartilhados: `/comecar` +1 570 B). Para medir, aplique o diff (`git diff HEAD`) sobre a junção com o main; não copie o `src` inteiro, que leva o código velho da branch (isso me deu um axe falso). O gzip medido à mão não bate com o spec, que conta também os `preload`.

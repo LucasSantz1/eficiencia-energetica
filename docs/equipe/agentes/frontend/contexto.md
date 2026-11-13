@@ -28,6 +28,9 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 
 ## Decisões em vigor
 
+- Texto sobre cor de faixa (HIS-110): A e E com branco; B, C e D com `text-tinta` (regra em `ui/Etiqueta.tsx`). Exceção
+  nova no `excecoes-axe.ts` só com a história que corrige; hoje a lista está vazia.
+
 - Camadas (ADR-001): telas importam estado e dados só de `aplicacao/`; `ui/` não lê estado; funcionalidade não importa
   outra; sem barris `index.ts`; `@/` entre pastas e `./` só na mesma pasta. Código só de servidor em `*.servidor.ts`
   com `import "server-only";` como primeiro import; arquivo `"use client"` nunca importa `.servidor`.
@@ -54,6 +57,9 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
   `next/link` no erro: usa `classesDeBotao` (medido: ~8 kB por rota).
 
 ## Pendências
+
+- HIS-110: feita (2026-11-13, opção (a)); `excecoes-axe.ts` vazia. Aguarda ux (cor da pílula) e qa. A opção (b)
+  (`corDaParte` → `faixaDoPeso`) espera o scrum-master.
 
 - HIS-001: implementada (2026-10-29); aguarda QA, segurança e tech-lead. Pergunta aberta ao tech-lead: +1 449 B de JS
   em `/casa` sem casa, vindos da repetição de `ui/` nos chunks das abas pré-carregadas.
