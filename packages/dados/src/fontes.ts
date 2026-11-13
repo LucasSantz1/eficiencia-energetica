@@ -126,7 +126,7 @@ export async function lerFontes(opcoes: OpcoesDeLeitura): Promise<Fontes> {
     registrar(`  ${selecao.tarifas.length} distribuidoras com tarifa vigente`);
     for (const d of selecao.descartadas) registrar(`  descartada — ${d}`);
     for (const v of selecao.vencidasEmUso) registrar(`  aviso — ${v.sigla}: vencida desde ${v.fimVigencia}, ainda dentro dos 6 meses (D4)`);
-    for (const v of selecao.comMaisDeUmValor) registrar(`  aviso — ${v.sigla}: ${v.valores} valores diferentes na vigência (V7)`);
+    for (const v of selecao.comMaisDeUmValor) registrar(`  aviso — ${v.sigla}: ${v.valores} valores diferentes na vigência${v.cnpjs ? `, com ${v.cnpjs.length} CNPJs (${v.cnpjs.join(", ")})` : ""} (V7)`);
     const amostra = selecao.tarifas.slice(0, 5).map((t) => `${t.sigla}: R$ ${(t.teKwh + t.tusdKwh).toFixed(4)}/kWh desde ${t.inicioVigencia}`);
     registrar(`  amostra: ${amostra.join("; ")}`);
     return { colunas: c, linhasB1: lido.linhas, totalDeLinhas: lido.total, selecao, agentes: resumirAgentes(lido.linhas, c, hoje) };

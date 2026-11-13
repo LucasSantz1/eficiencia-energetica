@@ -2,15 +2,12 @@ name: Atualizar tarifas e bandeiras
 
 # Baixa os dados abertos da ANEEL e do IBGE todo dia e grava em apps/web/public/dados.
 # Só cria um commit quando algo mudou de verdade.
+# Sem --forcar (HIS-111, h8): se uma barreira reclamar, nada é gravado e os dados do dia anterior ficam no ar. Quem
+# quiser publicar mesmo assim roda `pnpm dados:atualizar --forcar` na própria máquina e abre um PR com o diff.
 on:
   schedule:
     - cron: "17 9 * * *" # 06:17 em Brasília
-  workflow_dispatch:
-    inputs:
-      forcar:
-        description: "Gravar mesmo se a validação reclamar"
-        type: boolean
-        default: false
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -24,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
           cache: pnpm
@@ -34,13 +31,14 @@ jobs:
       - name: Atualizar dados
         run: |
           set -o pipefail
-          pnpm dados:atualizar ${{ inputs.forcar && '--forcar' || '' }} 2>&1 | tee atualizacao.log
+          pnpm dados:atualizar 2>&1 | tee atualizacao.log
       - name: Publicar resumo da atualização
         if: always()
         run: |
           # Mostra o resumo como anotação (aparece na página da execução e pode ser lido pela API).
           if [ -f atualizacao.log ]; then
-            resumo=$(tail -n 120 atualizacao.log | cut -c1-400 | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+            # Escapa %, \r e \n, nessa ordem, para nada do log virar comando do runner (R2; ressalva 4 da seguranca na 003a).
+            resumo=$(tail -n 120 atualizacao.log | cut -c1-400 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
             echo "::notice title=Resumo da atualização::${resumo}"
           fi
       - name: Salvar no repositório

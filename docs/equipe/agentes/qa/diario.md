@@ -10,6 +10,14 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-12 · HIS-111 · h8: critério 13 nos publicados, teste dos publicados e e2e — aprovado
+- O que fiz: cópia própria de `3812399` (Node 26); barreiras; critério 13 com script contra `6cfdb74` × `deed1f7`;
+  5 mutações no `publicados.test.ts`; `troca-distribuidora` + `peso-js` 3× e a suíte inteira na porta 3701; nomes com acento.
+- Decisões e porquê: aprovado. Os números batem com o backend e o diagnóstico 4. O HEAD da PR é `3812399` (o `14bae9f`
+  citado na tarefa não existe no repositório).
+- Arquivos: HIS-111, `contexto.md`, este diário. Evidências em `…/scratchpad/qa-his111-h8-*`.
+- Próximos passos: nenhum na HIS-111.
+
 ## 2026-10-31 · HIS-111 · h7 refeito: D1 fechado, aprovado
 - O que fiz: cópia limpa de `314555c` (main junto); barreiras; e2e inteiro (121 ok); `peso-js` + `troca-distribuidora` 3×;
   roteiro exploratório 19/19; comparei a busca do nome antigo sem acentos com a antiga, para todas as siglas.

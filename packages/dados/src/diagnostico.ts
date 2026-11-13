@@ -341,7 +341,7 @@ export function escreverMarkdown(d: DadosDoDiagnostico): string {
   saida.push("### Mais de um valor B1 na vigência (V7)", "");
   saida.push(linhaDeTabela(["Sigla", "CNPJ", "Valores", "Sucessora no sucessoes.json"]));
   saida.push("| --- | --- | --- | --- |");
-  for (const v of d.comMaisDeUmValor) saida.push(linhaDeTabela([v.sigla, v.cnpj, v.valores, v.ehSucessora ? "**sim**" : "não"]));
+  for (const v of d.comMaisDeUmValor) saida.push(linhaDeTabela([v.sigla, v.cnpjs ? v.cnpjs.join(" e ") : v.cnpj, v.valores, v.ehSucessora ? "**sim**" : "não"]));
   if (d.comMaisDeUmValor.length === 0) saida.push(linhaDeTabela(["nenhuma", "", "", ""]));
   saida.push("");
 

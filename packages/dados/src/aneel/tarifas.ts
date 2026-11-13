@@ -41,8 +41,11 @@ export interface SelecaoDeTarifas {
   vencidasDescartadas: TarifaVencida[];
   /** D4: vencidas há 6 meses ou menos; entram, com aviso no relatório. */
   vencidasEmUso: TarifaVencida[];
-  /** V7: siglas com mais de um valor (TE, TUSD) na vigência escolhida. */
-  comMaisDeUmValor: { sigla: string; cnpj?: string; valores: number }[];
+  /**
+   * V7: siglas com mais de um valor (TE, TUSD) na vigência escolhida, ou com mais de um CNPJ nela. `cnpjs` só vem
+   * quando há mais de um: aí são duas empresas com a mesma sigla, e não um preço por área.
+   */
+  comMaisDeUmValor: { sigla: string; cnpj?: string; valores: number; cnpjs?: string[] }[];
 }
 
 export interface ColunasTarifas {
@@ -115,6 +118,13 @@ export function ehTarifaResidencialB1(linha: Linha, c: ColunasTarifas): boolean 
  * Também conta quantos valores diferentes há na vigência escolhida (V7): depois de um agrupamento, a ANEEL pode
  * manter um preço por área, e aí um valor qualquer seria o errado para metade das cidades.
  *
+ * Agrupa só pela sigla, de propósito: o id publicado é a sigla (`idDaSigla`), e cada id tem uma tarifa só. A mesma
+ * sigla com dois CNPJs em vigências diferentes é a RGE (a antiga até 2019, a de hoje depois): fica a vigência mais
+ * nova, que é a certa. Os CNPJs de cada sigla, para o V9 e o V10, saem do `resumirAgentes`, que separa sigla + CNPJ.
+ * Dois CNPJs com a **mesma** vigência escolhida são duas empresas que a ANEEL escreveu igual: a sigla entra em
+ * `comMaisDeUmValor` com os `cnpjs` (mesmo que o valor seja igual), o relatório mostra, e o V7 para a rotina se ela for
+ * sucessora. A escolhida, nesse caso, é a do menor CNPJ, para o arquivo não mudar de uma execução para outra.
+ *
  * Os valores da ANEEL vêm em R$/MWh; aqui convertemos para R$/kWh.
  */
 export function selecionarTarifasVigentes(linhas: Linha[], c: ColunasTarifas, hoje: string): SelecaoDeTarifas {
@@ -156,7 +166,7 @@ export function selecionarTarifasVigentes(linhas: Linha[], c: ColunasTarifas, ho
     const lista = semDetalhe.length > 0 ? semDetalhe : todas;
     const iniciadas = lista.filter((t) => t.inicioVigencia <= hoje);
     const vigentes = iniciadas.filter((t) => !t.fimVigencia || t.fimVigencia >= hoje);
-    const escolhidas = (vigentes.length > 0 ? vigentes : iniciadas).sort((a, b) => b.inicioVigencia.localeCompare(a.inicioVigencia));
+    const escolhidas = (vigentes.length > 0 ? vigentes : iniciadas).sort((a, b) => b.inicioVigencia.localeCompare(a.inicioVigencia) || (a.cnpj ?? "").localeCompare(b.cnpj ?? ""));
     const escolhida = escolhidas[0];
     if (!escolhida) {
       descartadas.push(`${sigla}: nenhuma vigência iniciada até ${hoje}`);
@@ -171,8 +181,10 @@ export function selecionarTarifasVigentes(linhas: Linha[], c: ColunasTarifas, ho
       }
       vencidasEmUso.push(vencida);
     }
-    const valores = new Set(lista.filter((t) => t.inicioVigencia === escolhida.inicioVigencia).map((t) => `${t.teKwh.toFixed(6)}|${t.tusdKwh.toFixed(6)}`));
-    if (valores.size > 1) comMaisDeUmValor.push({ sigla, cnpj: escolhida.cnpj, valores: valores.size });
+    const daVigencia = lista.filter((t) => t.inicioVigencia === escolhida.inicioVigencia);
+    const valores = new Set(daVigencia.map((t) => `${t.teKwh.toFixed(6)}|${t.tusdKwh.toFixed(6)}`));
+    const cnpjs = [...new Set(daVigencia.map((t) => t.cnpj).filter((c): c is string => c !== undefined))].sort();
+    if (valores.size > 1 || cnpjs.length > 1) comMaisDeUmValor.push({ sigla, cnpj: escolhida.cnpj, valores: valores.size, ...(cnpjs.length > 1 ? { cnpjs } : {}) });
     const total = escolhida.teKwh + escolhida.tusdKwh;
     if (total <= 0.05 || total > 5) {
       descartadas.push(`${sigla}: tarifa fora do esperado (R$ ${total.toFixed(4)}/kWh)`);
