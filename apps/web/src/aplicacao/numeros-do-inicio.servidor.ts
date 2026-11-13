@@ -10,20 +10,17 @@ export interface NumerosDoInicio {
 }
 
 /**
- * Lê as tarifas e depois o relatório publicados em public/dados. Qualquer erro devolve undefined:
- * a página mostra os textos aproximados ("100+", "5.500+") em vez de quebrar.
+ * Lê as tarifas e depois o relatório publicados em public/dados. Sem `try/catch` de propósito (HIS-003a, D4): arquivo
+ * ruim faz o build falhar, e na revalidação o Next continua servindo a última página boa. Para rodar sem os dados
+ * reais, `pnpm dados:exemplo`.
  */
-export async function carregarNumerosDoInicio(): Promise<NumerosDoInicio | undefined> {
-  try {
-    const tarifas = await lerTarifasPublicadas();
-    const relatorio = await lerRelatorioPublicado();
-    const bandeira = bandeiraDoMes(tarifas.bandeiras, competenciaAtual());
-    return {
-      distribuidoras: tarifas.distribuidoras.length,
-      cidades: relatorio.municipios - relatorio.municipiosSemDistribuidora,
-      bandeira: bandeira?.bandeira,
-    };
-  } catch {
-    return undefined;
-  }
+export async function carregarNumerosDoInicio(): Promise<NumerosDoInicio> {
+  const tarifas = await lerTarifasPublicadas();
+  const relatorio = await lerRelatorioPublicado();
+  const bandeira = bandeiraDoMes(tarifas.bandeiras, competenciaAtual());
+  return {
+    distribuidoras: tarifas.distribuidoras.length,
+    cidades: relatorio.municipios - relatorio.municipiosSemDistribuidora,
+    bandeira: bandeira?.bandeira,
+  };
 }

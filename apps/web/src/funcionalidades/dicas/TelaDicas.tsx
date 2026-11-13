@@ -25,16 +25,18 @@ export function TelaDicas() {
   const economia = atual - comPlano;
   const semCusto = simulaveis.filter((d) => d.tipo === "habito");
 
+  // No computador (HIS-112, L5): o plano numa coluna lateral à direita e as dicas em grade à esquerda. A ordem do código
+  // continua a do celular (plano, depois a lista); a grade só muda o lugar na tela.
   return (
-    <div>
-      <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Dicas e plano de economia</h1>
-      <p className="mt-2 max-w-[56ch] text-lg text-tinta-suave">
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-x-8">
+      <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight lg:col-span-2">Dicas e plano de economia</h1>
+      <p className="mt-2 max-w-[56ch] text-lg text-tinta-suave lg:col-span-2">
         Cada dica foi calculada com os aparelhos da sua casa. Marque as que você vai seguir e veja quanto a conta cai.
         {semCusto.length > 0 && ` ${semCusto.length} delas não custam nada.`}
       </p>
 
       {/* Resumo do plano */}
-      <section aria-label="Seu plano de economia" aria-live="polite" className="sticky top-2 z-10 mt-6 rounded-[1.5rem] bg-tinta px-5 py-4 text-white shadow-[0_10px_30px_-12px_rgb(19_35_63/0.6)] sm:px-6">
+      <section aria-label="Seu plano de economia" aria-live="polite" className="sticky top-2 z-10 mt-6 rounded-[1.5rem] bg-tinta px-5 py-4 text-white shadow-[0_10px_30px_-12px_rgb(19_35_63/0.6)] sm:px-6 lg:col-start-2 lg:row-start-3 lg:shadow-none lateral-fixa">
         {plano.length === 0 ? (
           <p className="text-[1.02rem]">
             Hoje a conta estimada é de <strong className="numeros text-faisca">{formatarReais(atual)}</strong> por mês. Marque as dicas abaixo para montar o seu plano.
@@ -61,62 +63,64 @@ export function TelaDicas() {
         )}
       </section>
 
-      {simulaveis.length > 0 && (
-        <>
-          <div className="mt-8">
-            <Pilulas
-              rotulo="Filtrar dicas"
-              opcoes={[
-                { valor: "todas", rotulo: "Todas" },
-                { valor: "habito", rotulo: "Sem gastar nada" },
-                { valor: "troca", rotulo: "Trocando algo" },
-              ]}
-              valor={filtro}
-              aoMudar={setFiltro}
-            />
-          </div>
-          <ul className="mt-5 space-y-3">
-            {visiveis.map((d, i) => (
-              <CartaoDica
-                indice={i}
-                key={d.id}
-                dica={d}
-                marcada={plano.includes(d.id)}
-                aoAlternar={() => alternar(d.id)}
-                onde={(() => {
-                  const a = aparelhos.find((x) => x.id === d.aparelhoId);
-                  const c = comodos.find((x) => x.id === d.comodoId);
-                  return a ? `${a.quantidade > 1 ? `${a.quantidade} × ` : ""}${a.nome}${c ? `, ${c.nome}` : ""}` : undefined;
-                })()}
+      <div className="lg:col-start-1 lg:row-start-3">
+        {simulaveis.length > 0 && (
+          <>
+            <div className="mt-8 lg:mt-6">
+              <Pilulas
+                rotulo="Filtrar dicas"
+                opcoes={[
+                  { valor: "todas", rotulo: "Todas" },
+                  { valor: "habito", rotulo: "Sem gastar nada" },
+                  { valor: "troca", rotulo: "Trocando algo" },
+                ]}
+                valor={filtro}
+                aoMudar={setFiltro}
               />
-            ))}
-          </ul>
-          {visiveis.length === 0 && <p className="mt-5 text-tinta-suave">Nenhuma dica desse tipo para a sua casa.</p>}
-        </>
-      )}
+            </div>
+            <ul className="mt-5 space-y-3 lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-4 lg:space-y-0 xl:grid-cols-3">
+              {visiveis.map((d, i) => (
+                <CartaoDica
+                  indice={i}
+                  key={d.id}
+                  dica={d}
+                  marcada={plano.includes(d.id)}
+                  aoAlternar={() => alternar(d.id)}
+                  onde={(() => {
+                    const a = aparelhos.find((x) => x.id === d.aparelhoId);
+                    const c = comodos.find((x) => x.id === d.comodoId);
+                    return a ? `${a.quantidade > 1 ? `${a.quantidade} × ` : ""}${a.nome}${c ? `, ${c.nome}` : ""}` : undefined;
+                  })()}
+                />
+              ))}
+            </ul>
+            {visiveis.length === 0 && <p className="mt-5 text-tinta-suave">Nenhuma dica desse tipo para a sua casa.</p>}
+          </>
+        )}
 
-      <div className="mt-10 empty:hidden">
-        <EspacoReservado posicao="dicas-apos-lista" />
+        <div className="mt-10 empty:hidden">
+          <EspacoReservado posicao="dicas-apos-lista" />
+        </div>
+
+        {outras.length > 0 && (
+          <section aria-labelledby="outras" className="mt-12">
+            <h2 id="outras" className="text-2xl font-extrabold tracking-tight">
+              Também ajuda
+            </h2>
+            <ul className="mt-4 divide-y divide-linha border-y border-linha">
+              {outras.map((d) => (
+                <li key={d.id} className="flex gap-4 py-5">
+                  <Icone nome={d.icone} className={`mt-1 size-6 shrink-0 ${d.tipo === "aviso" ? "text-faixa-d" : "text-energia"}`} />
+                  <div>
+                    <h3 className="text-lg leading-snug font-extrabold">{d.titulo}</h3>
+                    <p className="mt-1 max-w-[62ch] text-tinta-suave">{d.texto}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
-
-      {outras.length > 0 && (
-        <section aria-labelledby="outras" className="mt-12">
-          <h2 id="outras" className="text-2xl font-extrabold tracking-tight">
-            Também ajuda
-          </h2>
-          <ul className="mt-4 divide-y divide-linha border-y border-linha">
-            {outras.map((d) => (
-              <li key={d.id} className="flex gap-4 py-5">
-                <Icone nome={d.icone} className={`mt-1 size-6 shrink-0 ${d.tipo === "aviso" ? "text-faixa-d" : "text-energia"}`} />
-                <div>
-                  <h3 className="text-lg leading-snug font-extrabold">{d.titulo}</h3>
-                  <p className="mt-1 max-w-[62ch] text-tinta-suave">{d.texto}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }
@@ -127,11 +131,12 @@ function CartaoDica({ dica, marcada, aoAlternar, onde, indice }: { dica: Dica; m
       className={`surgir rounded-[var(--radius-cartao)] border-2 bg-papel p-4 transition-[border-color,box-shadow] duration-300 sm:p-5 ${marcada ? "border-energia shadow-[0_0_0_4px_var(--color-energia-claro)]" : "border-transparent"}`}
       style={{ animationDelay: `${Math.min(indice, 8) * 60}ms` }}
     >
-      <div className="flex gap-4">
+      {/* Na grade do computador a coluna é estreita: o ícone vai para cima do texto e o botão desce para o pé do cartão. */}
+      <div className="flex gap-4 lg:h-full lg:flex-col lg:gap-3">
         <span className={`grid size-12 shrink-0 place-items-center rounded-2xl ${dica.tipo === "troca" ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia"}`}>
           <Icone nome={dica.icone} className="size-6" />
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 lg:flex lg:flex-col">
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.92rem] font-bold text-tinta-suave">
             {onde && <span>{onde}</span>}
             <span className={`rounded-full px-2 py-0.5 text-[0.82rem] ${dica.tipo === "troca" ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia-forte"}`}>
@@ -140,7 +145,7 @@ function CartaoDica({ dica, marcada, aoAlternar, onde, indice }: { dica: Dica; m
           </p>
           <h2 className="mt-0.5 text-xl leading-snug font-extrabold">{dica.titulo}</h2>
           <p className="mt-1.5 text-tinta-suave">{dica.texto}</p>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 lg:mt-auto lg:pt-4">
             <p className="numeros">
               <strong className="text-lg">{formatarReais(dica.economiaMes ?? 0)} por mês</strong>
               <span className="text-tinta-suave">

@@ -16,6 +16,12 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-003a · dados quebrados não travam o site documentado
+- O que fiz: seção sobre dados ilegíveis, trava, `casa-ilegivel` e telas de erro em `privacidade-e-seguranca.md`; T1 a T4 no `guia-de-uso.md`; conferência de formato e os dois jobs em `dados.md`; "Leitura segura" em `arquitetura.md`; `desenvolvimento.md` (audit, Dependabot, specs novos); CHANGELOG.
+- Decisões e porquê: teto da HIS-109 documentado como 7 (decisão do tech-lead, não 8 como eu tinha anotado); contagens reconferidas (85 arquivos, 152 testes de camadas, 210 e2e). O `site.md` ficou de fora do pedido e segue pendente.
+- Arquivos: os acima, a história, `contexto.md`, este diário.
+- Próximos passos: `site.md`; CHANGELOG da 111 e da 002b, se o scrum-master quiser.
+
 ## 2026-10-30 · HIS-002a · testes no navegador e CI em dois jobs documentados
 - O que fiz: seção "Testes no navegador" e "Integração contínua" novas em `desenvolvimento.md`; barreira "nada sai do
   aparelho" em `privacidade-e-seguranca.md`; ESLint apontando para a HIS-002b em `arquitetura.md`; CHANGELOG.

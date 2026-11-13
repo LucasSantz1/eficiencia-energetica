@@ -54,6 +54,31 @@ Toque em qualquer aparelho para mudar a quantidade ou o tempo de uso.
 - Mude a distribuidora, o benefício ou a conta de referência.
 - **Apagar todos os meus dados:** apaga a casa deste celular. Como nada é enviado para fora, depois de apagar não há como recuperar.
 
+## Se os dados salvos ou os preços da luz estiverem estragados
+
+Às vezes algo dá errado, e não é culpa sua. O site nunca fica com a tela em branco. Veja o que pode aparecer.
+
+**Parte da casa foi tirada.** Um aviso no topo diz: "Parte do que estava salvo aqui tinha um problema e foi tirada.
+Tiramos 2 aparelhos e 1 conta de luz. O resto da sua casa continua salvo." Toque em **Ver meus aparelhos** para conferir
+e em **Entendi** para fechar o aviso. Ele não volta.
+
+**A cidade e a empresa de luz saíram.** O aviso diz "Não conseguimos abrir sua cidade e sua empresa de luz." Os aparelhos
+continuam salvos. Toque em **Escolher minha cidade** e escolha de novo.
+
+**Nada da casa deu para usar.** O aviso diz "Não conseguimos abrir a casa que estava salva aqui." Toque em
+**Cadastrar minha casa** e monte a casa de novo. Se quiser limpar tudo, use "Apagar todos os meus dados" em Minha casa:
+ele apaga também qualquer cópia de segurança que o site guardou neste celular.
+
+**Os preços da luz ou a lista de cidades não carregam.** O aviso diz "Não conseguimos carregar os preços da luz" (ou "as
+cidades de São Paulo", por exemplo). Pode ser a internet ou um problema do nosso lado. O aviso lembra que as suas
+respostas ou a sua casa continuam salvas. Toque em **Tentar de novo**. Se o celular estiver sem internet, o aviso diz
+"Você está sem internet": ligue os dados móveis ou o Wi-Fi e tente de novo. Se falhar duas vezes, ele sugere tentar mais tarde.
+
+**Algo deu errado na tela.** Aparece "Algo deu errado nesta tela. Não foi culpa sua. O que você cadastrou continua
+salvo." Toque em **Tentar de novo**. Se não funcionar, toque em **Voltar ao início**.
+
+**A página não existe.** Aparece "Não achamos esta página". O endereço pode estar errado. Toque em **Voltar ao início**.
+
 ## Perguntas comuns
 
 **O valor é exato?** É uma estimativa. Ele depende do tempo de uso que você informou. A tarifa da ANEEL não inclui

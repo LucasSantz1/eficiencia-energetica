@@ -6,10 +6,13 @@
  * arquivo num PR, à vista. Decisão do tech-lead na HIS-001 (2026-10-29, commit da2a3c4), item 11:
  *   11a · JS que o HTML de cada rota referencia (o que a página precisa para abrir): até +1 024 B (gzip);
  *   11b · JS total baixado depois do prefetch dos <Link>: até +2 048 B.
+ * Revisto pelo tech-lead na HIS-112 (2026-11-13, commit c9e9fbd, L8): o 11b de cada aba soma o JS das outras abas pelo
+ * prefetch, que roda depois que a página abriu; por isso não pode ter o mesmo teto do 11a. O 11b passa a +4 096 B; o
+ * 11a continua +1 024 B e é a barreira.
  */
 
 export const LIMITE_JS_DO_HTML = 1024;
-export const LIMITE_TOTAL_COM_PREFETCH = 2048;
+export const LIMITE_TOTAL_COM_PREFETCH = 4096;
 
 export type CampoDePeso = "jsDoHtml" | "totalComPrefetch";
 export type PesoDaMedida = Partial<Record<CampoDePeso, number>>;
@@ -17,6 +20,8 @@ export type PesosPorMedida = Record<string, PesoDaMedida>;
 
 export interface ReferenciaDePeso {
   medidoNoCommit: string;
+  /** Por que a referência mudou (decisão e história), já que JSON não tem comentário. */
+  decisao?: string;
   rotas: PesosPorMedida;
 }
 
@@ -106,5 +111,7 @@ export function lerReferenciaDePeso(bruto: unknown): ReferenciaDePeso {
     }
     rotas[medida] = lido;
   }
-  return { medidoNoCommit: bruto.medidoNoCommit, rotas };
+  if ("decisao" in bruto && typeof bruto.decisao !== "string") throw new Error("peso-js.json: decisao não é texto");
+  const decisao = "decisao" in bruto && typeof bruto.decisao === "string" ? { decisao: bruto.decisao } : {};
+  return { medidoNoCommit: bruto.medidoNoCommit, ...decisao, rotas };
 }

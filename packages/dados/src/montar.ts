@@ -482,6 +482,10 @@ export function validar(m: Montagem, hoje: string): string[] {
   if (ufsSemDistribuidora.length > 0) erros.push(`Estados sem distribuidora: ${ufsSemDistribuidora.join(", ")}.`);
   const fora = m.tarifas.distribuidoras.filter((d) => d.tarifaKwh < 0.3 || d.tarifaKwh > 2);
   if (fora.length > 0) erros.push(`Tarifas fora da faixa R$ 0,30–2,00/kWh: ${fora.map((d) => `${d.sigla}=${d.tarifaKwh}`).join(", ")}.`);
+  // Unidade errada no `divisorDaUnidade`: se a ANEEL publicar só meses até 20 R$/MWh, a amarela (18,85) seria lida como
+  // R$/100 kWh e daria 0,1885, 10 vezes o certo. A maior bandeira já cobrada foi 0,142 (dominio-energia, HIS-003).
+  const bandeirasAltas = m.tarifas.bandeiras.filter((b) => b.adicionalKwh > ADICIONAL_DA_BANDEIRA_SUSPEITO_KWH);
+  if (bandeirasAltas.length > 0) erros.push(`Bandeira acima de R$ ${ADICIONAL_DA_BANDEIRA_SUSPEITO_KWH}/kWh (unidade errada?): ${bandeirasAltas.map((b) => `${b.competencia}=${b.adicionalKwh}`).join(", ")}.`);
   const ultima = m.tarifas.bandeiras.at(-1)?.competencia;
   const limite = mesesAntes(hoje.slice(0, 7), 3);
   if (!ultima || ultima < limite) erros.push(`Bandeira mais recente (${ultima ?? "nenhuma"}) é anterior a ${limite}.`);
@@ -494,6 +498,9 @@ export function validar(m: Montagem, hoje: string): string[] {
   }
   return erros;
 }
+
+/** Um pouco acima da maior bandeira já cobrada (escassez hídrica, R$ 0,142/kWh, ANEEL). Passa com `--forcar`. */
+const ADICIONAL_DA_BANDEIRA_SUSPEITO_KWH = 0.15;
 
 function mesesAntes(competencia: string, meses: number): string {
   const [a, m] = competencia.split("-").map(Number) as [number, number];

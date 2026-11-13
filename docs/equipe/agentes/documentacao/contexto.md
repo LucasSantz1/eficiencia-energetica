@@ -32,8 +32,10 @@ o projeto, o planejamento e o Scrum. Quando algo grande mudar, atualizar os dois
   `site.md` detalha arquivo a arquivo. Notas antigas de histórias e o "Contexto" do ADR-001 ficam como registro histórico.
 - Exemplo de saída do verificador documentado (arquitetura e desenvolvimento) foi conferido numa cópia: se a mensagem do
   `scripts/verificar-camadas.mjs` mudar, atualizar os dois.
-- Lint e camadas (HIS-002b): fonte única em `arquitetura.md#verificador-de-camadas`; os números (66 arquivos, 7
-  comentários, 145 casos) mudam com o código: reconferir com `node scripts/verificar-camadas.mjs`.
+- Lint e camadas (HIS-002b): fonte única em `arquitetura.md#verificador-de-camadas`; os números (85 arquivos, 7
+  comentários, 152 testes) mudam com o código: reconferir com `node scripts/verificar-camadas.mjs`.
+- Leitura segura (HIS-003a): fonte única em `arquitetura.md#leitura-segura-dos-dados-de-fora`; trava e `casa-ilegivel` em
+  `privacidade-e-seguranca.md`. O bloco provisório do lint saiu e o teto da HIS-109 ficou em 7 (não 8). e2e: 210 (204 rodam, 6 pendentes).
 - Testes no navegador: fonte única em `desenvolvimento.md` ("Testes no navegador" e "Integração contínua"). Se mudar o
   nome dos checks no `ci.yml`, o número de testes ou as exceções do axe, atualizar lá (HIS-002a).
 
@@ -42,10 +44,9 @@ o projeto, o planejamento e o Scrum. Quando algo grande mudar, atualizar os dois
 - Manter o CHANGELOG a cada história fechada.
 - HIS-001: o dono do projeto precisa aplicar no `CLAUDE.md` o texto novo da nota "Estado atual" (proposto em 2026-10-29,
   entregue a quem orquestra; a documentação não edita o `CLAUDE.md`).
-- HIS-003a: quando o bloco provisório do `eslint.config.mjs` sair, tirar o parágrafo dele de `arquitetura.md` e de
-  `desenvolvimento.md` ("Comentários que desligam o lint") e trocar o teto 7 por 8.
 - HIS-110: quando corrigir o contraste da `/`, tirar a frase "8 entradas de `color-contrast`" de `desenvolvimento.md`.
-- HIS-003: validação de fronteira em `infraestrutura/validacao/` → acrescentar em `site.md` e `arquitetura.md`.
+- HIS-003a: `arquitetura.md` já descreve os leitores; falta o `site.md` (ui/AvisoDaCasaSalva, AvisoFalhaDeCarga, TelaDeErro, foco, global-error, not-found, storage próprio).
+- CHANGELOG não tem entradas da HIS-111 nem da HIS-002b: pedir ao scrum-master se entram agora.
 
 ## Orientações do responsável
 

@@ -8,7 +8,7 @@ import { useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
 import { descreverUso } from "@/ui/aparelho/textosDeUso";
-import { Aviso } from "@/ui/Aviso";
+import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { BotaoLink } from "@/ui/Botao";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
@@ -18,15 +18,37 @@ import { Acompanhamento } from "./Acompanhamento";
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
 
+type Resumo = ReturnType<typeof useResumo>;
+
+/** Painel do acompanhamento. O aviso de falha (T2) fica sempre montado, no topo, para cuidar do foco quando volta. */
 export function PainelAcompanhamento() {
-  const { resumo, resumoPlano, plano, preco, bandeira, distribuidora, residencia, comodos, aparelhos, dicas, carregando, erro } = useResumo();
+  const resumo = useResumo();
+  const { falhasSeguidas, semInternet, carregando, tentarDeNovo, arquivo } = resumo;
+  return (
+    <>
+      <div className="mb-6 empty:hidden">
+        <AvisoFalhaDeCarga
+          assunto={{ tipo: "precos" }}
+          fraseDeSeguranca="Sua casa continua salva."
+          falhasSeguidas={falhasSeguidas}
+          semInternet={semInternet}
+          carregando={carregando}
+          aoTentarDeNovo={tentarDeNovo}
+        />
+      </div>
+      {falhasSeguidas > 0 && !arquivo ? null : <ConteudoDoPainel dados={resumo} />}
+    </>
+  );
+}
+
+function ConteudoDoPainel({ dados }: { dados: Resumo }) {
+  const { resumo, resumoPlano, plano, preco, bandeira, distribuidora, residencia, comodos, aparelhos, dicas, carregando } = dados;
   const [editando, setEditando] = useState<Aparelho>();
   const edicao = useEdicaoDeAparelho();
   const { conta } = resumo;
   const maior = resumo.aparelhos[0]?.kwhMes ?? 0;
   const melhor = dicas.find((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id));
 
-  if (erro) return <Aviso tom="alerta">Não conseguimos carregar as tarifas. Confira sua internet e recarregue a página.</Aviso>;
   if (carregando && !distribuidora) return <div className="h-48 animate-pulse rounded-[var(--radius-cartao)] bg-papel" aria-busy aria-label="Carregando" />;
 
   if (aparelhos.length === 0) {
@@ -41,14 +63,17 @@ export function PainelAcompanhamento() {
     );
   }
 
+  // No computador (HIS-112, L3): a conta em cima; "Seus cômodos" e, logo abaixo, o "Mês a mês" à esquerda; à direita,
+  // uma coluna lateral com "Quem mais gasta" e a dica, que ocupa as duas linhas (A-112-1: sem isso sobrava um vão de
+  // ~640 px embaixo dos cômodos); a nota embaixo. A ordem do código é a do celular; as áreas só mudam o lugar na tela.
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0 lg:[grid-template-areas:'conta_conta'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']">
       {/* Valor da conta */}
-      <section aria-labelledby="titulo-conta" className="surgir rounded-[1.75rem] bg-tinta px-5 py-6 text-white sm:px-8 sm:py-8">
+      <section aria-labelledby="titulo-conta" className="surgir rounded-[1.75rem] bg-tinta px-5 py-6 text-white sm:px-8 sm:py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-x-12 lg:[grid-area:conta]">
         <h1 id="titulo-conta" className="text-lg font-bold text-white/80">
           Sua conta estimada por mês
         </h1>
-        <p className="numeros mt-1 text-[clamp(3rem,13vw,5.25rem)] leading-none font-extrabold tracking-tight text-faisca">
+        <p className="numeros mt-1 text-[clamp(3rem,13vw,5.25rem)] leading-none font-extrabold tracking-tight text-faisca lg:text-[4.5rem]">
           <ValorAnimado valor={conta.valor} formatar={(v) => formatarReais(v)} duracao={1100} />
         </p>
         <p className="numeros mt-3 text-lg text-white/85">
@@ -67,7 +92,7 @@ export function PainelAcompanhamento() {
           </Link>
         )}
 
-        <div className="mt-6 space-y-2 border-t border-white/15 pt-5 text-[0.98rem] text-white/80">
+        <div className="mt-6 space-y-2 border-t border-white/15 pt-5 text-[0.98rem] text-white/80 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mt-0 lg:border-t-0 lg:pt-0">
           {bandeira && preco.origem === "aneel" && (
             <p className="text-white">
               <SeloBandeira bandeira={bandeira.bandeira} exata={bandeira.exata} sobreEscuro />
@@ -95,7 +120,7 @@ export function PainelAcompanhamento() {
       </section>
 
       {/* Cômodos */}
-      <section aria-labelledby="titulo-comodos">
+      <section aria-labelledby="titulo-comodos" className="lg:[grid-area:comodos]">
         <div className="flex items-end justify-between gap-4">
           <h2 id="titulo-comodos" className="text-2xl font-extrabold tracking-tight">
             Seus cômodos
@@ -104,7 +129,7 @@ export function PainelAcompanhamento() {
             Editar <ChevronRight className="size-5" aria-hidden />
           </Link>
         </div>
-        <ul className="mt-4 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-4 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
           {comodos.map((c, indice) => {
             const dados = resumo.comodos.find((x) => x.comodoId === c.id);
             const doComodo = aparelhos.filter((a) => a.comodoId === c.id);
@@ -142,80 +167,86 @@ export function PainelAcompanhamento() {
         </ul>
       </section>
 
-      {/* Quem mais gasta */}
-      <section aria-labelledby="titulo-ranking">
-        <div className="flex items-end justify-between gap-4">
-          <h2 id="titulo-ranking" className="text-2xl font-extrabold tracking-tight">
-            Quem mais gasta
-          </h2>
-          <Link href="/casa/comodos?visao=geral" transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
-            Painel geral <ChevronRight className="size-5" aria-hidden />
-          </Link>
-        </div>
-        <div className="mt-3">
-          <LegendaEtiqueta />
-        </div>
-        <ul className="mt-5 space-y-5">
-          {resumo.aparelhos.slice(0, 6).map(({ aparelho, kwhMes, valorMes, participacao }, indice) => {
-            // O nome acessível repete o texto visível na mesma ordem (WCAG 2.5.3, texto da ux no D-A5-1);
-            // por isso tela e nome saem das mesmas variáveis.
-            const quantidade = aparelho.quantidade > 1 ? `${aparelho.quantidade} × ` : "";
-            const nomeComodo = comodos.find((c) => c.id === aparelho.comodoId)?.nome;
-            const porcentagem = formatarPorcentagem(participacao);
-            const uso = descreverUso(aparelho);
-            const valor = formatarReais(valorMes);
-            return (
-              <li key={aparelho.id} className="surgir" style={{ animationDelay: `${300 + indice * 80}ms` }}>
-                <button type="button" onClick={() => setEditando(aparelho)} className="block w-full rounded-xl text-left" aria-label={`${quantidade}${aparelho.nome} em ${nomeComodo}, ${porcentagem}, ${uso}, ${valor} por mês. É ${porcentagem} da conta. Toque para ajustar.`}>
-                  {/* Os {" "} entre blocos não aparecem na tela (itens flex/bloco), mas separam as palavras no texto
-                      visível que o axe junta sem espaço; sem eles, "Banheiro" e "41%" viram uma palavra só. */}
-                  <span className="flex items-center gap-2">
-                    <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-5 text-tinta-suave" />
-                    <span className="flex-1 truncate font-bold">
-                      {aparelho.quantidade > 1 && <span className="numeros">{quantidade}</span>}
-                      {aparelho.nome}
-                      <span className="font-normal text-tinta-suave"> em {nomeComodo}</span>
-                    </span>{" "}
-                    <span className="numeros text-[0.95rem] text-tinta-suave">{porcentagem}</span>
-                  </span>{" "}
-                  <span className="mb-1.5 block pl-7 text-[0.92rem] text-tinta-suave">{uso}</span>{" "}
-                  <BarraEtiqueta relativo={maior > 0 ? kwhMes / maior : 0} participacao={participacao} atraso={450 + indice * 80}>
-                    {valor}
-                  </BarraEtiqueta>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-
-      <EspacoReservado posicao="painel-apos-ranking" />
-
-      {melhor && (
-        <section aria-labelledby="titulo-economia" className="surgir rounded-[var(--radius-cartao)] border-2 border-energia bg-energia-claro p-5 sm:p-6" style={{ animationDelay: "700ms" }}>
-          <h2 id="titulo-economia" className="text-lg font-bold text-energia-forte">
-            {plano.length > 0 ? "Próxima dica para o seu plano" : "A dica que mais economiza na sua casa"}
-          </h2>
-          <div className="mt-3 flex items-start gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-papel text-energia">
-              <Icone nome={melhor.icone} className="size-6" />
-            </span>
-            <div className="flex-1">
-              <p className="text-xl leading-snug font-extrabold">{melhor.titulo}</p>
-              <p className="numeros mt-1 text-energia-forte">
-                <strong>{formatarReais(melhor.economiaMes ?? 0)} por mês</strong>, ou {formatarReais((melhor.economiaMes ?? 0) * 12)} em um ano
-              </p>
-            </div>
+      {/* Coluna lateral no computador; no celular, a mesma margem de antes entre os três blocos. Sem lateral-fixa: com 6
+          aparelhos e a dica ela passa da altura da janela, e a utilidade a transformaria numa caixa com rolagem própria. */}
+      <div className="space-y-12 lg:self-start lg:[grid-area:lado]">
+        {/* Quem mais gasta */}
+        <section aria-labelledby="titulo-ranking">
+          <div className="flex items-end justify-between gap-4">
+            <h2 id="titulo-ranking" className="text-2xl font-extrabold tracking-tight">
+              Quem mais gasta
+            </h2>
+            <Link href="/casa/comodos?visao=geral" transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
+              Painel geral <ChevronRight className="size-5" aria-hidden />
+            </Link>
           </div>
-          <BotaoLink href="/casa/dicas" transitionTypes={["nav-forward"]} variante="secundario" className="mt-5">
-            Montar meu plano de economia
-          </BotaoLink>
+          <div className="mt-3">
+            <LegendaEtiqueta />
+          </div>
+          <ul className="mt-5 space-y-5">
+            {resumo.aparelhos.slice(0, 6).map(({ aparelho, kwhMes, valorMes, participacao }, indice) => {
+              // O nome acessível repete o texto visível na mesma ordem (WCAG 2.5.3, texto da ux no D-A5-1);
+              // por isso tela e nome saem das mesmas variáveis.
+              const quantidade = aparelho.quantidade > 1 ? `${aparelho.quantidade} × ` : "";
+              const nomeComodo = comodos.find((c) => c.id === aparelho.comodoId)?.nome;
+              const porcentagem = formatarPorcentagem(participacao);
+              const uso = descreverUso(aparelho);
+              const valor = formatarReais(valorMes);
+              return (
+                <li key={aparelho.id} className="surgir" style={{ animationDelay: `${300 + indice * 80}ms` }}>
+                  <button type="button" onClick={() => setEditando(aparelho)} className="block w-full rounded-xl text-left" aria-label={`${quantidade}${aparelho.nome} em ${nomeComodo}, ${porcentagem}, ${uso}, ${valor} por mês. É ${porcentagem} da conta. Toque para ajustar.`}>
+                    {/* Os {" "} entre blocos não aparecem na tela (itens flex/bloco), mas separam as palavras no texto
+                        visível que o axe junta sem espaço; sem eles, "Banheiro" e "41%" viram uma palavra só. */}
+                    <span className="flex items-center gap-2">
+                      <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-5 text-tinta-suave" />
+                      <span className="flex-1 truncate font-bold">
+                        {aparelho.quantidade > 1 && <span className="numeros">{quantidade}</span>}
+                        {aparelho.nome}
+                        <span className="font-normal text-tinta-suave"> em {nomeComodo}</span>
+                      </span>{" "}
+                      <span className="numeros text-[0.95rem] text-tinta-suave">{porcentagem}</span>
+                    </span>{" "}
+                    <span className="mb-1.5 block pl-7 text-[0.92rem] text-tinta-suave">{uso}</span>{" "}
+                    <BarraEtiqueta relativo={maior > 0 ? kwhMes / maior : 0} participacao={participacao} atraso={450 + indice * 80}>
+                      {valor}
+                    </BarraEtiqueta>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </section>
-      )}
 
-      <Acompanhamento estimativaKwhMes={conta.consumoKwh} />
+        <EspacoReservado posicao="painel-apos-ranking" />
 
-      <p className="text-[0.95rem] text-tinta-suave">
+        {melhor && (
+          <section aria-labelledby="titulo-economia" className="surgir rounded-[var(--radius-cartao)] border-2 border-energia bg-energia-claro p-5 sm:p-6" style={{ animationDelay: "700ms" }}>
+            <h2 id="titulo-economia" className="text-lg font-bold text-energia-forte">
+              {plano.length > 0 ? "Próxima dica para o seu plano" : "A dica que mais economiza na sua casa"}
+            </h2>
+            <div className="mt-3 flex items-start gap-3">
+              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-papel text-energia">
+                <Icone nome={melhor.icone} className="size-6" />
+              </span>
+              <div className="flex-1">
+                <p className="text-xl leading-snug font-extrabold">{melhor.titulo}</p>
+                <p className="numeros mt-1 text-energia-forte">
+                  <strong>{formatarReais(melhor.economiaMes ?? 0)} por mês</strong>, ou {formatarReais((melhor.economiaMes ?? 0) * 12)} em um ano
+                </p>
+              </div>
+            </div>
+            <BotaoLink href="/casa/dicas" transitionTypes={["nav-forward"]} variante="secundario" className="mt-5">
+              Montar meu plano de economia
+            </BotaoLink>
+          </section>
+        )}
+      </div>
+
+      <div className="lg:[grid-area:acompanhamento]">
+        <Acompanhamento estimativaKwhMes={conta.consumoKwh} />
+      </div>
+
+      <p className="text-[0.95rem] text-tinta-suave lg:max-w-[68ch] lg:[grid-area:nota]">
         Os valores são estimativas feitas com os tempos de uso que você informou. A conta real pode variar com impostos, taxa de iluminação pública e dias de leitura.
       </p>
 
