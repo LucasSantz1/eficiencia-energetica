@@ -36,6 +36,50 @@
 - Testes: core 239, web 16 (vitest), dados 104, camadas 152 e 210 no navegador (204 rodam, 6 pendentes), com
   `cabecalhos`, `casa-salva`, `dados-publicos` e `erros` novos. Peso de JS aceito pelo tech-lead (`peso-js.json`).
 
+## 2026-11-12 · Cada cidade com a distribuidora de hoje (HIS-111)
+
+**Para quem usa**
+- Em 227 cidades (RS 127, SP 62, RR 14, MG 13, PB 9, PR 1, RJ 1), o site usava o preço de uma empresa de luz que já não
+  existia, comprada ou juntada com outra entre 2017 e 2023. A conta estimada saía de 11% a 55% menor do que a real. Agora
+  essas cidades usam o preço da empresa de hoje, o mesmo que vem na conta de luz.
+- Quem já tinha a casa salva com a empresa antiga vê um aviso: "O preço da luz foi atualizado. A CPFL Mococa hoje é a
+  CPFL Santa Cruz. A gente ainda usava o preço antigo..." Toque em "Entendi" para fechar. O aviso só aparece uma vez e não
+  aparece para quem informou a própria conta de luz, porque aí o preço já vinha da conta.
+- Se uma empresa de luz deixar de existir no futuro, o site não volta a usar o preço antigo em silêncio.
+
+**Técnico**
+- Rotina de dados (ADR-005): não publica tarifa vencida há mais de 6 meses; uma empresa só vira outra pelo mesmo CNPJ ou
+  por uma linha de `packages/dados/base/sucessoes.json` com ato e fonte oficiais; na dúvida a rotina para e nada é gravado
+  (regras V1 a V10). O `tarifas.json` ganha `substituidas` (id antigo → id de hoje).
+- `@ee/core`: `acharDistribuidora` e `distribuidorasDaCidade` seguem `substituidas`; `idDaSigla` é a regra única do id.
+  No site, `useDistribuidoraAtualizada` regrava o id uma vez e alimenta o `AvisoTrocaDistribuidora` da `Casca`.
+- h8 (PR #9): o `atualizar-dados.yml` roda sem `--forcar` (nem aceita a flag), o diagnóstico roda em `pull_request` sem
+  permissão de escrita, o `\r` do log é escapado e o teste dos arquivos publicados (`publicados.test.ts`) entra no `pnpm test`.
+- Conferido pelo qa nos arquivos publicados no `main`: mudam exatamente 227 cidades, nenhuma ficou com tarifa vencida, 10
+  seguem sem distribuidora, como antes. Teste de unidade: core 56, dados 98, camadas 152. Peso de JS: +38 B por rota.
+
+## 2026-11-03 · Lint e camadas conferidos sozinhos (HIS-002b)
+
+**Para quem usa**
+- Nada muda na tela. Por dentro, o projeto passou a conferir sozinho, a cada mudança, se o código segue o padrão e as
+  regras de segurança. Isso ajuda a manter o site rápido e seguro para todas as famílias.
+
+**Técnico**
+- `pnpm lint` (ESLint 10.13.0, `eslint-config-next` 16.4.3, `eslint-plugin-import-x` 4.17.1; `eslint.config.mjs`, com
+  `--max-warnings 0`) e novo passo no job "Lint, tipos e testes" do `ci.yml`. Regras: matriz de camadas por
+  `no-restricted-imports`, `zustand` e módulos do Node só onde o ADR-001 permite, `no-explicit-any`, `ban-ts-comment`,
+  `react/no-danger`, `eval`/`new Function`, `innerHTML` e afins, `"use server"`, link `target="_blank"` sem `rel`,
+  `import-x/order` (ordem dos imports corrigida em commit só de formatação).
+- `scripts/verificar-camadas.mjs` passou a usar o parser do TypeScript e ficou com o que depende de outro arquivo: `.servidor`,
+  `"use client"`, valor importado de módulo `"use client"` por arquivo sem diretiva (S2), destino do import, link simbólico,
+  comentário `eslint-disable` (só a forma da HIS-109, com teto de 7). Saída: `Camadas: tudo certo (N arquivos; M comentário(s) da HIS-109)`.
+- 145 casos negativos em `scripts/testes/` (104 no ESLint, 41 no script), rodados no `pnpm test`; apagar um caso obrigatório reprova.
+- Correção S2: `ui/tiposDeTransicao.ts` (constantes de transição, antes no `Movimento`) e `aplicacao/identificador.ts`
+  (`novoId`, antes em `aplicacao/casa`), para valor compartilhado morar em arquivo sem diretiva.
+- Bloco provisório `provisorio/arquivos-em-outras-historias` no `eslint.config.mjs`: saiu na HIS-003a (o teto da HIS-109 ficou em 7).
+- `pnpm audit`: sem alta ou crítica; 2 moderadas de `minimatch` (só ferramenta de desenvolvimento, aceitas).
+- ADR-001 revisado (onde cada regra é conferida); `docs/arquitetura.md` e `docs/sistema/desenvolvimento.md` atualizados.
+
 ## 2026-10-31 · Node 26 (LTS)
 
 **Para quem usa**
