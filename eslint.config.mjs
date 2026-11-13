@@ -145,12 +145,11 @@ export default defineConfig([
     },
   },
   {
-    // Provisório (HIS-002b, etapa 4): estes dois arquivos estão em mudança na HIS-003a e na HIS-111 e não podiam ser
-    // tocados aqui. Quando elas forem integradas: casa.ts ganha o 8º comentário da HIS-109 (useCasaCarregada) e os
-    // dois recebem o pnpm lint --fix da ordem dos imports; então este bloco sai. Só estas duas regras, só estes
-    // arquivos: camadas e sintaxe proibida continuam valendo neles.
-    name: "provisorio/arquivos-em-outras-historias",
-    files: [`${SITE}/infraestrutura/armazenamento/casa.ts`, "packages/dados/src/escrever.ts"],
-    rules: { "react-hooks/set-state-in-effect": "off", "import-x/order": "off" },
+    // Exceção de verdade, por arquivo e com motivo (Ab3 da HIS-002b: nunca por comentário no código). O global-error
+    // substitui o layout raiz quebrado; "Voltar ao início" é um <a> comum para a página carregar do zero, sem o
+    // next/link, que somaria JS a toda rota (HIS-003a, T3 e D10).
+    name: "excecao/global-error",
+    files: [`${SITE}/app/global-error.tsx`],
+    rules: { "@next/next/no-html-link-for-pages": "off" },
   },
 ]);

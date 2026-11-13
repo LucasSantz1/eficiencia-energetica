@@ -1,6 +1,7 @@
 /*
- * Acessibilidade (critério 3; D10; P-qa-4), em 390 e 1280 px: o axe nas 24 telas — as 7 páginas sem casa, 6 com
- * casa, os 7 passos do cadastro depois do estado, o painel geral dos cômodos e as 3 folhas. Reprova violação séria
+ * Acessibilidade (critério 3; D10; P-qa-4), em 390 e 1280 px: o axe nas 31 telas — as 7 páginas sem casa, 6 com
+ * casa, os 7 passos do cadastro depois do estado, o painel geral dos cômodos, as 3 folhas e, da HIS-003a (D8), os
+ * avisos T1a/T1b/T1c, as falhas T2a/T2b, o erro T3 e a 404 (T4). Reprova violação séria
  * ou crítica fora de `excecoes-axe.ts`; `moderate`/`minor` e `incomplete` (o axe pede revisão humana) vão como anexo.
  *
  * Antes da análise: movimento reduzido (sem ele o axe mede o contraste no meio da animação e acusa 1,08:1 que não
@@ -17,13 +18,15 @@ import {
   TELAS_AXE,
   violacoesQueReprovam,
 } from "./apoio/axe";
-import { lerFixture, semearCasa } from "./apoio/casa";
+import { CHAVE_CASA, lerFixture, semearCasa, semearTextos } from "./apoio/casa";
+import { MENSAGEM_DO_ERRO, quebrarFormatoDeNumero } from "./apoio/erros";
 import { escreverNoResumoDoCi } from "./apoio/resumo-do-ci";
 import { dialogoAberto } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 import { EXCECOES_AXE } from "./excecoes-axe";
 
-type Abrir = (pagina: Page, contexto: BrowserContext) => Promise<void>;
+/** `errosEsperados`: a tela de falha provoca erro de console de propósito (500, 404, erro de render). */
+type Abrir = (pagina: Page, contexto: BrowserContext, errosEsperados: RegExp[]) => Promise<void>;
 
 const titulo = (pagina: Page) => pagina.getByRole("heading", { level: 1 });
 
@@ -85,6 +88,21 @@ const folha =
     await expect(dialogoAberto(pagina)).toBeVisible();
   };
 
+/** A casa da fixture com uma mudança no `state`, como texto (o que o site nunca gravaria). */
+function casaMudada(mudar: (estado: Record<string, unknown>) => Record<string, unknown>): string {
+  const casa = lerFixture("casa-v2.json");
+  return JSON.stringify({ ...casa, state: mudar(structuredClone(casa.state)) });
+}
+
+/** Abre a /casa com um aviso T1 e confere o título do aviso. */
+const avisoT1 =
+  (texto: string, tituloDoAviso: string): Abrir =>
+  async (pagina, contexto) => {
+    await semearTextos(contexto, { [CHAVE_CASA]: texto });
+    await pagina.goto("/casa");
+    await expect(pagina.getByRole("status").filter({ hasText: tituloDoAviso })).toBeVisible();
+  };
+
 const ABRIR: Record<string, Abrir> = {
   "/ · sem casa": async (pagina) => {
     await pagina.goto("/");
@@ -115,8 +133,8 @@ const ABRIR: Record<string, Abrir> = {
   "/comecar · passo um cômodo": passoDoCadastro("um cômodo"),
   "/comecar · passo revisão": passoDoCadastro("revisão"),
   "/comecar · passo conta": passoDoCadastro("conta"),
-  "/casa/comodos?visao=geral · com casa": async (pagina, contexto) => {
-    await comTitulo("/casa/comodos?visao=geral", "Cômodos e aparelhos", true)(pagina, contexto);
+  "/casa/comodos?visao=geral · com casa": async (pagina, contexto, errosEsperados) => {
+    await comTitulo("/casa/comodos?visao=geral", "Cômodos e aparelhos", true)(pagina, contexto, errosEsperados);
     await expect(pagina.getByRole("radio", { name: "Painel geral" })).toBeChecked();
   },
   "/casa · folha editor de aparelho": folha((p) => p.getByRole("button", { name: /Toque para ajustar\.$/ }).first().click()),
@@ -125,6 +143,42 @@ const ABRIR: Record<string, Abrir> = {
     await p.getByRole("radio", { name: "Relógio de luz" }).click();
     await p.getByRole("button", { name: /^Anotar leitura/ }).click(); // "Anotar leitura de hoje" quando já há leitura
   }),
+  "/casa · aviso T1a": avisoT1(
+    casaMudada((e) => ({ ...e, contas: [{ id: "x", competencia: "2026-13", kwh: 1, valor: 1 }] })),
+    "Parte do que estava salvo aqui tinha um problema e foi tirada.",
+  ),
+  "/casa · aviso T1b": avisoT1(
+    casaMudada((e) => ({ ...e, residencia: { uf: "../x" } })),
+    "Não conseguimos abrir sua cidade e sua empresa de luz.",
+  ),
+  "/casa · aviso T1c": avisoT1("não é JSON", "Não conseguimos abrir a casa que estava salva aqui."),
+  "/casa · falha T2a": async (pagina, contexto, errosEsperados) => {
+    errosEsperados.push(/status of 500/);
+    await semearCasa(contexto, lerFixture("casa-v2.json"));
+    await pagina.route("**/dados/tarifas.json", (rota) => rota.fulfill({ status: 500, body: "erro" }));
+    await pagina.goto("/casa");
+    await expect(pagina.getByRole("alert").filter({ hasText: "Não conseguimos carregar os preços da luz." })).toBeVisible();
+  },
+  "/comecar · falha T2b": async (pagina, _contexto, errosEsperados) => {
+    errosEsperados.push(/status of 500/);
+    await pagina.route("**/dados/municipios/SP.json", (rota) => rota.fulfill({ status: 500, body: "erro" }));
+    await pagina.goto("/comecar");
+    await pagina.locator("select#estado").selectOption("SP");
+    await pagina.getByRole("button", { name: "Continuar", exact: true }).click();
+    await expect(pagina.getByRole("alert").filter({ hasText: "Não conseguimos carregar as cidades de São Paulo." })).toBeVisible();
+  },
+  "/casa · erro T3": async (pagina, contexto, errosEsperados) => {
+    errosEsperados.push(new RegExp(MENSAGEM_DO_ERRO));
+    await semearCasa(contexto, lerFixture("casa-v2.json"));
+    await quebrarFormatoDeNumero(contexto);
+    await pagina.goto("/casa");
+    await expect(titulo(pagina)).toHaveText("Algo deu errado nesta tela.");
+  },
+  "/nao-existe · T4": async (pagina, _contexto, errosEsperados) => {
+    errosEsperados.push(/status of 404/);
+    await pagina.goto("/nao-existe");
+    await expect(titulo(pagina)).toHaveText("Não achamos esta página.");
+  },
 };
 
 // Cada tela da lista tem como ser aberta, e nada sobra: falha ao carregar o arquivo, antes de rodar.
@@ -146,11 +200,11 @@ test.describe("axe", () => {
 
   for (const tela of TELAS_AXE) {
     const chave = chaveDaTela(tela);
-    test(`axe · ${chave}`, async ({ page, context }) => {
+    test(`axe · ${chave}`, async ({ page, context, errosEsperados }) => {
       const info = test.info();
       const abrir = ABRIR[chave];
       if (!abrir) throw new Error(`sem como abrir ${chave}`);
-      await abrir(page, context);
+      await abrir(page, context, errosEsperados);
       await esperarTelaParada(page);
 
       const resultado = await analisarAcessibilidade(page);

@@ -1,36 +1,37 @@
 {
-  "medidoNoCommit": "6e2f6da",
+  "medidoNoCommit": "40ba7e1",
+  "decisao": "HIS-003a, integração do main (2026-11-12): medido contra o main novo (6e2f6da, com HIS-111 e 002b). Contra 06be352: 11a até +12 018 B (/casa/ajustes) e 11b até +14 714 B, acima do teto do D10 (+10,5 kB / +13,5 kB); só a 003a sobre o main novo: 11a até +10 993 B e 11b até +13 880 B, ainda 0,5 kB e 0,4 kB acima. Aceito pelo tech-lead em 2026-11-13 (24480da): o teto conta só o incremento da 003a sobre o main novo, +11 264 B no 11a e +14 336 B no 11b.",
   "rotas": {
     "/": {
-      "jsDoHtml": 164734,
-      "totalComPrefetch": 184856
+      "jsDoHtml": 172162,
+      "totalComPrefetch": 196933
     },
     "/comecar": {
-      "jsDoHtml": 173027,
-      "totalComPrefetch": 184856
+      "jsDoHtml": 183799,
+      "totalComPrefetch": 196933
     },
     "/casa": {
-      "jsDoHtml": 176004,
-      "totalComPrefetch": 233316
+      "jsDoHtml": 186659,
+      "totalComPrefetch": 247196
     },
     "/casa/comodos": {
-      "jsDoHtml": 173981,
-      "totalComPrefetch": 233316
+      "jsDoHtml": 184395,
+      "totalComPrefetch": 247196
     },
     "/casa/dicas": {
-      "jsDoHtml": 167073,
-      "totalComPrefetch": 233316
+      "jsDoHtml": 177487,
+      "totalComPrefetch": 247196
     },
     "/casa/ajustes": {
-      "jsDoHtml": 164988,
-      "totalComPrefetch": 233316
+      "jsDoHtml": 175981,
+      "totalComPrefetch": 247196
     },
     "/sobre": {
-      "jsDoHtml": 139546,
-      "totalComPrefetch": 168801
+      "jsDoHtml": 140398,
+      "totalComPrefetch": 176229
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 213194
+      "totalComPrefetch": 225733
     }
   }
 }

@@ -7,14 +7,14 @@ import { useTarifas } from "@/infraestrutura/dados-publicos/navegador";
 
 /** Junta os dados da casa com a tarifa da distribuidora e a bandeira do mês. */
 export function useResumo() {
-  const tarifas = useTarifas();
+  const { dados: arquivoDeTarifas, carregando, falhasSeguidas, semInternet, tentarDeNovo } = useTarifas();
   const residencia = useCasa((s) => s.residencia);
   const aparelhos = useCasa((s) => s.aparelhos);
   const comodos = useCasa((s) => s.comodos);
   const plano = useCasa((s) => s.plano);
 
   return useMemo(() => {
-    const arquivo = tarifas.dados;
+    const arquivo = arquivoDeTarifas;
     // acharDistribuidora segue `substituidas`: a casa salva com um id que saiu do arquivo (rge-sul) já usa o preço de
     // hoje (rge) na primeira tela, antes de a casa ser regravada (HIS-111, D7).
     const distribuidora = residencia && arquivo ? acharDistribuidora(arquivo, residencia.distribuidoraId) : undefined;
@@ -26,8 +26,8 @@ export function useResumo() {
     // Plano de economia: só conta as dicas marcadas que ainda existem (o aparelho pode ter mudado).
     const planoValido = plano.filter((id) => dicas.some((d) => d.id === id && d.simulavel));
     const resumoPlano = planoValido.length > 0 ? resumirCasa(simularPlano(aparelhos, planoValido), r, preco) : undefined;
-    return { arquivo, carregando: tarifas.carregando, erro: tarifas.erro, residencia, aparelhos, comodos, distribuidora, bandeira, preco, resumo, dicas, plano: planoValido, resumoPlano };
-  }, [tarifas.dados, tarifas.carregando, tarifas.erro, residencia, aparelhos, comodos, plano]);
+    return { arquivo, carregando, falhasSeguidas, semInternet, tentarDeNovo, residencia, aparelhos, comodos, distribuidora, bandeira, preco, resumo, dicas, plano: planoValido, resumoPlano };
+  }, [arquivoDeTarifas, carregando, falhasSeguidas, semInternet, tentarDeNovo, residencia, aparelhos, comodos, plano]);
 }
 
 /** Tarifa média nacional (sem impostos), usada no simulador da página inicial antes de saber onde a pessoa mora. */

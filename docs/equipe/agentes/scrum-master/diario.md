@@ -10,6 +10,12 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-003a · Definição de Pronto conferida; Pronto com ressalvas baixas
+- O que fiz: conferi pelas notas de qa, seguranca, tech-lead e documentação (e2e 204 ✓, `main` integrado em `7ee7448`); marquei Pronto; criei HIS-114 (memória cheia) e HIS-115 (`casa-ilegivel`) no backlog da E0; atualizei o quadro (HIS-111 Pronto e no `main`; HIS-112 aprovada, f4–f7 depois da 003a; HIS-110 na PR #11; HIS-103 em preparação; Sprint 1 aberta).
+- Decisões e porquê: ressalvas baixas não bloqueiam; `TETO_HIS_109` em 7 aceito (decisão do tech-lead, o teto só desce); `site.md` fica como pendência da documentação, sem ID. Não rodei os testes: confiei nas evidências registradas.
+- Arquivos: `HIS-003-base-de-seguranca.md`, `planejamento.md`, `quadro.md`, `contexto.md` e este diário.
+- Próximos passos: merge da PR #10; 003b e HIS-112 f4–f7; refinar HIS-103 e HIS-107.
+
 ## 2026-11-03 · HIS-002b · Definição de Pronto conferida; Pronto com ressalvas
 - O que fiz: conferi a Definição de Pronto pelas notas de tech-lead (D17), qa, seguranca e documentação; marquei Pronto; pus DEF-002b-1 e HIS-113 (ressalva 4 da seguranca) no backlog da E0; revi a ordem do quadro e criei a linha da HIS-112.
 - Decisões e porquê: critério 11 aceito com 7 linhas + bloco provisório (D17-b), que sai na 003a; ordem HIS-111 → 002b → 003a sem paralelo, porque 002b e 003a mexem no `eslint.config.mjs`/`ci.yml`; HIS-112 só rascunho até o dono aprovar; não verifiquei os checks obrigatórios do `main` (sem acesso), fica com o dono.

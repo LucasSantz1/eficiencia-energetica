@@ -129,6 +129,12 @@
 - HIS-112 (desenho L1–L12, 2026-11-12): no code review, conferir que o celular fica idêntico (q3), que o único JS novo
   é o `useTelaLarga` com `useSyncExternalStore`, a ausência de `id` repetido nos cômodos, o peso do L8 e o rebase sobre
   a 003a (f4–f7 só depois dela).
+- HIS-003a: **code review aprovado em 2026-11-03**. Falta conferir no rebase o `--fix`, o bloco fora e o teto 8.
+  Itens do D10 já conferidos: o `app/error.tsx` fora (ou de volta, com o teto +1,3 kB), os
+  `/* @__PURE__ */`, o teto de +10,5 kB por rota no `peso-js.json` do qa, que "Apagar tudo" faz `removeItem` e solta a
+  trava, a cópia `eficiencia-energetica:casa-ilegivel` (uma vez só, apagada com "Apagar tudo") e, no rebase, o bloco
+  provisório fora e o `TETO_HIS_109` em 8. A ordem é HIS-111 → 002b → 003a.
+- Backlog (D10d): carregar os avisos T1/T2 só quando aparecem (cerca de 1,5 kB) quando houver regra de `import()`.
 
 - HIS-003: levar as respostas da P-tl-1, da P-tl-2 e da P-tl-3 para o desenho. No a6, reconferir os SHA. No code
   review, conferir:

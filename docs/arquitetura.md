@@ -81,6 +81,35 @@ todas e não aparece no desenho. As regras, na ordem do ADR:
 | `infraestrutura/` | `infraestrutura`, `config` | qualquer camada de cima |
 | `@ee/core` | só os próprios arquivos (`./`) | React, rede, armazenamento, o site |
 
+### Leitura segura dos dados de fora
+
+Decisão no [ADR-004](equipe/decisoes/ADR-004-leitura-segura-de-dados.md), feita na [HIS-003a](equipe/historias/HIS-003-base-de-seguranca.md).
+Todo dado que vem de fora (localStorage, `/dados`, formulário) é lido por funções `lerX(bruto: unknown)` do `@ee/core`,
+escritas à mão (sem zod), que **nunca lançam** para dado ruim e não corrigem nada: o que está errado é descartado e contado.
+
+| Arquivo do core | O que traz |
+| --- | --- |
+| `limites.ts` | todos os limites de tamanho e faixa, com a fonte de cada um; mais `validarFaixa` |
+| `leitura-segura.ts` | peças dos leitores: `ehObjeto`, `numeroNaFaixa`, `textoLimitado`, `umaDas`, `listaCompleta`... |
+| `casa-salva.ts` | `lerCasaSalva`, `lerAparelho`, `lerComodo`, `lerConta`, `lerLeitura`, `lerResidencia` e `avisoDaCasaSalva` (o que a tela diz) |
+| `arquivos-publicos.ts` | `lerArquivoTarifas`, `lerArquivoMunicipios`, `lerRelatorioDosDados` e `ErroDeFormato` |
+| `entrada.ts`, `estados.ts` | `lerNumeroDigitado` (campos numéricos) e `ehUf` (os 27 estados) |
+
+Cada ambiente reage de um jeito ao mesmo leitor:
+
+| Quem usa | Dado fora do formato |
+| --- | --- |
+| Navegador, casa salva (`infraestrutura/armazenamento/casa.ts`) | tira só o inválido, avisa a pessoa e regrava a versão limpa. Se o leitor lançar por bug, a **trava** impede a gravação (a casa salva não é sobrescrita por uma casa vazia) |
+| Navegador, `/dados` (`dados-publicos/navegador.ts`) | `ErroDeFormato` vira a mensagem "Não conseguimos carregar..." com "Tentar de novo" |
+| Servidor (`arquivos.servidor.ts`) | lança; a página inicial mostra números aproximados |
+| Rotina de dados (`packages/dados/src/formato.ts`) | recusa tudo o que o site descartaria e não grava |
+
+O storage do Zustand é próprio (nunca lança, mesmo com a memória cheia ou bloqueada) e o `merge` do `persist` passa a
+casa pelo `lerCasaSalva`. Na tela, `ui/AvisoDaCasaSalva` e `ui/AvisoFalhaDeCarga` mostram os avisos, `ui/TelaDeErro` com
+`app/global-error.tsx` e `app/not-found.tsx` cobrem o erro inesperado e a 404. O que a pessoa lê está no
+[guia de uso](sistema/guia-de-uso.md#se-os-dados-salvos-ou-os-preços-da-luz-estiverem-estragados); a trava e a cópia
+`casa-ilegivel`, em [privacidade e segurança](sistema/privacidade-e-seguranca.md#dados-salvos-que-o-site-não-consegue-ler).
+
 ### Decisões que valem para todo o código
 
 - **`aplicacao/` é a única porta para `infraestrutura/`.** As telas pegam a casa (`useCasa`, `useCasaCarregada`,
@@ -111,10 +140,10 @@ e [ADR-003](equipe/decisoes/ADR-003-qualidade-automatica.md)). Os dois rodam no 
 | --- | --- | --- |
 | ESLint (`eslint.config.mjs`) | `pnpm lint` | o que se decide olhando só o próprio arquivo: a tabela de quem importa quem (cada camada tem a lista do que pode; pasta nova já nasce proibida), sem `../`, `zustand` só em `infraestrutura/`, módulo do Node só em `infraestrutura/**/*.servidor.ts`, `server-only` só em `*.servidor.ts`, domínio só com `./`, e a sintaxe proibida (`require`, `import()`, `"use server"`, HTML a partir de texto, `eval`, `any`, `@ts-ignore`) |
 | Script (`scripts/verificar-camadas.mjs`) | `pnpm camadas`, dentro do `pnpm typecheck` | o que depende de outro arquivo ou da estrutura: arquivo `"use client"` não importa `.servidor`; todo `.servidor` começa com `import "server-only";`; arquivo sem diretiva só traz componentes (e tipos) de módulo `"use client"`; o destino do import existe; pasta antiga, arquivo fora das camadas e link simbólico são erro; comentário que muda regra do ESLint é erro, salvo a forma da HIS-109 |
-| Casos negativos | `pnpm test` | `scripts/testes/`: 145 casos (104 no ESLint, 41 no script) que provam que cada regra reprova o que deve; apagar um caso obrigatório também reprova |
+| Casos negativos | `pnpm test` | `scripts/testes/`: 152 testes que provam que cada regra reprova o que deve; apagar um caso obrigatório também reprova |
 
 O script usa o parser do TypeScript só para ler a sintaxe, apenas lê arquivos e nunca diz "tudo certo" sem ter lido
-nenhum. Sem problemas, a saída é `Camadas: tudo certo (66 arquivos; 7 comentário(s) da HIS-109)` e o código de saída é 0
+nenhum. Sem problemas, a saída é `Camadas: tudo certo (85 arquivos; 7 comentário(s) da HIS-109)` e o código de saída é 0
 (o número de arquivos cresce com o código).
 
 Um import proibido aparece como erro do ESLint, por exemplo `ui/Botao.tsx` importando `@/aplicacao/casa`:
@@ -122,10 +151,9 @@ Um import proibido aparece como erro do ESLint, por exemplo `ui/Botao.tsx` impor
 código 1.
 
 Os "comentário(s) da HIS-109" são os desligamentos da regra `react-hooks/set-state-in-effect` que a
-HIS-109 vai eliminar. O script conta e há um teto (hoje 7):
-o número só pode diminuir. Enquanto a HIS-003a não sai, um bloco
-provisório no `eslint.config.mjs` desliga duas regras (`set-state-in-effect` e a ordem dos imports) em
-`infraestrutura/armazenamento/casa.ts` e `packages/dados/src/escrever.ts`; a HIS-003a tira o bloco e sobe o teto para 8.
+HIS-109 vai eliminar. O script conta e há um teto (hoje 7): o número só pode diminuir. O bloco provisório do
+`eslint.config.mjs` saiu com a HIS-003a. A única exceção por arquivo hoje é `app/global-error.tsx`, que usa um `<a>`
+comum de propósito: o layout raiz quebrou e a página precisa carregar do zero.
 
 Valor compartilhado entre servidor e cliente mora em arquivo sem diretiva: quem não é `"use client"` e importa um valor
 de um módulo `"use client"` recebe só uma referência de cliente, não o valor.
@@ -139,7 +167,7 @@ de um módulo `"use client"` recebe só uma referência de cliente, não o valor
 
 A página inicial é estática e se atualiza uma vez por dia (`revalidate = 86400`). No servidor, ela lê `tarifas.json`
 e `relatorio.json` do disco (`arquivos.servidor.ts`); se der erro, mostra números aproximados em vez de quebrar.
-No navegador, as telas da casa buscam os arquivos por `/dados` (`infraestrutura/dados-publicos/navegador.ts`).
+No navegador, as telas da casa buscam os arquivos por `/dados` (`infraestrutura/dados-publicos/navegador.ts`), e passam pelos leitores do core. Em "Tentar de novo" o pedido usa `no-cache`, para não receber de novo o mesmo arquivo ruim do cache de 1 hora.
 
 ## Estado local
 
@@ -156,4 +184,6 @@ Tudo desligado com `prefers-reduced-motion`.
 ## Segurança
 
 Regras obrigatórias no [`CLAUDE.md`](../CLAUDE.md#segurança-obrigatório). Base de segurança do site na história
-[HIS-003](equipe/historias/HIS-003-base-de-seguranca.md).
+[HIS-003](equipe/historias/HIS-003-base-de-seguranca.md): sete cabeçalhos em toda resposta (`next.config.ts`), CSP com tudo
+`'self'` e sem `unsafe-eval` em produção, leitores do core (acima), `pnpm audit` no CI, Dependabot e `apps/web/.env.example`.
+O que cada medida protege está em [privacidade e segurança](sistema/privacidade-e-seguranca.md).

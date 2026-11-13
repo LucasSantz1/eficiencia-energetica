@@ -2,31 +2,40 @@ name: Atualizar tarifas e bandeiras
 
 # Baixa os dados abertos da ANEEL e do IBGE todo dia e grava em apps/web/public/dados.
 # Só cria um commit quando algo mudou de verdade.
+#
+# Dois jobs (A14 da HIS-003): `gerar` roda o pnpm install e a rotina inteira com token só de leitura e sem credencial
+# no .git/config; `publicar` tem permissão de escrita, mas não instala nada nem roda código do projeto: só baixa o
+# artefato, confere que é só apps/web/public/dados e faz o push.
+# Actions fixadas pelo SHA do commit, com a versão em comentário (ADR-003). Para subir:
+# git ls-remote --tags https://github.com/<action> (usar a linha ^{} quando houver).
+# Sem --forcar (HIS-111, h8): se uma barreira reclamar, nada é gravado e os dados do dia anterior ficam no ar. Quem
+# quiser publicar mesmo assim roda `pnpm dados:atualizar --forcar` na própria máquina e abre um PR com o diff.
 on:
   schedule:
     - cron: "17 9 * * *" # 06:17 em Brasília
-  workflow_dispatch:
-    inputs:
-      forcar:
-        description: "Gravar mesmo se a validação reclamar"
-        type: boolean
-        default: false
+  workflow_dispatch: {}
 
-permissions:
-  contents: write
+# Nada no topo: cada job pede só o que precisa.
+permissions: {}
 
 concurrency:
   group: atualizar-dados
   cancel-in-progress: false
 
 jobs:
-  atualizar:
+  gerar:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+    outputs:
+      mudou: ${{ steps.conferir.outputs.mudou }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
           cache: pnpm
@@ -34,23 +43,74 @@ jobs:
       - name: Atualizar dados
         run: |
           set -o pipefail
-          pnpm dados:atualizar ${{ inputs.forcar && '--forcar' || '' }} 2>&1 | tee atualizacao.log
+          pnpm dados:atualizar 2>&1 | tee "$RUNNER_TEMP/atualizacao.log"
       - name: Publicar resumo da atualização
         if: always()
         run: |
           # Mostra o resumo como anotação (aparece na página da execução e pode ser lido pela API).
-          if [ -f atualizacao.log ]; then
-            resumo=$(tail -n 120 atualizacao.log | cut -c1-400 | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
+          log="$RUNNER_TEMP/atualizacao.log"
+          if [ -f "$log" ]; then
+            # Escapa %, \r e \n, nessa ordem, para nada do log virar comando do runner (R2; ressalva 4 da seguranca na 003a).
+            resumo=$(tail -n 120 "$log" | cut -c1-400 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')
             echo "::notice title=Resumo da atualização::${resumo}"
           fi
-      - name: Salvar no repositório
+      - name: Conferir o que mudou
+        id: conferir
         run: |
-          if git diff --quiet -- apps/web/public/dados; then
+          fora=$(git status --porcelain --untracked-files=all | grep -v '^.. apps/web/public/dados/' || true)
+          if [ -n "$fora" ]; then
+            echo "::error::A rotina mexeu fora de apps/web/public/dados"
+            echo "$fora"
+            exit 1
+          fi
+          if [ -z "$(git status --porcelain --untracked-files=all -- apps/web/public/dados)" ]; then
+            echo "Nada mudou."
+            echo "mudou=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "mudou=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.conferir.outputs.mudou == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dados
+          path: apps/web/public/dados/
+          retention-days: 1
+          if-no-files-found: error
+
+  publicar:
+    needs: gerar
+    # Só o main publica: uma execução manual em outra branch rodaria o código dela e gravaria no main.
+    if: needs.gerar.outputs.mudou == 'true' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    # Sem setup-node e sem pnpm install: nenhum código do projeto roda com o token de escrita.
+    steps:
+      # Aqui a credencial fica, porque o push precisa dela.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+      # O artefato substitui a pasta inteira (assim some a UF que deixou de existir).
+      - run: rm -rf apps/web/public/dados
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dados
+          path: apps/web/public/dados
+      - name: Conferir e salvar no repositório
+        run: |
+          set -euo pipefail
+          fora=$(git status --porcelain --untracked-files=all | grep -v '^.. apps/web/public/dados/' || true)
+          [ -z "$fora" ] || { echo "::error::Artefato fora de apps/web/public/dados"; echo "$fora"; exit 1; }
+          [ -z "$(find apps/web/public/dados -type f ! -name '*.json')" ] || { echo "::error::Arquivo que não é JSON"; exit 1; }
+          find apps/web/public/dados -name '*.json' -print0 | xargs -0 -n1 jq -e 'type == "object"' > /dev/null
+          # O main pode ter andado entre os dois jobs e já ter os mesmos dados.
+          if [ -z "$(git status --porcelain --untracked-files=all -- apps/web/public/dados)" ]; then
             echo "Nada mudou."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add apps/web/public/dados
+          git add -A -- apps/web/public/dados
           git commit -m "dados: atualiza tarifas e bandeiras da ANEEL"
           git push

@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { distribuidorasDaCidade, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type Ligacao, type Municipio } from "@ee/core";
+import { distribuidorasDaCidade, ehUf, ESTADOS, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type Ligacao, type Municipio } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
+import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { Botao } from "@/ui/Botao";
 import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Campo } from "@/ui/Campo";
@@ -30,12 +31,11 @@ const LIGACOES: { id: Ligacao; titulo: string; descricao: string }[] = [
 ];
 
 export function TelaAjustes() {
-  const router = useRouter();
   const { residencia, arquivo, distribuidora } = useResumo();
   const atualizar = useCasa((s) => s.atualizarResidencia);
-  const apagarTudo = useCasa((s) => s.apagarTudo);
+  const definirResidencia = useCasa((s) => s.definirResidencia);
+  const temCasaSemCidade = useCasa((s) => s.comodos.length > 0 || s.aparelhos.length > 0);
   const [mudandoCidade, setMudandoCidade] = useState(false);
-  const [confirmarApagar, setConfirmarApagar] = useState(false);
   const [kwh, setKwh] = useState(residencia?.contaReferencia ? String(residencia.contaReferencia.kwh).replace(".", ",") : "");
   const [valor, setValor] = useState(residencia?.contaReferencia ? residencia.contaReferencia.valor.toFixed(2).replace(".", ",") : "");
   const [contaSalva, setContaSalva] = useState(false);
@@ -45,7 +45,31 @@ export function TelaAjustes() {
   // Com o id de hoje no lugar do antigo (HIS-111): um municipios/{UF}.json antigo no cache ainda pode trazer rge-sul.
   const opcoesDistribuidora = arquivo && municipioAtual ? distribuidorasDaCidade(arquivo, municipioAtual.distribuidoras) : [];
 
-  if (!residencia) return null;
+  if (!residencia) {
+    // T1b: a cidade saiu e os aparelhos ficaram. Só "Onde você mora"; a escolha cria a residência de novo, sem apagar
+    // os aparelhos (o /comecar apagaria, D5). Benefício e ligação voltam para "não sei" até a pessoa escolher.
+    return (
+      <div className="space-y-12">
+        <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
+        {temCasaSemCidade && (
+          <Secao titulo="Onde você mora">
+            <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
+          </Secao>
+        )}
+        <SeusDados />
+        <TrocarCidade
+          aberta={mudandoCidade}
+          aoFechar={() => setMudandoCidade(false)}
+          estados={arquivo?.estados ?? []}
+          arquivo={arquivo}
+          aoEscolher={(m, distribuidoraId) => {
+            definirResidencia({ uf: m.uf, municipioIbge: m.ibge, municipioNome: m.nome, distribuidoraId, beneficio: "nao-sei", ligacao: "nao-sei" });
+            setMudandoCidade(false);
+          }}
+        />
+      </div>
+    );
+  }
 
   const salvarConta = () => {
     const k = Number(kwh.replace(",", "."));
@@ -144,37 +168,7 @@ export function TelaAjustes() {
         )}
       </Secao>
 
-      <Secao titulo="Seus dados">
-        <p className="max-w-[56ch] text-tinta-suave">Tudo o que você cadastrou fica guardado só neste navegador. Se limpar os dados do navegador, as informações são apagadas.</p>
-        <div className="mt-4">
-          {!confirmarApagar ? (
-            <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
-              Apagar todos os meus dados
-            </Botao>
-          ) : (
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="font-bold">Apagar a casa e todos os aparelhos?</span>
-              <Botao
-                variante="perigo"
-                onClick={() => {
-                  apagarTudo();
-                  router.push("/");
-                }}
-              >
-                Sim, apagar
-              </Botao>
-              <Botao variante="fantasma" onClick={() => setConfirmarApagar(false)}>
-                Cancelar
-              </Botao>
-            </div>
-          )}
-        </div>
-        <p className="mt-6">
-          <Link href="/sobre" className="font-bold text-energia underline underline-offset-4">
-            De onde vêm as tarifas e como o cálculo é feito
-          </Link>
-        </p>
-      </Secao>
+      <SeusDados />
 
       <TrocarCidade
         aberta={mudandoCidade}
@@ -188,6 +182,49 @@ export function TelaAjustes() {
         }}
       />
     </div>
+  );
+}
+
+/**
+ * "Apagar todos os meus dados" (LGPD). Aparece em toda Minha casa, também sem cidade e quando a casa guardada não deu
+ * para ler (D-3a-1 do qa): a Casca só abre esta tela sem cidade quando há algum dado guardado.
+ */
+function SeusDados() {
+  const router = useRouter();
+  const apagarTudo = useCasa((s) => s.apagarTudo);
+  const [confirmarApagar, setConfirmarApagar] = useState(false);
+  return (
+    <Secao titulo="Seus dados">
+      <p className="max-w-[56ch] text-tinta-suave">Tudo o que você cadastrou fica guardado só neste navegador. Se limpar os dados do navegador, as informações são apagadas.</p>
+      <div className="mt-4">
+        {!confirmarApagar ? (
+          <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
+            Apagar todos os meus dados
+          </Botao>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="font-bold">Apagar a casa e todos os aparelhos?</span>
+            <Botao
+              variante="perigo"
+              onClick={() => {
+                apagarTudo();
+                router.push("/");
+              }}
+            >
+              Sim, apagar
+            </Botao>
+            <Botao variante="fantasma" onClick={() => setConfirmarApagar(false)}>
+              Cancelar
+            </Botao>
+          </div>
+        )}
+      </div>
+      <p className="mt-6">
+        <Link href="/sobre" className="font-bold text-energia underline underline-offset-4">
+          De onde vêm as tarifas e como o cálculo é feito
+        </Link>
+      </p>
+    </Secao>
   );
 }
 
@@ -212,12 +249,14 @@ function TrocarCidade({
 }: {
   aberta: boolean;
   aoFechar: () => void;
-  ufAtual: string;
+  ufAtual?: string;
   estados: { uf: string; nome: string; distribuidoras: string[] }[];
   arquivo: ArquivoParaBusca | undefined;
   aoEscolher: (m: Municipio, distribuidoraId: string) => void;
 }) {
-  const [uf, setUf] = useState(ufAtual);
+  const [ufEscolhida, setUf] = useState(ufAtual);
+  // Sem cidade salva (T1b), começa pelo primeiro estado da lista, que é o que o seletor mostra.
+  const uf = ufEscolhida ?? estados[0]?.uf;
   const [escolhido, setEscolhido] = useState<Municipio>();
   const municipios = useMunicipios(uf);
 
@@ -248,6 +287,16 @@ function TrocarCidade({
               ))}
             </select>
           </Campo>
+          <div className="empty:hidden">
+            <AvisoFalhaDeCarga
+              assunto={{ tipo: "cidades", estado: ehUf(uf) ? ESTADOS[uf] : "" }}
+              fraseDeSeguranca="Sua casa continua salva."
+              falhasSeguidas={municipios.falhasSeguidas}
+              semInternet={municipios.semInternet}
+              carregando={municipios.carregando}
+              aoTentarDeNovo={municipios.tentarDeNovo}
+            />
+          </div>
           {municipios.dados && (
             <BuscaCidade
               autoFocus={false}

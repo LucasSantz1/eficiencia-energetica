@@ -20,7 +20,7 @@ pnpm install
 | `pnpm lint` | ESLint em todo o repositório: padrão do código, regras de segurança e a maior parte das regras de camadas (ADR-001); sem aviso nenhum |
 | `pnpm camadas` | confere se cada arquivo do site só usa as camadas permitidas (ADR-001); ver abaixo |
 | `pnpm typecheck` | roda `pnpm camadas` e depois a verificação de tipos em todos os pacotes |
-| `pnpm test` | testes de unidade (`@ee/core` e `@ee/dados`) e os casos negativos do lint e das camadas (`pnpm test:camadas`, `scripts/testes/`) |
+| `pnpm test` | testes de unidade (`@ee/core`, `@ee/dados` e `@ee/web`, este com vitest em `apps/web/test/`) e os casos negativos do lint e das camadas (`pnpm test:camadas`, `scripts/testes/`) |
 | `pnpm test:e2e` | testes no navegador (fluxo, acessibilidade com axe e peso de JS); precisa de `pnpm build` antes; ver abaixo |
 | `pnpm dados:atualizar` | baixa os dados da ANEEL e grava em `apps/web/public/dados` |
 | `pnpm dados:exemplo` | gera dados fictícios para trabalhar sem internet |
@@ -74,16 +74,16 @@ apps/web/src/ui/Botao.tsx → @/aplicacao/casa: ui não pode importar aplicacao 
 ```
 
 O script cuida do que depende de outro arquivo ou da estrutura das pastas (`.servidor`, `"use client"`, destino do import). Sem
-problemas, mostra `Camadas: tudo certo (66 arquivos; 7 comentário(s) da HIS-109)` (os números mudam com o código). Ele
+problemas, mostra `Camadas: tudo certo (85 arquivos; 7 comentário(s) da HIS-109)` (os números mudam com o código). Ele
 só lê arquivos e usa o parser do TypeScript, que já vem instalado.
 
 ### Comentários que desligam o lint
 
 Ninguém desliga uma regra do ESLint por comentário: o script de camadas reprova qualquer `eslint-disable`. A única exceção
 é o desligamento de `react-hooks/set-state-in-effect` com motivo e a marca `(HIS-109)`, que a HIS-109 vai eliminar. Há
-hoje 7, e o teto só pode diminuir. Enquanto a HIS-003a não sai, um bloco provisório em `eslint.config.mjs`
-(`provisorio/arquivos-em-outras-historias`) desliga duas regras em `infraestrutura/armazenamento/casa.ts` e
-`packages/dados/src/escrever.ts`; quem integrar por último tira o bloco e sobe o teto para 8.
+hoje 7, e o teto só pode diminuir. O bloco provisório do `eslint.config.mjs` saiu com a HIS-003a: o código desses
+arquivos passou a seguir as regras. Exceção de verdade só existe por arquivo e com motivo no `eslint.config.mjs`
+(hoje, `app/global-error.tsx`, que usa um `<a>` comum porque o layout raiz quebrou); nunca por comentário no código.
 
 Para mudanças de interface, rode também os testes no navegador (abaixo) e olhe as capturas de tela.
 
@@ -94,7 +94,7 @@ Os testes ficam em `apps/web/e2e/` e usam o Playwright com o Chromium. Eles sobe
 
 ```bash
 pnpm build
-PORTA_E2E=3105 pnpm --filter @ee/web test:e2e                # tudo (113 testes)
+PORTA_E2E=3105 pnpm --filter @ee/web test:e2e                # tudo (210 testes; 204 rodam, 6 pendentes)
 PORTA_E2E=3105 pnpm --filter @ee/web test:e2e rotas.spec.ts  # só um arquivo
 ```
 
@@ -117,6 +117,10 @@ O que fica em `apps/web/e2e/`:
 | `teclado.spec.ts`, `transicoes.spec.ts` | uso só com teclado; transições ao trocar de aba, também com movimento reduzido |
 | `acessibilidade.spec.ts` + `excecoes-axe.ts` | o axe nas 7 páginas, sem e com casa salva, sem violação séria ou crítica fora da lista de exceções |
 | `peso-js.spec.ts` + `peso-js.json` | o JavaScript de cada página contra a referência guardada |
+| `cabecalhos.spec.ts` | os 7 cabeçalhos de segurança em páginas, `/dados`, arquivos estáticos e na 404 (HIS-003a) |
+| `casa-salva.spec.ts` | casa salva estragada: descarta só o inválido, avisos T1, trava de gravação, cópia `casa-ilegivel` e "Apagar tudo" |
+| `dados-publicos.spec.ts`, `erros.spec.ts` | `/dados` fora do formato (mensagem, "Tentar de novo", sem internet, 2ª falha, foco); tela de erro geral e 404 |
+| `troca-distribuidora.spec.ts` | distribuidora que deixa de existir (HIS-111) |
 | `sanidade.spec.ts` | prova que cada barreira acima reprova quando deveria (testes negativos) |
 | `apoio/`, `fixtures/` | funções compartilhadas e as casas de exemplo (v1 e v2) |
 
@@ -139,7 +143,7 @@ obrigatórios para entrar no `main`:
 
 | Check | O que faz |
 | --- | --- |
-| **Lint, tipos e testes** | instala, `lint`, `typecheck` (com o verificador de camadas e os tipos de `e2e/`) e `test` (com os casos negativos do lint e das camadas) |
+| **Lint, tipos e testes** | instala, `pnpm audit --audit-level high` (reprova com falha alta ou crítica), `lint`, `typecheck` (com o verificador de camadas e os tipos de `e2e/`) e `test` (com os casos negativos do lint e das camadas) |
 | **Navegador (e2e, axe e peso)** | instala o Chromium, `build`, `test:e2e`; guarda o relatório; confere que nada mudou no repositório |
 
 - O resumo de cada execução mostra a tabela do peso de JS e as exceções do axe.
@@ -151,7 +155,10 @@ obrigatórios para entrar no `main`:
 
 | Outro workflow | Quando roda | O que faz |
 | --- | --- | --- |
-| `atualizar-dados.yml` | todo dia às 06:17 (Brasília) e à mão | atualiza os dados e faz commit só se algo mudou |
+| `atualizar-dados.yml` | todo dia às 06:17 (Brasília) e à mão | dois jobs: `gerar` (só leitura) baixa, confere o formato e entrega os dados; `publicar` (escrita, só no `main`) faz o commit só se algo mudou. Ver [dados](dados.md#os-dois-jobs-da-rotina) |
+
+O Dependabot (`.github/dependabot.yml`) sugere atualizações de npm e de GitHub Actions toda segunda-feira, esperando 7 dias
+depois da publicação. O `.env.example` fica em `apps/web/` e hoje não tem nenhuma variável: o site não precisa de segredo.
 
 ## Publicar na Vercel
 

@@ -23,6 +23,7 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 | `ui/aparelho/` | componentes de aparelho compartilhados, sem store: `tipos.ts` (`ItemComodo`), `textosDeUso.ts`, `LinhaAparelho`, `BlocoIluminacao`, `TempoUso`, `SeletorCatalogo`, `EditorAparelho` (props `comodos`/`aoSalvar`/`aoRemover`) |
 | `aplicacao/` | única porta para `infraestrutura/`: `casa.ts` (`useCasa`, `useCasaCarregada`, `novoId`, `useEdicaoDeAparelho`, `useDistribuidoraAtualizada`), `dados-publicos.ts` (`useTarifas`, `useMunicipios`), `resumo.ts` (`useResumo`, `tarifaMedia`, `nomeDistribuidora`), `numeros-do-inicio.servidor.ts` |
 | `infraestrutura/` | `armazenamento/casa.ts` (o único `create` do store: chave `eficiencia-energetica:casa`, versão 2 + `migrate`), `identificador.ts` (`novoId`), `dados-publicos/navegador.ts` (fetch de `/dados`), `dados-publicos/arquivos.servidor.ts` (único `node:fs`) |
+| HIS-003a (a4/a5) | `infraestrutura/armazenamento/armazenamento-local.ts` (nunca lança; `travarGravacao`) e `hidratacao.ts` (`lerCasaNaHidratacao`, `dadosSalvaveis`); `ui/AvisoDaCasaSalva`, `ui/AvisoFalhaDeCarga`, `ui/TelaDeErro`, `ui/foco.ts`, `ui/estilosDeBotao.ts`; `app/error.tsx`, `global-error.tsx`, `not-found.tsx`; testes do store em `apps/web/test/` (vitest) |
 | `config/recursos.ts` | `RECURSOS.espacosReservados = false` |
 
 ## Decisões em vigor
@@ -47,6 +48,15 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
   HIS-111/ADR-005); nunca `find`/`Map` por id na tela. Aviso que entra depois do carregamento vai numa região
   `role="status"` sempre presente, com `Aviso anunciar={false}`.
 
+- Casa salva (HIS-003a): o `merge` lê tudo com `lerCasaSalva` a cada abertura; existe aviso exatamente quando algo
+  saiu, e só então regrava. Se o leitor lançar, a gravação fica travada (nunca regravar a casa vazia); a trava solta com
+  "Apagar tudo" (tira a chave e a `casa-ilegivel`) e com cadastro novo (antes copia o texto bruto, uma vez só) — D10. Toda ação do
+  store passa pelo leitor; o que ele recusa não muda nada.
+- `/dados`: a tela recebe `falhasSeguidas`, `semInternet`, `carregando` e `tentarDeNovo`, nunca texto técnico. O aviso
+  de falha fica sempre montado para levar o foco ao título quando volta a dar certo.
+- Só o `global-error.tsx` é tela de erro (sem `app/error.tsx`, D10). O que entra em toda rota (`global-error.tsx`, `not-found.tsx`) não importa `Botao.tsx`, `lucide` nem
+  `next/link` no erro: usa `classesDeBotao` (medido: ~8 kB por rota).
+
 ## Pendências
 
 - HIS-112: f1–f3 feitas (2026-11-12). f4–f7 (`Casca`, `/casa`, ajustes, cadastro) esperam a HIS-003a no `main`
@@ -58,16 +68,14 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
   "Quem mais gasta" e região focável da tabela do painel geral). Com isso, o axe passa nos 2 projetos. Falta o qa trocar o seletor
   `^${nome}: ` de `e2e/aparelhos.spec.ts:43` pelo nome novo. Achado para a HIS-110: 2 `dd` `text-white/85` nos cartões
   da Tarifa Social também falham `color-contrast`.
-- HIS-002b: B1–B7 feitos (2026-11-03, `7427be6`…`1062111`); aguarda tech-lead (B8, bloco provisório do
-  `eslint.config.mjs` para `infraestrutura/armazenamento/casa.ts` e `packages/dados/src/escrever.ts`), qa e seguranca.
-  Ao integrar a HIS-003a/HIS-111: `pnpm lint --fix`, pôr o 8º comentário da HIS-109 em `casa.ts:132`, tirar o bloco;
-  o efeito novo de `aplicacao/casa.ts` da HIS-111 passaria do teto de 8.
+- HIS-002b: no main. O bloco provisório saiu no merge da 003a (`ac4fee4`, 2026-11-12); `TETO_HIS_109` = 7 (7 linhas hoje).
 - Teste instável anterior: fluxo principal, "terminar o cadastro" às vezes conta 13 transições em vez de 14 (também no `main`).
-- HIS-003: validação com zod, tela de erro, limites de entrada.
 - HIS-111: h6 feito (30/10); o D1 do h7 (peso de JS) foi corrigido em 31/10: o 11a de `/casa*` ficou em até +998 B (folga de
   26 B). Aguarda o qa refazer o h7. O `React.lazy` piora o peso com o Turbopack: não usar para economizar bytes.
   O F2 (cidade sem preço: cadastro, cartão de cima do painel, Minha casa) não entrou: mexe no `PainelAcompanhamento`
   da 002a.
+- HIS-003a: main integrado (2026-11-12, `4cc37bc`…`9abcd0a`, com push). Falta o tech-lead decidir o peso (11a até
+  +10 993 B sobre o main novo; teto +10,5 kB) e o teto 7 × 8 da HIS-109. HIS-003b (limites nas telas) vem depois.
 
 ## Orientações do responsável
 

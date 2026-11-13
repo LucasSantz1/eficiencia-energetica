@@ -115,8 +115,11 @@ describe("nomeComercialDoId (HIS-111, F1: nome do id que saiu do arquivo)", () =
 
   it("sem nome conhecido devolve undefined, nunca a sigla solta (CNEE, cooperativas, protótipo)", () => {
     for (const id of ["cnee", "certaja", "constructor", "__proto__", "toString", ""]) expect(nomeComercialDoId(id)).toBeUndefined();
-    // Sigla com acento não acha o próprio id (a busca não tira acentos, para pesar menos): o aviso sai sem o nome antigo.
-    expect(nomeComercialDoId("ambar-roraima")).toBeUndefined();
+  });
+
+  it("sigla com acento acha o próprio id, pela mesma regra da rotina (h8)", () => {
+    expect(nomeComercialDoId("ambar-roraima")).toBe("Roraima Energia");
+    expect(nomeComercialDoId("neoenergia-brasilia")).toBe("Neoenergia Brasília");
   });
 });
 

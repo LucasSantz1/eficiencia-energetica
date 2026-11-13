@@ -16,10 +16,77 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Aprendizado: o `next start` antigo continua no ar depois de um build novo; matar pelo `cwd` do processo. O 11b das abas `/casa*` soma o chunk dos cômodos.
 - Arquivos: `ui/telaLarga.ts`, `app/globals.css`, `ui/Etiqueta.tsx`, `funcionalidades/comodos/*`, `funcionalidades/dicas/TelaDicas.tsx`, a história.
 
+## 2026-11-12 · HIS-003a · main integrado por merge; bloco provisório fora; peso medido de novo
+- O que fiz: merge `4cc37bc` (resolvido à mão, `substituidas` no leitor), `ac4fee4` (bloco fora, `lint --fix`, JSDoc),
+  `40ba7e1` (e2e da troca), `9abcd0a` (peso). Diários e contextos com as entradas dos dois lados.
+- Decisões e porquê: teto da HIS-109 em 7 (é o número de hoje; 8 deixaria vaga); `<a>` do `global-error` como
+  exceção na configuração; laço em `substituidas` sai inteiro (V8), sem troca.
+- Verificação: barreira verde; e2e 188 ✓ e as falhas da troca corrigidas (20 ✓); peso acima do teto por ~0,5 kB.
+- Aprendizado: um merge que mudou os diários "pelo lado de fora" do conflito também apaga entradas; juntar por título.
+
+## 2026-11-03 · HIS-003a · D10: só o global-error, CAMPOS_* puros e a trava que solta
+- O que fiz: `3f60fe4` (sem `app/error.tsx`, T3 conferido com o `global-error`), `040ddd4` (`/* @__PURE__ */`, −249 B),
+  `1b235d5` ("Apagar tudo" e cadastro novo soltam a trava; cópia bruta uma vez só; 5 testes).
+- Verificação: barreira verde; peso 11a até +10 382 B (teto +10,5 kB); e2e 106 ✓, só o peso ✗ (o qa atualiza no a7).
+- Aprendizado: ler o `document.title` depois do retry mede a tela que voltou, não a de erro: medir no momento certo.
+
+## 2026-11-03 · HIS-003a · a4 e a5: casa salva e /dados validados, avisos T1/T2, telas de erro e cabeçalhos
+- O que fiz: a4 `9be1f4c` (armazenamento seguro, `merge`, trava de gravação do pedido 1, ações pelo leitor, `/dados`
+  pelos leitores, servidor sem `catch`, vitest no site) e a5 `017281f` (T1 ×3, T1b, T2 ×3, T3, T4, foco, `rel`, D6).
+- Decisões e porquê: `carregando` derivado da chave (caminho + tentativa), sem `setState` síncrono no efeito; 2ª falha
+  do T3 por instante guardado no módulo (funciona com ou sem remontagem, conferido); telas de toda rota sem `Botao`,
+  `lucide` e `next/link` no erro (o peso mostrou cada uma levando o módulo inteiro).
+- Verificação: barreira verde; e2e (3351) 106 ✓ e só o peso ✗; roteiro avulso em 390/1280 com capturas.
+- Aprendizado: medir o peso por pedaço (`gzip` dos `<script>` do HTML) mostra na hora qual import puxa o quê. E, para
+  forçar erro no `Intl`, chamar o getter original pelo descritor.
+- Arquivos: ver o contexto (linha HIS-003a), a história e este diário.
+- Próximos passos: tech-lead decide o peso; qa no a7; seguranca nos R1–R13.
+
+## 2026-11-03 · HIS-002b · lint e camadas no CI: B1–B7 (ESLint, casos negativos, script com parser do TS, S2/T3)
+- O que fiz: um commit por passo (`7427be6` B1, `e8ffa7a` B2, `c602b73` B3, `7e25a8c` B4, `b0bd88c` B5, `666fe8c` B6,
+  `1062111` B7). 145 casos + 4 controles em `scripts/testes/`; script reescrito com `ts.createSourceFile`.
+- Decisões e porquê: `casa.ts` e `packages/dados` estão em outras histórias → bloco provisório na configuração (2
+  regras, 2 arquivos) em vez de mexer neles. `OBRIGATORIOS` conferido nos dois sentidos (caso novo também precisa entrar
+  na lista). Os comentários da C10 são lidos pelos tokens do parser, pulando texto de JSX, para `//` em texto não acusar.
+- Verificação: barreira verde; mutações V1–V4 e V6–V8 vermelhas com o id; e2e numa cópia (3341) e controle do `main`
+  (3342): a falha de transição em "terminar o cadastro" aparece nos dois, então não é desta história.
+- Aprendizado: num `sed` de mutação, conferir que o padrão casa só onde se quer (apagar `"I7-13", ` tirou também o id
+  do caso). E o ESLint 10 com `-c` usa a pasta atual como base.
+- Arquivos: `eslint.config.mjs`, `package.json`, `pnpm-lock.yaml`, `.github/workflows/ci.yml`, `scripts/**`,
+  `apps/web/postcss.config.mjs`, `ui/tiposDeTransicao.ts`, `aplicacao/identificador.ts`, 20 arquivos com imports
+  reordenados, a história, este diário e `contexto.md`.
+- Próximos passos: tech-lead (B8 e o bloco provisório), documentacao, qa (etapa 5) e seguranca (Rb1–Rb9).
+
 ## 2026-10-31 · HIS-111 · D1 do h7: o peso de JS de /casa* voltou a ficar abaixo do limite
 - O que fiz: mantive o aviso no carregamento normal, mas mais leve. Ele cuida do próprio "Entendi" e do foco; os nomes foram para `core/trocas.ts`; tirei verificações repetidas. O 11a de `/casa*` ficou em até +998 B (limite +1 024), medido na junção com o `origin/main`.
 - Aprendizado: o `React.lazy` piora o peso com o Turbopack (ele parte os chunks compartilhados: `/comecar` +1 570 B). Para medir, aplique o diff (`git diff HEAD`) sobre a junção com o main; não copie o `src` inteiro, que leva o código velho da branch (isso me deu um axe falso). O gzip medido à mão não bate com o spec, que conta também os `preload`.
 - Arquivos: `casca/*`, `ui/Aviso.tsx`, `aplicacao/casa.ts`, `core/src/{distribuidoras,trocas,index}.ts`, teste do core, a história.
+
+## 2026-10-30 · HIS-002 · D-A5-1 e D-A5-2: nome do "Quem mais gasta" e Tab na tabela do painel geral
+- O que fiz: commit `92e9fd9`. Coloquei o `aria-label` da ux nos 6 botões do ranking, com `{" "}` entre os blocos, e
+  `role="region"`, nome e `tabIndex={0}` na região rolável da tabela do painel geral.
+- Decisões e porquê: tela e nome saem das mesmas variáveis, para nunca divergirem. A quantidade continua condicionada
+  a `quantidade > 1`, sem `{"" && …}`.
+- Verificação: controle e depois, 0 px em 390/1280 (`/casa` e `?visao=geral`); axe sem os 2 defeitos; o Tab chega à
+  tabela e as setas rolam (rolagem suave: medir depois de esperar); e2e 106 ✓ / 6 pendentes / 1 ✗ (seletor antigo em
+  `aparelhos.spec.ts:43`, do qa; com o seletor novo, numa cópia, passa).
+- Aprendizado: mudar um nome acessível pode quebrar seletores do e2e que dependem dele. Procurar o nome antigo em
+  `e2e/` antes de mudar.
+- Arquivos: `PainelAcompanhamento.tsx`, `TelaComodos.tsx`, a história, este diário, `contexto.md`.
+- Próximos passos: o qa ajusta o seletor e fecha o A5.
+
+## 2026-10-30 · HIS-002 · A5 da 002a: nomes da casa ilustrada e `<dl>` da Tarifa Social, sem mudança visível
+- O que fiz: commit `b0bff1c` — `aria-label` dos 5 cômodos com o modelo da ux (com o `reais()` local, U+00A0) e o
+  `<p>` do CRAS fora do `<dl>` (div com grade `gap-6` em volta, `<dl>` com a mesma grade).
+- Decisões e porquê: `{" "}` entre o nome e a porcentagem, porque o axe junta o texto dos filhos sem espaço e o nome
+  novo sozinho não zerava a regra (medido); `display: contents` recusado (risco de perder a semântica).
+- Verificação: cópias próprias antes × depois (portas 3121/3122): 0 pixel diferente em 390/1280 px, sem e com casa,
+  depois de validar o comparador com controle; nomes pela árvore do Chromium (CDP) e pelo seletor do D16; axe sem
+  `definition-list` e `label-content-name-mismatch`; typecheck e test verdes.
+- Aprendizado: a captura da `/` não é determinística sem parar animações e esperar a `Contagem`; o relógio fixo do
+  Playwright trava a `Contagem`. Validar o comparador com controle antes de confiar (retro da HIS-001 de novo).
+- Arquivos: `apps/web/src/funcionalidades/inicio/CasaIlustrada.tsx`, `PaginaInicial.tsx`, a história, este diário, `contexto.md`.
+- Próximos passos: qa no A5; os 2 `dd` com contraste baixo vão para a conversa da HIS-110.
 
 ## 2026-10-30 · HIS-111 · h6: id de hoje nas telas e aviso da troca de distribuidora
 - O que fiz: `useResumo` com `acharDistribuidora`; `Cadastro` e `TelaAjustes` com `distribuidorasDaCidade`;

@@ -3,8 +3,8 @@
 import { ArrowLeft, ChevronDown, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { agregarAparelhos, COMODOS_PADRAO, distribuidorasDaCidade, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
-import { useCasa, useCasaCarregada } from "@/aplicacao/casa";
+import { agregarAparelhos, COMODOS_PADRAO, distribuidorasDaCidade, ehUf, ESTADOS, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
+import { useAvisoDaCasaSalva, useCasa, useCasaCarregada } from "@/aplicacao/casa";
 import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora } from "@/aplicacao/resumo";
 import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
@@ -12,7 +12,8 @@ import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
 import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
 import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
 import type { ItemComodo } from "@/ui/aparelho/tipos";
-import { Aviso } from "@/ui/Aviso";
+import { AvisoDaCasaSalva } from "@/ui/AvisoDaCasaSalva";
+import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Campo } from "@/ui/Campo";
@@ -218,14 +219,27 @@ export function Cadastro() {
     >
       <TransicaoTela chave={passo}>
       <div>
-      {tarifas.erro && (
-        <Aviso tom="alerta">
-          Não conseguimos carregar as tarifas. Confira sua internet.{" "}
-          <button className="font-bold underline" onClick={tarifas.tentarDeNovo}>
-            Tentar de novo
-          </button>
-        </Aviso>
-      )}
+      {/* T2: os dois ficam montados (sem falha não mostram nada) para levar o foco ao título quando voltar a dar certo. */}
+      <div className="mb-6 empty:hidden">
+        <AvisoFalhaDeCarga
+          assunto={{ tipo: "precos" }}
+          fraseDeSeguranca="Suas respostas não se perdem."
+          falhasSeguidas={tarifas.falhasSeguidas}
+          semInternet={tarifas.semInternet}
+          carregando={tarifas.carregando}
+          aoTentarDeNovo={tarifas.tentarDeNovo}
+        />
+      </div>
+      <div className="mb-6 empty:hidden">
+        <AvisoFalhaDeCarga
+          assunto={{ tipo: "cidades", estado: ehUf(uf) ? ESTADOS[uf] : "" }}
+          fraseDeSeguranca="Suas respostas não se perdem."
+          falhasSeguidas={municipios.falhasSeguidas}
+          semInternet={municipios.semInternet}
+          carregando={municipios.carregando}
+          aoTentarDeNovo={municipios.tentarDeNovo}
+        />
+      </div>
 
       {passo === "estado" && (
         <>
@@ -534,6 +548,12 @@ export function Cadastro() {
   );
 }
 
+/** T1 no /comecar: o cadastro também lê a casa salva, e esta pode ser a primeira tela que a pessoa abre. */
+function AvisoDaCasaNoCadastro() {
+  const { aviso, dispensar } = useAvisoDaCasaSalva();
+  return <AvisoDaCasaSalva aviso={aviso} aoEntender={dispensar} className="mb-6" />;
+}
+
 function Moldura({ children, progresso }: { children: React.ReactNode; progresso?: React.ReactNode }) {
   return (
     <div className="mx-auto min-h-dvh max-w-2xl px-4 pt-4 pb-10 sm:px-6">
@@ -541,7 +561,10 @@ function Moldura({ children, progresso }: { children: React.ReactNode; progresso
         <Marca />
       </header>
       {progresso && <div className="mt-6">{progresso}</div>}
-      <main className="mt-6">{children}</main>
+      <main className="mt-6">
+        <AvisoDaCasaNoCadastro />
+        {children}
+      </main>
     </div>
   );
 }

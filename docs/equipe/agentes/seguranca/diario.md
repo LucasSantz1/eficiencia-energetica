@@ -13,6 +13,18 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-03 · HIS-003a · etapa 6 (R1–R13 e D10 2): aprovado com ressalvas (baixo)
+- O que fiz: numa cópia de `13cbd30` rodei typecheck, test e build, mais o `curl` dos cabeçalhos em 6 rotas e um roteiro Playwright em 390/1280 px com 24 combinações de rota × casa e "Apagar tudo". Também procurei no bundle a chave e os domínios de fora, e revisei o código do D10.
+- Decisões e porquê: a cópia bruta foi aceita. Fica só no aparelho, ninguém a lê, é uma chave do tamanho do original no máximo, nasce só quando o leitor lança e sai com "Apagar tudo". Duas ressalvas baixas: o `\r` no `::notice` e uma regra para quem um dia ler a cópia.
+- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md`, `contexto.md`, `diario.md`.
+- Próximos passos: no rebase, conferir o bloco provisório da 002b e o teto 8; depois, o a7 (qa) e a HIS-003b.
+
+## 2026-11-03 · HIS-003a · decisões (1) e (2) da etapa 4: aceito com 2 pedidos
+- O que fiz: li `casa-salva.ts`, `limites.ts`, `leitura-segura.ts`; conferi NaN, Infinity, 1e308, 1e-300 e teto somado.
+- Decisões e porquê: decimal em medida aceito (teto e finitude ficam). Sem try/catch aceito se o `merge` (a4, ainda não existe) travar a gravação ao pegar erro, senão a próxima ação regrava a casa vazia.
+- Arquivos: `docs/equipe/historias/HIS-003-base-de-seguranca.md`.
+- Próximos passos: revisar o `merge` e o teste de `setItem` não chamado no a4.
+
 ## 2026-10-31 · HIS-111 · S1 fechada (`0cc072a`)
 - O que fiz: refiz a prova do S1 (`scratchpad/seg-his111/s1.mts`) contra a correção, com cabeçalho quebrado, binário,
   `\n    at ::add-mask::` e um erro que não é `Error`. Resultado: nenhuma linha com `::` e 0 arquivos gravados; teste

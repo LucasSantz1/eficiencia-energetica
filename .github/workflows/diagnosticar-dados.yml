@@ -1,12 +1,13 @@
 name: Diagnosticar dados (sem gravar)
 
-# HIS-111, passo 0 (T3): baixa os CSVs da ANEEL e mostra o que a montagem da branch mudaria, sem gravar nada.
-# O resumo sai na página da execução ($GITHUB_STEP_SUMMARY) e no log do passo "Diagnosticar".
+# HIS-111 (T3): baixa os CSVs da ANEEL e mostra o que a montagem do PR mudaria, sem gravar nada.
+# O resumo sai na página da execução ($GITHUB_STEP_SUMMARY), no log do passo "Diagnosticar" e nas anotações.
 # Só leitura: token com contents: read, sem credencial guardada, sem segredo, e o último passo confere que nada mudou.
+# Gatilho pull_request (h8, R4 da seguranca): toda mudança na rotina ou no sucessoes.json mostra o diff das cidades no
+# próprio PR. Nunca pull_request_target: o código do PR roda sem token de escrita nem segredo.
 on:
   workflow_dispatch: {}
-  push: # só durante a HIS-111: no h8 vira pull_request com paths [packages/dados/**] (R4 da seguranca)
-    branches: [his-111-tarifas-vencidas]
+  pull_request:
     # packages/core e o lockfile mudam a montagem; sem eles o diagnóstico ficaria velho (R1 da seguranca).
     paths:
       - "packages/dados/**"
@@ -16,8 +17,9 @@ on:
 
 permissions: {}
 
+# Um grupo por PR: um PR não cancela o diagnóstico do outro.
 concurrency:
-  group: diagnosticar-dados
+  group: diagnosticar-dados-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

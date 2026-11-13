@@ -16,6 +16,11 @@ export function formatarKwh(kwh: number): string {
   return `${(v >= 10 ? numero0 : numero1).format(v)} kWh`;
 }
 
+/** 9.500: quantidade inteira com ponto de milhar (ex.: quantos aparelhos saíram da casa salva, T1a). */
+export function formatarQuantidade(n: number): string {
+  return numero0.format(Number.isFinite(n) ? n : 0);
+}
+
 /** 5.500 W */
 export function formatarWatts(w: number): string {
   return `${numero0.format(w)} W`;

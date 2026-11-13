@@ -29,16 +29,27 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - **Arquivos:** `HIS-111-tarifas-vencidas.md` (nota), `contexto.md` e este diário.
 - **Próximos passos:** qa (h7) com o e2e da troca e as capturas; h8 com os itens das duas notas.
 
-## 2026-10-30 · HIS-111 · code review do backend em `packages/dados` aprovado; T2 e ADR-005 revistos depois do passo 0
-- **O que fiz:** revisei os commits do backend em `packages/dados` desde `6daaabf` (h0–h5, correções do passo 0, linha
-  12 do `sucessoes.json`) e rodei typecheck, test (core 48, dados 87) e build numa cópia
-  (`scratchpad/tl-his111-rev/copia`): verdes. Trouxe o ADR-005 aceito e o meu contexto/diário da `his-002-qualidade`
-  (o `origin/main` ainda tem a proposta) e apliquei a revisão.
-- **Decisões e porquê:** aprovado sem devolver; o diagnóstico 4 passou todos os portões. ADR-005 item 2 ganhou: nome
-  igual não é a mesma empresa (raiz do CNPJ), empresa da tarifa = sigla + CNPJ, ano do conjunto não troca sozinho.
-  V4 confirmado como "publicada", porque o estrito pararia a rotina a cada atraso da ANEEL.
-- **Arquivos:** `HIS-111-tarifas-vencidas.md` (T2, perguntas, nota), `ADR-005-…md`, `contexto.md` e este diário.
-- **Próximos passos:** h6 (frontend), h7 (qa); no h8, os 3 itens da nota. Responder a pergunta F1.
+## 2026-11-03 · HIS-003a · code review final aprovado (etapa 7)
+- **O que fiz:** revisei `0cef6c1..ab0838a` (a1–a7, cortes do D10, trava, D-3a-1 a 3). Numa cópia
+  (`scratchpad/tl-his003a-rev/`), typecheck, test, build e audit verdes. Rodei 5 specs de e2e (71 passam, 2 pulados);
+  o peso fica dentro dos tetos.
+- **Decisões e porquê:** aprovado. Nada de `as` nem `any`, as camadas e o ADR-004 estão respeitados. Só um ajuste
+  pequeno de JSDoc, para o rebase.
+- **Arquivos:** `HIS-003-base-de-seguranca.md` (nota), `contexto.md` e este diário.
+- **Próximos passos:** no rebase, conferir o `--fix`, o bloco fora e o teto 8 antes do merge.
+
+## 2026-11-03 · HIS-003a · peso, trava da gravação e ordem de integração (D10)
+- **O que fiz:** fiz builds da `5c5f171` e do `main` em cópias (`scratchpad/tl-his003a-peso/`), reproduzi o peso
+  (+8,2 a +11,8 kB) e medi 4 experimentos: sem o leitor dos arquivos no navegador (−1 kB), sem `error.tsx` (−1,3 kB),
+  `@__PURE__` nos `CAMPOS_*` (−0,3 kB) e `sideEffects: false` (nada).
+- **Decisões e porquê:**
+  - Cortar o `error.tsx` e marcar os `CAMPOS_*`; o resto é o custo da história, aceito até +10,5 kB por rota.
+  - O leitor dos arquivos fica: tirar poupa 1 kB e desfaz o ADR-004.
+  - Achei que "Apagar tudo" não apaga com a trava ligada (LGPD). A trava passa a soltar com "Apagar tudo" e com o
+    `criarCasa`, este depois de guardar uma cópia bruta.
+  - Ordem: 111 → 002b → 003a.
+- **Arquivos:** `HIS-003-base-de-seguranca.md` (D10 e a nota), `contexto.md` e este diário.
+- **Próximos passos:** frontend e backend aplicam; a seguranca confirma a cópia bruta; o qa faz o a7 com a referência nova.
 
 ## 2026-10-30 · HIS-002 · etapa 7 da 002a: code review aprovado; ADR-004 e ADR-005 aceitos
 - **O que fiz:** revisei o diff de código contra o D9–D16 e rodei typecheck, test e build numa cópia
@@ -126,6 +137,26 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
   (HIS-110), `docs/equipe/quadro.md`, `contexto.md`, este diário.
 - Próximos passos: etapa 4 da 002a (qa + frontend); eu no A6 (SHA, peso do runner, passo "nada mudou") e no code
   review (etapa 7). Scrum-master decide `corDaParte` × `faixaDoPeso` antes da HIS-110.
+
+## 2026-10-30 · HIS-111 · code review do h6 (frontend) aprovado
+- **O que fiz:** revisei o `10166f5` (core, `aplicacao/casa.ts`, `Casca`, `AvisoTrocaDistribuidora`, `Aviso`,
+  `Cadastro`, `TelaAjustes`) e rodei typecheck, test (core 53, dados 87) e build numa cópia
+  (`scratchpad/tl-his111-h6/copia`): verdes. O ESLint ainda não existe nesta branch (vem com a 002b).
+- **Decisões e porquê:** aprovado. A regravação não entra em laço porque `trocaDeDistribuidora` só troca para um id
+  publicado. A `Casca` fica no layout, então o par da visita dura até "Entendi". `idDaSigla` duplicado vai para o h8.
+- **Arquivos:** `HIS-111-tarifas-vencidas.md` (nota), `contexto.md` e este diário.
+- **Próximos passos:** qa (h7) com o e2e da troca e as capturas; h8 com os itens das duas notas.
+
+## 2026-10-30 · HIS-111 · code review do backend em `packages/dados` aprovado; T2 e ADR-005 revistos depois do passo 0
+- **O que fiz:** revisei os commits do backend em `packages/dados` desde `6daaabf` (h0–h5, correções do passo 0, linha
+  12 do `sucessoes.json`) e rodei typecheck, test (core 48, dados 87) e build numa cópia
+  (`scratchpad/tl-his111-rev/copia`): verdes. Trouxe o ADR-005 aceito e o meu contexto/diário da `his-002-qualidade`
+  (o `origin/main` ainda tem a proposta) e apliquei a revisão.
+- **Decisões e porquê:** aprovado sem devolver; o diagnóstico 4 passou todos os portões. ADR-005 item 2 ganhou: nome
+  igual não é a mesma empresa (raiz do CNPJ), empresa da tarifa = sigla + CNPJ, ano do conjunto não troca sozinho.
+  V4 confirmado como "publicada", porque o estrito pararia a rotina a cada atraso da ANEEL.
+- **Arquivos:** `HIS-111-tarifas-vencidas.md` (T2, perguntas, nota), `ADR-005-…md`, `contexto.md` e este diário.
+- **Próximos passos:** h6 (frontend), h7 (qa); no h8, os 3 itens da nota. Responder a pergunta F1.
 
 ## 2026-10-29 · HIS-002 · desenho técnico definitivo (etapa 3), pergunta do e2e respondida, quebra proposta
 - O que fiz: li a história, ADR-001, retro, script de camadas, `linha-de-base.cjs`, `ci.yml`, `apps/web/src` e a doc

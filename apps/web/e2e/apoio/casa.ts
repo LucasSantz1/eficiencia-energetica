@@ -41,21 +41,32 @@ export function lerFixture(nome: "casa-v1.json" | "casa-v2.json"): CasaGuardada 
   return bruto;
 }
 
+/** Cópia do texto que o leitor não conseguiu abrir, guardada antes de um cadastro novo (HIS-003a, D10 2). */
+export const CHAVE_CASA_ILEGIVEL = "eficiencia-energetica:casa-ilegivel";
+
 /**
- * Grava a casa antes de qualquer script do site, só na primeira página da aba: recarregar ou navegar depois não
- * grava de novo (senão "Apagar todos os meus dados" e a migração não seriam testados de verdade).
+ * Grava textos no localStorage antes de qualquer script do site, só na primeira página da aba: recarregar ou navegar
+ * depois não grava de novo (senão "Apagar todos os meus dados" e a migração não seriam testados de verdade). Texto
+ * cru, para poder gravar o que o site nunca gravaria (JSON quebrado, HIS-003a).
  */
+export async function semearTextos(contexto: BrowserContext, textos: Record<string, string>): Promise<void> {
+  await contexto.addInitScript((valores) => {
+    // A página em branco inicial (about:blank) também roda o script, e lá o armazenamento é proibido.
+    if (!location.protocol.startsWith("http")) return;
+    if (sessionStorage.getItem("e2e:semeado")) return;
+    for (const [chave, valor] of Object.entries(valores)) localStorage.setItem(chave, valor);
+    sessionStorage.setItem("e2e:semeado", "1");
+  }, textos);
+}
+
+/** Grava a casa (como `semearTextos`, com o JSON da casa na chave do site). */
 export async function semearCasa(contexto: BrowserContext, casa: CasaGuardada): Promise<void> {
-  await contexto.addInitScript(
-    ({ chave, valor }) => {
-      // A página em branco inicial (about:blank) também roda o script, e lá o armazenamento é proibido.
-      if (!location.protocol.startsWith("http")) return;
-      if (sessionStorage.getItem("e2e:semeado")) return;
-      localStorage.setItem(chave, valor);
-      sessionStorage.setItem("e2e:semeado", "1");
-    },
-    { chave: CHAVE_CASA, valor: JSON.stringify(casa) },
-  );
+  await semearTextos(contexto, { [CHAVE_CASA]: JSON.stringify(casa) });
+}
+
+/** O texto cru guardado numa chave (ou `null`). */
+export async function textoGuardado(pagina: Page, chave: string): Promise<string | null> {
+  return pagina.evaluate((c) => localStorage.getItem(c), chave);
 }
 
 /** O que está guardado agora (ou `null` se não há casa). */

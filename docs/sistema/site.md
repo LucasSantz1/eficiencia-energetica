@@ -32,6 +32,8 @@ As rotas são finas: não têm `"use client"` nem regra de negócio, só devolve
 | `casa/ajustes/page.tsx` | servidor | `TelaAjustes` |
 | `casa/aparelhos/page.tsx` | redirecionamento | endereço antigo: leva para `/casa/comodos`. A página é estática, então o servidor responde **200** com o redirecionamento dentro do conteúdo (`NEXT_REDIRECT`), e quem troca de endereço é o navegador |
 | `sobre/page.tsx` | servidor, estático | conteúdo fixo, sem estado (fica na própria rota) |
+| `global-error.tsx` | cliente | tela de erro geral (T3): `TelaDeErro` com `<html>` e `<body>` próprios, porque substitui o documento inteiro. É o único limite de erro: não há `error.tsx` por rota, que pesaria cerca de 1,3 kB em toda rota |
+| `not-found.tsx` | servidor | página não encontrada (T4): "Não achamos esta página" e "Voltar ao início" |
 | `manifest.ts`, `icon.svg` | — | instalação como aplicativo |
 | `globals.css` | — | tokens, utilidades de animação e regras de transição |
 
@@ -47,6 +49,8 @@ Uma pasta por funcionalidade. Uma funcionalidade não importa outra; o que é us
 | `inicio/BotaoComecar.tsx`, `inicio/CasaIlustrada.tsx` | botão de começar ("Ver a minha casa" para quem já cadastrou) e a ilustração da casa por cômodos |
 | `cadastro/Cadastro.tsx` | assistente de cadastro, uma pergunta por tela |
 | `cadastro/rascunho.ts` | a casa antes de ser criada: `ajustarComodos`, `rascunhoParaCasa`, `itemDoCatalogoParaComodo` |
+| `casca/AvisoTrocaDistribuidora.tsx` | aviso "O preço da luz foi atualizado" quando a empresa de luz salva mudou de nome ou foi incorporada (HIS-111); só na visita em que a troca acontece, até "Entendi"; não aparece se a casa tem conta de luz informada |
+| `inicio/AvisoDaCasaNoInicio.tsx` | o aviso T1 na página inicial, para quem abre o site por ela |
 | `casca/Casca.tsx` | moldura da área da casa: marca, cidade, navegação de 4 seções (embaixo no celular, no topo no computador), transição entre telas; espera a casa carregar e mostra "Vamos cadastrar" a quem ainda não tem casa |
 | `acompanhamento/PainelAcompanhamento.tsx` | tela `/casa`: conta estimada, cômodos, quem mais gasta, economia do plano |
 | `acompanhamento/Acompanhamento.tsx` | contas de luz e leituras do relógio, com gráficos |
@@ -72,6 +76,10 @@ de retorno. Podem chamar funções puras do `@ee/core` (formatação, catálogo,
 | `Barras.tsx`, `Etiqueta.tsx` | gráfico de barras; a barra em seta nas cores do INMETRO, legenda e selo da bandeira |
 | `BuscaCidade.tsx` | busca de cidade sem acento e sem diferenciar maiúsculas |
 | `Marca.tsx`, `Icone.tsx` | marca do site; ícone por nome |
+| `AvisoDaCasaSalva.tsx` | aviso T1 de que parte da casa salva foi tirada (3 versões: parte, sem cidade e empresa de luz, nada aproveitável); `listaDoQueSaiu` monta "2 aparelhos e 1 conta de luz". O `role="status"` fica na página vazio e o texto chega depois da leitura da casa |
+| `AvisoFalhaDeCarga.tsx` | aviso T2 quando `tarifas.json` ou `municipios/{UF}.json` não carregam: "Tentar de novo" (com `aria-disabled` enquanto carrega), versão "sem internet" e frase extra a partir da 2ª falha seguida |
+| `TelaDeErro.tsx` | tela T3, usada só pelo `global-error`: texto fixo, sem mensagem técnica, foco no título, aviso da 2ª falha |
+| `foco.ts`, `estilosDeBotao.ts` | `focarTitulo()` leva o foco ao `h1` quando o botão que o tinha some; classes de botão reaproveitadas pelos links |
 | `EspacoReservado.tsx` | espaço reservado desligado (não renderiza nada) |
 
 ### Componentes de aparelho (`ui/aparelho/`)
@@ -92,12 +100,12 @@ Usados pelo cadastro, pelo acompanhamento e pelos cômodos.
 
 A porta das telas para os dados. As telas nunca importam `infraestrutura/` direto.
 
-- **`casa.ts`** — reexporta `useCasa`, `useCasaCarregada`, `DadosCasa` e `novoId`; define `useEdicaoDeAparelho()`, que
+- **`casa.ts`** — reexporta `useCasa`, `useCasaCarregada`, `useHaDadosGuardados`, `DadosCasa` e `novoId`; define `useAvisoDaCasaSalva()` (o aviso T1, que só existe depois de a casa ser lida e pode ser dispensado) e `useDistribuidoraAtualizada()` (a troca de empresa de luz da visita, para o aviso da `Casca`); e `useEdicaoDeAparelho()`, que
   liga o `EditorAparelho` à casa (salvar com id atualiza, sem id cria; remover usa a ação do store, que também tira o
   aparelho do plano).
-- **`resumo.ts`** — `useResumo`: junta casa + tarifa + bandeira do mês e chama `resumirCasa`, `gerarDicas` e
+- **`resumo.ts`** — `useResumo`: junta casa + tarifa + bandeira do mês (e expõe `falhasSeguidas`, `semInternet` e `tentarDeNovo` para o `AvisoFalhaDeCarga`) e chama `resumirCasa`, `gerarDicas` e
   `simularPlano`; também `tarifaMedia` (simulador da página inicial) e `nomeDistribuidora`.
-- **`dados-publicos.ts`** — reexporta `useTarifas` e `useMunicipios`.
+- **`dados-publicos.ts`** — reexporta `useTarifas` e `useMunicipios`, que agora devolvem também `falhasSeguidas`, `semInternet` e `tentarDeNovo`.
 - **`numeros-do-inicio.servidor.ts`** — só servidor: `carregarNumerosDoInicio()` devolve distribuidoras, cidades
   atendidas e bandeira do mês para a página inicial; se qualquer leitura falhar, devolve `undefined` e a página mostra
   números aproximados.
@@ -110,12 +118,18 @@ A porta das telas para os dados. As telas nunca importam `infraestrutura/` diret
   - Ações: `criarCasa`, `definirResidencia`, `atualizarResidencia`, `adicionarComodo`, `renomearComodo`, `removerComodo`,
     `adicionarDoCatalogo`, `adicionarAparelho`, `atualizarAparelho`, `removerAparelho`, `salvarConta`, `removerConta`,
     `salvarLeitura`, `removerLeitura`, `alternarNoPlano`, `apagarTudo`.
+  - Leitura segura (HIS-003a, ADR-004): o `merge` do `persist` passa a casa pelo `lerCasaSalva`, descarta só o inválido e
+    guarda o `avisoDaCasaSalva`; `dispensarAvisoDaCasaSalva` fecha o aviso. Se o leitor lançar, a gravação trava
+    (`textoGuardadoSemLer`) e o cadastro novo guarda a cópia `casa-ilegivel`. `apagarTudo` tira as duas chaves e solta a trava.
   - Migração da versão 1: acrescenta `contas`, `leituras` e `plano` vazios.
   - `useCasaCarregada()` evita mostrar a tela vazia antes de ler o armazenamento.
+- **`armazenamento/armazenamento-local.ts`** — `criarArmazenamentoSeguro`: o `storage` do `persist`, que nunca lança
+  (nem com a memória cheia ou bloqueada) e tem `travarGravacao`, `liberarGravacao`, `copiarTextoUmaVez` e `existe`.
+  `hidratacao.ts` liga o leitor do core à trava.
 - **`identificador.ts`** — `novoId()`: id local para cômodos, aparelhos, contas e leituras (`crypto.randomUUID`, ou
   data + número aleatório em navegadores antigos). Não é segredo.
 - **`dados-publicos/navegador.ts`** — `useTarifas` e `useMunicipios`: buscam `/dados/tarifas.json` e
-  `/dados/municipios/{UF}.json`, com cache em memória (uma busca por arquivo; se falhar, tenta de novo na próxima vez).
+  `/dados/municipios/{UF}.json`, com cache em memória (uma busca por arquivo). O arquivo passa por `lerArquivoTarifas`/`lerArquivoMunicipios` e a sigla do estado por `ehUf`. Se falhar, conta `falhasSeguidas` e `tentarDeNovo` busca com `no-cache`.
 - **`dados-publicos/arquivos.servidor.ts`** — só servidor (`import "server-only"`): lê `public/dados/tarifas.json` e
   `relatorio.json` do disco para a página inicial. É o único arquivo do site que usa `node:fs`.
 

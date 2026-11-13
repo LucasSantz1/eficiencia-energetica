@@ -8,7 +8,7 @@ import { useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
 import { descreverUso } from "@/ui/aparelho/textosDeUso";
-import { Aviso } from "@/ui/Aviso";
+import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { BotaoLink } from "@/ui/Botao";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
@@ -18,15 +18,37 @@ import { Acompanhamento } from "./Acompanhamento";
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
 
+type Resumo = ReturnType<typeof useResumo>;
+
+/** Painel do acompanhamento. O aviso de falha (T2) fica sempre montado, no topo, para cuidar do foco quando volta. */
 export function PainelAcompanhamento() {
-  const { resumo, resumoPlano, plano, preco, bandeira, distribuidora, residencia, comodos, aparelhos, dicas, carregando, erro } = useResumo();
+  const resumo = useResumo();
+  const { falhasSeguidas, semInternet, carregando, tentarDeNovo, arquivo } = resumo;
+  return (
+    <>
+      <div className="mb-6 empty:hidden">
+        <AvisoFalhaDeCarga
+          assunto={{ tipo: "precos" }}
+          fraseDeSeguranca="Sua casa continua salva."
+          falhasSeguidas={falhasSeguidas}
+          semInternet={semInternet}
+          carregando={carregando}
+          aoTentarDeNovo={tentarDeNovo}
+        />
+      </div>
+      {falhasSeguidas > 0 && !arquivo ? null : <ConteudoDoPainel dados={resumo} />}
+    </>
+  );
+}
+
+function ConteudoDoPainel({ dados }: { dados: Resumo }) {
+  const { resumo, resumoPlano, plano, preco, bandeira, distribuidora, residencia, comodos, aparelhos, dicas, carregando } = dados;
   const [editando, setEditando] = useState<Aparelho>();
   const edicao = useEdicaoDeAparelho();
   const { conta } = resumo;
   const maior = resumo.aparelhos[0]?.kwhMes ?? 0;
   const melhor = dicas.find((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id));
 
-  if (erro) return <Aviso tom="alerta">Não conseguimos carregar as tarifas. Confira sua internet e recarregue a página.</Aviso>;
   if (carregando && !distribuidora) return <div className="h-48 animate-pulse rounded-[var(--radius-cartao)] bg-papel" aria-busy aria-label="Carregando" />;
 
   if (aparelhos.length === 0) {

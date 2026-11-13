@@ -113,9 +113,9 @@ function lerResumoDoScript(saida) {
   return { arquivos: Number(casamento[1]), his109: Number(casamento[2]) };
 }
 
-// Critério 11: os efeitos da HIS-109 só podem diminuir (a HIS-109 leva a 0).
-// 7, e não 8, enquanto o bloco provisório do eslint.config.mjs esconder o efeito do casa.ts (D17 do tech-lead):
-// com 8, um efeito novo passaria sem ninguém ver. Quem tirar o bloco (HIS-003a) volta para 8.
+// Critério 11: os efeitos da HIS-109 só podem diminuir (a HIS-109 leva a 0). O teto é o número de hoje, para um
+// efeito novo nunca entrar por uma vaga (D17 do tech-lead). Com o bloco provisório fora (HIS-003a), o casa.ts ganhou o
+// seu comentário e o navegador.ts perdeu o dele (o useArquivo da 003a não copia estado no efeito): seguem 7.
 const TETO_HIS_109 = 7;
 
 const casosDoEslint = CASOS.filter((caso) => caso.verificador === "eslint");

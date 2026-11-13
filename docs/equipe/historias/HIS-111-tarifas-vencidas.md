@@ -6,7 +6,7 @@
 | Sprint | **Sprint 0, prioridade 1** (scrum-master, 2026-10-30): defeito com número errado no ar, não função nova |
 | Tamanho | M (≈ 3 dias: 2,25 backend, 0,25 frontend, 0,5 qa; T4) |
 | Papéis principais | backend, dominio-energia, qa; tech-lead (contrato do `tarifas.json`) e ux (um texto) |
-| Status | Em andamento: h0–h5 feitos pelo backend em 30/10; falta o resultado do passo 0 (push da branch), o h6 (frontend), o h7 (qa) e o h8 |
+| Status | No `main` (PR #5 e #8); h8 na branch `his-111-h8` (backend, 12/11), falta o PR |
 | Branch | `his-111-tarifas-vencidas` |
 
 > **Origem:** achado P-de-1 do dominio-energia na HIS-003 ("Achado: tarifas vencidas", 2026-10-30). Investigação e
@@ -1198,3 +1198,21 @@ resto igual.
 - **Sem regressão:** typecheck, test (53 + 87) e build verdes; e2e inteiro 121 ok + 6 `fixme` antigos; `peso-js` e `troca-distribuidora` 3× verdes; roteiro manual (teclado, zoom 200%, reduzido, nomes) 19/19, console limpo.
 - **Acentos:** os 12 ids de `substituidas` acham o mesmo nome de antes (`cnee` segue sem nome); só "Âmbar Amazonas", "Âmbar Roraima" e "Neoenergia Brasília" perdem o nome antigo, e as três estão publicadas. Se uma sair, o aviso usa o texto sem o nome antigo (F1). Nenhum nome sai trocado. Risco baixo, aceito.
 - Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-r2-*` (e2e, peso, capturas).
+
+### [backend] 2026-11-12 — h8 na branch `his-111-h8` (7 commits, `419d705..4dbfa1a`)
+- **Feito:** a rotina do Actions roda sem `--forcar`. O diagnóstico roda em `pull_request` e o teste dos publicados (V1, V2, V3, V8) entra no `pnpm test`. A mesma sigla com dois CNPJs agora aparece no V7. Os comentários velhos foram corrigidos e o `\r` do resumo é escapado. O id sai de uma regra só, o `idDaSigla` do core (+38 B em `/casa*`).
+- **Publicados no `main` (`deed1f7`) contra os de 29/10 (`6cfdb74`):** mudam **227** (RS 127, SP 62, RR 14, MG 13, PB 9, PR 1, RJ 1), 0 cidades com vencida e **10** sem distribuidora. O relatório não tem agente sem tarifa, vínculo extinto nem ligação recusada. As 9 cidades do critério 1 e de risco estão como no diagnóstico 4.
+- **Fora:** o item 7 (leitor com 501 entradas e `distribuidoras: [null]`) é meu, mas vive na branch da 003a. Faço no rebase dela, com o `sed` do `\r` no job `gerar`.
+- **Verifiquei:** lint, typecheck, test (core 56, dados 98, camadas 152), build, `peso-js` e `troca-distribuidora` (23/23).
+- **Próximo:** quem orquestra abre o PR; o qa confere o critério 13 nos publicados; a seguranca olha o gatilho novo.
+
+### [seguranca] 2026-11-12 — h8 (`419d705..3812399`; o `14bae9f` pedido não existe, revisei até o HEAD): **aprovado com ressalvas (baixo)**
+1. **Diagnóstico em PR ok:** `pull_request` (nunca `_target`), `permissions: {}` + `contents: read`, `persist-credentials: false`, sem segredo, SHA iguais aos do `ci.yml`; PR de fork roda sem escrita. Concorrência por `github.ref` (`refs/pull/N/merge`) não mistura PRs.
+2. **`--forcar` ok:** o `atualizar-dados.yml` não tem `inputs` nem a flag, e só `workflow_dispatch: {}`; o Actions não consegue ligá-la. **\r ok:** provado `a\r::add-mask::x` → `a%0D::add-mask::x`. **idDaSigla ok:** igual à regra antiga; os 102 ids publicados saem iguais.
+3. **S2 (baixo, backend):** `atualizar-dados.yml` (único com `contents: write`) usa `checkout@v5`, `pnpm/action-setup@v4` e `setup-node@v5` por tag. Fixe nos mesmos SHA do `ci.yml`.
+
+### [qa] 2026-11-12 — h8 (PR #9, `3812399`) e critério 13 nos publicados do `main` (`deed1f7`): **aprovado**
+- **Critério 13 (e 1, 2, 10, 11):** as 6 cidades certas; das 227 que tinham vencida, 0 ainda têm e 0 ficam sem distribuidora; mudam 227 (RS 127, SP 62, RR 14, MG 13, PB 9, PR 1, RJ 1) e nenhuma outra; 10 sem distribuidora, como antes; V1, V2, V3 e V8 limpos; média 0,837. Guarapuava `copel-dis, ess`.
+- **Teste dos publicados** (`publicados.test.ts`, dentro do `pnpm test`): verde, e 5 mutações (cidade com `rge-sul`, vencida em 2019, CNPJ repetido, substituto inexistente, sem `substituidas`) reprovam. Lint, typecheck, test (56 + 98 + 152) e build verdes com Node 26.
+- **E2e:** `troca-distribuidora` e `peso-js` 3× verdes (11a +38 B em todas as rotas); suíte inteira 121 ok + 6 `fixme`. Âmbar Roraima, Âmbar Amazonas e Neoenergia Brasília voltam a achar o nome antigo, e nenhum nome sai trocado.
+- Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-h8-*` (critério 13, peso, e2e, acentos).
