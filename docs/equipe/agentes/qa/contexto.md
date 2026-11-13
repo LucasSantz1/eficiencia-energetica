@@ -50,6 +50,10 @@
 - Testar história × 002a sem tocar worktree: `git merge-tree --write-tree A B` + `git archive <árvore> | tar -x` numa
   pasta do scratchpad + `pnpm install --offline --frozen-lockfile`; `PORTA_E2E=31xx pnpm exec playwright test`.
 
+- **HIS-111, h8 (2026-11-12): aprovado** na PR #9 (`3812399`). Critério 13 conferido nos publicados do `main` (`deed1f7`)
+  com `…/scratchpad/criterio13.cjs <repo> <antes> <depois>` (mudam 227, 10 sem distribuidora, 0 vencidas). O teste dos
+  publicados reprova as 5 mutações. Na cópia sem `.git`, o `test:camadas` falha (usa `git ls-files`): rodar no worktree.
+
 ## Decisões em vigor
 
 - e2e: fixture automática reprova `pageerror`, `console.error` e pedido fora da origem do `baseURL`; contexto novo por
@@ -96,8 +100,7 @@
 
 ## Pendências
 
-- HIS-111 h8: 6 cidades + Guarapuava/Nova Friburgo/Campina Grande nos arquivos publicados. Peso de `/casa*` com folga
-  de só 26 B no 11a: qualquer história que mexer na `Casca` mede de novo.
+- Peso de `/casa*`: a referência foi refeita no `main`; qualquer história que mexer na `Casca` mede de novo.
 
 - HIS-002: transformar o fluxo em testes Playwright no CI, com axe; aposentar `apps/web/e2e-base/`.
 - HIS-002: levar o `manual-qa.cjs` (teclado, folhas, nomes acessíveis, zoom, âncora) para `apps/web/e2e/`, com axe.

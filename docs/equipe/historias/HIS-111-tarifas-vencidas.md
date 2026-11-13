@@ -1210,3 +1210,9 @@ resto igual.
 1. **Diagnóstico em PR ok:** `pull_request` (nunca `_target`), `permissions: {}` + `contents: read`, `persist-credentials: false`, sem segredo, SHA iguais aos do `ci.yml`; PR de fork roda sem escrita. Concorrência por `github.ref` (`refs/pull/N/merge`) não mistura PRs.
 2. **`--forcar` ok:** o `atualizar-dados.yml` não tem `inputs` nem a flag, e só `workflow_dispatch: {}`; o Actions não consegue ligá-la. **\r ok:** provado `a\r::add-mask::x` → `a%0D::add-mask::x`. **idDaSigla ok:** igual à regra antiga; os 102 ids publicados saem iguais.
 3. **S2 (baixo, backend):** `atualizar-dados.yml` (único com `contents: write`) usa `checkout@v5`, `pnpm/action-setup@v4` e `setup-node@v5` por tag. Fixe nos mesmos SHA do `ci.yml`.
+
+### [qa] 2026-11-12 — h8 (PR #9, `3812399`) e critério 13 nos publicados do `main` (`deed1f7`): **aprovado**
+- **Critério 13 (e 1, 2, 10, 11):** as 6 cidades certas; das 227 que tinham vencida, 0 ainda têm e 0 ficam sem distribuidora; mudam 227 (RS 127, SP 62, RR 14, MG 13, PB 9, PR 1, RJ 1) e nenhuma outra; 10 sem distribuidora, como antes; V1, V2, V3 e V8 limpos; média 0,837. Guarapuava `copel-dis, ess`.
+- **Teste dos publicados** (`publicados.test.ts`, dentro do `pnpm test`): verde, e 5 mutações (cidade com `rge-sul`, vencida em 2019, CNPJ repetido, substituto inexistente, sem `substituidas`) reprovam. Lint, typecheck, test (56 + 98 + 152) e build verdes com Node 26.
+- **E2e:** `troca-distribuidora` e `peso-js` 3× verdes (11a +38 B em todas as rotas); suíte inteira 121 ok + 6 `fixme`. Âmbar Roraima, Âmbar Amazonas e Neoenergia Brasília voltam a achar o nome antigo, e nenhum nome sai trocado.
+- Evidências: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/qa-his111-h8-*` (critério 13, peso, e2e, acentos).
