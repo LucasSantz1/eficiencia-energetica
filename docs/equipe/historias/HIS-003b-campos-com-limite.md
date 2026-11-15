@@ -321,3 +321,7 @@ _(qa)_ A escrever a partir do `campos.spec.ts` acima e dos casos 1–23 da 003a.
 - Para o qa (b3): casos do `campos.spec.ts`, axe com erro e alerta, Esc na folha com alerta aberto, toque no botão logo depois de digitar.
 - Próximo: **tech-lead** (peso) e **qa** (b3).
 
+
+### [ux-acessibilidade] 2026-11-15 — conta zerada nos Ajustes e revisão do "Confere?"
+- Ajustes: manter a 1ª frase do T5 e acrescentar: "Para seguir sem conta, é só não tocar em “Usar estes valores”." Sem botão novo e sem culpa; o aviso fica junto do campo, como `status`.
+- "Confere?" claro em 390 e 1440 px: amarelo com ícone e texto (não só cor), valor entendido, pista e dois botões. Conferir só que "Corrigir" tem alvo de 44 px de altura.
