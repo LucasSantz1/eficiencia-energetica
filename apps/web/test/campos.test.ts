@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { formatarKwh, formatarReais, formatarWatts, LIMITES } from "@ee/core";
-import { faixaDoConsumoDaConta, faixaDoValorDaConta, mensagensDaPotencia, mensagensDoConsumoDaConta, mensagensDoValorDaConta } from "@/ui/campos/mensagens";
+import { mensagensDaPotencia } from "@/ui/aparelho/mensagensDoAparelho";
 import { situacaoDoCampo, textoDoNumero, type RegraDoCampo } from "@/ui/campos/situacaoDoCampo";
+import { faixaDoConsumoDaConta, faixaDoValorDaConta, mensagensDoConsumoDaConta, mensagensDoValorDaConta } from "@/ui/conta/mensagensDaConta";
 
 // O que o useCampoNumerico mostra sai de situacaoDoCampo (o hook só guarda o texto, se é para mostrar e o "Sim").
 const potencia: RegraDoCampo = { faixa: LIMITES.potenciaW, casas: 0, obrigatorio: true, mensagens: mensagensDaPotencia() };

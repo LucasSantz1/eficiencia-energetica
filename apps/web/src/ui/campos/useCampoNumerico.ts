@@ -1,6 +1,6 @@
 // Sem "use client" de propósito: só exporta um hook, usado por componentes que já são de cliente.
 
-import { useState } from "react";
+import { useState, type FocusEvent } from "react";
 import type { Faixa } from "@ee/core";
 import type { AlertaDoCampo } from "@/ui/Campo";
 import { TITULO_CONFERE, type MensagensDoCampo } from "./mensagens";
@@ -21,7 +21,7 @@ interface Estado {
 export interface CampoNumerico {
   texto: string;
   aoMudar: (texto: string) => void;
-  aoSair: () => void;
+  aoSair: (evento?: FocusEvent) => void;
   /** Mensagem do T5 para o `Campo`, quando é para mostrar. */
   erro: string | undefined;
   /** "Confere?" do T6 para o `Campo`, quando é para mostrar. */
@@ -32,6 +32,8 @@ export interface CampoNumerico {
   valorLido: number | undefined;
   /** Mostra a mensagem e diz à tela o que fazer: salvar (`ok`), focar o erro ou esperar o "Sim". */
   conferir: () => ResultadoDaConferencia;
+  /** Troca o número por um que veio do site (ex.: a resposta "Qual a potência?" do catálogo), já aceito. */
+  definir: (valor: number | undefined) => void;
 }
 
 /**
@@ -72,7 +74,8 @@ export function useCampoNumerico({
       const ficouCerto = situacaoDoCampo(texto, regra, estado.confirmado).tipo === "ok";
       mudar({ texto, mostrar: estado.mostrar && !ficouCerto });
     },
-    aoSair: () => {
+    aoSair: (evento) => {
+      if (indoParaUmBotao(evento)) return;
       // Entrar e sair sem digitar nada não acusa erro; vazio depois de apagar, sim.
       if (estado.texto !== textoDoNumero(inicial, dinheiro) || estado.texto.trim() !== "") mudar({ mostrar: true });
     },
@@ -92,5 +95,15 @@ export function useCampoNumerico({
       if (!estado.mostrar) mudar({ mostrar: true });
       return situacao.tipo;
     },
+    definir: (valor) => mudar({ texto: textoDoNumero(valor, dinheiro), mostrar: false, confirmado: valor }),
   };
+}
+
+/**
+ * O foco saiu do campo para um botão (ex.: "Usar estes valores"). A mensagem não entra agora: ela empurraria o botão
+ * para baixo entre o apertar e o soltar, e o toque se perderia. Se for o botão de continuar, o `conferir()` mostra a
+ * mensagem e leva o foco ao campo; se for outro botão, a pessoa está fazendo outra coisa.
+ */
+export function indoParaUmBotao(evento: FocusEvent | undefined): boolean {
+  return evento?.relatedTarget instanceof HTMLButtonElement;
 }

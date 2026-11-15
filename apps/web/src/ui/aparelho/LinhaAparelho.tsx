@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { consumoMensalKwh, formatarReais, itemDoCatalogo, type PrecoKwh } from "@ee/core";
+import { consumoMensalKwh, formatarReais, itemDoCatalogo, LIMITES, type PrecoKwh } from "@ee/core";
 import { Contador } from "@/ui/Contador";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
@@ -85,8 +85,8 @@ export function LinhaAparelho({
                 <span className="font-bold">Banhos por dia</span>
                 <Contador
                   valor={item.banho.banhosPorDia}
-                  min={1}
-                  max={20}
+                  min={LIMITES.banhosPorDia.min}
+                  max={LIMITES.banhosPorDia.max}
                   rotulo="banhos por dia"
                   aoMudar={(banhosPorDia) => aoMudar({ banho: { ...item.banho!, banhosPorDia }, minutosPorDia: banhosPorDia * item.banho!.minutosPorBanho })}
                 />

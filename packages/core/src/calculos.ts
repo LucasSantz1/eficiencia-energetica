@@ -142,13 +142,18 @@ export interface ResumoCasa {
   comodos: { comodoId: string; kwhMes: number; valorMes: number; participacao: number }[];
 }
 
+/** Consumo estimado da casa inteira por mês: a soma dos aparelhos (a mesma do `resumirCasa`). */
+export function consumoMensalDaCasaKwh(aparelhos: readonly Aparelho[]): number {
+  return aparelhos.reduce((soma, aparelho) => soma + consumoMensalKwh(aparelho), 0);
+}
+
 /**
  * Calcula cada aparelho isoladamente, soma tudo e divide o valor da conta entre os aparelhos
  * na proporção do consumo — assim a soma dos aparelhos fecha com o total da conta.
  */
 export function resumirCasa(aparelhos: Aparelho[], residencia: Pick<Residencia, "beneficio" | "ligacao" | "contaReferencia">, preco: PrecoKwh): ResumoCasa {
   const itens = aparelhos.map((aparelho) => ({ aparelho, kwhMes: consumoMensalKwh(aparelho) }));
-  const total = itens.reduce((s, i) => s + i.kwhMes, 0);
+  const total = consumoMensalDaCasaKwh(aparelhos);
   const conta = estimarConta(total, residencia, preco);
   // Valor dos aparelhos = consumo × preço, menos a parte isenta pelo benefício, rateada.
   const valorDosAparelhos = residencia.beneficio === "tarifa-social" ? conta.valor : total * preco.valor;
