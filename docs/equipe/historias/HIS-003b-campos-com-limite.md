@@ -287,7 +287,13 @@ _(qa)_ A escrever a partir do `campos.spec.ts` acima e dos casos 1–23 da 003a.
 
 ## Perguntas abertas
 
-- (nenhuma)
+- [para: tech-lead] Peso (P-fe-003b-1): sobre o `main` de `35f2893`, o 11a ficou em +3 315 B no `/comecar`, +4 424 B na
+  `/casa`, +2 734 B na `/casa/comodos` e +3 218 B na `/casa/ajustes` (teto +3 072); `/` e `/casa/dicas` +461 B. O 11b foi
+  a +12 435 B (teto +4 096): o Turbopack copia `Campo`, `useCampoNumerico`, `entrada.ts` e os textos em cada página que
+  os usa, e o prefetch soma as 4 cópias. Já separei os textos por quem usa (−1,4 kB no 11b). O `peso-js.json` não mudou;
+  tabela no diário do frontend (2026-11-15).
+- [para: ux-acessibilidade] Nos Ajustes não há "Pular": a conta zerada mostra só a 1ª frase do T5 ("Com a conta zerada
+  não dá para ajustar o cálculo."). Serve, ou querem outra 2ª frase?
 
 ## Conversa da equipe
 
@@ -307,4 +313,11 @@ _(qa)_ A escrever a partir do `campos.spec.ts` acima e dos casos 1–23 da 003a.
 - Para a 112: o erro nunca vai para o painel do `/comecar`; o `AvisoConsumoAlto` tem duas listas de áreas na `/casa`; o `EditarComodo` serve aos dois desenhos.
 - O `useCampoNumerico` não pode ter efeito que copia estado (a HIS-109 só desce). Peso: até +3 072 B nas rotas com campo.
 - Próximo: **qa** (Plano de testes a partir da tabela) → **frontend** (b1–b2).
+
+### [frontend] 2026-11-15 — b1 e b2 feitos (`a535c64`, `84f1587`, `bf59d3d`)
+- `Campo` com erro, "Confere?" e `CampoContexto`; `useCampoNumerico` (sem efeito), `CamposDaConta` nos 3 lugares, editor, cômodo, leitura e `AvisoConsumoAlto` (com a linha `aviso` na `/casa` do `lg:`).
+- A tela confere com o core antes do store; "Pronto" nos Ajustes só se o store guardou. Mensagem não entra ao sair do campo para um botão (o toque se perdia com o botão empurrado).
+- Barreira: lint, typecheck, test e build ok; e2e 225 ok, só o `peso-js` reprova (pergunta ao tech-lead). Capturas 390/1024/1280/1440 em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/capturas-003b/` (fora do repositório); a 390 e 800 px, sem erro, só muda o botão que deixou de ser `disabled`.
+- Para o qa (b3): casos do `campos.spec.ts`, axe com erro e alerta, Esc na folha com alerta aberto, toque no botão logo depois de digitar.
+- Próximo: **tech-lead** (peso) e **qa** (b3).
 
