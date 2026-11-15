@@ -10,6 +10,17 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-15 · HIS-003b · desenho revisto para o main de hoje; PRs do Dependabot #17–#19
+- **O que fiz:** mapeei os campos de número no código de hoje (5 leituras antigas e 3 cópias da conta) e revi o desenho
+  da 003b. Li as PRs #17, #18 e #19 pela API: os checks falham pela base antiga (lint do `Etiqueta.tsx`) e pela ANEEL
+  fora do ar, não pelas dependências.
+- **Decisões e porquê:**
+  - A tela confere antes com o core, porque o store recusa em silêncio desde a 003a.
+  - #17 e #18 entram depois de `@dependabot rebase` e CI verde; a #18 depende do contrato do `persist` (zustand 5.1).
+  - A #19 (TS 6) vira história própria.
+- **Arquivos:** `HIS-003b-campos-com-limite.md` e este diário.
+- **Próximos passos:** o qa escreve o plano de testes; depois o frontend faz b1–b2.
+
 ## 2026-11-12 · HIS-112 · desenho técnico do layout para computador (L1–L12)
 - **O que fiz:** juntei o `origin/main` (`deed1f7`) na branch e li a história, as maquetes e as 5 telas. Escrevi L1–L12
   (container, cada tela, foco, peso, rebase, tarefas e e2e).
