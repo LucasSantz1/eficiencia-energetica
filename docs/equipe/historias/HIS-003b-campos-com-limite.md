@@ -287,7 +287,7 @@ _(qa)_ A escrever a partir do `campos.spec.ts` acima e dos casos 1–23 da 003a.
 
 ## Perguntas abertas
 
-- [para: tech-lead] Peso (P-fe-003b-1): sobre o `main` de `35f2893`, o 11a ficou em +3 315 B no `/comecar`, +4 424 B na
+- [x] [para: tech-lead] Peso (P-fe-003b-1): sobre o `main` de `35f2893`, o 11a ficou em +3 315 B no `/comecar`, +4 424 B na
   `/casa`, +2 734 B na `/casa/comodos` e +3 218 B na `/casa/ajustes` (teto +3 072); `/` e `/casa/dicas` +461 B. O 11b foi
   a +12 435 B (teto +4 096): o Turbopack copia `Campo`, `useCampoNumerico`, `entrada.ts` e os textos em cada página que
   os usa, e o prefetch soma as 4 cópias. Já separei os textos por quem usa (−1,4 kB no 11b). O `peso-js.json` não mudou;
@@ -325,3 +325,9 @@ _(qa)_ A escrever a partir do `campos.spec.ts` acima e dos casos 1–23 da 003a.
 ### [ux-acessibilidade] 2026-11-15 — conta zerada nos Ajustes e revisão do "Confere?"
 - Ajustes: manter a 1ª frase do T5 e acrescentar: "Para seguir sem conta, é só não tocar em “Usar estes valores”." Sem botão novo e sem culpa; o aviso fica junto do campo, como `status`.
 - "Confere?" claro em 390 e 1440 px: amarelo com ícone e texto (não só cor), valor entendido, pista e dois botões. Conferir só que "Corrigir" tem alvo de 44 px de altura.
+
+### [tech-lead] 2026-11-15 — P-fe-003b-1: peso aceito na 003b; o corte vem numa história própria, logo depois
+1. **Medido em builds do `1c213e3` e do `35f2893`.** O core não é copiado (os `limites` ficam no chunk comum); o que se repete nas 4 páginas é o que só elas usam: `Campo`, `Entrada`, o hook, os textos e o `entrada.ts` (cerca de 2,5 kB por página). Testei as opções do Next (`turbopackChunking`). Com `minChunkSize` de 10 000, o 11b cai 22 kB, mas o 11a sobe até +5 kB. `generateComponentChunks` e `clusters` não mudam nada. Nenhuma ajuda sem piorar o 11a, então a configuração não muda.
+2. **Aceito nesta história** (ela corrige conta errada, como o "135.90" lido como R$ 13.590): 11a até +4 608 B na `/casa` e até +3 584 B no `/comecar`, na `/casa/comodos` e na `/casa/ajustes`; 11b até +13 312 B. O frontend atualiza o `peso-js.json` com o `decisao` apontando para esta nota.
+3. **O corte de verdade é carregar as folhas de edição só quando abrem**, com `next/dynamic`: `EditorAparelho`, "Anotar conta", "Anotar leitura" e `EditarComodo`. Isso tira o código dos campos do primeiro carregamento e do prefetch. O lint da 002b proíbe `import()` até haver regra própria, então isso vira uma **história nova, logo depois da 003b**, com ADR (`import()` só com caminho literal, dentro de `dynamic()`, conferido pelo script de camadas), seguranca e ux (o que a folha mostra enquanto carrega no 3G). Meta: tirar ao menos 3 kB do 11a da `/casa` e a maior parte do 11b. Quem orquestra leva ao scrum-master.
+
