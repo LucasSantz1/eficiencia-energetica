@@ -6,6 +6,7 @@ import {
   KWH_POR_DIA_ENTRE_LEITURAS,
   LIMITES,
   maiorConsumoDeEtiquetaDoCatalogoKwh,
+  mediaBrasilParaTexto,
   periodosDeLeitura,
   potenciaDoChuveiroMaisForteW,
   precoDaContaForaDoComum,
@@ -190,5 +191,17 @@ describe("números de referência do \"Confere?\" saem do catálogo", () => {
   it("as referências ficam abaixo do alerta (senão o alerta pegaria aparelho comum)", () => {
     expect(potenciaDoChuveiroMaisForteW()).toBeLessThanOrEqual(LIMITES.potenciaW.alerta);
     expect(maiorConsumoDeEtiquetaDoCatalogoKwh()).toBeLessThanOrEqual(LIMITES.kwhMesInformado.alerta);
+  });
+});
+
+describe("média do país nos textos do \"Confere?\" (EPE, 178,2 kWh por mês)", () => {
+  it("\"perto de 180\" por mês e \"perto de 6\" por dia", () => {
+    expect(mediaBrasilParaTexto()).toEqual({ kwhMes: 180, kwhDia: 6 });
+  });
+
+  it("as duas referências ficam bem abaixo dos alertas da conta e da leitura", () => {
+    const { kwhMes, kwhDia } = mediaBrasilParaTexto();
+    expect(kwhMes).toBeLessThan(LIMITES.contaKwhCalibracao.alerta);
+    expect(kwhDia).toBeLessThan(KWH_POR_DIA_ENTRE_LEITURAS.alerta);
   });
 });
