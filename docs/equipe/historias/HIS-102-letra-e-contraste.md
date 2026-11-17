@@ -45,3 +45,8 @@ primeira tela, sem piscar.
   contraste troca os tokens `--color-tinta-suave`, `--color-linha` e `--color-energia`.
 
 ## Conversa da equipe
+
+### [frontend] 2026-11-17 — critérios 1 a 6 feitos (`4f56e24`…), para a revisão do tech-lead
+- Chave `eficiencia-energetica:leitura` lida e validada em `infraestrutura/armazenamento/leitura.ts`; script de uma linha no `<head>` (texto filho, sem `dangerouslySetInnerHTML`; a CSP já tem `'unsafe-inline'`); seção "Leitura" com `ui/Interruptor` (`role="switch"`); "Apagar todos os meus dados" apaga a chave.
+- Achado do e2e: com a letra a 125%, o `truncate` cortava "em Sala" e o axe acusava `label-content-name-mismatch`; com a letra maior, nada trunca (regra fora das camadas, no `globals.css`).
+- lint, typecheck, test (37 no site, 12 novos), build e e2e (259) verdes; peso 11a no máximo +782 B (`/casa/ajustes`). Capturas: `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his102/`.
