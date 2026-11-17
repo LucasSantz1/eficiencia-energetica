@@ -74,6 +74,12 @@ Os casos negativos de cada regra estão em `scripts/testes/casos-de-camadas.mjs`
 - **Valor compartilhado entre servidor e cliente mora em arquivo sem diretiva** (HIS-002b, critério 8): quem não tem
   `"use client"` e importa um valor de um módulo `"use client"` recebe só uma referência de cliente, não o valor. Por
   isso as constantes de transição ficam em `ui/tiposDeTransicao.ts` e o `novoId` em `aplicacao/identificador.ts`.
+- **Regra do core usada por uma rota só vai para uma entrada própria do pacote** (revisado em 2026-11-17, HIS-103b).
+  O Turbopack junta tudo o que sai do `index.ts` do `@ee/core` num pedaço comum, carregado em todas as rotas. Por isso,
+  um módulo do domínio que só uma tela usa (o primeiro é `tarifa-social.ts`) fica fora do `index.ts`, em
+  `exports["./<nome>"]` no `package.json` do core, e é importado como `@ee/core/<nome>`. A lista de entradas permitidas
+  está no `eslint.config.mjs`, e qualquer outro caminho interno continua proibido. Medido: −357 B no JS do HTML de
+  cada rota que não usa o guia.
 - **Sem barris `index.ts`:** importa-se o arquivo direto, para não misturar módulos cliente e servidor nem atrapalhar o
   tree-shaking. Imports entre pastas usam `@/`; `./` só dentro da mesma pasta.
 - O app Expo reaproveita `@ee/core` e copia a mesma organização.
