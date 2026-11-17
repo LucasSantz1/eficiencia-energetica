@@ -59,8 +59,10 @@ export interface RespostasDaTarifaSocial {
  * B: pode ter Desconto Social (renda por pessoa acima de ½ e até 1 salário mínimo; R4).
  * C: pode ter Tarifa Social pelo aparelho de saúde (renda total de até 3 salários mínimos; R1 c).
  * D: pelas respostas, não se encaixa.
+ * conferir: fora da vigência do salário mínimo, o que daria B ou D. O salário mínimo novo é maior, então B ou D com o
+ * valor antigo podem negar quem tem direito; o CRAS confirma (dominio-energia, revisão de 17/11/2026).
  */
-export type CasoDaTarifaSocial = "A" | "B" | "C" | "D";
+export type CasoDaTarifaSocial = "A" | "B" | "C" | "D" | "conferir";
 
 /** Renda comparada com o limite, para a tela explicar em R$ (só quando o salário mínimo está em vigor). */
 export interface ComparacaoDaRenda {
@@ -79,9 +81,12 @@ export type ResultadoDaTarifaSocial =
       caso: CasoDaTarifaSocial;
       /** `undefined` quando o caso veio do BPC (a renda não foi perguntada). */
       comparacao: ComparacaoDaRenda | undefined;
-      /** Com A, B ou C: o CadÚnico não está feito ou a pessoa não sabe (R5, R9). */
-      fazerCadUnico: boolean;
-      /** Com A, B ou C: a conta não está no nome de alguém da família, ou a pessoa não sabe (R5). */
+      /**
+       * Aviso do CadÚnico (R5, R9), quando a família pode ter o desconto: "fazer" se ele não está feito ou a pessoa não
+       * sabe; "conferir-em-dia" no caminho do BPC, em que a pergunta do CadÚnico é pulada (dominio-energia, 17/11/2026).
+       */
+      avisoDoCadUnico: "fazer" | "conferir-em-dia" | undefined;
+      /** Quando pode ter: a conta não está no nome de alguém da família, ou a pessoa não sabe (R5). */
       trocarNomeDaConta: boolean;
     };
 
@@ -103,20 +108,16 @@ function rendaValida(pessoas: number | undefined, rendaCentavos: number | undefi
 }
 
 /**
- * Diz o caso A–D. A ordem é A, C, B, D: quem cabe na Tarifa Social pelo aparelho de saúde (C) também pode caber no
- * Desconto Social (B), e a Tarifa Social é o desconto maior (80 kWh de graça contra desconto até 120 kWh).
- * Usa o último salário mínimo conhecido mesmo fora da vigência: o resultado é "pode ter, confira", e a tela esconde os R$.
+ * Diz o caso A–D, na data `hoje` (AAAA-MM-DD). A ordem é A, C, B, D: quem cabe na Tarifa Social pelo aparelho de saúde
+ * (C) também pode caber no Desconto Social (B), e a Tarifa Social é o desconto maior (80 kWh de graça contra desconto
+ * até 120 kWh). Fora da vigência, o último salário mínimo conhecido ainda vale para A e C (o limite novo só é maior),
+ * mas B e D viram "conferir": com o valor antigo, negariam quem tem direito.
  */
-export function avaliarTarifaSocial(respostas: RespostasDaTarifaSocial): ResultadoDaTarifaSocial {
+export function avaliarTarifaSocial(respostas: RespostasDaTarifaSocial, hoje: string): ResultadoDaTarifaSocial {
   const comAvisos = (caso: CasoDaTarifaSocial, comparacao: ComparacaoDaRenda | undefined): ResultadoDaTarifaSocial => {
     const podeTer = caso !== "D";
-    return {
-      tipo: "resultado",
-      caso,
-      comparacao,
-      fazerCadUnico: podeTer && respostas.cadUnico !== "sim",
-      trocarNomeDaConta: podeTer && respostas.contaNoNome !== "sim",
-    };
+    const avisoDoCadUnico = !podeTer || respostas.cadUnico === "sim" ? undefined : respostas.bpc === "sim" ? "conferir-em-dia" : "fazer";
+    return { tipo: "resultado", caso, comparacao, avisoDoCadUnico, trocarNomeDaConta: podeTer && respostas.contaNoNome !== "sim" };
   };
 
   // R1 b: o BPC basta, a renda não importa (Lei 12.212/2010, art. 2º, II).
@@ -132,6 +133,8 @@ export function avaliarTarifaSocial(respostas: RespostasDaTarifaSocial): Resulta
   if (rendaCentavos * 2 <= pessoas * sm) return comAvisos("A", porPessoa(0.5, sm / 2));
   // R1 c: renda total ≤ 3 SM com aparelho de saúde (Lei 12.212/2010, art. 2º, § 1º).
   if (respostas.saude === "sim" && rendaCentavos <= 3 * sm) return comAvisos("C", { base: "total", rendaCentavos, limiteCentavos: 3 * sm, salariosMinimos: 3 });
+  // Fora da vigência, B e D dependem de um salário mínimo que já mudou (para mais): só o CRAS confirma.
+  if (!salarioMinimoEmVigor(hoje)) return comAvisos("conferir", undefined);
   // R4: renda por pessoa acima de ½ e até 1 SM (Lei 10.438/2002, art. 13, § 3º-I, pela Lei 15.235/2025).
   if (rendaCentavos <= pessoas * sm) return comAvisos("B", porPessoa(1, sm));
   return comAvisos("D", porPessoa(1, sm));

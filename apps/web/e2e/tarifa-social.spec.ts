@@ -96,6 +96,7 @@ test("caminho principal: 6 perguntas, foco no título, resultado A com a conta e
   await semViolacaoGrave(page);
 
   // Links oficiais abrem em outra página e não levam dados.
+  await expect(page.getByRole("link", { name: "Achar o CRAS mais perto (abre em outra página)" })).toHaveAttribute("href", "https://www.gov.br/pt-br/servicos/acessar-o-cras-centro-de-referencia-da-assistencia-social");
   for (const link of await page.locator("a[target=_blank]").all()) await expect(link).toHaveAttribute("rel", "noopener noreferrer");
 
   // Privacidade: nada no armazenamento nem na URL.
@@ -113,7 +114,9 @@ test("BPC = sim pula para a conta (Pergunta 2 de 2) e dá A, com os avisos de no
   await expect(page.getByRole("status").filter({ hasText: /^Pergunta/ })).toHaveText("Pergunta 2 de 2");
   await escolher(page, "A conta de luz está no nome de alguém que mora na casa?", "Não sei");
   await expect(titulo(page)).toHaveText("Sua família pode ter direito à Tarifa Social");
-  await expect(page.getByText("Primeiro, faça o CadÚnico no CRAS.")).toBeVisible();
+  // A pergunta do CadÚnico foi pulada: o aviso manda conferir se ele está em dia (dominio-energia, 17/11/2026).
+  await expect(page.getByText("Confira no CRAS se o CadÚnico está em dia.")).toBeVisible();
+  await expect(page.getByText("Primeiro, faça o CadÚnico")).toHaveCount(0);
   await expect(page.getByText("O desconto só vem se a conta estiver no nome de alguém da família.")).toBeVisible();
   await expect(page.getByText(/^Renda por pessoa/)).toHaveCount(0);
   await fotografar(page, info, "resultado-a-bpc");
@@ -175,4 +178,14 @@ test("salário mínimo vencido (2027): o resultado não mostra R$ do salário m�
   await expect(page.getByText("O valor do salário mínimo mudou. Confira o valor de hoje no CRAS.")).toBeVisible();
   await expect(page.getByText(/R\$ 810,50|R\$ 750,00/)).toHaveCount(0);
   await expect(page.getByText(/^Até 31\/12\/2026/)).toHaveCount(0);
+});
+
+test("salário mínimo vencido (2027): o que daria D vira \"Confira no CRAS\", sem negar (dominio-energia)", async ({ page }, info) => {
+  await abrir(page, info, EM_2027);
+  await responder(page, "3", "4863,03", "Não");
+  await expect(titulo(page)).toHaveText("Confira no CRAS");
+  await expect(page.getByText("Não deu para conferir a renda com o salário mínimo deste ano. O CRAS confirma.")).toBeVisible();
+  await expect(page.getByText("Pelo que você respondeu, não parece")).toHaveCount(0);
+  await fotografar(page, info, "resultado-conferir-2027");
+  await semViolacaoGrave(page);
 });

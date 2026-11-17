@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleCheck, CircleMinus } from "lucide-react";
+import { CircleCheck, CircleHelp, CircleMinus } from "lucide-react";
 import type { Ref } from "react";
 import { convocacaoAberta, salarioMinimoEmVigor, type ResultadoDaTarifaSocial } from "@ee/core/tarifa-social";
 import { Aviso } from "@/ui/Aviso";
@@ -14,14 +14,14 @@ type ResultadoCalculado = Extract<ResultadoDaTarifaSocial, { tipo: "resultado" }
  * aparecem dentro da vigência (critério 4); depois dela, o aviso diz que o valor mudou.
  */
 export function Resultado({ resultado, hoje, aoRecomecar, tituloRef }: { resultado: ResultadoCalculado; hoje: string; aoRecomecar: () => void; tituloRef: Ref<HTMLHeadingElement> }) {
-  const { caso, comparacao, fazerCadUnico, trocarNomeDaConta } = resultado;
+  const { caso, comparacao, avisoDoCadUnico, trocarNomeDaConta } = resultado;
   const textos = RESULTADOS[caso];
   const podeTer = caso !== "D";
   const emVigor = salarioMinimoEmVigor(hoje);
   return (
     <div>
       <p className={`inline-flex items-center gap-2 rounded-full px-3 py-1 font-bold ${podeTer ? "bg-energia-claro text-energia-forte" : "bg-papel text-tinta"}`}>
-        {podeTer ? <CircleCheck className="size-5" aria-hidden /> : <CircleMinus className="size-5" aria-hidden />}
+        {caso === "conferir" ? <CircleHelp className="size-5" aria-hidden /> : podeTer ? <CircleCheck className="size-5" aria-hidden /> : <CircleMinus className="size-5" aria-hidden />}
         {textos.selo}
       </p>
       <h2 ref={tituloRef} tabIndex={-1} className="mt-3 text-[clamp(1.75rem,6vw,2.2rem)] leading-tight font-extrabold tracking-tight outline-none">
@@ -32,7 +32,7 @@ export function Resultado({ resultado, hoje, aoRecomecar, tituloRef }: { resulta
 
       <div className="mt-6 space-y-3">
         {comparacao && !emVigor && <Aviso anunciar={false}>{AVISOS.salarioMinimoMudou}</Aviso>}
-        {fazerCadUnico && <Aviso anunciar={false}>{AVISOS.fazerCadUnico}</Aviso>}
+        {avisoDoCadUnico && <Aviso anunciar={false}>{avisoDoCadUnico === "fazer" ? AVISOS.fazerCadUnico : AVISOS.conferirCadUnico}</Aviso>}
         {trocarNomeDaConta && <Aviso anunciar={false}>{AVISOS.trocarNomeDaConta}</Aviso>}
         {podeTer && convocacaoAberta(hoje) && (
           <Aviso tom="faisca" anunciar={false}>

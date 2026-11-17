@@ -9,6 +9,8 @@ import { useTelaLarga } from "@/ui/telaLarga";
  * F6 (documentos do CadÚnico, gov.br, 15/12/2025) e F9 (reclamação na ANEEL, gov.br, 15/12/2025).
  */
 const LINK_DOCUMENTOS = "https://www.gov.br/pt-br/servicos/inscrever-se-no-cadastro-unico-para-programas-sociais-do-governo-federal";
+/** Serviço "Acessar o CRAS" do gov.br, que leva à busca do MDS (dominio-energia, 17/11/2026). */
+const LINK_CRAS = "https://www.gov.br/pt-br/servicos/acessar-o-cras-centro-de-referencia-da-assistencia-social";
 const LINK_ANEEL = "https://www.gov.br/pt-br/servicos/registrar-reclamacao-sobre-demanda-junto-a-distribuidora-de-energia-eletrica-ANEEL";
 
 function assinarConexao(avisar: () => void): () => void {
@@ -89,6 +91,7 @@ export function BlocosFixos({ emColunas = false }: { emColunas?: boolean }) {
         <p>
           Dúvida do CadÚnico: ligue <Telefone numero="121" /> (grátis).
         </p>
+        <LinkOficial href={LINK_CRAS}>Achar o CRAS mais perto</LinkOficial>
       </Bloco>
       <Bloco titulo="Não estou recebendo. O que fazer?" aberto={aberto}>
         <ol className="list-decimal space-y-2 pl-6">

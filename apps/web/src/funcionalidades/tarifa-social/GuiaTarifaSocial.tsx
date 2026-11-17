@@ -111,7 +111,7 @@ export function GuiaTarifaSocial() {
     escolhas.bpc && escolhas.contaNoNome
       ? { ...escolhas, bpc: escolhas.bpc, contaNoNome: escolhas.contaNoNome, pessoas, rendaCentavos: renda === undefined ? undefined : Math.round(renda * 100) }
       : undefined;
-  const resultado = passo === "resultado" && respostas ? avaliarTarifaSocial(respostas) : undefined;
+  const resultado = passo === "resultado" && respostas && hoje ? avaliarTarifaSocial(respostas, hoje) : undefined;
   const resultadoPronto = resultado?.tipo === "resultado" ? resultado : undefined;
   const anuncio = passo === "resultado" ? (resultadoPronto ? RESULTADOS[resultadoPronto.caso].titulo : "") : `Pergunta ${indice + 1} de ${ativas.length}`;
 

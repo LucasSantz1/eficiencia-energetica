@@ -88,12 +88,20 @@ export const RESULTADOS: Record<CasoDaTarifaSocial, { titulo: string; texto: str
     texto: "Hoje a família não se encaixa nas regras. Se a renda ou a casa mudar, responda de novo. Em caso de dúvida, o CRAS pode confirmar.",
     selo: "Não parece",
   },
+  // Fora da vigência do salário mínimo, no lugar de B e D (dominio-energia, revisão de 17/11/2026).
+  conferir: {
+    titulo: "Confira no CRAS",
+    texto: "Não deu para conferir a renda com o salário mínimo deste ano. O CRAS confirma.",
+    selo: "Confira",
+  },
 };
 
 const [ANO_DO_PRAZO, MES_DO_PRAZO, DIA_DO_PRAZO] = PRAZO_DA_CONVOCACAO.split("-");
 
 export const AVISOS = {
   fazerCadUnico: "Primeiro, faça o CadÚnico no CRAS. É de graça. Leve os documentos da lista abaixo.",
+  // Com BPC a pergunta do CadÚnico é pulada (dominio-energia, 17/11/2026; R5).
+  conferirCadUnico: "Confira no CRAS se o CadÚnico está em dia.",
   trocarNomeDaConta: "O desconto só vem se a conta estiver no nome de alguém da família. Peça a troca na distribuidora (a empresa que manda a conta de luz).",
   convocacao: `Até ${DIA_DO_PRAZO}/${MES_DO_PRAZO}/${ANO_DO_PRAZO}, atenda se a distribuidora chamar para atualizar o cadastro. Quem não atender pode perder o desconto.`,
   salarioMinimoMudou: "O valor do salário mínimo mudou. Confira o valor de hoje no CRAS.",

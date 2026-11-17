@@ -20,8 +20,11 @@ const semBpc = (pessoas: number, reais: number, extra: Partial<RespostasDaTarifa
   ...extra,
 });
 
-const caso = (respostas: RespostasDaTarifaSocial): CasoDaTarifaSocial | "invalido" => {
-  const resultado = avaliarTarifaSocial(respostas);
+const EM_2026 = "2026-11-17";
+const EM_2027 = "2027-01-01";
+
+const caso = (respostas: RespostasDaTarifaSocial, hoje = EM_2026): CasoDaTarifaSocial | "invalido" => {
+  const resultado = avaliarTarifaSocial(respostas, hoje);
   return resultado.tipo === "invalido" ? "invalido" : resultado.caso;
 };
 
@@ -43,11 +46,11 @@ describe("casos C1–C13 (HIS-103)", () => {
   });
 
   it("C12: 2 pessoas, R$ 1.200,00, sem CadÚnico e conta em outro nome: A com os dois avisos", () => {
-    expect(avaliarTarifaSocial(semBpc(2, 1200, { cadUnico: "nao", contaNoNome: "nao" }))).toEqual({
+    expect(avaliarTarifaSocial(semBpc(2, 1200, { cadUnico: "nao", contaNoNome: "nao" }), EM_2026)).toEqual({
       tipo: "resultado",
       caso: "A",
       comparacao: { base: "por-pessoa", rendaCentavos: 60_000, limiteCentavos: 81_050, salariosMinimos: 0.5 },
-      fazerCadUnico: true,
+      avisoDoCadUnico: "fazer",
       trocarNomeDaConta: true,
     });
   });
@@ -67,12 +70,12 @@ describe("casos C1–C13 (HIS-103)", () => {
 
 describe("avisos e comparação", () => {
   it("\"Não sei\" no CadÚnico e na conta também pede o CadÚnico e a troca do nome", () => {
-    const resultado = avaliarTarifaSocial(semBpc(4, 3000, { cadUnico: "nao-sei", contaNoNome: "nao-sei" }));
-    expect(resultado).toMatchObject({ fazerCadUnico: true, trocarNomeDaConta: true });
+    const resultado = avaliarTarifaSocial(semBpc(4, 3000, { cadUnico: "nao-sei", contaNoNome: "nao-sei" }), EM_2026);
+    expect(resultado).toMatchObject({ avisoDoCadUnico: "fazer", trocarNomeDaConta: true });
   });
 
   it("no caso D não há aviso de CadÚnico nem de nome da conta", () => {
-    expect(avaliarTarifaSocial(semBpc(3, 4863.03, { cadUnico: "nao", contaNoNome: "nao" }))).toMatchObject({ caso: "D", fazerCadUnico: false, trocarNomeDaConta: false });
+    expect(avaliarTarifaSocial(semBpc(3, 4863.03, { cadUnico: "nao", contaNoNome: "nao" }), EM_2026)).toMatchObject({ caso: "D", avisoDoCadUnico: undefined, trocarNomeDaConta: false });
   });
 
   it("C não passa na frente de A, mas passa na frente de B (a Tarifa Social é o desconto maior)", () => {
@@ -81,8 +84,32 @@ describe("avisos e comparação", () => {
   });
 
   it("com BPC, a renda não é comparada; no C, a comparação é com 3 salários mínimos da renda total", () => {
-    expect(avaliarTarifaSocial({ bpc: "sim", contaNoNome: "sim" })).toMatchObject({ caso: "A", comparacao: undefined, fazerCadUnico: true });
-    expect(avaliarTarifaSocial(semBpc(2, 4000, { saude: "sim" }))).toMatchObject({ comparacao: { base: "total", rendaCentavos: 400_000, limiteCentavos: 486_300, salariosMinimos: 3 } });
+    // Com BPC a pergunta do CadÚnico é pulada: o aviso manda conferir se ele está em dia (R5; dominio-energia, 17/11/2026).
+    expect(avaliarTarifaSocial({ bpc: "sim", contaNoNome: "sim" }, EM_2026)).toMatchObject({ caso: "A", comparacao: undefined, avisoDoCadUnico: "conferir-em-dia" });
+    expect(avaliarTarifaSocial(semBpc(2, 4000, { saude: "sim" }), EM_2026)).toMatchObject({ comparacao: { base: "total", rendaCentavos: 400_000, limiteCentavos: 486_300, salariosMinimos: 3 } });
+  });
+});
+
+describe("fora da vigência do salário mínimo (2027): B e D viram \"conferir\" (dominio-energia, 17/11/2026)", () => {
+  it("3 pessoas, R$ 4.863,03, hoje = 2027-01-01: conferir (com o salário mínimo novo pode ser B)", () => {
+    expect(caso(semBpc(3, 4863.03), EM_2027)).toBe("conferir");
+  });
+
+  it("o que seria B também vira conferir; A, C e o BPC continuam (o limite novo só é maior)", () => {
+    expect(caso(semBpc(4, 3242.04), EM_2027)).toBe("conferir");
+    expect(caso(semBpc(4, 3000), EM_2027)).toBe("A");
+    expect(caso(semBpc(2, 4000, { saude: "sim" }), EM_2027)).toBe("C");
+    expect(caso({ bpc: "sim", contaNoNome: "sim" }, EM_2027)).toBe("A");
+  });
+
+  it("conferir mantém os avisos de CadÚnico e de nome da conta, sem a comparação em R$", () => {
+    expect(avaliarTarifaSocial(semBpc(3, 4863.03, { cadUnico: "nao", contaNoNome: "nao" }), EM_2027)).toEqual({
+      tipo: "resultado",
+      caso: "conferir",
+      comparacao: undefined,
+      avisoDoCadUnico: "fazer",
+      trocarNomeDaConta: true,
+    });
   });
 });
 
