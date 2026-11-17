@@ -17,13 +17,13 @@ export function faixaDoValorDaConta(uso: UsoDaConta): Faixa {
 }
 
 /**
- * T5, conta zerada na calibração. Nos Ajustes não existe o botão "Pular": fica só a primeira frase da ux, para não
- * mandar a pessoa procurar um botão que não está na tela.
+ * T5, conta zerada na calibração. Nos Ajustes não existe o botão "Pular": a 2ª frase diz como seguir sem conta, sem
+ * mandar a pessoa procurar um botão que não está na tela (decisão da ux, 2026-11-15).
  */
 function contaZerada(uso: UsoDaConta): string | undefined {
   const frase = "Com a conta zerada não dá para ajustar o cálculo.";
   if (uso === "cadastro") return `${frase} Se ela veio zerada, toque em "Pular, não tenho a conta agora".`;
-  if (uso === "ajustes") return frase;
+  if (uso === "ajustes") return `${frase} Para seguir sem conta, é só não tocar em “Usar estes valores”.`;
   return undefined;
 }
 
