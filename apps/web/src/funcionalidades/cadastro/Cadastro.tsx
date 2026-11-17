@@ -100,6 +100,10 @@ export function Cadastro() {
 
   /** Troca de passo animada: avançar desliza para a esquerda, voltar para a direita. */
   const irPara = (p: Passo, sentido: "adiante" | "volta" = passos.indexOf(p) < indice ? "volta" : "adiante") => {
+    // Perto do fim, já busca o painel (dados e código). Sem isso, a navegação do concluir para (suspende) esperando
+    // o código de /casa; o React roda nesse meio-tempo uma lane adiada que consome os tipos de transição da raiz, e o
+    // painel entra sem a animação "entrar-painel" (DEF-002b-1, causa medida na HIS-002b).
+    if (p === "revisao" || p === "conta") router.prefetch("/casa");
     startTransition(() => {
       addTransitionType(sentido === "volta" ? "nav-back" : "nav-forward");
       setPasso(p);
