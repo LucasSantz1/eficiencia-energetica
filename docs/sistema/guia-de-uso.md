@@ -29,6 +29,8 @@ O site faz uma pergunta por vez:
 
 ## 3. Acompanhe
 
+No computador, a tela aproveita a largura: mostra mais coisas lado a lado.
+
 Na tela **Acompanhamento** você vê:
 
 - a **conta estimada** do mês;

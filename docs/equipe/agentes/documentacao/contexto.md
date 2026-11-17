@@ -51,3 +51,5 @@ o projeto, o planejamento e o Scrum. Quando algo grande mudar, atualizar os dois
 ## Orientações do responsável
 
 _(espaço para o dono do projeto escrever orientações a este papel)_
+
+- HIS-112 (layout para computador): fonte única em `site.md#layout-no-computador-a-partir-de-1024-px`; `arquitetura.md` só resume. Entrada no CHANGELOG fica acima da HIS-003a; a HIS-110 não estava no CHANGELOG (ordenar quando entrar).

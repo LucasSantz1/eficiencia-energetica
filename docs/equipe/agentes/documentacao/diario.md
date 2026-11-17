@@ -16,6 +16,12 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-13 · HIS-112 · layout para computador documentado
+- O que fiz: seção "Layout no computador" e linhas novas nas tabelas em `site.md`; linha no `guia-de-uso.md`; decisão sobre `useTelaLarga` em `arquitetura.md`; CHANGELOG.
+- Decisões: conferi no código o desvio do L3 (lateral sem `lateral-fixa`) e o A-112-1 (Mês a mês sob os cômodos). Sem entrada da HIS-110 no CHANGELOG, pus a da 112 no topo.
+- Arquivos: os quatro acima, a nota na história e este diário.
+- Próximos passos: se a HIS-110 entrar, ficar acima da 112.
+
 ## 2026-11-13 · HIS-003a · dados quebrados não travam o site documentado
 - O que fiz: seção sobre dados ilegíveis, trava, `casa-ilegivel` e telas de erro em `privacidade-e-seguranca.md`; T1 a T4 no `guia-de-uso.md`; conferência de formato e os dois jobs em `dados.md`; "Leitura segura" em `arquitetura.md`; `desenvolvimento.md` (audit, Dependabot, specs novos); CHANGELOG.
 - Decisões e porquê: teto da HIS-109 documentado como 7 (decisão do tech-lead, não 8 como eu tinha anotado); contagens reconferidas (85 arquivos, 152 testes de camadas, 210 e2e). O `site.md` ficou de fora do pedido e segue pendente.

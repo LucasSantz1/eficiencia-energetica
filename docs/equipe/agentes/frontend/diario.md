@@ -10,6 +10,30 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-15 · HIS-003b · campos com limite e "Confere?" nas telas (b1, b2) e "Pronto" falso dos Ajustes
+- O que fiz: `Campo`/`Entrada` com erro, alerta e contexto; `useCampoNumerico` + `situacaoDoCampo` (pura, com vitest);
+  `CamposDaConta` no cadastro, Ajustes e acompanhamento; potência sem `Math.min`, etiqueta, nomes, leitura (6 dígitos e
+  "Confere?" > 100 kWh/dia), `AvisoConsumoAlto` (revisão e painel, com a linha `aviso` só quando há aviso); pessoas até 20.
+  Core: `mediaBrasilParaTexto` e `consumoMensalDaCasaKwh`, com teste.
+- Decisões: "Sim" devolve o foco à entrada (o botão some; a ux pede); a mensagem não entra quando o foco sai para um
+  botão (no e2e o clique em "Usar estes valores" se perdia); leitura vazia continua com o botão desabilitado (não há
+  texto da ux para ela); nos Ajustes a conta zerada usa só a 1ª frase do T5 (pergunta à ux).
+- Peso sobre o `main` de `35f2893` (medido nas duas cópias, porta 34xx), 11a: `/` +460, `/comecar` +3 315,
+  `/casa` +4 424, `/casa/comodos` +2 734, `/casa/dicas` +461, `/casa/ajustes` +3 218, `/sobre` 0. 11b: +3 378 (`/`,
+  `/comecar`), +12 435 (`/casa*`), +9 517 (`/casa` com casa), +460 (`/sobre`). Separar os textos por quem usa tirou
+  ~1,4 kB do 11b. `peso-js.json` intocado: decisão do tech-lead.
+- Verificação: lint, typecheck, test, build; e2e 225 ok (só `peso-js` reprova); spec próprio na cópia (11 casos, sem
+  erro de console) e capturas 390/1024/1280/1440; pixel a pixel a 390 e 800 px sem erro: só o botão que deixou de ser `disabled`.
+- Arquivos: `ui/Campo.tsx`, `ui/Entrada.tsx`, `ui/foco.ts`, `ui/campos/*`, `ui/conta/*`, `ui/AvisoConsumoAlto.tsx`,
+  `ui/aparelho/{EditorAparelho,LinhaAparelho,mensagensDoAparelho}`, `cadastro/Cadastro.tsx`, `ajustes/TelaAjustes.tsx`,
+  `acompanhamento/{Acompanhamento,PainelAcompanhamento,mensagensDoRelogio}`, `comodos/TelaComodos.tsx`,
+  `core/src/{limites,calculos}.ts` e testes.
+- Próximos passos: tech-lead (peso) e qa (b3: `campos.spec.ts`, caso no `layout-computador.spec.ts`, axe).
+
+## 2026-11-13 · HIS-103 · textos da Tarifa Social que prometiam mais do que o site faz (D1–D6, D8, D9)
+- O que fiz: troquei os textos da `/`, Minha casa, cadastro, acompanhamento, Sobre e a dica/comentário do core pela correção do dominio-energia.
+- Decisões: o caminho da saúde leva a renda de até 3 salários mínimos (R1-c), mais honesto que a proposta curta; "cerca de" no desconto da Tarifa Social (estimativa).
+- Arquivos: `inicio/PaginaInicial.tsx`, `ajustes/TelaAjustes.tsx`, `cadastro/Cadastro.tsx`, `acompanhamento/PainelAcompanhamento.tsx`, `app/sobre/page.tsx`, `core/src/{dicas,tipos}.ts`, a história.
 ## 2026-11-13 · HIS-112 · f4–f7: Casca de 75rem, /casa em áreas, Minha casa em 2 colunas e painel do cadastro
 - O que fiz: merge da 003a (só diários em conflito); f4–f7 em um commit cada; o painel "Por que perguntamos" com os textos da seguranca.
 - Decisões: a lateral da `/casa` sem `lateral-fixa` (passa da janela e vira rolagem interna); `progresso` do cadastro limitado a 34rem; grade da `Moldura` com o passo numa `div` própria.
@@ -62,6 +86,15 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
   `apps/web/postcss.config.mjs`, `ui/tiposDeTransicao.ts`, `aplicacao/identificador.ts`, 20 arquivos com imports
   reordenados, a história, este diário e `contexto.md`.
 - Próximos passos: tech-lead (B8 e o bloco provisório), documentacao, qa (etapa 5) e seguranca (Rb1–Rb9).
+## 2026-11-13 · HIS-110 · contraste da /: faixa D com tinta e os 2 <dd> da Tarifa Social em branco
+- O que fiz: criei a história; pílula da faixa D com `text-tinta`; `<dd>` com `text-white`; esvaziei o `excecoes-axe.ts`.
+- Decisões: opção (a) (sem trocar a escala da pílula), porque a (b) muda cor que a pessoa vê e espera o scrum-master. Nenhum token mudou.
+- Arquivos: `inicio/CasaIlustrada.tsx`, `inicio/PaginaInicial.tsx`, `ui/Etiqueta.tsx`, `e2e/excecoes-axe.ts`, a história.
+
+## 2026-11-13 · HIS-110 · contraste da /: faixa D com tinta e os 2 <dd> da Tarifa Social em branco
+- O que fiz: criei a história; pílula da faixa D com `text-tinta`; `<dd>` com `text-white`; esvaziei o `excecoes-axe.ts`.
+- Decisões: opção (a) (sem trocar a escala da pílula), porque a (b) muda cor que a pessoa vê e espera o scrum-master. Nenhum token mudou.
+- Arquivos: `inicio/CasaIlustrada.tsx`, `inicio/PaginaInicial.tsx`, `ui/Etiqueta.tsx`, `e2e/excecoes-axe.ts`, a história.
 
 ## 2026-10-31 · HIS-111 · D1 do h7: o peso de JS de /casa* voltou a ficar abaixo do limite
 - O que fiz: mantive o aviso no carregamento normal, mas mais leve. Ele cuida do próprio "Entendi" e do foco; os nomes foram para `core/trocas.ts`; tirei verificações repetidas. O 11a de `/casa*` ficou em até +998 B (limite +1 024), medido na junção com o `origin/main`.

@@ -2,7 +2,7 @@
 
 import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { agregarAparelhos, COMODOS_PADRAO, formatarKwh, formatarReais, itemDoCatalogo, type Aparelho, type Comodo as TipoComodoCasa, type TipoComodo } from "@ee/core";
+import { agregarAparelhos, COMODOS_PADRAO, formatarKwh, formatarReais, itemDoCatalogo, LIMITES_DE_TEXTO, type Aparelho, type Comodo as TipoComodoCasa, type TipoComodo } from "@ee/core";
 import { useCasa, useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { useResumo } from "@/aplicacao/resumo";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
@@ -10,7 +10,10 @@ import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
 import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
+import { NOME_DO_COMODO_VAZIO } from "@/ui/campos/mensagens";
+import { indoParaUmBotao } from "@/ui/campos/useCampoNumerico";
 import { Entrada } from "@/ui/Entrada";
+import { focarPrimeiroErro } from "@/ui/foco";
 import { Folha } from "@/ui/Folha";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
@@ -303,11 +306,15 @@ function EditarComodo({ comodo, aoFechar, quantidade }: { comodo?: TipoComodoCas
   const remover = useCasa((s) => s.removerComodo);
   const [nome, setNome] = useState("");
   const [confirmar, setConfirmar] = useState(false);
+  // T5 do nome vazio: aparece ao sair do campo ou ao salvar, e some na tecla que dá nome de novo.
+  const [conferirNome, setConferirNome] = useState(false);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reinicia o formulário quando muda o cômodo em edição (HIS-109)
     setNome(comodo?.nome ?? "");
     setConfirmar(false);
+    setConferirNome(false);
   }, [comodo]);
+  const erroDoNome = conferirNome && !nome.trim() ? NOME_DO_COMODO_VAZIO : undefined;
 
   return (
     <Folha
@@ -319,6 +326,8 @@ function EditarComodo({ comodo, aoFechar, quantidade }: { comodo?: TipoComodoCas
           <Botao
             largo
             onClick={() => {
+              setConferirNome(true);
+              if (focarPrimeiroErro([{ id: "nome-comodo-edit", resultado: nome.trim() ? "ok" : "erro" }])) return;
               renomear(comodo.id, nome);
               aoFechar();
             }}
@@ -330,8 +339,8 @@ function EditarComodo({ comodo, aoFechar, quantidade }: { comodo?: TipoComodoCas
     >
       {comodo && (
         <div className="space-y-6">
-          <Campo rotulo="Nome do cômodo" id="nome-comodo-edit">
-            <Entrada id="nome-comodo-edit" className="font-bold" value={nome} maxLength={40} onChange={(e) => setNome(e.target.value)} />
+          <Campo rotulo="Nome do cômodo" id="nome-comodo-edit" erro={erroDoNome}>
+            <Entrada id="nome-comodo-edit" className="font-bold" value={nome} maxLength={LIMITES_DE_TEXTO.nomeComodo} onChange={(e) => setNome(e.target.value)} onBlur={(evento) => indoParaUmBotao(evento) || setConferirNome(true)} />
           </Campo>
           <div className="space-y-2">
             <span className="block font-bold">Sugestões</span>

@@ -14,8 +14,10 @@
 | Consumo | P × t, mês de 30 dias, × fator de ciclo | física / convenção |
 | Fator de ciclo do ar | inverter 0,6 · split comum 0,85 · janela e portátil 0,9 | estimativa a partir de PROCEL/INMETRO |
 | Consumo mínimo | 30 / 50 / 100 kWh | REN ANEEL 1.000/2021 |
-| Tarifa Social | 80 kWh/mês gratuitos | Lei 15.235/2025 (sancionada em 08/10/2025) |
-| Desconto Social | até 120 kWh, só aviso (percentual não modelado) | Lei 15.235/2025, a partir de 01/01/2026 |
+| Tarifa Social | 80 kWh/mês gratuitos (contas desde 05/07/2025) | Lei 12.212/2010 art. 1º (red. Lei 15.235/2025); REN 1.147/2025 |
+| Tarifa Social, quem | CadÚnico ≤ ½ SM por pessoa; BPC; CadÚnico renda total ≤ 3 SM + aparelho de saúde (pedido com atestado); indígenas/quilombolas só com ½ SM ou BPC | Lei 12.212 art. 2º, I, II, §§ 1º e 4º |
+| Desconto Social | até 120 kWh, ½ a 1 SM por pessoa, só aviso (percentual não modelado) | Lei 10.438 art. 13 § 3º-I (Lei 15.235), desde 01/01/2026 |
+| Salário mínimo | R$ 1.621 (½ = 810,50; 3 = 4.863) | Decreto 12.797/2025, só 2026 |
 | Tarifa | B1 residencial convencional, Tarifa de Aplicação, TE + TUSD, sem impostos | ANEEL dados abertos |
 | Bandeira | adicional do mês; unidade detectada pela grandeza (R$/MWh ou R$/kWh) | ANEEL dados abertos |
 | Calibração pela conta | valor ÷ kWh; com Tarifa Social, divide por (kWh − 80) e ignora se der menos de 10 kWh | conta da família |
@@ -33,7 +35,17 @@
 - Nomes antigos para o aviso: Vale Paranapanema, Bragantina, Força e Luz do Oeste, Companhia Energética de Roraima;
   CNEE sem nome (sem fonte).
 
+## Decisões em vigor (HIS-103, 13/11/2026)
+
+- Guia da Tarifa Social diz "pode ter direito, confira no CRAS/distribuidora", nunca "tem direito".
+- Renda, pessoas e saúde não são guardadas. Salário mínimo com data de vigência. Regras R1–R11 e casos C1–C13 na
+  história `HIS-103-guia-tarifa-social.md`.
+- Defeitos no ar D1–D9 registrados na história (D1 e D2 prometem mais do que a família recebe).
+
 ## Pendências
+
+- HIS-103: Tarifa Social × custo de disponibilidade (trifásica 100 kWh > 80 grátis): conferir no texto da REN
+  1.147/2025 (cedoc não abriu em 13/11/2026). `calculos.ts:107-109` hoje ignora o mínimo para a Tarifa Social.
 
 - HIS-003: revisar o `limites.ts`, o `arquivos-publicos.ts` (P1–P7) e os testes quando o backend escrever; trocar o
   link da EPE (hoje cópia da eixos) pelo oficial.

@@ -115,7 +115,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
               <dd className="titulo-largo numeros text-[3.4rem]">
                 <Contagem valor={80} sufixo=" kWh" />
               </dd>
-              <dd className="mt-2 text-tinta-suave">por mês sem pagar nada para famílias com Tarifa Social</dd>
+              <dd className="mt-2 text-tinta-suave">de energia de graça por mês para famílias com Tarifa Social</dd>
             </Revelar>
           </dl>
         </div>
@@ -189,7 +189,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
               Sua família pode pagar menos na conta de luz
             </h2>
             <p className="mt-6 max-w-[48ch] text-lg text-white/85">
-              Desde 2025, famílias de baixa renda inscritas no CadÚnico têm direito a desconto ou isenção. O desconto é aplicado pela distribuidora automaticamente, e o nosso cálculo já considera a regra.
+              Famílias de baixa renda no CadÚnico podem pagar menos. O desconto vem sozinho se o CadÚnico estiver em dia e a conta estiver no nome de alguém da casa. A Tarifa Social já entra no nosso cálculo. O Desconto Social ainda não: a conta real fica um pouco menor.
             </p>
             <div className="mt-9">
               <BotaoComecar estilo="faisca" texto="Calcular a minha conta" />
@@ -202,7 +202,9 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
               <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={100}>
                 <dt className="text-lg font-bold">Tarifa Social</dt>
                 <dd className="titulo-largo mt-2 text-[2.6rem]">80 kWh grátis</dd>
-                <dd className="mt-2 text-white">Para famílias com renda de até meio salário mínimo por pessoa, ou que recebem o BPC.</dd>
+                {/* Quem pode ter: Lei 12.212/2010, art. 2º, I, II e § 1º (HIS-103, R1). Os 80 kWh são de energia: ICMS,
+                    iluminação pública e parcelas continuam (ANEEL, página "Tarifa Social"; HIS-103, R5 e D2). */}
+                <dd className="mt-2 text-white">Para famílias com renda de até meio salário mínimo por pessoa, ou que recebem o BPC. Também para quem tem alguém que precisa de aparelho elétrico ligado para a saúde, com renda de até 3 salários mínimos na família. Impostos e iluminação pública podem continuar na conta.</dd>
               </Revelar>
               <Revelar className="rounded-[1.5rem] bg-white/10 p-6" atraso={220}>
                 <dt className="text-lg font-bold">Desconto Social</dt>

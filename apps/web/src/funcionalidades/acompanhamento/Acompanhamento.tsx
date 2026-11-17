@@ -2,15 +2,34 @@
 
 import { Gauge, Pencil, Plus, Receipt } from "lucide-react";
 import { useState } from "react";
-import { competenciaAtual, formatarCompetencia, formatarKwh, formatarReais, historicoContas, periodosDeLeitura, type ContaMensal } from "@ee/core";
+import {
+  alertaDaLeitura,
+  competenciaAtual,
+  formatarCompetencia,
+  formatarKwh,
+  formatarReais,
+  historicoContas,
+  lerNumeroDigitado,
+  LIMITES,
+  periodosDeLeitura,
+  validarFaixa,
+  type ContaMensal,
+  type ContaReferencia,
+  type LeituraRelogio,
+} from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { Aviso } from "@/ui/Aviso";
 import { Barras } from "@/ui/Barras";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
+import { TITULO_CONFERE } from "@/ui/campos/mensagens";
+import { CamposDaConta } from "@/ui/conta/CamposDaConta";
+import { useCamposDaConta } from "@/ui/conta/useCamposDaConta";
 import { Entrada } from "@/ui/Entrada";
+import { focarPrimeiroErro } from "@/ui/foco";
 import { Folha } from "@/ui/Folha";
 import { Pilulas } from "@/ui/Pilulas";
+import { confereALeitura } from "./mensagensDoRelogio";
 
 const MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const mesCurto = (competencia: string) => {
@@ -22,7 +41,14 @@ const dataCurta = (iso: string) => {
   return `${dia}/${String(mes).padStart(2, "0")}`;
 };
 const hojeISO = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
-const numero = (t: string) => Number(t.replace(/\./g, "").replace(",", "."));
+const dataPorExtenso = (iso: string) => new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
+/** O relógio tem de 4 a 6 dígitos: o tamanho máximo sai do limite do `limites.ts` (R9 da 003a). */
+const DIGITOS_DA_LEITURA = String(LIMITES.leituraKwh.max).length;
+/** Número do relógio que o store aceita, com as mesmas funções do core; `undefined` se não der para salvar. */
+const leituraValida = (texto: string) => {
+  const lido = lerNumeroDigitado(texto, 0);
+  return lido.tipo === "numero" && validarFaixa(LIMITES.leituraKwh, lido.valor) !== "fora" ? lido.valor : undefined;
+};
 
 /**
  * Acompanhamento mês a mês (contas de luz) e dia a dia (leituras do relógio).
@@ -52,15 +78,26 @@ export function Acompanhamento({ estimativaKwhMes }: { estimativaKwhMes: number 
   );
 }
 
+/** Conta aberta na folha. `sessao` é criada ao abrir e não muda ao trocar o mês: é a chave dos campos. */
+interface ContaEmEdicao {
+  id?: string;
+  competencia: string;
+  inicial?: ContaReferencia;
+  sessao: object;
+}
+
 function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
   const contas = useCasa((s) => s.contas);
+  const beneficio = useCasa((s) => s.residencia?.beneficio);
   const salvar = useCasa((s) => s.salvarConta);
   const remover = useCasa((s) => s.removerConta);
-  const [editando, setEditando] = useState<{ id?: string; competencia: string; kwh: string; valor: string }>();
+  const [editando, setEditando] = useState<ContaEmEdicao>();
+  // No acompanhamento a conta zerada vale (casa fechada, Tarifa Social): faixa `…Acompanhamento` do limites.ts.
+  const camposDaConta = useCamposDaConta({ uso: "acompanhamento", beneficio, ids: { kwh: "conta-kwh-m", valor: "conta-valor-m" }, inicial: editando?.inicial, chave: editando?.sessao });
   const historico = historicoContas(contas);
   const ultimas = historico.slice(-12);
 
-  const abrirNova = () => setEditando({ competencia: competenciaAtual(), kwh: "", valor: "" });
+  const abrirNova = () => setEditando({ competencia: competenciaAtual(), sessao: {} });
 
   return (
     <>
@@ -92,7 +129,7 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
                 <button
                   type="button"
                   aria-label={`Editar conta de ${formatarCompetencia(c.competencia)}`}
-                  onClick={() => setEditando({ id: c.id, competencia: c.competencia, kwh: String(c.kwh).replace(".", ","), valor: c.valor.toFixed(2).replace(".", ",") })}
+                  onClick={() => setEditando({ id: c.id, competencia: c.competencia, inicial: { kwh: c.kwh, valor: c.valor }, sessao: {} })}
                   className="grid size-11 place-items-center rounded-full text-tinta-suave hover:bg-fundo"
                 >
                   <Pencil className="size-5" />
@@ -115,9 +152,12 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
             <div className="flex flex-col gap-3">
               <Botao
                 largo
-                disabled={!editando.competencia || !(numero(editando.kwh) > 0) || !(numero(editando.valor) > 0)}
+                disabled={!editando.competencia}
                 onClick={() => {
-                  salvar({ id: editando.id, competencia: editando.competencia, kwh: numero(editando.kwh), valor: numero(editando.valor) });
+                  // Só salva o que passou pelo T5/T6; o resto fica na folha, com o foco no primeiro campo que não passou.
+                  const conta = camposDaConta.conferir();
+                  if (!conta) return;
+                  salvar({ id: editando.id, competencia: editando.competencia, ...conta });
                   setEditando(undefined);
                 }}
               >
@@ -144,12 +184,7 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
             <Campo rotulo="Mês da conta" id="conta-mes" ajuda="O mês de referência que aparece na conta.">
               <input id="conta-mes" type="month" value={editando.competencia} max={competenciaAtual()} onChange={(e) => setEditando({ ...editando, competencia: e.target.value })} className="min-h-12 w-full rounded-[var(--radius-controle)] border-2 border-linha bg-papel px-4 text-lg font-bold" />
             </Campo>
-            <Campo rotulo="Consumo" id="conta-kwh-m" ajuda="“Consumo (kWh)” ou “kWh faturado”.">
-              <Entrada id="conta-kwh-m" inputMode="decimal" sufixo="kWh" placeholder="Ex.: 150" value={editando.kwh} onChange={(e) => setEditando({ ...editando, kwh: e.target.value.replace(/[^\d,.]/g, "") })} />
-            </Campo>
-            <Campo rotulo="Valor total" id="conta-valor-m">
-              <Entrada id="conta-valor-m" inputMode="decimal" prefixo="R$" placeholder="Ex.: 135,90" value={editando.valor} onChange={(e) => setEditando({ ...editando, valor: e.target.value.replace(/[^\d,.]/g, "") })} />
-            </Campo>
+            <CamposDaConta className="space-y-5" campos={camposDaConta} textos={{ consumo: "Consumo", ajudaDoConsumo: "“Consumo (kWh)” ou “kWh faturado”.", valor: "Valor total" }} />
           </div>
         )}
       </Folha>
@@ -181,10 +216,28 @@ function Relogio({ estimativaKwhDia }: { estimativaKwhDia: number }) {
   const leituras = useCasa((s) => s.leituras);
   const salvar = useCasa((s) => s.salvarLeitura);
   const remover = useCasa((s) => s.removerLeitura);
-  const [editando, setEditando] = useState<{ id?: string; data: string; valor: string }>();
+  // `confere` mostra o "Confere?" (T6); `confirmado` é o par "data|número" que a pessoa disse que está certo.
+  const [editando, setEditando] = useState<{ id?: string; data: string; valor: string; confere?: boolean; confirmado?: string }>();
   const { periodos, ignoradas } = periodosDeLeitura(leituras);
   const ordenadas = [...leituras].sort((a, b) => b.data.localeCompare(a.data));
   const ultimo = periodos.at(-1);
+
+  // Compara com a leitura anterior mais próxima (sem a que está sendo editada): mais de 100 kWh por dia pergunta.
+  const valorKwh = editando ? leituraValida(editando.valor) : undefined;
+  const nova: LeituraRelogio | undefined = editando && valorKwh !== undefined ? { id: editando.id ?? "nova", data: editando.data, valorKwh } : undefined;
+  const anterior = nova ? leituras.filter((l) => l.id !== nova.id && l.data < nova.data).sort((a, b) => b.data.localeCompare(a.data))[0] : undefined;
+  const raro = nova && anterior ? alertaDaLeitura(anterior, nova) : undefined;
+  const par = nova ? `${nova.data}|${nova.valorKwh}` : undefined;
+  const pendente = Boolean(raro) && par !== editando?.confirmado;
+  const alertaDoRelogio =
+    editando?.confere && pendente && raro && anterior && nova
+      ? {
+          titulo: TITULO_CONFERE,
+          texto: confereALeitura(dataPorExtenso(anterior.data), dataPorExtenso(nova.data), raro.kwhPorDia),
+          aoConfirmar: () => setEditando({ ...editando, confere: false, confirmado: par }),
+          aoCorrigir: () => setEditando({ ...editando, confere: false }),
+        }
+      : undefined;
 
   return (
     <>
@@ -252,9 +305,16 @@ function Relogio({ estimativaKwhDia }: { estimativaKwhDia: number }) {
             <div className="flex flex-col gap-3">
               <Botao
                 largo
-                disabled={!editando.data || !(numero(editando.valor) >= 0) || editando.valor === ""}
+                disabled={!editando.data || valorKwh === undefined}
                 onClick={() => {
-                  salvar({ id: editando.id, data: editando.data, valorKwh: numero(editando.valor) });
+                  if (valorKwh === undefined) return;
+                  // T6: o número raro só é salvo depois do "Sim, está certo"; o foco vai para o campo com a pergunta.
+                  if (pendente) {
+                    setEditando({ ...editando, confere: true });
+                    focarPrimeiroErro([{ id: "leitura-valor", resultado: "alerta" }]);
+                    return;
+                  }
+                  salvar({ id: editando.id, data: editando.data, valorKwh });
                   setEditando(undefined);
                 }}
               >
@@ -279,10 +339,18 @@ function Relogio({ estimativaKwhDia }: { estimativaKwhDia: number }) {
         {editando && (
           <div className="space-y-5">
             <Campo rotulo="Dia da leitura" id="leitura-data">
-              <input id="leitura-data" type="date" value={editando.data} max={hojeISO()} onChange={(e) => setEditando({ ...editando, data: e.target.value })} className="min-h-12 w-full rounded-[var(--radius-controle)] border-2 border-linha bg-papel px-4 text-lg font-bold" />
+              <input id="leitura-data" type="date" value={editando.data} max={hojeISO()} onChange={(e) => setEditando({ ...editando, data: e.target.value, confere: false })} className="min-h-12 w-full rounded-[var(--radius-controle)] border-2 border-linha bg-papel px-4 text-lg font-bold" />
             </Campo>
-            <Campo rotulo="Número do relógio" id="leitura-valor" ajuda="Anote os números pretos do relógio de luz, da esquerda para a direita, sem os vermelhos (se houver).">
-              <Entrada id="leitura-valor" inputMode="numeric" sufixo="kWh" placeholder="Ex.: 12345" value={editando.valor} onChange={(e) => setEditando({ ...editando, valor: e.target.value.replace(/[^\d]/g, "") })} />
+            <Campo rotulo="Número do relógio" id="leitura-valor" ajuda="Anote os números pretos do relógio de luz, da esquerda para a direita, sem os vermelhos (se houver)." alerta={alertaDoRelogio}>
+              <Entrada
+                id="leitura-valor"
+                inputMode="numeric"
+                sufixo="kWh"
+                placeholder="Ex.: 12345"
+                maxLength={DIGITOS_DA_LEITURA}
+                value={editando.valor}
+                onChange={(e) => setEditando({ ...editando, valor: e.target.value.replace(/[^\d]/g, ""), confere: false })}
+              />
             </Campo>
           </div>
         )}

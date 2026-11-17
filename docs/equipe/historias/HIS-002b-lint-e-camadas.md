@@ -693,6 +693,8 @@ baixa para quem usa (falta só a animação de entrada no painel). Para: **front
   do caminho (`Cadastro`, `Casca`, `Movimento`, `app/casa`, `app/comecar`) a 002b só move imports (`ENTRAR_NO_PAINEL` igual).
 - Pista, não confirmada: o `router.push("/casa")` do `concluir` não tem prefetch e a `Casca` monta primeiro o
   esqueleto (`useCasaCarregada` começa `false`), sem `TransicaoTela`; vale medir antes de mudar o teste ou o site.
+- **Causa provada (frontend, 2026-11-17):** a navegação suspende esperando o JS de `/casa`; o React agenda uma lane adiada (524288) que faz commit antes e consome os tipos de transição da raiz (`claimQueuedTransitionTypes`), então o commit da navegação sai sem "entrar-painel" e sem animação (perda real). A linha do tempo das lanes mostrou isso em 7 das 7 falhas e em nenhuma das 50 execuções que passaram.
+- **Correção:** `router.prefetch("/casa")` ao chegar na revisão (`Cadastro.tsx`, `irPara`); repro 79/79 sem script nem lane adiada antes do push; `fluxo-principal --repeat-each=40` (80 execuções): 0 vez "transições depois de"; antes, 3 em 80. Outro intermitente, sem relação (já aparecia sem a correção, antes da revisão): 2 em 80 não acham "Cômodo 1 de N" em 5 s depois de "Continuar com N cômodos", no computador — para o **qa**.
 
 ## Perguntas abertas
 

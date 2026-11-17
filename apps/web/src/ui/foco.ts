@@ -11,3 +11,15 @@ export function focarTitulo(): void {
   if (!titulo.hasAttribute("tabindex")) titulo.tabIndex = -1;
   titulo.focus();
 }
+
+/**
+ * Põe o foco no primeiro campo que não passou (T5: erro; T6: "Confere?" sem resposta), na ordem da tela. Espera o
+ * próximo quadro: a mensagem e o `aria-describedby` entram na mesma troca de estado, e o leitor de tela precisa
+ * encontrá-los ao chegar no campo. Devolve `true` se algum campo não passou (a tela não segue).
+ */
+export function focarPrimeiroErro(campos: readonly { id: string; resultado: "ok" | "erro" | "alerta" }[]): boolean {
+  const primeiro = campos.find((campo) => campo.resultado !== "ok");
+  if (!primeiro) return false;
+  requestAnimationFrame(() => document.getElementById(primeiro.id)?.focus());
+  return true;
+}

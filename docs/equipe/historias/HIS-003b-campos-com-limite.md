@@ -6,8 +6,8 @@
 | Sprint | 0 |
 | Tamanho | M (≈ 1,5 dia com o qa: passos b1–b3) |
 | Papéis principais | frontend, ux-acessibilidade, qa |
-| Status | Preparada (implementação bloqueada: ver "Dependências") |
-| Branch | `his-003b-campos` (sai do `main` **depois** da integração da HIS-003a) |
+| Status | Preparada; desenho revisto em 2026-11-15 (a 003a já está no `main`) |
+| Branch | `his-003b-campos` (saiu do `main` em `e24561a`) |
 
 > **Origem:** dividida da HIS-003 pelo scrum-master em 2026-10-30, a partir da proposta D9 do tech-lead (P-tl-3). A
 > outra parte é a [HIS-003a · Dados quebrados não travam o site](HIS-003-base-de-seguranca.md) (o arquivo manteve o
@@ -182,51 +182,99 @@ Se o T6 da potência já apareceu e a pessoa confirmou, esse aviso da casa tamb�
 
 ## Desenho técnico
 
-_(tech-lead, 2026-10-30; movido da HIS-003 sem mudança. Contratos de domínio usados aqui — `LIMITES`, `validarFaixa`,
-`precoDaContaForaDoComum`, `alertaDaLeitura`, `consumoDaCasaForaDoComum`, `lerNumeroDigitado` — e a decisão D1.3 sobre
-o `CampoContexto` estão na HIS-003a, D1 e D2.)_
+_(tech-lead, 2026-10-30; **revisto em 2026-11-15** sobre o `main` em `e24561a`, com a 003a, a 110, a 112 e a 103. Os
+contratos de domínio vêm da 003a e já estão no `main`: `LIMITES`, `LIMITES_DE_TEXTO`, `validarFaixa`,
+`precoDaContaForaDoComum`, `alertaDaLeitura`, `consumoDaCasaForaDoComum`, `potenciaDoChuveiroMaisForteW`,
+`maiorConsumoDeEtiquetaDoCatalogoKwh` (`packages/core/src/limites.ts`) e `lerNumeroDigitado`
+(`packages/core/src/entrada.ts`). Nenhuma regra nova vai para o core.)_
 
-### T5 e T6, campos fora do limite e "Confere?" (do D5)
+### O que mudou desde o desenho de outubro (e por que ele foi revisto)
 
-- `ui/Campo.tsx`:
-  - `id` passa a ser obrigatório; todos os usos já têm.
-  - Ganha `erro` e `alerta: { titulo; texto; aoConfirmar; aoCorrigir }`.
-  - Região `aria-live` sempre na página, com os ids `{id}-erro`, `{id}-alerta` e `{id}-ajuda`.
-  - Os botões do alerta ficam fora da região.
-  - No "Corrigir", o foco vai para a entrada com o texto selecionado; no "Sim", só o foco. A `Entrada` se registra pelo
-    contexto.
-- `ui/Entrada.tsx`: lê o contexto (`aria-invalid`, `aria-describedby`, junto com o que vier por prop, e `border-alerta`).
-- `ui/campos/useCampoNumerico.ts`:
-  - Guarda o texto, se o campo já foi tocado e qual valor a pessoa confirmou.
-  - Mostra a mensagem ao sair do campo e no `conferir()`. Depois disso, confere a cada tecla.
-  - `valorValido` é o que pode ser salvo.
-- `ui/campos/mensagens.ts`: textos do T5 e do T6 a partir de `LIMITES` e dos `formatar*`.
-- `ui/conta/CamposDaConta.tsx`: kWh, valor e o alerta de preço, para `uso: "calibracao" | "acompanhamento"`. Substitui
-  as três cópias de hoje (cadastro, ajustes e acompanhamento).
-- Telas:
-  - `EditorAparelho`: o `Math.min(30000)` sai.
-  - `TelaComodos`: nome do cômodo.
-  - Leitura do relógio: `maxLength={6}` e alerta ao salvar.
-  - `ui/AvisoConsumoAlto.tsx`: aviso do consumo estimado da casa.
-  - Pessoas até 20.
+- **Os campos ainda leem número do jeito antigo.** São 5 lugares com `Number(t.replace(...))`: `Acompanhamento.tsx:25`
+  (`numero`), `TelaAjustes.tsx:75-76`, `Cadastro.tsx:149-150`, `EditorAparelho.tsx:125` (etiqueta) e
+  `EditorAparelho.tsx:191` (potência, com o `Math.min(30000, …)`). O "135.90" continua virando R$ 13.590.
+- **Desde a 003a, as ações do store recusam em silêncio** o que o leitor não aceita (`salvarConta`, `salvarLeitura`,
+  `atualizarResidencia`, `adicionarAparelho`... devolvem sem gravar). Hoje a tela não sabe que nada foi salvo. Na
+  `TelaAjustes`, o "Conta salva" aparece mesmo quando o store recusou. É a razão principal desta história: **a tela
+  confere antes, com as mesmas funções do core, e só chama a ação com valor válido.** O store continua sendo a 2ª
+  barreira e não muda.
+- **`CamposDaConta` ainda não existe:** são 3 cópias de kWh + valor (`Cadastro.tsx:515-520`, passo `conta`;
+  `TelaAjustes.tsx:138-143`, seção `#conta`; `Acompanhamento.tsx:147-152`, na `Folha` "Anotar conta de luz").
+- **Layout da 112:** a `/casa/ajustes` está em 2 colunas (a conta fica à esquerda); o `/comecar` tem o painel "Por que
+  perguntamos" à direita, que **nunca** mostra erro nem "Confere?" (regra 5 do `/comecar` na 112); a `/casa` tem áreas
+  de grade no `lg:` (`PainelAcompanhamento.tsx`); os cômodos têm dois desenhos (`ComodosNoComputador` e a sanfona) que
+  abrem a **mesma** folha `EditarComodo` e o mesmo `EditorAparelho`.
+- **Limites de texto escritos à mão:** `maxLength={40}` em `Cadastro.tsx:403` e `TelaComodos.tsx:334`, e `{60}` em
+  `EditorAparelho.tsx:89`. Passam a vir de `LIMITES_DE_TEXTO` (R9 da 003a). O `Contador` de pessoas (`Cadastro.tsx:358`)
+  tem `max={15}`, contra `LIMITES.pessoas.max` = 20.
+- `ui/foco.ts` (`focarTitulo`, da 003a) existe. O foco "no 1º campo errado" usa um `focarPrimeiroErro` novo no mesmo
+  arquivo, não o título.
 
-### Testes (do D8)
+### Contratos (T5 e T6)
+
+- **`ui/Campo.tsx`** (é `"use client"`):
+  - `id` passa a ser obrigatório, e todos os usos já têm;
+  - ganha `erro?: string` e
+    `alerta?: { titulo: string; texto: string; aoConfirmar: () => void; aoCorrigir: () => void }`;
+  - publica `{ id, idsDescricao, invalido }` num `CampoContexto`.
+  - Fica sempre na página uma região `aria-live="polite"` com `{id}-erro` e `{id}-alerta`. A ajuda continua `{id}-ajuda`,
+    fora da região. Os botões "Sim, está certo" e "Corrigir" ficam fora da região, e nenhum recebe foco sozinho.
+  - "Corrigir" põe o foco na entrada com o texto selecionado. "Sim" não move o foco.
+- **`ui/Entrada.tsx`:** lê o contexto e junta `aria-invalid` e `aria-describedby` com o que vier por prop. A borda fica
+  `border-alerta` quando é erro e `border-faisca` quando é alerta. Sem contexto (uso fora de `Campo`), fica igual a hoje.
+- **`ui/campos/useCampoNumerico.ts`:**
+  `useCampoNumerico({ faixa: Faixa; casas: 0 | 2; obrigatorio: boolean; inicial?: number; formatar: (n: number) => string })`
+  devolve `{ texto, aoMudar, aoSair, erro, alerta, valorValido, conferir }`.
+  - Guarda o texto, se o campo foi tocado e o valor que a pessoa confirmou no "Sim". Mostra a mensagem ao sair do campo
+    ou no `conferir()`, e depois confere a cada tecla.
+  - `conferir()` devolve `"ok" | "erro" | "alerta"` para a tela decidir: salvar, focar o erro ou esperar o "Sim".
+  - **Só estado derivado e handlers; nenhum `useEffect` que copia estado** (a HIS-109 só desce, D17 da 002b).
+- **`ui/campos/mensagens.ts`:** monta os textos do T5 e do T6 a partir de `LIMITES` e dos `formatar*` do core. Nenhum
+  número de faixa na tela.
+- **`ui/conta/CamposDaConta.tsx`:** `{ uso: "calibracao" | "acompanhamento"; beneficio: Beneficio; ... }`, com kWh,
+  valor e o alerta de preço (`precoDaContaForaDoComum`). Substitui as 3 cópias. Na calibração a faixa é
+  `contaKwhCalibracao` e `contaValorCalibracao`; no acompanhamento, as `…Acompanhamento` (0 é aceito).
+- **`ui/AvisoConsumoAlto.tsx`:** usa `consumoDaCasaForaDoComum` e aparece no passo `revisao` do cadastro e no painel.
+  No painel, vem logo depois da `section` da conta no código. No `lg:`, a raiz do `PainelAcompanhamento` usa uma de
+  duas listas de áreas, as duas escritas por inteiro no código (o Tailwind precisa da classe literal): uma com a linha
+  `'aviso aviso'` depois de `'conta conta'` e outra sem. Assim não sobra linha vazia com intervalo quando não há aviso.
+- `ui/` só chama funções puras do `@ee/core` (ADR-001, regra 4). `aplicacao/` e `infraestrutura/` não mudam.
+
+### Onde entra, tela por tela
+
+| Arquivo (hoje) | Mudança |
+| --- | --- |
+| `ui/aparelho/EditorAparelho.tsx` | potência com `useCampoNumerico(LIMITES.potenciaW, 0)`; sai o `Math.min`; alerta acima de 10.000 W, com a referência `potenciaDoChuveiroMaisForteW()`; etiqueta com `kwhMesInformado`; nome com `maxLength={LIMITES_DE_TEXTO.nomeAparelho}`; "Salvar" chama `conferir()` em todos os campos e foca o 1º errado |
+| `funcionalidades/acompanhamento/Acompanhamento.tsx` | o `numero` sai; conta com `CamposDaConta uso="acompanhamento"`; leitura com `maxLength={6}` e `alertaDaLeitura` ao salvar, comparando com a leitura anterior |
+| `funcionalidades/ajustes/TelaAjustes.tsx` | conta com `CamposDaConta uso="calibracao"`; "Conta salva" só depois de o store aceitar (valor válido e, se houver alerta, depois do "Sim") |
+| `funcionalidades/cadastro/Cadastro.tsx` | passo `conta` com `CamposDaConta uso="calibracao"`; `concluir` só com o valor válido; nome do cômodo com `LIMITES_DE_TEXTO.nomeComodo`; pessoas com `max={LIMITES.pessoas.max}`; `AvisoConsumoAlto` na `revisao`. Erro e alerta ficam no passo, nunca no painel do lado |
+| `funcionalidades/comodos/TelaComodos.tsx` (`EditarComodo`) | nome com `LIMITES_DE_TEXTO.nomeComodo` e erro de nome vazio. Serve aos dois desenhos da 112 |
+| `funcionalidades/acompanhamento/PainelAcompanhamento.tsx` | `AvisoConsumoAlto` e as duas listas de áreas |
+
+### Peso
+
+O 11a fica em até +3 072 B nas rotas com campo (`/comecar`, `/casa`, `/casa/comodos` e `/casa/ajustes`) e em até
++1 024 B nas outras. O 11b vai até +4 096 B. Conta-se só o incremento da 003b sobre o `main` de quando ela começar.
+Passou disso, falar comigo antes de mudar o `peso-js.json`.
+
+### Testes
 
 | Arquivo | O que prova |
 | --- | --- |
-| `campos.spec.ts` | potência vazia, 0, 75.001 e 10.001 (ao sair do campo, `aria-invalid`/`aria-describedby`, mín. e máx. formatados, "Sim" salva, "Corrigir" seleciona); "Ver o resultado" com erro põe o foco no 1º campo errado; preço da conta 150 kWh / R$ 1.359,00 dá alerta, e com Tarifa Social não; conta 0 no acompanhamento é aceita; leitura acima de 100 kWh por dia dá alerta |
+| `campos.spec.ts` (novo) | potência vazia, 0, 75.001 e 10.001 (ao sair do campo: `aria-invalid` e `aria-describedby`, mín. e máx. formatados, "Sim" salva, "Corrigir" seleciona); "Ver o resultado" com erro foca o 1º campo errado; "135.90" no valor vira R$ 135,90 e não R$ 13.590; conta de 150 kWh e R$ 1.359,00 dá alerta, e com Tarifa Social não; conta 0 no acompanhamento é aceita; leitura acima de 100 kWh por dia dá alerta; nos Ajustes, valor recusado não mostra "Conta salva" |
+| `layout-computador.spec.ts` | a 1280 px, o erro do passo `conta` fica no passo, e o `aside` "Por que perguntamos" não muda |
+| `apps/web/test/` (vitest) | `useCampoNumerico`: os estados `ok`, `erro` e `alerta`, e o "Sim" guardado só para o mesmo valor |
 
-- **axe:** entram o campo com erro e o campo com alerta.
-- **Peso:** a referência `peso-js.json` muda de propósito no PR; mesmo teto do D8 da 003a (acima de +4 kB gzip por
-  rota, falar com o tech-lead antes).
+- **axe:** entram o campo com erro e o campo com alerta, a 390 e a 1280 px.
+- **Celular:** nenhum pixel muda nas telas sem erro (mesma comparação do q3 da 112).
 
-### Passos (do D9)
+### Passos
 
 | Passo | Quem | O quê | Est. |
 | --- | --- | --- | --- |
-| b1 | frontend | `Campo`/`Entrada` com contexto, `useCampoNumerico`, `mensagens.ts` | 0,5 d |
-| b2 | frontend | `CamposDaConta` nos 3 lugares, `EditorAparelho`, `TelaComodos`, leitura, `AvisoConsumoAlto`, pessoas até 20 | 0,75 d |
-| b3 | qa | `campos.spec.ts` + axe | 0,25–0,5 d |
+| b1 | frontend | `Campo`/`Entrada` com contexto, `useCampoNumerico`, `mensagens.ts`, `focarPrimeiroErro` e o teste vitest | 0,5 d |
+| b2 | frontend | `CamposDaConta` nos 3 lugares, `EditorAparelho`, `EditarComodo`, leitura, `AvisoConsumoAlto` (com as áreas da `/casa`), pessoas até 20, `LIMITES_DE_TEXTO` | 0,75 d |
+| b3 | qa | `campos.spec.ts`, o caso no `layout-computador.spec.ts` e axe | 0,5 d |
 
 ## Ameaças
 
@@ -239,7 +287,13 @@ _(qa)_ A escrever a partir do `campos.spec.ts` acima e dos casos 1–23 da 003a.
 
 ## Perguntas abertas
 
-- (nenhuma)
+- [x] [para: tech-lead] Peso (P-fe-003b-1): sobre o `main` de `35f2893`, o 11a ficou em +3 315 B no `/comecar`, +4 424 B na
+  `/casa`, +2 734 B na `/casa/comodos` e +3 218 B na `/casa/ajustes` (teto +3 072); `/` e `/casa/dicas` +461 B. O 11b foi
+  a +12 435 B (teto +4 096): o Turbopack copia `Campo`, `useCampoNumerico`, `entrada.ts` e os textos em cada página que
+  os usa, e o prefetch soma as 4 cópias. Já separei os textos por quem usa (−1,4 kB no 11b). O `peso-js.json` não mudou;
+  tabela no diário do frontend (2026-11-15).
+- [para: ux-acessibilidade] Nos Ajustes não há "Pular": a conta zerada mostra só a 1ª frase do T5 ("Com a conta zerada
+  não dá para ajustar o cálculo."). Serve, ou querem outra 2ª frase?
 
 ## Conversa da equipe
 
@@ -252,3 +306,37 @@ _(qa)_ A escrever a partir do `campos.spec.ts` acima e dos casos 1–23 da 003a.
   30.000 W e o "135.90" lido como R$ 13.590 dão conta errada para a família.
 - Arquivos alterados: este arquivo (novo), `HIS-003-base-de-seguranca.md`, `docs/planejamento.md`, `docs/equipe/quadro.md`.
 - Para o próximo (frontend + qa): etapa 4 quando a 003a estiver no `main`. Antes, qa escreve o "Plano de testes".
+
+### [tech-lead] 2026-11-15 — desenho técnico revisto para o código de hoje (`e24561a`)
+- Os 5 lugares que ainda leem número do jeito antigo e as 3 cópias dos campos da conta estão mapeados, com os arquivos e linhas de hoje (tabela "Onde entra").
+- Desde a 003a, o store recusa em silêncio. Por isso a tela confere antes, com as funções do core, e o store continua sendo a 2ª barreira; isso conserta também o "Conta salva" falso dos Ajustes.
+- Para a 112: o erro nunca vai para o painel do `/comecar`; o `AvisoConsumoAlto` tem duas listas de áreas na `/casa`; o `EditarComodo` serve aos dois desenhos.
+- O `useCampoNumerico` não pode ter efeito que copia estado (a HIS-109 só desce). Peso: até +3 072 B nas rotas com campo.
+- Próximo: **qa** (Plano de testes a partir da tabela) → **frontend** (b1–b2).
+
+### [frontend] 2026-11-15 — b1 e b2 feitos (`a535c64`, `84f1587`, `bf59d3d`)
+- `Campo` com erro, "Confere?" e `CampoContexto`; `useCampoNumerico` (sem efeito), `CamposDaConta` nos 3 lugares, editor, cômodo, leitura e `AvisoConsumoAlto` (com a linha `aviso` na `/casa` do `lg:`).
+- A tela confere com o core antes do store; "Pronto" nos Ajustes só se o store guardou. Mensagem não entra ao sair do campo para um botão (o toque se perdia com o botão empurrado).
+- Barreira: lint, typecheck, test e build ok; e2e 225 ok, só o `peso-js` reprova (pergunta ao tech-lead). Capturas 390/1024/1280/1440 em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/capturas-003b/` (fora do repositório); a 390 e 800 px, sem erro, só muda o botão que deixou de ser `disabled`.
+- Para o qa (b3): casos do `campos.spec.ts`, axe com erro e alerta, Esc na folha com alerta aberto, toque no botão logo depois de digitar.
+- Próximo: **tech-lead** (peso) e **qa** (b3).
+
+
+### [ux-acessibilidade] 2026-11-15 — conta zerada nos Ajustes e revisão do "Confere?"
+- Ajustes: manter a 1ª frase do T5 e acrescentar: "Para seguir sem conta, é só não tocar em “Usar estes valores”." Sem botão novo e sem culpa; o aviso fica junto do campo, como `status`.
+- "Confere?" claro em 390 e 1440 px: amarelo com ícone e texto (não só cor), valor entendido, pista e dois botões. Conferir só que "Corrigir" tem alvo de 44 px de altura.
+
+### [tech-lead] 2026-11-15 — P-fe-003b-1: peso aceito na 003b; o corte vem numa história própria, logo depois
+1. **Medido em builds do `1c213e3` e do `35f2893`.** O core não é copiado (os `limites` ficam no chunk comum); o que se repete nas 4 páginas é o que só elas usam: `Campo`, `Entrada`, o hook, os textos e o `entrada.ts` (cerca de 2,5 kB por página). Testei as opções do Next (`turbopackChunking`). Com `minChunkSize` de 10 000, o 11b cai 22 kB, mas o 11a sobe até +5 kB. `generateComponentChunks` e `clusters` não mudam nada. Nenhuma ajuda sem piorar o 11a, então a configuração não muda.
+2. **Aceito nesta história** (ela corrige conta errada, como o "135.90" lido como R$ 13.590): 11a até +4 608 B na `/casa` e até +3 584 B no `/comecar`, na `/casa/comodos` e na `/casa/ajustes`; 11b até +13 312 B. O frontend atualiza o `peso-js.json` com o `decisao` apontando para esta nota.
+3. **O corte de verdade é carregar as folhas de edição só quando abrem**, com `next/dynamic`: `EditorAparelho`, "Anotar conta", "Anotar leitura" e `EditarComodo`. Isso tira o código dos campos do primeiro carregamento e do prefetch. O lint da 002b proíbe `import()` até haver regra própria, então isso vira uma **história nova, logo depois da 003b**, com ADR (`import()` só com caminho literal, dentro de `dynamic()`, conferido pelo script de camadas), seguranca e ux (o que a folha mostra enquanto carrega no 3G). Meta: tirar ao menos 3 kB do 11a da `/casa` e a maior parte do 11b. Quem orquestra leva ao scrum-master.
+
+
+### [tech-lead] 2026-11-17 — revisão única da PR (código e segurança): aprovado
+1. **Aprovado** (`a535c64..bf59d3d`, `425c7ed`, `16e832b` com o Next 16.4.6 e `23df555`). Os 5 `Number(replace)` saíram. Toda tela confere com o core (`lerNumeroDigitado` + `validarFaixa`, em `situacaoDoCampo`) antes de chamar o store, que continua sendo a 2ª barreira. O "Conta salva" falso foi corrigido: a tela só confirma quando o store gravou (`mesmaConta`).
+2. **Segurança:** nenhum `as` sobre dado de fora, nenhum `any` e nenhum `!`. Os textos têm `maxLength` vindo de `LIMITES_DE_TEXTO` e a leitura tem 6 dígitos. Os números ficam presos às faixas do `limites.ts`, sem número escrito à mão na tela. Não há HTML a partir de texto, e o `useCampoNumerico` não tem efeito (continuam 7 linhas da HIS-109).
+3. Como verifiquei: numa cópia, lint, typecheck (98 arquivos), test (242 + 25 + 104 + 152) e build verdes. `pnpm audit` sem alta nem crítica (1 moderada). Próximo: fechamento.
+
+### [qa] 2026-11-17 — b3 feito: aprovado, com 1 defeito baixo
+- `campos.spec.ts`: limites e "Confere?" da potência, conta e leitura; "135.90" lido como R$ 135,90; conta 0 aceita no acompanhamento; conta zerada e o "Pronto" falso nos Ajustes; axe com erro e com alerta. O caso do `/comecar` a 1280 px está em `layout-computador.spec.ts`. "Sim" e "Corrigir" têm 44 px de altura ou mais. Specs novos e afetados numa cópia: 136 testes que passam, 0 falhas; lint verde.
+- **D-3b-1 (baixa, frontend/ux):** quem sai do campo com Tab e cai num botão não vê a mensagem (o `indoParaUmBotao` vale também para o teclado). Ela só aparece ao apertar continuar, o que fere a letra do critério 5. Sugestão: só segurar a mensagem quando o toque é de ponteiro.

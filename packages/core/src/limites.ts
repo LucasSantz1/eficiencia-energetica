@@ -106,6 +106,14 @@ export const CONSUMO_DA_CASA_ALERTA_KWH_MES = 2_000;
 /** Média do consumo residencial do país em jun/2025, kWh/mês (EPE, Boletim Trimestral de Consumo de Eletricidade nº 22). O texto diz "perto de 180". */
 export const MEDIA_BRASIL_KWH_MES = 178.2;
 
+/**
+ * A média do país arredondada para os textos do "Confere?" (T6): "perto de 180 kWh por mês" (dezena mais próxima) e
+ * "perto de 6 kWh por dia" (178,2 ÷ 30 = 5,94, inteiro mais próximo). Fonte: `MEDIA_BRASIL_KWH_MES` (EPE).
+ */
+export function mediaBrasilParaTexto(): { kwhMes: number; kwhDia: number } {
+  return { kwhMes: Math.round(MEDIA_BRASIL_KWH_MES / 10) * 10, kwhDia: Math.round(MEDIA_BRASIL_KWH_MES / DIAS_NO_MES) };
+}
+
 /** Diz se o número cabe na faixa. Número que não é finito (`NaN`, `Infinity`) está sempre fora. */
 export function validarFaixa(faixa: Faixa, valor: number): ResultadoDaFaixa {
   if (!Number.isFinite(valor)) return "fora";

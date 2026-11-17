@@ -351,8 +351,10 @@ export function gerarDicas(ctx: Contexto & { bandeira?: BandeiraMes }): Dica[] {
       tipo: "geral",
       icone: "hand-heart",
       titulo: "Veja se sua família tem direito à Tarifa Social",
+      // Lei 12.212/2010, art. 2º, I, II e § 1º, e Lei 15.235/2025 (HIS-103, R1, R4 e R6). Os 80 kWh são de energia:
+      // impostos e iluminação pública continuam na conta (D2).
       texto:
-        "Famílias no CadÚnico com renda de até meio salário mínimo por pessoa, ou que recebem o BPC, não pagam os primeiros 80 kWh do mês. Com renda até um salário mínimo por pessoa, há desconto até 120 kWh. Procure o CRAS da sua cidade para se inscrever no CadÚnico.",
+        "Famílias no CadÚnico com renda de até meio salário mínimo por pessoa, ou que recebem o BPC, não pagam a energia dos primeiros 80 kWh do mês. Com renda até um salário mínimo por pessoa, há desconto até 120 kWh. Procure o CRAS da sua cidade para se inscrever no CadÚnico. Se alguém da casa precisa de aparelho elétrico ligado para a saúde, e a renda da família é de até 3 salários mínimos, peça na distribuidora com atestado médico.",
       simulavel: false,
     });
   }
