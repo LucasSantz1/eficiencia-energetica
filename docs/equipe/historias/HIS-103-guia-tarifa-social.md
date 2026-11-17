@@ -325,3 +325,7 @@ _(qa)_ Unidade com C1–C13; e2e do guia em 390 px e 1280 px; conferir D1–D8 c
 - Peso (código do `49d4741`): `/tarifa-social` 11a 165.524 B e 11b 184.352 B; nas outras rotas o 11a sobe de +386 a +729 B. **[para: tech-lead]** a `/casa` com casa segue +6.577 B no 11b: não é o guia (o código dele não baixa lá), é o Turbopack que refez os pedaços comuns (ícones e `ui/`). Ficou gravado no `decisao` do JSON.
 - e2e completo na cópia (porta 35xx): 242 ok antes do último ajuste do teste do link do CRAS; depois, guia, peso e rotas 30 ok.
 
+### [tech-lead] 2026-11-17 — 11b da `/casa` com casa depois dos cortes (`3492f5a`): aceito
+1. **Conferido numa cópia:** listei os `.js` que a `/casa` com casa baixa até a rede parar, no `main` antes do guia e no `3492f5a`. Nenhum tem código do guia: nenhum texto de `textos.ts` nem a regra do core. São 8 pedaços novos, a mesma coisa redistribuída pelo Turbopack, e o total sobe de 227 488 B para 234 030 B (gzip -9). É prefetch, depois que a página abriu, e o 11a está dentro do limite. **Aceito**, sem corte possível nesta história: mexer no `turbopackChunking` piora o 11a (medido na P-fe-003b-1).
+2. O **qa** grava o 11b novo da `/casa` com casa no `peso-js.json`, com o `decisao` apontando para esta nota. Backlog para o scrum-master: uma história de "peso com prefetch" que reveja o prefetch das 4 abas da `/casa`, que é quem mais pesa no 11b.
+
