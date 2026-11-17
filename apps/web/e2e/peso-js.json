@@ -1,41 +1,41 @@
 {
-  "medidoNoCommit": "49d4741",
-  "decisao": "HIS-103b, tech-lead (d8b7939): /tarifa-social entra como rota nova (sem referência anterior). Depois dos cortes (regra em @ee/core/tarifa-social e prefetch={false} na /casa), contra a referência anterior (daef13f) o 11a das outras rotas sobe de +386 a +729 B e o 11b fica entre −4 867 e +1 186 B, salvo a /casa com casa: +6 577 B, porque o Turbopack refez os pedaços comuns (ícones e ui/) quando a rota nova passou a usá-los; o código do guia não é baixado na /casa. Essa exceção está como pergunta ao tech-lead na HIS-103. Medido com o código do 49d4741.",
+  "medidoNoCommit": "0170330",
+  "decisao": "HIS-103b (tech-lead, d8b7939 e a03f63f, 2026-11-17): rota nova /tarifa-social aceita; com a regra em @ee/core/tarifa-social e prefetch={false} nos links da /casa, o 11a das outras rotas fica abaixo de +1 024 B; o 11b da /casa com casa (+6,5 kB, módulos redistribuídos pelo Turbopack, sem código do guia) foi aceito. Medido no main com TypeScript 6 e Next 16.4.6.",
   "rotas": {
     "/": {
-      "jsDoHtml": 172730,
-      "totalComPrefetch": 192760
+      "jsDoHtml": 173192,
+      "totalComPrefetch": 196220
     },
     "/comecar": {
-      "jsDoHtml": 184879,
-      "totalComPrefetch": 192760
+      "jsDoHtml": 188277,
+      "totalComPrefetch": 196220
     },
     "/casa": {
-      "jsDoHtml": 187744,
-      "totalComPrefetch": 251525
+      "jsDoHtml": 192063,
+      "totalComPrefetch": 263980
     },
     "/casa/comodos": {
-      "jsDoHtml": 187050,
-      "totalComPrefetch": 251525
+      "jsDoHtml": 189642,
+      "totalComPrefetch": 263980
     },
     "/casa/dicas": {
-      "jsDoHtml": 178325,
-      "totalComPrefetch": 251525
+      "jsDoHtml": 178657,
+      "totalComPrefetch": 263980
     },
     "/casa/ajustes": {
-      "jsDoHtml": 176875,
-      "totalComPrefetch": 251525
+      "jsDoHtml": 180023,
+      "totalComPrefetch": 263980
     },
     "/sobre": {
       "jsDoHtml": 140268,
-      "totalComPrefetch": 176793
+      "totalComPrefetch": 177255
     },
     "/tarifa-social": {
-      "jsDoHtml": 165524,
-      "totalComPrefetch": 184352
+      "jsDoHtml": 166354,
+      "totalComPrefetch": 185244
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 234796
+      "totalComPrefetch": 244253
     }
   }
 }
