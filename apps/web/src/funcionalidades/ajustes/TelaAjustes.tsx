@@ -16,6 +16,7 @@ import { CamposDaConta } from "@/ui/conta/CamposDaConta";
 import { useCamposDaConta, type CamposDaContaEstado } from "@/ui/conta/useCamposDaConta";
 import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
+import { SecaoLeitura } from "./SecaoLeitura";
 
 const BENEFICIOS: { id: Beneficio; titulo: string; descricao: string }[] = [
   { id: "tarifa-social", titulo: "Tarifa Social", descricao: "CadÚnico com renda de até meio salário mínimo por pessoa, BPC, ou CadÚnico com renda de até 3 salários mínimos e alguém que precisa de aparelho elétrico para a saúde. A energia dos primeiros 80 kWh é de graça." },
@@ -170,7 +171,8 @@ export function TelaAjustes() {
         </Secao>
       </div>
 
-      <div className="lg:self-start">
+      <div className="space-y-12 lg:self-start">
+        <SecaoLeitura />
         <SeusDados />
       </div>
 
