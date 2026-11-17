@@ -32,6 +32,20 @@ leva perguntas de um para o outro e não deixa a história avançar com pergunta
 - `docs/equipe/agentes/<papel>/` — pasta de cada agente: `contexto.md` (estado da área, decisões, pendências,
   orientações do responsável) e `diario.md` (histórico de trabalho).
 
+## Modo rápido (em vigor desde 17/11/2026, pedido do dono)
+
+O dono pediu mais agilidade nas funcionalidades novas. Vale para toda história, menos as sensíveis:
+
+- **Quem faz:** quem orquestra implementa direto as tarefas pequenas e médias; agentes só para trabalho grande ou
+  especialista (domínio, pesquisa de regra).
+- **Revisão:** uma só, do tech-lead (código + checklist de segurança do `CLAUDE.md`). O resto é o CI: lint, tipos,
+  testes, build, e2e com axe e peso. Teste novo acompanha toda mudança de comportamento.
+- **Documentação e scrum:** uma vez por semana, em lote (CHANGELOG, `docs/sistema/`, quadro e diários).
+- **Merge:** a PR é marcada com auto-merge e entra sozinha quando o CI fica verde.
+- **Peso de JS:** acima do teto, o tech-lead decide na mesma revisão; não vira rodada separada.
+- **Sensível = processo completo** (domínio, ux, segurança, qa separados): dado da pessoa, login, envio ao servidor,
+  cálculo da conta, Tarifa Social e regras da ANEEL.
+
 ## Fluxo de uma história
 
 ```

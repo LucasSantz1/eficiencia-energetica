@@ -24,6 +24,7 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 | `aplicacao/` | única porta para `infraestrutura/`: `casa.ts` (`useCasa`, `useCasaCarregada`, `novoId`, `useEdicaoDeAparelho`, `useDistribuidoraAtualizada`), `dados-publicos.ts` (`useTarifas`, `useMunicipios`), `resumo.ts` (`useResumo`, `tarifaMedia`, `nomeDistribuidora`), `numeros-do-inicio.servidor.ts` |
 | `infraestrutura/` | `armazenamento/casa.ts` (o único `create` do store: chave `eficiencia-energetica:casa`, versão 2 + `migrate`), `identificador.ts` (`novoId`), `dados-publicos/navegador.ts` (fetch de `/dados`), `dados-publicos/arquivos.servidor.ts` (único `node:fs`) |
 | HIS-003a (a4/a5) | `infraestrutura/armazenamento/armazenamento-local.ts` (nunca lança; `travarGravacao`) e `hidratacao.ts` (`lerCasaNaHidratacao`, `dadosSalvaveis`); `ui/AvisoDaCasaSalva`, `ui/AvisoFalhaDeCarga`, `ui/TelaDeErro`, `ui/foco.ts`, `ui/estilosDeBotao.ts`; `app/error.tsx`, `global-error.tsx`, `not-found.tsx`; testes do store em `apps/web/test/` (vitest) |
+| HIS-003b (campos) | `ui/Campo` (`erro`, `alerta`, `CampoContexto`; `id` obrigatório) e `ui/Entrada` (lê o contexto); `ui/campos/` (`useCampoNumerico`, `situacaoDoCampo` pura, `mensagens.ts` comuns); `ui/conta/` (`CamposDaConta`, `useCamposDaConta`, `mensagensDaConta`); `ui/aparelho/mensagensDoAparelho.ts`; `ui/AvisoConsumoAlto`; `foco.ts` (`focarPrimeiroErro`); teste em `apps/web/test/campos.test.ts` |
 | `config/recursos.ts` | `RECURSOS.espacosReservados = false` |
 
 ## Decisões em vigor
@@ -59,7 +60,18 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 - Só o `global-error.tsx` é tela de erro (sem `app/error.tsx`, D10). O que entra em toda rota (`global-error.tsx`, `not-found.tsx`) não importa `Botao.tsx`, `lucide` nem
   `next/link` no erro: usa `classesDeBotao` (medido: ~8 kB por rota).
 
+- Campos (HIS-003b): a tela confere com `lerNumeroDigitado` + `validarFaixa` antes de chamar o store (que recusa em
+  silêncio); nenhum número de faixa na tela, tudo do `limites.ts`. Mensagem só ao sair do campo ou no continuar, e não
+  quando o foco vai para um botão (`indoParaUmBotao`: o botão empurrado perdia o toque). Botão de continuar nunca
+  `disabled` por campo errado. Campo que muda de "coisa em edição" volta ao inicial pela `chave` do hook, sem efeito.
+  O valor já salvo conta como confirmado (o "Confere?" não volta para ele).
+- Peso: o Turbopack copia o módulo inteiro em cada página que o importa (sem tree-shaking por export no nosso código);
+  texto ou função usado por uma tela só fica perto dela.
+
 ## Pendências
+
+- HIS-003b: b1 e b2 feitos (2026-11-15, `a535c64`, `84f1587`, `bf59d3d`, com push). Aguarda o tech-lead decidir o peso
+  (11a até +4 424 B, 11b +12 435 B; P-fe-003b-1), a ux sobre a conta zerada nos Ajustes e o qa (b3).
 
 - HIS-103: textos D1–D6, D8 e D9 corrigidos (2026-11-13, branch `his-103-guia-tarifa-social`). Falta o guia (D7 e o link do D4).
 - HIS-112: f1–f7 feitas (2026-11-12/13, sobre a 003a). Aguarda qa (q1–q5; o teto do 11b no spec ainda é +2 048) e o

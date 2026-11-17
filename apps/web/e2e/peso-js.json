@@ -1,37 +1,37 @@
 {
-  "medidoNoCommit": "daef13f",
-  "decisao": "HIS-112, L8 (tech-lead, 2026-11-12; revisto em c9e9fbd, 2026-11-13): contra a referência da 003a, 11a até +2 048 B na /casa/comodos (medido +1 998) e +1 024 B nas outras rotas (medido até +694 no /comecar); 11b até +4 096 B (medido até +3 143). Medido com o código do daef13f.",
+  "medidoNoCommit": "ab61c00",
+  "decisao": "HIS-003b, P-fe-003b-1 (tech-lead, 722b30d, 2026-11-15): aceito porque a história corrige conta errada; 11a até +4 608 B na /casa e +3 584 B nas outras rotas com campo; 11b até +13 312 B. O corte vem na história seguinte (folhas com next/dynamic). Medido no Next 16.4.6.",
   "rotas": {
     "/": {
-      "jsDoHtml": 172199,
-      "totalComPrefetch": 197627
+      "jsDoHtml": 172610,
+      "totalComPrefetch": 201050
     },
     "/comecar": {
-      "jsDoHtml": 184493,
-      "totalComPrefetch": 197627
+      "jsDoHtml": 187854,
+      "totalComPrefetch": 201050
     },
     "/casa": {
-      "jsDoHtml": 187057,
-      "totalComPrefetch": 250339
+      "jsDoHtml": 191504,
+      "totalComPrefetch": 263019
     },
     "/casa/comodos": {
-      "jsDoHtml": 186393,
-      "totalComPrefetch": 250339
+      "jsDoHtml": 189083,
+      "totalComPrefetch": 263019
     },
     "/casa/dicas": {
-      "jsDoHtml": 177736,
-      "totalComPrefetch": 250339
+      "jsDoHtml": 178150,
+      "totalComPrefetch": 263019
     },
     "/casa/ajustes": {
-      "jsDoHtml": 176146,
-      "totalComPrefetch": 250339
+      "jsDoHtml": 179448,
+      "totalComPrefetch": 263019
     },
     "/sobre": {
-      "jsDoHtml": 140398,
-      "totalComPrefetch": 176266
+      "jsDoHtml": 140268,
+      "totalComPrefetch": 176673
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 228219
+      "totalComPrefetch": 237880
     }
   }
 }
