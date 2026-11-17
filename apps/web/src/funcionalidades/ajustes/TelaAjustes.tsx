@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { distribuidorasDaCidade, ehUf, ESTADOS, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type ContaReferencia, type Ligacao, type Municipio } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
+import { apagarPreferenciaDeLeitura } from "@/aplicacao/leitura";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
 import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
@@ -16,6 +17,7 @@ import { CamposDaConta } from "@/ui/conta/CamposDaConta";
 import { useCamposDaConta, type CamposDaContaEstado } from "@/ui/conta/useCamposDaConta";
 import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
+import { SecaoLeitura } from "./SecaoLeitura";
 
 const BENEFICIOS: { id: Beneficio; titulo: string; descricao: string }[] = [
   { id: "tarifa-social", titulo: "Tarifa Social", descricao: "CadÚnico com renda de até meio salário mínimo por pessoa, BPC, ou CadÚnico com renda de até 3 salários mínimos e alguém que precisa de aparelho elétrico para a saúde. A energia dos primeiros 80 kWh é de graça." },
@@ -58,6 +60,7 @@ export function TelaAjustes() {
               <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
             </Secao>
           )}
+          <SecaoLeitura />
           <SeusDados />
           <TrocarCidade
             aberta={mudandoCidade}
@@ -176,7 +179,8 @@ export function TelaAjustes() {
         </Secao>
       </div>
 
-      <div className="lg:self-start">
+      <div className="space-y-12 lg:self-start">
+        <SecaoLeitura />
         <SeusDados />
       </div>
 
@@ -228,6 +232,8 @@ function SeusDados() {
               variante="perigo"
               onClick={() => {
                 apagarTudo();
+                // A escolha de leitura mora numa chave própria: "todos os meus dados" inclui ela (LGPD, HIS-102).
+                apagarPreferenciaDeLeitura();
                 router.push("/");
               }}
             >
