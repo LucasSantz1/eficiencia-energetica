@@ -3,7 +3,8 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { addTransitionType, startTransition, useEffect, useRef, useState } from "react";
-import { avaliarTarifaSocial, FAIXA_DA_RENDA_FAMILIAR, formatarReais, lerNumeroDigitado, LIMITES, validarFaixa, type Faixa, type RespostasDaTarifaSocial } from "@ee/core";
+import { formatarReais, lerNumeroDigitado, LIMITES, validarFaixa, type Faixa } from "@ee/core";
+import { avaliarTarifaSocial, FAIXA_DA_RENDA_FAMILIAR, type RespostasDaTarifaSocial } from "@ee/core/tarifa-social";
 import { TransicaoTela } from "@/ui/Movimento";
 import { BlocosFixos } from "./BlocosFixos";
 import { PerguntaDeEscolhaNaTela, PerguntaDeNumeroNaTela } from "./Perguntas";

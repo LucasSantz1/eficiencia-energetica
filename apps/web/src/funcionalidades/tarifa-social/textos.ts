@@ -1,16 +1,7 @@
 // Sem "use client": só textos, usados pelos componentes do guia (que já são de cliente).
 
-import {
-  DESCONTO_SOCIAL_LIMITE_KWH,
-  formatarReais,
-  LIMITES,
-  PRAZO_DA_CONVOCACAO,
-  TARIFA_DE_EXEMPLO_KWH,
-  TARIFA_SOCIAL_ISENCAO_KWH,
-  valorDaEnergiaDeGracaNoExemplo,
-  type CasoDaTarifaSocial,
-  type ComparacaoDaRenda,
-} from "@ee/core";
+import { DESCONTO_SOCIAL_LIMITE_KWH, formatarReais, LIMITES, TARIFA_SOCIAL_ISENCAO_KWH } from "@ee/core";
+import { PRAZO_DA_CONVOCACAO, TARIFA_DE_EXEMPLO_KWH, valorDaEnergiaDeGracaNoExemplo, type CasoDaTarifaSocial, type ComparacaoDaRenda } from "@ee/core/tarifa-social";
 
 /**
  * Textos do guia da Tarifa Social, copiados do "Fluxo e textos" da HIS-103 (ux-acessibilidade, 2026-11-17). Os números

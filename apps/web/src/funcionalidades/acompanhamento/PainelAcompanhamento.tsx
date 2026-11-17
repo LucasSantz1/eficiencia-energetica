@@ -110,10 +110,11 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
             </p>
           )}
           {residencia?.beneficio === "tarifa-social" && conta.economiaBeneficio > 0 && <p>A Tarifa Social tira cerca de {formatarReais(conta.economiaBeneficio)} da conta: a energia dos primeiros 80 kWh é de graça.</p>}
-          {/* "Não sei" no cadastro: o fim do cadastro leva ao guia, como a opção promete (HIS-103, D7). */}
+          {/* "Não sei" no cadastro: o fim do cadastro leva ao guia, como a opção promete (HIS-103, D7). Sem prefetch:
+              a /casa não baixa o guia a cada visita, só quando a pessoa toca (tech-lead, HIS-103b). */}
           {residencia?.beneficio === "nao-sei" && (
             <p>
-              <Link href="/tarifa-social" transitionTypes={["nav-forward"]} className="font-bold text-faisca underline underline-offset-2">
+              <Link href="/tarifa-social" prefetch={false} transitionTypes={["nav-forward"]} className="font-bold text-faisca underline underline-offset-2">
                 Ver se pode ter direito à Tarifa Social
               </Link>
             </p>

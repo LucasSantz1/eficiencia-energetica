@@ -14,4 +14,3 @@ export * from "./entrada";
 export * from "./estados";
 export * from "./casa-salva";
 export * from "./arquivos-publicos";
-export * from "./tarifa-social";

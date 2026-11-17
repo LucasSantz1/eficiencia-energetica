@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Regras de negócio compartilhadas entre o site e o futuro app: cálculos de consumo, tarifa, bandeira, Tarifa Social, catálogo de aparelhos e dicas.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./tarifa-social": "./src/tarifa-social.ts"
   },
   "scripts": {
     "test": "vitest run",

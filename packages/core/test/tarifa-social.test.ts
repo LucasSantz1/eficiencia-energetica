@@ -7,7 +7,7 @@ import {
   valorDaEnergiaDeGracaNoExemplo,
   type CasoDaTarifaSocial,
   type RespostasDaTarifaSocial,
-} from "../src";
+} from "../src/tarifa-social";
 
 // Casos C1–C13 da HIS-103 (dominio-energia), com o salário mínimo de 2026 (R$ 1.621,00). Renda em centavos.
 const semBpc = (pessoas: number, reais: number, extra: Partial<RespostasDaTarifaSocial> = {}): RespostasDaTarifaSocial => ({

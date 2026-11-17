@@ -2,7 +2,7 @@
 
 import { CircleCheck, CircleMinus } from "lucide-react";
 import type { Ref } from "react";
-import { convocacaoAberta, salarioMinimoEmVigor, type ResultadoDaTarifaSocial } from "@ee/core";
+import { convocacaoAberta, salarioMinimoEmVigor, type ResultadoDaTarifaSocial } from "@ee/core/tarifa-social";
 import { Aviso } from "@/ui/Aviso";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { AVISOS, BOTOES_DO_RESULTADO, explicarARenda, RESULTADOS } from "./textos";

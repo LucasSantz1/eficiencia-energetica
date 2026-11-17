@@ -2,6 +2,9 @@ import { TARIFA_SOCIAL_ISENCAO_KWH } from "./calculos";
 import { LIMITES, validarFaixa, type Faixa } from "./limites";
 
 /**
+ * Entrada própria do pacote (`@ee/core/tarifa-social`), fora do `index.ts`: só a rota /tarifa-social usa esta regra, e
+ * o que sai do `index.ts` vai num pedaço comum que toda rota baixa (ADR-001 revisto, HIS-103b).
+ *
  * Guia "pode ter direito?" da Tarifa Social e do Desconto Social (HIS-103). Regras e fontes do dominio-energia,
  * consultadas em 13/11/2026 ("Regras de negócio e fontes" da HIS-103). O guia nunca diz "tem direito": quem confirma
  * é o CRAS ou a distribuidora. Toda conta de dinheiro é em centavos, sem arredondar a renda por pessoa (critério 2).
