@@ -10,9 +10,9 @@ import { expect, test } from "./apoio/teste";
 
 const CHAVE_LEITURA = "eficiencia-energetica:leitura";
 const AMBOS_LIGADOS = JSON.stringify({ letraMaior: true, maisContraste: true });
-const TELAS = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/sobre"] as const;
+const TELAS = ["/", "/comecar", "/tarifa-social", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/sobre"] as const;
 
-const interruptor = (pagina: Page, nome: "Letra maior" | "Mais contraste") => pagina.getByRole("switch", { name: nome });
+const interruptor = (pagina: Page, nome: "Letra maior" | "Mais contraste") => pagina.getByRole("switch", { name: nome, exact: true });
 const marcasDoHtml = (pagina: Page) => pagina.evaluate(() => ({ ...document.documentElement.dataset }));
 
 test("ligar os dois, recarregar e abrir outra tela: continua ligado", async ({ page, context }) => {
@@ -97,4 +97,19 @@ test("Apagar todos os meus dados também apaga a escolha de leitura", async ({ p
   await expect(page).toHaveURL((url) => url.pathname === "/");
   expect(await textoGuardado(page, CHAVE_LEITURA)).toBeNull();
   expect(await marcasDoHtml(page)).not.toHaveProperty("contraste");
+});
+
+test("sem casa cadastrada: a letra maior também fica no topo do cadastro e da casa", async ({ page }) => {
+  await page.goto("/comecar");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Em qual estado você mora?");
+  await interruptor(page, "Letra maior").click();
+  await expect(interruptor(page, "Letra maior")).toHaveAttribute("aria-checked", "true");
+  expect(await marcasDoHtml(page)).toMatchObject({ letra: "maior" });
+
+  // A Casca sem casa ("Vamos cadastrar") mostra o mesmo controle, já ligado.
+  await page.goto("/casa");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Vamos cadastrar a sua casa");
+  await expect(interruptor(page, "Letra maior")).toHaveAttribute("aria-checked", "true");
+  await interruptor(page, "Letra maior").click();
+  expect(await marcasDoHtml(page)).not.toHaveProperty("letra");
 });
