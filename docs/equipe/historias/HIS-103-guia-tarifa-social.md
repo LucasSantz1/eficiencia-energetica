@@ -320,3 +320,8 @@ _(qa)_ Unidade com C1–C13; e2e do guia em 390 px e 1280 px; conferir D1–D8 c
 - Sugestão: com BPC = sim, a pergunta do CadÚnico é pulada e o aviso manda "fazer o CadÚnico". Melhor: "Confira no CRAS se o CadÚnico está em dia" (R5).
 - CRAS: respondido em "Perguntas abertas" (link do gov.br, que aponta para a busca do MDS).
 
+### [frontend] 2026-11-17 — cortes do tech-lead e revisão do domínio aplicados (`c06a2ad`, `49d4741`, peso no `peso-js.json`)
+- Regra em `@ee/core/tarifa-social` (fora do `index.ts`, lint só aceita esta entrada) e `prefetch={false}` nos 2 links da `/casa`. Domínio: B e D viram "Confira no CRAS" fora da vigência; BPC = sim manda conferir o CadÚnico; link do CRAS no "Onde ir".
+- Peso (código do `49d4741`): `/tarifa-social` 11a 165.524 B e 11b 184.352 B; nas outras rotas o 11a sobe de +386 a +729 B. **[para: tech-lead]** a `/casa` com casa segue +6.577 B no 11b: não é o guia (o código dele não baixa lá), é o Turbopack que refez os pedaços comuns (ícones e `ui/`). Ficou gravado no `decisao` do JSON.
+- e2e completo na cópia (porta 35xx): 242 ok antes do último ajuste do teste do link do CRAS; depois, guia, peso e rotas 30 ok.
+
