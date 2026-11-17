@@ -36,10 +36,12 @@ export function interpretarPreferenciaDeLeitura(bruto: string | null): Preferenc
  * Roda no <head>, antes de pintar, e marca o <html> com a escolha guardada (sem piscar a versão normal). Vai como
  * texto filho do <script>, sem dangerouslySetInnerHTML; por isso não pode ter & < > nem aspas, que o React escaparia
  * (o teste de unidade confere). A CSP da HIS-003a já permite script inline ('unsafe-inline', sem nonce nem hash).
- * Mesma regra do interpretarPreferenciaDeLeitura: só `true` liga.
+ * Mesma regra do interpretarPreferenciaDeLeitura: só `true` liga e texto grande demais é ignorado.
  */
+// Texto com mais de TAMANHO_MAXIMO caracteres é ignorado, como no leitor: `t.slice(200)` só tem algo quando o texto
+// passa de 200 (sem `>`, que o React escaparia).
 export const SCRIPT_DA_PRIMEIRA_PINTURA =
-  `try{var p=JSON.parse(localStorage.getItem(\`${CHAVE_DA_LEITURA}\`));if(p){var h=document.documentElement;` +
+  `try{var t=localStorage.getItem(\`${CHAVE_DA_LEITURA}\`);var p=t?t.slice(${TAMANHO_MAXIMO})?null:JSON.parse(t):null;if(p){var h=document.documentElement;` +
   "if(p.letraMaior===true)h.dataset.letra=`maior`;if(p.maisContraste===true)h.dataset.contraste=`mais`}}catch(e){}";
 
 function armazenamento(): Storage | undefined {

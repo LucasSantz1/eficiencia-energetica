@@ -49,6 +49,17 @@ describe("script da primeira pintura (HIS-102)", () => {
     expect(rodar(JSON.stringify({ letraMaior: "true", maisContraste: 1 }))).toEqual({});
   });
 
+  it("ignora texto com mais de 200 caracteres, como o leitor", () => {
+    const comLixo = (tamanho: number) => {
+      const base = JSON.stringify({ letraMaior: true, x: "" });
+      return base.replace('"x":""', `"x":"${"a".repeat(tamanho - base.length)}"`);
+    };
+    expect(comLixo(200)).toHaveLength(200);
+    expect(rodar(comLixo(200))).toEqual({ letra: "maior" });
+    expect(rodar(comLixo(201))).toEqual({});
+    expect(interpretarPreferenciaDeLeitura(comLixo(201))).toEqual(LEITURA_PADRAO);
+  });
+
   it("não quebra a página com nada guardado, JSON quebrado ou armazenamento bloqueado", () => {
     expect(rodar(null)).toEqual({});
     expect(rodar("{quebrado")).toEqual({});
