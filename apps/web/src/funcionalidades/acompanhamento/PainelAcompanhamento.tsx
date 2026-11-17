@@ -117,6 +117,15 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
             </p>
           )}
           {residencia?.beneficio === "tarifa-social" && conta.economiaBeneficio > 0 && <p>A Tarifa Social tira cerca de {formatarReais(conta.economiaBeneficio)} da conta: a energia dos primeiros 80 kWh é de graça.</p>}
+          {/* "Não sei" no cadastro: o fim do cadastro leva ao guia, como a opção promete (HIS-103, D7). Sem prefetch:
+              a /casa não baixa o guia a cada visita, só quando a pessoa toca (tech-lead, HIS-103b). */}
+          {residencia?.beneficio === "nao-sei" && (
+            <p>
+              <Link href="/tarifa-social" prefetch={false} transitionTypes={["nav-forward"]} className="font-bold text-faisca underline underline-offset-2">
+                Ver se pode ter direito à Tarifa Social
+              </Link>
+            </p>
+          )}
           {residencia?.beneficio === "desconto-social" && <p>Esta estimativa não tira o Desconto Social, porque o valor muda em cada distribuidora. A sua conta deve vir um pouco menor.</p>}
           {conta.cobradoPeloMinimo && (
             <p className="flex gap-2">

@@ -10,6 +10,19 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-17 · HIS-103b · guia da Tarifa Social (/tarifa-social)
+- O que fiz: merge do `origin/next-16-4-6`; core `avaliarTarifaSocial` + vigência do salário mínimo e do prazo, com C1–C13;
+  página estática com a funcionalidade `tarifa-social` (perguntas, resultados A–D, blocos fixos); links na `/`, Minha
+  casa e painel ("Não sei"); `rotas.spec` com a rota nova; `tarifa-social.spec.ts` (390/1440, axe, 2027 sem R$).
+- Decisões: ordem A, C, B, D (a Tarifa Social é o desconto maior); data de hoje só no clique (a página é estática); um `h1`
+  só; sem `Casca`; erro e "Confere?" locais (o `Campo` com erro está na PR #21, que não toquei).
+- Peso (gzip, celular): 11a 165.139 B, 11b 183.967 B; guia 11,5 kB; o core inteiro (17,4 kB) vem pelo barril. Tirar o
+  catálogo do `limites.ts` só deu −326 B (desfeito); `sideEffects: false` piora outras rotas (não entrou).
+- Barreira: e2e 239 ok; só o `peso-js` reprova (contra o `caece07`: 11a +700 a +1.050 B, 11b da `/casa` com casa
+  +6.864 B, porque o Turbopack refez os pedaços compartilhados). Pergunta ao tech-lead na história.
+- Arquivos: `core/src/tarifa-social.ts` (+teste, `index.ts`), `app/tarifa-social/page.tsx`, `funcionalidades/tarifa-social/*`,
+  `inicio/PaginaInicial.tsx`, `ajustes/TelaAjustes.tsx`, `acompanhamento/PainelAcompanhamento.tsx`, `e2e/{rotas,tarifa-social}.spec.ts`.
+- Próximos passos: respostas de ux, dominio-energia e tech-lead; qa e seguranca.
 ## 2026-11-15 · HIS-003b · campos com limite e "Confere?" nas telas (b1, b2) e "Pronto" falso dos Ajustes
 - O que fiz: `Campo`/`Entrada` com erro, alerta e contexto; `useCampoNumerico` + `situacaoDoCampo` (pura, com vitest);
   `CamposDaConta` no cadastro, Ajustes e acompanhamento; potência sem `Math.min`, etiqueta, nomes, leitura (6 dígitos e

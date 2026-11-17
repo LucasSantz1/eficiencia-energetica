@@ -1,37 +1,41 @@
 {
-  "medidoNoCommit": "ab61c00",
-  "decisao": "HIS-003b, P-fe-003b-1 (tech-lead, 722b30d, 2026-11-15): aceito porque a história corrige conta errada; 11a até +4 608 B na /casa e +3 584 B nas outras rotas com campo; 11b até +13 312 B. O corte vem na história seguinte (folhas com next/dynamic). Medido no Next 16.4.6.",
+  "medidoNoCommit": "0170330",
+  "decisao": "HIS-103b (tech-lead, d8b7939 e a03f63f, 2026-11-17): rota nova /tarifa-social aceita; com a regra em @ee/core/tarifa-social e prefetch={false} nos links da /casa, o 11a das outras rotas fica abaixo de +1 024 B; o 11b da /casa com casa (+6,5 kB, módulos redistribuídos pelo Turbopack, sem código do guia) foi aceito. Medido no main com TypeScript 6 e Next 16.4.6.",
   "rotas": {
     "/": {
-      "jsDoHtml": 172610,
-      "totalComPrefetch": 201050
+      "jsDoHtml": 173192,
+      "totalComPrefetch": 196220
     },
     "/comecar": {
-      "jsDoHtml": 187854,
-      "totalComPrefetch": 201050
+      "jsDoHtml": 188277,
+      "totalComPrefetch": 196220
     },
     "/casa": {
-      "jsDoHtml": 191504,
-      "totalComPrefetch": 263019
+      "jsDoHtml": 192063,
+      "totalComPrefetch": 263980
     },
     "/casa/comodos": {
-      "jsDoHtml": 189083,
-      "totalComPrefetch": 263019
+      "jsDoHtml": 189642,
+      "totalComPrefetch": 263980
     },
     "/casa/dicas": {
-      "jsDoHtml": 178150,
-      "totalComPrefetch": 263019
+      "jsDoHtml": 178657,
+      "totalComPrefetch": 263980
     },
     "/casa/ajustes": {
-      "jsDoHtml": 179448,
-      "totalComPrefetch": 263019
+      "jsDoHtml": 180023,
+      "totalComPrefetch": 263980
     },
     "/sobre": {
       "jsDoHtml": 140268,
-      "totalComPrefetch": 176673
+      "totalComPrefetch": 177255
+    },
+    "/tarifa-social": {
+      "jsDoHtml": 166354,
+      "totalComPrefetch": 185244
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 237880
+      "totalComPrefetch": 244253
     }
   }
 }
