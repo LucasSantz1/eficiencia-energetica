@@ -278,8 +278,67 @@ _(modelos para o ux-acessibilidade ajustar; valores entre `{}` vêm do core e pa
 
 ## Fluxo e textos
 
-_(ux-acessibilidade: pendente. Os textos acima são o ponto de partida do domínio. Pontos a decidir: onde fica o campo, como
-anunciar a mudança de estado para leitor de tela, contraste do estado "falta".)_
+_(ux-acessibilidade, 17/11/2026, modo rápido. Os textos do domínio valem; aqui ficam só as decisões e os ajustes.)_
+
+**1. Onde fica.** No painel `/casa`, num cartão "Sua meta" logo abaixo da conta estimada (a pessoa já olha o R$ ali).
+Em Minha casa entra só uma linha "Meta de luz: {meta}" com o botão "Mudar meta", que leva ao cartão. Sem meta, o cartão é
+um convite curto: "Quanto você quer pagar de luz por mês?" + botão "Definir meta". Nada de passo novo no cadastro.
+
+**2. Campo (uma decisão só).** Rótulo visível e ajuda como no domínio. `inputMode="decimal"`, prefixo "R$" fora do campo,
+aceita vírgula e ponto, alvo >= 44 px. Erro ao sair do campo (padrão HIS-003): "Escreva um valor entre R$ 1,00 e R$ 5.000,00."
+com `aria-invalid` + `aria-describedby` + ícone. "Salvar meta" não fica `disabled`: mostra o erro e foca o campo.
+**Confere?** (HIS-003b, amarelo, sem `aria-invalid`, sem janela, nenhum botão com foco sozinho), para meta acima de
+R$ 1.000,00 (suposição, perto de 5x uma conta comum): "**Confere?** {valor} é muito para uma conta de luz. Veja se a vírgula
+está no lugar certo." Botões "Sim, está certo" e "Corrigir". Salva só depois de confirmar. "Tirar a meta" pede
+confirmação na mesma tela ("Tirar a meta de {meta}?" / "Sim, tirar" / "Manter").
+**Conta de luz da pessoa (CIP).** Campo opcional logo depois: "Taxa de iluminação pública (opcional)". Ajuda: "Está na sua
+conta de luz, na linha da iluminação pública. Se não achar, deixe vazio." Vazio é caminho "não sei". Confere? acima de R$ 150,00.
+
+**3. Painel.** Um bloco com `aria-live="polite"` (sempre no código, vazio antes do texto). Ordem: título do estado (h3),
+linha da conta e da meta, dicas, fecho, avisos. R$ sempre antes do kWh; kWh só em "Ver detalhes". Falta = barra em seta
+da etiqueta com a meta marcada (nunca só cor: o texto diz o número). Cada dica é um cartão que leva ao aparelho; o
+valor é o ganho marginal do domínio (R4.3). Estado 4: verde-energia. Estado 3: verde com ícone de visto. Estados 2 e 5:
+faísca em `Aviso` (não é erro, a pessoa não errou). Estado 1: "Falta o preço da luz" como na HIS-111.
+```
+Sua meta: R$ 120,00     [Mudar]
+Falta economizar R$ 40,00 por mês.
+Conta estimada R$ 160,00 | meta R$ 120,00
+Estas 2 dicas chegam lá
+ Banho mais curto: economiza R$ 7,04
+ Chuveiro no verão: economiza R$ 5,63
+Juntas, economizam R$ 12,67 ...
+É uma estimativa. ...
+```
+
+**4. Pisos.**
+- Abaixo do piso (estado 2): título e linhas do domínio, sem "falta" e sem dicas. Botão principal "Usar {piso}" (preenche
+  o campo com a menor meta e pede para confirmar com "Salvar meta"; nunca troca a meta sozinho). Mantém a meta digitada.
+- Conta não informada ou aparelhos que explicam pouco (parcial): "Falta economizar **pelo menos** {falta}" com "pelo menos"
+  também no `aria-label` da barra. Cabeçalho "Estas {n} dicas ajudam". Botão "Colocar minha conta de luz" (vai ao cadastro da
+  conta) e, no divergente, "Ver meus aparelhos". Nunca "chegam lá" nem "já cabe" sem conta (usa a linha "Sem os impostos...").
+
+**5. Celular 390 px e computador (HIS-112).** Uma coluna: conta, cartão da meta, painel, dicas. Campo e botão empilhados,
+botão com largura inteira. No `lg`, o cartão da meta vai para a coluna do painel (grid-areas, ordem do código = ordem do
+celular), campo e botão na mesma linha, dicas em lista de uma coluna (nada de cartões idênticos lado a lado). Sem `sticky`.
+
+**6. Leitor de tela e letra maior (HIS-102).** Ao salvar, o foco fica no botão "Mudar" e o bloco `aria-live` anuncia o título
+do estado e o número ("Falta economizar R$ 40,00 por mês"), não o painel inteiro. Se o elemento com foco some (ex.: "Tirar a
+meta"), o foco vai ao título do cartão. Barra em seta com `role="img"` e rótulo: "Conta de R$ 160,00, meta de R$ 120,00".
+Nome acessível do botão começa pelo texto visível. Sem tamanho fixo em px: tudo em `rem`, para a letra maior não cortar.
+Com letra maior e 360 px, o campo e a linha "conta | meta" quebram em duas linhas; sem rolagem para o lado. Contraste AA:
+texto de apoio em `text-white` (nunca `/85`) sobre o verde; faísca com texto tinta. Animação da barra desligada com
+movimento reduzido; número final aparece direto.
+
+**Textos ajustados (resto: copiar do domínio).**
+- Cartão sem meta: "Quanto você quer pagar de luz por mês?" / "Definir meta".
+- Linha do Minha casa: "Meta de luz: {meta} por mês" / "Mudar meta".
+- Confirmação ao salvar (status, 1 linha): "Meta salva neste aparelho."
+- "Fica só neste aparelho. Não enviamos para ninguém." no rodapé do cartão e "Apagar tudo" também apaga a meta.
+- Trocar "ligação tem 1 fase" por "a luz entra na casa com 1 fio (fase)" só se o domínio confirmar; por ora manter o do domínio
+  e o link "Onde vejo isso na conta?".
+
+**Para o frontend conferir:** `aria-live` sempre presente; Confere? sem dialog; foco; 390/1280/360 px com letra maior; sem
+R$ 0,00 sem preço; axe sem erro. **Próximo:** tech-lead (desenho técnico), depois seguranca e qa.
 
 ## Desenho técnico
 
