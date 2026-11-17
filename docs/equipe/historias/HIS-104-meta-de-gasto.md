@@ -342,9 +342,121 @@ R$ 0,00 sem preço; axe sem erro. **Próximo:** tech-lead (desenho técnico), de
 
 ## Desenho técnico
 
-_(tech-lead: pendente. Pedido do domínio: função(ões) de meta em `packages/core` com testes, usando só `estimarConta`,
-`precoKwh`, `simularPlano` e `gerarDicas`, sem regra na interface; campo de CIP em `Residencia` com `migrate`; constantes
-nomeadas (20%, 3 dicas, R$ 1 a R$ 5.000, em centavos) com comentário de que são suposições; `precoKwh` aceitando a CIP.)_
+_(tech-lead, 2026-11-17, sobre o `main` em `cc4df94`. Segue R1–R7 do domínio. História sensível: nenhuma conta na
+interface, e todo número sai do core com teste.)_
+
+### M1. Iluminação pública (CIP): entra **agora**, sem migração de preço (resposta à pergunta `[para: tech-lead]`)
+
+- A CIP vem da mesma conta de luz. Por isso ela fica em `ContaReferencia.iluminacaoPublica?: number` (R$, 2 casas,
+  opcional), e não em `Residencia`.
+- **Quem já calibrou não muda nada:** quem não tem o campo continua com o preço de hoje, igual até o centavo. Só muda
+  para quem digitar a CIP. Por isso não há migração de preço, só a do formato (M3).
+- **Uma regra só, no core** (`calculos.ts`):
+  - `precoKwh` divide `(valor − CIP) ÷ kWh cobrados`. Na Tarifa Social continua dividindo por `kWh − 80`.
+  - `estimarConta` soma a CIP em `valor` e devolve `valorIluminacaoPublica`, porque a CIP não depende do kWh.
+  - `resumirCasa` divide entre os aparelhos só `valor − CIP`. Na Tarifa Social, hoje ele divide `conta.valor`; sem
+    essa troca, a CIP iria parar no custo dos aparelhos.
+- Com isso, o painel, as dicas (a diferença entre duas contas cancela a CIP) e a meta usam a mesma conta. O `C` e o `P`
+  do R1/R2 viram `estimarConta(...).valor`, sem somar a CIP de novo na tela.
+- **Teste de regressão obrigatório:** todos os testes de `calculos` e `dicas` passam **sem mudar nenhum valor esperado**
+  (sem CIP = regra de hoje). Os casos novos com CIP são o C2 e um de Tarifa Social com CIP.
+- Limite: `LIMITES.iluminacaoPublica = { min: 0, max: ?, casas: 2 }`, e o leitor exige `CIP < valor` (sobra energia na
+  conta). `[para: dominio-energia]`: qual o máximo com fonte, ou uma suposição nomeada? Proponho R$ 500,00 como
+  suposição.
+
+### M2. Função pura no core: `avaliarMeta`
+
+- Fica em `packages/core/src/meta.ts`, exportado como **entrada própria** `@ee/core/meta` (só a `/casa` usa; ADR-001,
+  revisão da HIS-103b). O `package.json` do core e a lista do `eslint.config.mjs` ganham `meta`.
+- Constantes nomeadas, cada uma com o comentário "suposição de produto, não é regra do setor":
+  - `FAIXA_DA_META: Faixa = { min: 1, max: 5000, casas: 2 }`;
+  - `DIVERGENCIA_MAXIMA = 0.2`;
+  - `DICAS_NA_META = 3`;
+  - `HABITOS_ANTES_DA_TROCA = 3`.
+- Contrato, todo em **centavos inteiros** (R2):
+
+```ts
+type Confianca = { tipo: "completa" } | { tipo: "parcial"; motivo: "sem-conta" | "divergencia"; contaInformadaCentavos?: number };
+interface PassoDaMeta { dicaId: string; ganhoCentavos: number }           // ganho marginal, na ordem (R4.3)
+type SituacaoDaMeta =
+  | { tipo: "sem-dados" }                                                   // estado 1
+  | { tipo: "abaixo-do-piso"; pisoCentavos: number; confianca: Confianca }  // estado 2
+  | { tipo: "dentro"; contaCentavos: number; folgaCentavos: number; confianca: Confianca }   // estado 3
+  | { tipo: "falta"; contaCentavos: number; faltaCentavos: number; pisoCentavos: number; passos: PassoDaMeta[];
+      totalCentavos: number; contaDepoisCentavos: number; chegaLa: boolean; confianca: Confianca }; // estados 4 e 5
+function avaliarMeta(entrada: { metaReais: number; aparelhos: Aparelho[]; residencia: Pick<Residencia, "beneficio" | "ligacao" | "contaReferencia">;
+  preco: PrecoKwh; dicas: readonly Dica[] }): SituacaoDaMeta
+```
+
+- **Regras do R4, sem atalho:**
+  - `conta(ids) = centavos(estimarConta(consumoMensalDaCasaKwh(simularPlano(aparelhos, ids)), residencia, preco).valor)`;
+  - candidatas: as `dicas` (de `gerarDicas`, já com o contexto da tela) com `simulavel`, `tipo` `habito` ou `troca` e
+    `centavos(economiaMes) > 0`;
+  - a escolha é gulosa e recalcula o ganho de cada candidata **em cima do plano** a cada passo. Empate: maior kWh, depois
+    `id` em ordem alfabética. Até 3 hábitos primeiro, troca só se eles não bastarem;
+  - para em `conta ≤ meta` ou em 3 dicas. Ganho 0 sai da lista.
+  - `chegaLa` só é `true` com confiança `completa` (R3). Com `parcial`, a tela usa os textos "pelo menos" e "ajudam".
+- `sem-dados` quando `preco.origem === "indisponivel"` ou não há aparelho. Meta fora da `FAIXA_DA_META` não chega aqui:
+  a tela e o leitor barram antes (C13).
+- **Testes** (`packages/core/test/meta.test.ts`): C1 a C14 com os valores do domínio, mais "a soma dos `passos` =
+  `totalCentavos` ± 1" e "`totalCentavos` ≤ `contaCentavos − pisoCentavos`". O C7 com Tarifa Social fica
+  `test.todo` até a pergunta do domínio. A função não usa `Date` nem guarda nada, então o resultado só depende da
+  entrada.
+
+### M3. Onde a meta é guardada: `DadosCasa`, versão 3
+
+- Fica em `DadosCasa.metaMensal?: number` (R$, 2 casas), e não numa chave própria. A meta é dado da casa: quando houver
+  sincronização (E4), vai junto, e "Apagar tudo" já a apaga.
+- **Formato salvo muda, então a versão sobe de 2 para 3:**
+  - o `migrate` continua só repassando, porque os campos novos são opcionais e o `merge` com `lerCasaSalva` confere
+    tudo (ADR-004);
+  - teste de migração: a fixture `casa-v2.json` abre na v3 **sem aviso T1** e com o mesmo preço, e a v3 com meta e
+    CIP volta igual depois de recarregar.
+- **Leitor na fronteira** (`casa-salva.ts`, R4c):
+  - `metaMensal` e `iluminacaoPublica` entram nos `CAMPOS_*`, com `numeroNaFaixa` (`FAIXA_DA_META` e
+    `LIMITES.iluminacaoPublica`);
+  - CIP maior ou igual ao valor da conta descarta só a CIP, contada em `descartados`. Meta inválida é descartada.
+  - O tipo e a faixa da meta ficam em `limites.ts` (ou em `meta.ts` reexportado), porque o leitor da casa vive no `index`
+    e não pode depender da entrada `@ee/core/meta`. **O leitor só usa a faixa.**
+- **Store** (`infraestrutura/armazenamento/casa.ts`): ganha `definirMeta(reais: number | undefined)`, que passa pelo
+  leitor como as outras ações. A CIP entra pelo `atualizarResidencia({ contaReferencia })` que já existe.
+
+### M4. Tela (padrão da HIS-112 e da 003b)
+
+- **`aplicacao/meta.ts`:** `useMeta()` junta o `useResumo` (aparelhos, residência, preço, dicas) com a `metaMensal`
+  e devolve a `SituacaoDaMeta`, num `useMemo`. Nenhuma conta fica fora do core.
+- **`funcionalidades/acompanhamento/MetaDeGasto.tsx`:**
+  - campo com `useCampoNumerico(FAIXA_DA_META, 2)` da 003b, com "Salvar meta" e "Tirar a meta";
+  - o resultado é uma `section aria-labelledby` com os textos do domínio, ajustados pelo ux. Os textos ficam em
+    `funcionalidades/acompanhamento/textosDaMeta.ts`, com os valores sempre por `formatarReais`;
+  - quando o estado muda depois de "Salvar meta", o resumo vai num `role="status"`. É resposta a uma ação da pessoa,
+    então não conflita com a regra de não anunciar sem pedir. O ux confirma.
+- **Lugar no painel:** logo depois do cartão da conta no código (e do `AvisoConsumoAlto`, quando existir). No `lg:`,
+  ganha uma linha própria `'meta meta'` depois de `'conta conta'`, nas duas listas de áreas do `PainelAcompanhamento`
+  (com e sem aviso, escritas por inteiro). Dentro dela, o campo fica à esquerda e o resultado à direita
+  (`lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]`). Com isso o celular fica idêntico até a seção nova.
+- **CIP:** um campo opcional "Iluminação pública (está na sua conta)" no `CamposDaConta` com `uso` de calibração
+  (Ajustes e cadastro), com o texto do ux. É opcional porque não existe valor médio com fonte.
+
+### M5. Peso
+
+O 11a da `/casa` vai até +3 072 B: o `meta.ts` só entra na `/casa`, pela entrada própria. O 11a das outras rotas vai até
++1 024 B (o `precoKwh` e o campo de CIP). O 11b vai até +4 096 B. Passou disso, falar comigo antes de mudar o
+`peso-js.json`. O qa grava a referência nova no commit final.
+
+### M6. Tarefas
+
+| # | Quem | O quê | Est. |
+| --- | --- | --- | --- |
+| m1 | backend | M1: `iluminacaoPublica`, `precoKwh`/`estimarConta`/`resumirCasa`, limite, regressão sem mudar nenhum valor esperado | 0,5 d |
+| m2 | backend | M2: `meta.ts`, entrada `@ee/core/meta`, lista do ESLint e do `nega-core-caminho-interno`, C1–C14 | 0,75 d |
+| m3 | backend | M3 no core: leitor (`casa-salva.ts`, `CAMPOS_*`, descartes) | 0,25 d |
+| m4 | frontend | M3 no site: versão 3, `migrate`, `definirMeta`, teste vitest de migração e de "Apagar tudo" | 0,25 d |
+| m5 | frontend | M4: `useMeta`, `MetaDeGasto`, linha `meta` nas áreas, campo de CIP no `CamposDaConta` | 0,75 d |
+| q1 | qa | e2e 390 e 1280 px dos 5 estados, C4 no navegador (R$ 12,67, nunca R$ 14,08), migração v2 → v3, axe, peso | 0,5 d |
+
+A ordem é m1 → m2 → m3 → m4 → m5 → q1. A m1 e a m2 podem andar juntas. A seguranca revê M1 e M3 (dado financeiro
+guardado no aparelho) antes da m4.
 
 ## Ameaças
 
@@ -365,8 +477,11 @@ dados. Mais: e2e do painel em 390 px e 1280 px, com axe, e teste de migração d
 
 - [ ] `[para: dominio-energia]` Na Tarifa Social, o custo de disponibilidade da trifásica (100 kWh) vale além dos 80 kWh
   isentos? Hoje o código não aplica. Mudaria o piso e o C7. Pendente da HIS-103 (cedoc da REN 1.147/2025 não abriu em 13/11/2026).
-- [ ] `[para: tech-lead]` Aceita mudar `precoKwh` para tirar a CIP antes de dividir (R1)? Altera preços de quem já calibrou
+- [x] `[para: tech-lead]` Aceita mudar `precoKwh` para tirar a CIP antes de dividir (R1)? Altera preços de quem já calibrou
   com a conta; precisa de `migrate` e teste de regressão.
+  — **Resposta (tech-lead, 2026-11-17):** aceito, e entra agora (M1). Não altera o preço de quem já calibrou: a CIP é um campo
+  novo e opcional, então sem ela tudo fica igual até o centavo, com teste de regressão. O formato salvo sobe para a versão 3,
+  com `migrate` e teste (M3).
 - [ ] `[para: ux-acessibilidade]` Campo da CIP: opcional, com explicação "o valor está na sua conta, na linha de iluminação
   pública"? Lembrar que a CIP é cobrada por município e não existe valor médio com fonte.
 - [ ] `[para: scrum-master]` Confirmar o limite de 3 dicas e o corte de 20% (suposições de produto).
@@ -385,3 +500,12 @@ dados. Mais: e2e do painel em 390 px e 1280 px, com axe, e teste de migração d
 - Como verifiquei: contas feitas à mão com `DIAS_NO_MES = 30` e as fórmulas do `dicas.ts`. **Não reconsultei os sites oficiais
   hoje**; as fontes são as já registradas no código e no contexto, a reconferir no PR. Impostos por estado ficam fora (HIS-202).
 - Para o próximo (ux-acessibilidade e tech-lead): ajustar textos e desenho; resolver as perguntas abertas.
+
+### [tech-lead] 2026-11-17 — desenho técnico (M1–M6)
+1. **CIP entra agora** como `ContaReferencia.iluminacaoPublica`, opcional: quem já calibrou não muda nem um centavo (regressão obrigatória). A regra fica num lugar só (`precoKwh` tira a CIP antes de dividir; `estimarConta` a soma de volta), então painel, dicas e meta batem.
+2. **`avaliarMeta`** fica no core, na entrada própria `@ee/core/meta`, em centavos inteiros, com escolha gulosa sempre por `simularPlano`. O `chegaLa` só é verdadeiro com estimativa completa. C1–C14 viram testes; o C7 com Tarifa Social fica `todo`.
+3. **Meta em `DadosCasa.metaMensal`**, formato na versão 3 (`migrate` só repassa, `merge` confere), lida e limitada no leitor da casa salva. Sai com "Apagar tudo".
+4. **Painel:** seção depois do cartão da conta, com uma linha `meta` própria nas áreas do `lg:`; o celular fica igual até ela. Peso: até +3 072 B na `/casa` e até +1 024 B nas outras rotas.
+5. Respondi à pergunta sobre a CIP. Ficam abertas: o teto da CIP e a trifásica na Tarifa Social (dominio-energia), e 3 dicas e 20% (scrum-master).
+6. Próximo: **ux** (textos e lugar) ‖ **seguranca** (M1, M3) ‖ **dominio** (teto da CIP) → **backend** m1–m3 → **frontend** m4–m5 → **qa**.
+
