@@ -55,6 +55,7 @@
     font-size: 125%;
     --spacing: 0.2rem;
   }
+
   /* "Mais contraste": texto de apoio quase da cor do texto, linhas visíveis e o verde mais escuro. */
   html[data-contraste="mais"] {
     --color-tinta-suave: #26354d;
@@ -336,4 +337,13 @@ dialog[open].folha {
     opacity: 1;
     transform: none;
   }
+}
+
+/* Com a letra maior (HIS-102), cortar com "..." esconderia metade do nome: o texto quebra a linha (decisão em vigor:
+   nomes longos quebram, não truncam) e o nome visível continua batendo com o acessível (axe). Fora das camadas de
+   propósito: precisa vencer a utilidade `truncate`, que fica na camada utilities. */
+html[data-letra="maior"] .truncate {
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
 }
