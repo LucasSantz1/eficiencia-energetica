@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { distribuidorasDaCidade, ehUf, ESTADOS, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type ContaReferencia, type Ligacao, type Municipio } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
+import { apagarPreferenciaDeLeitura } from "@/aplicacao/leitura";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
 import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
@@ -59,6 +60,7 @@ export function TelaAjustes() {
               <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
             </Secao>
           )}
+          <SecaoLeitura />
           <SeusDados />
           <TrocarCidade
             aberta={mudandoCidade}
@@ -224,6 +226,8 @@ function SeusDados() {
               variante="perigo"
               onClick={() => {
                 apagarTudo();
+                // A escolha de leitura mora numa chave própria: "todos os meus dados" inclui ela (LGPD, HIS-102).
+                apagarPreferenciaDeLeitura();
                 router.push("/");
               }}
             >
