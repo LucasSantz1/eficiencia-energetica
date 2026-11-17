@@ -263,8 +263,10 @@ _(qa)_ Unidade com C1–C13; e2e do guia em 390 px e 1280 px; conferir D1–D8 c
   com "Não sei" no cadastro, o link "Ver se pode ter direito à Tarifa Social"; (4) com BPC = sim são 2 perguntas, e a
   tela diz "Pergunta 2 de 2" (o texto dizia "2 de 3"). Também: um só `h1` (o topo); perguntas e resultado são `h2` e
   recebem o foco; o progresso é texto + barra, como no cadastro, e não `Pilulas`; a página não usa a `Casca` (ela é da casa).
-- [ ] `[para: dominio-energia]` (frontend) O link "Achar o CRAS mais perto (serviço do gov.br)" ficou de fora: não há
-  endereço oficial nas fontes F1–F9. Qual é?
+- [x] `[para: dominio-energia]` (frontend) O link "Achar o CRAS mais perto (serviço do gov.br)" ficou de fora: não há
+  endereço oficial nas fontes F1–F9. Qual é? — **resposta (17/11/2026):** https://www.gov.br/pt-br/servicos/acessar-o-cras-centro-de-referencia-da-assistencia-social
+  (gov.br, "Acessar o CRAS", modificada em 14/07/2026). A busca que essa página indica é o MOPS do MDS:
+  https://aplicacoes.mds.gov.br/sagi/mops/ . Usar o link do gov.br no botão (é mais estável e explica o serviço).
 - [ ] `[para: tech-lead]` (frontend) A `/tarifa-social` não está no `peso-js.json`: 11a 165.139 B e 11b 183.967 B (o
   guia é 11,5 kB; o `@ee/core` inteiro, 17,4 kB, vem junto porque o barril não é podado). `sideEffects: false` no core
   tirou 14,5 kB do guia, mas aumentou o 11b da `/` (+8,9 kB) e da Minha casa (+6,9 kB); não entrou. O `peso-js`
@@ -311,4 +313,10 @@ _(qa)_ Unidade com C1–C13; e2e do guia em 390 px e 1280 px; conferir D1–D8 c
 2. **Corte 1 (frontend):** a regra do guia vai para uma entrada própria do core (`@ee/core/tarifa-social`; ADR-001 revisto). Ela sai do `index.ts` e entra no `exports` do `package.json`. No `eslint.config.mjs`, a regra passa a `^@ee/(?!core(/tarifa-social)?$)`, e o caso `nega-core-caminho-interno` continua acusando. Medido: o código do guia sai da `/casa`, e o 11a das outras rotas cai de +700–1 066 B para +379–709 B, abaixo dos +1 024 B (antes, a `/casa`, a `/casa/comodos` e a `/casa/ajustes` passavam do limite).
 3. **Corte 2 (frontend):** `prefetch={false}` nos dois links para o guia que ficam na `/casa` (painel e Minha casa). Assim a `/casa` não baixa o guia (os +6 864 B do 11b) a cada visita; ele só carrega quando a pessoa toca no link. O link da página inicial continua com prefetch, porque lá o guia é a ação principal.
 4. **Peso aceito depois dos cortes:** `/tarifa-social` como rota nova (11a cerca de 165 kB, 11b cerca de 184 kB, sem referência anterior) e as outras rotas dentro de +1 024 B no 11a e +2 048 B no 11b. O **qa** inclui a rota no `peso-js.json`, medido no commit final, com o `decisao` apontando para esta nota.
+
+### [dominio-energia] 2026-11-17 — `avaliarTarifaSocial` (0f16ed8): certa em 2026; 1 ajuste obrigatório para 2027
+- Em 2026 está aprovada: A/C/B/D, a ordem A, C, B, D, os limites inclusivos e os testes C1–C13 batem com R1, R4 e R7. Nenhum caso promete mais do que a lei dá.
+- **Ajuste obrigatório:** a partir de 01/01/2027 a função continua usando o salário mínimo de 2026, que é menor que o novo. Assim **nega quem tem direito**: dá D a quem cabe no Desconto Social e B a quem cabe na Tarifa Social. A e C continuam valendo, porque o limite só sobe. Fora da vigência, B e D viram um caso novo, "conferir": "Não deu para conferir a renda com o salário mínimo deste ano. O CRAS confirma." Teste: 3 pessoas, R$ 4.863,03, hoje = 2027-01-01 → "conferir".
+- Sugestão: com BPC = sim, a pergunta do CadÚnico é pulada e o aviso manda "fazer o CadÚnico". Melhor: "Confira no CRAS se o CadÚnico está em dia" (R5).
+- CRAS: respondido em "Perguntas abertas" (link do gov.br, que aponta para a busca do MDS).
 
