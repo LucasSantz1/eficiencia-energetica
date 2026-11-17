@@ -23,6 +23,25 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Arquivos: `core/src/tarifa-social.ts` (+teste, `index.ts`), `app/tarifa-social/page.tsx`, `funcionalidades/tarifa-social/*`,
   `inicio/PaginaInicial.tsx`, `ajustes/TelaAjustes.tsx`, `acompanhamento/PainelAcompanhamento.tsx`, `e2e/{rotas,tarifa-social}.spec.ts`.
 - Próximos passos: respostas de ux, dominio-energia e tech-lead; qa e seguranca.
+## 2026-11-15 · HIS-003b · campos com limite e "Confere?" nas telas (b1, b2) e "Pronto" falso dos Ajustes
+- O que fiz: `Campo`/`Entrada` com erro, alerta e contexto; `useCampoNumerico` + `situacaoDoCampo` (pura, com vitest);
+  `CamposDaConta` no cadastro, Ajustes e acompanhamento; potência sem `Math.min`, etiqueta, nomes, leitura (6 dígitos e
+  "Confere?" > 100 kWh/dia), `AvisoConsumoAlto` (revisão e painel, com a linha `aviso` só quando há aviso); pessoas até 20.
+  Core: `mediaBrasilParaTexto` e `consumoMensalDaCasaKwh`, com teste.
+- Decisões: "Sim" devolve o foco à entrada (o botão some; a ux pede); a mensagem não entra quando o foco sai para um
+  botão (no e2e o clique em "Usar estes valores" se perdia); leitura vazia continua com o botão desabilitado (não há
+  texto da ux para ela); nos Ajustes a conta zerada usa só a 1ª frase do T5 (pergunta à ux).
+- Peso sobre o `main` de `35f2893` (medido nas duas cópias, porta 34xx), 11a: `/` +460, `/comecar` +3 315,
+  `/casa` +4 424, `/casa/comodos` +2 734, `/casa/dicas` +461, `/casa/ajustes` +3 218, `/sobre` 0. 11b: +3 378 (`/`,
+  `/comecar`), +12 435 (`/casa*`), +9 517 (`/casa` com casa), +460 (`/sobre`). Separar os textos por quem usa tirou
+  ~1,4 kB do 11b. `peso-js.json` intocado: decisão do tech-lead.
+- Verificação: lint, typecheck, test, build; e2e 225 ok (só `peso-js` reprova); spec próprio na cópia (11 casos, sem
+  erro de console) e capturas 390/1024/1280/1440; pixel a pixel a 390 e 800 px sem erro: só o botão que deixou de ser `disabled`.
+- Arquivos: `ui/Campo.tsx`, `ui/Entrada.tsx`, `ui/foco.ts`, `ui/campos/*`, `ui/conta/*`, `ui/AvisoConsumoAlto.tsx`,
+  `ui/aparelho/{EditorAparelho,LinhaAparelho,mensagensDoAparelho}`, `cadastro/Cadastro.tsx`, `ajustes/TelaAjustes.tsx`,
+  `acompanhamento/{Acompanhamento,PainelAcompanhamento,mensagensDoRelogio}`, `comodos/TelaComodos.tsx`,
+  `core/src/{limites,calculos}.ts` e testes.
+- Próximos passos: tech-lead (peso) e qa (b3: `campos.spec.ts`, caso no `layout-computador.spec.ts`, axe).
 
 ## 2026-11-13 · HIS-103 · textos da Tarifa Social que prometiam mais do que o site faz (D1–D6, D8, D9)
 - O que fiz: troquei os textos da `/`, Minha casa, cadastro, acompanhamento, Sobre e a dica/comentário do core pela correção do dominio-energia.

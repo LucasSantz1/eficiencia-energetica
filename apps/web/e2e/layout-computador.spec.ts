@@ -6,6 +6,7 @@
  */
 import type { Locator, Page } from "@playwright/test";
 import { analisarAcessibilidade, descreverViolacoes, violacoesQueReprovam } from "./apoio/axe";
+import { irAteAConta } from "./apoio/cadastro";
 import { lerFixture, semearCasa } from "./apoio/casa";
 import { botaoDaLista } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
@@ -236,6 +237,33 @@ test("/comecar: o painel Por que perguntamos aparece a 1024 px, muda com o passo
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Qual é a sua cidade?");
   await expect(painel).not.toHaveText(primeiro);
   await expect(painel.getByRole("button")).toHaveCount(0); // só explica: nada para tocar lá dentro
+});
+
+test("/comecar a 1280 px: o erro da conta fica no passo, e o painel Por que perguntamos não muda (HIS-003b)", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: ALTURA });
+  await irAteAConta(page, /^Não sei/);
+  const painel = page.getByRole("complementary");
+  await expect(painel).toBeVisible();
+  const textoDoPainel = await painel.innerText();
+  await page.locator("input#conta-kwh").fill("0");
+  await page.locator("input#conta-valor").fill("0");
+  await page.getByRole("button", { name: "Ver o resultado" }).click();
+  const erro = page.locator("#conta-kwh-erro");
+  await expect(erro).toBeVisible();
+  const caixaDoErro = await caixa(erro);
+  const caixaDoPainel = await caixa(painel);
+  expect(caixaDoErro.x + caixaDoErro.width, "o erro fica na coluna do passo, à esquerda do painel").toBeLessThan(caixaDoPainel.x);
+  expect(await painel.innerText()).toBe(textoDoPainel);
+  await expect(painel.locator("[id$='-erro'], [id$='-alerta']")).toHaveCount(0);
+
+  // O "Confere?" também fica no passo.
+  await page.locator("input#conta-kwh").fill("150");
+  await page.locator("input#conta-valor").fill("1.359,00");
+  await page.locator("input#conta-valor").blur();
+  const alerta = page.locator("#conta-valor-alerta");
+  await expect(alerta).toBeVisible();
+  expect((await caixa(alerta)).x).toBeLessThan(caixaDoPainel.x);
+  expect(await painel.innerText()).toBe(textoDoPainel);
 });
 
 test("/comecar: container, 68 caracteres, zoom e axe (critérios 1, 7, 10; q4)", async ({ page }) => {

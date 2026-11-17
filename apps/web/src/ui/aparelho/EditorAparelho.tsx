@@ -2,13 +2,17 @@
 
 import { CircleHelp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { consumoMensalKwh, formatarKwh, formatarReais, itemDoCatalogo, type Aparelho, type Comodo, type PrecoKwh } from "@ee/core";
+import { consumoMensalKwh, formatarKwh, formatarReais, itemDoCatalogo, LIMITES, LIMITES_DE_TEXTO, type Aparelho, type Comodo, type PrecoKwh } from "@ee/core";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
+import { NOME_DO_APARELHO_VAZIO } from "@/ui/campos/mensagens";
+import { indoParaUmBotao, useCampoNumerico } from "@/ui/campos/useCampoNumerico";
 import { Contador } from "@/ui/Contador";
 import { Entrada } from "@/ui/Entrada";
+import { focarPrimeiroErro } from "@/ui/foco";
 import { Folha } from "@/ui/Folha";
 import { Pilulas } from "@/ui/Pilulas";
+import { mensagensDaEtiqueta, mensagensDaPotencia } from "./mensagensDoAparelho";
 import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
 
 
@@ -40,26 +44,48 @@ export function EditorAparelho({
   const [r, setR] = useState<Rascunho | undefined>(aparelho);
   const [semEtiqueta, setSemEtiqueta] = useState(false);
   const [confirmarRemocao, setConfirmarRemocao] = useState(false);
+  // T5 do nome vazio: aparece ao sair do campo ou ao salvar, e some na tecla que dá nome de novo.
+  const [conferirNome, setConferirNome] = useState(false);
+  // Os campos de número voltam ao valor salvo quando muda o aparelho em edição (a chave), sem efeito novo.
+  const potencia = useCampoNumerico({ faixa: LIMITES.potenciaW, casas: 0, obrigatorio: true, mensagens: mensagensDaPotencia(), inicial: aparelho?.potenciaW || undefined, chave: aparelho });
+  const etiqueta = useCampoNumerico({ faixa: LIMITES.kwhMesInformado, casas: 2, obrigatorio: true, mensagens: mensagensDaEtiqueta(), inicial: aparelho?.kwhMesInformado, chave: aparelho });
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reinicia o rascunho quando muda o aparelho em edição (HIS-109)
     setR(aparelho);
     setSemEtiqueta(false);
     setConfirmarRemocao(false);
+    setConferirNome(false);
   }, [aparelho]);
 
   if (!r) return <Folha aberta={false} aoFechar={aoFechar} titulo="">{null}</Folha>;
 
   const item = itemDoCatalogo(r.catalogoId);
   const modo = item?.modo ?? "tempo";
+  const usaPotencia = modo !== "etiqueta";
+  const usaEtiqueta = modo === "etiqueta" && !semEtiqueta;
   const mudar = (p: Partial<Rascunho>) => setR((atual) => (atual ? { ...atual, ...p } : atual));
-  const kwh = consumoMensalKwh(r);
+  // A prévia usa o número que a tela entendeu (mesmo antes do "Sim"); enquanto o campo está errado, o último que valia.
+  const comNumeros = {
+    ...r,
+    potenciaW: usaPotencia ? (potencia.valorLido ?? r.potenciaW) : r.potenciaW,
+    kwhMesInformado: usaEtiqueta ? (etiqueta.valorLido ?? r.kwhMesInformado) : r.kwhMesInformado,
+  };
+  const kwh = consumoMensalKwh(comNumeros);
   const valor = kwh * preco.valor;
+  const erroDoNome = conferirNome && !r.nome.trim() ? NOME_DO_APARELHO_VAZIO : undefined;
 
+  // Confere todos os campos (na ordem da tela) antes de chamar a ação: desde a 003a o store recusa em silêncio.
   const salvar = () => {
-    const { id, ...dados } = r;
-    const limpo = { ...dados, nome: dados.nome.trim() || item?.nome || "Aparelho" };
-    aoSalvar(limpo, id);
+    setConferirNome(true);
+    const naoPassou = focarPrimeiroErro([
+      { id: "ap-nome", resultado: r.nome.trim() ? "ok" : "erro" },
+      ...(usaEtiqueta ? [{ id: "ap-etiqueta", resultado: etiqueta.conferir() }] : []),
+      ...(usaPotencia ? [{ id: "ap-potencia", resultado: potencia.conferir() }] : []),
+    ]);
+    if (naoPassou) return;
+    const { id, ...dados } = comNumeros;
+    aoSalvar({ ...dados, nome: dados.nome.trim() }, id);
     aoFechar();
   };
 
@@ -85,8 +111,8 @@ export function EditorAparelho({
       }
     >
       <div className="space-y-7">
-        <Campo rotulo="Nome" id="ap-nome">
-          <Entrada id="ap-nome" className="font-bold" value={r.nome} onChange={(e) => mudar({ nome: e.target.value })} maxLength={60} />
+        <Campo rotulo="Nome" id="ap-nome" erro={erroDoNome}>
+          <Entrada id="ap-nome" className="font-bold" value={r.nome} onChange={(e) => mudar({ nome: e.target.value })} onBlur={(evento) => indoParaUmBotao(evento) || setConferirNome(true)} maxLength={LIMITES_DE_TEXTO.nomeAparelho} />
         </Campo>
 
         {comodos.length > 1 && (
@@ -98,15 +124,28 @@ export function EditorAparelho({
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="font-bold">Quantidade</span>
-          <Contador valor={r.quantidade} aoMudar={(quantidade) => mudar({ quantidade })} min={1} max={60} rotulo="quantidade" />
+          <Contador valor={r.quantidade} aoMudar={(quantidade) => mudar({ quantidade })} min={LIMITES.quantidade.min} max={LIMITES.quantidade.max} rotulo="quantidade" />
         </div>
 
-        {item && <SeletorVariantes catalogo={item} escolhas={r.variantes} aoMudar={mudar} />}
+        {item && (
+          <SeletorVariantes
+            catalogo={item}
+            escolhas={r.variantes}
+            aoMudar={(mudancas) => {
+              mudar(mudancas);
+              // A resposta do catálogo troca o número do campo, como antes (o texto do campo mora no useCampoNumerico).
+              if (mudancas.potenciaW !== undefined) potencia.definir(mudancas.potenciaW);
+              if (mudancas.kwhMesInformado !== undefined) etiqueta.definir(mudancas.kwhMesInformado);
+            }}
+          />
+        )}
 
-        {modo === "etiqueta" && !semEtiqueta && (
+        {usaEtiqueta && (
           <Campo
             rotulo="Consumo na etiqueta"
             id="ap-etiqueta"
+            erro={etiqueta.erro}
+            alerta={etiqueta.alerta}
             ajuda={
               <>
                 {item?.ondeEncontrar}{" "}
@@ -116,16 +155,7 @@ export function EditorAparelho({
               </>
             }
           >
-            <Entrada
-              id="ap-etiqueta"
-              inputMode="decimal"
-              sufixo="kWh/mês"
-              value={r.kwhMesInformado ?? ""}
-              onChange={(e) => {
-                const n = Number(e.target.value.replace(",", "."));
-                mudar({ kwhMesInformado: Number.isFinite(n) && n > 0 ? n : undefined });
-              }}
-            />
+            <Entrada id="ap-etiqueta" inputMode="decimal" sufixo="kWh/mês" value={etiqueta.texto} onChange={(e) => etiqueta.aoMudar(e.target.value)} onBlur={etiqueta.aoSair} />
           </Campo>
         )}
         {modo === "etiqueta" && semEtiqueta && <p className="text-tinta-suave">Usando o consumo comum para esse tipo de aparelho: {formatarKwh(item?.kwhMes ?? 0)} por mês.</p>}
@@ -136,8 +166,8 @@ export function EditorAparelho({
               <span className="font-bold">Banhos por dia</span>
               <Contador
                 valor={r.banho?.banhosPorDia ?? 1}
-                min={1}
-                max={20}
+                min={LIMITES.banhosPorDia.min}
+                max={LIMITES.banhosPorDia.max}
                 rotulo="banhos por dia"
                 aoMudar={(banhosPorDia) => {
                   const banho = { banhosPorDia, minutosPorBanho: r.banho?.minutosPorBanho ?? 8 };
@@ -149,8 +179,8 @@ export function EditorAparelho({
               <span className="font-bold">Minutos por banho</span>
               <Contador
                 valor={r.banho?.minutosPorBanho ?? 8}
-                min={1}
-                max={60}
+                min={LIMITES.minutosPorBanho.min}
+                max={LIMITES.minutosPorBanho.max}
                 unidade="min"
                 rotulo="minutos por banho"
                 aoMudar={(minutosPorBanho) => {
@@ -169,10 +199,12 @@ export function EditorAparelho({
           </>
         )}
 
-        {modo !== "etiqueta" && (
+        {usaPotencia && (
           <Campo
             rotulo="Potência"
             id="ap-potencia"
+            erro={potencia.erro}
+            alerta={potencia.alerta}
             ajuda={
               <span className="flex gap-2">
                 <CircleHelp className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -183,13 +215,8 @@ export function EditorAparelho({
               </span>
             }
           >
-            <Entrada
-              id="ap-potencia"
-              inputMode="numeric"
-              sufixo="W"
-              value={r.potenciaW || ""}
-              onChange={(e) => mudar({ potenciaW: Math.min(30000, Number(e.target.value.replace(/\D/g, "")) || 0) })}
-            />
+            {/* Sem Math.min: o número digitado fica no campo e o T5 diz o que está errado. */}
+            <Entrada id="ap-potencia" inputMode="numeric" sufixo="W" value={potencia.texto} onChange={(e) => potencia.aoMudar(e.target.value)} onBlur={potencia.aoSair} />
           </Campo>
         )}
 

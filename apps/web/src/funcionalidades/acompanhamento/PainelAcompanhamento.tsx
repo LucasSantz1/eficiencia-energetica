@@ -3,11 +3,12 @@
 import { ChevronRight, Info } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { COMODOS_PADRAO, ehLampada, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
+import { COMODOS_PADRAO, consumoDaCasaForaDoComum, ehLampada, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
 import { useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
 import { descreverUso } from "@/ui/aparelho/textosDeUso";
+import { AvisoConsumoAlto } from "@/ui/AvisoConsumoAlto";
 import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { BotaoLink } from "@/ui/Botao";
 import { EspacoReservado } from "@/ui/EspacoReservado";
@@ -66,8 +67,14 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
   // No computador (HIS-112, L3): a conta em cima; "Seus cômodos" e, logo abaixo, o "Mês a mês" à esquerda; à direita,
   // uma coluna lateral com "Quem mais gasta" e a dica, que ocupa as duas linhas (A-112-1: sem isso sobrava um vão de
   // ~640 px embaixo dos cômodos); a nota embaixo. A ordem do código é a do celular; as áreas só mudam o lugar na tela.
+  // Com o "Confere seus aparelhos?" (HIS-003b), a linha 'aviso' entra logo depois da conta; sem ele, a lista não tem a
+  // linha (sobraria um intervalo vazio). As duas listas ficam escritas por inteiro: o Tailwind precisa da classe literal.
+  const consumoAlto = consumoDaCasaForaDoComum(conta.consumoKwh);
+  const areas = consumoAlto
+    ? "lg:[grid-template-areas:'conta_conta'_'aviso_aviso'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']"
+    : "lg:[grid-template-areas:'conta_conta'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']";
   return (
-    <div className="space-y-12 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0 lg:[grid-template-areas:'conta_conta'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']">
+    <div className={`space-y-12 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0 ${areas}`}>
       {/* Valor da conta */}
       <section aria-labelledby="titulo-conta" className="surgir rounded-[1.75rem] bg-tinta px-5 py-6 text-white sm:px-8 sm:py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-x-12 lg:[grid-area:conta]">
         <h1 id="titulo-conta" className="text-lg font-bold text-white/80">
@@ -127,6 +134,16 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           )}
         </div>
       </section>
+
+      <AvisoConsumoAlto
+        className="lg:[grid-area:aviso]"
+        kwhMes={conta.consumoKwh}
+        acao={
+          <BotaoLink href="/casa/comodos" transitionTypes={["nav-forward"]} variante="secundario">
+            Ver meus aparelhos
+          </BotaoLink>
+        }
+      />
 
       {/* Cômodos */}
       <section aria-labelledby="titulo-comodos" className="lg:[grid-area:comodos]">

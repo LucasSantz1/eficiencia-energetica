@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { distribuidorasDaCidade, ehUf, ESTADOS, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type Ligacao, type Municipio } from "@ee/core";
+import { distribuidorasDaCidade, ehUf, ESTADOS, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type ContaReferencia, type Ligacao, type Municipio } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
@@ -12,7 +12,8 @@ import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { Botao } from "@/ui/Botao";
 import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Campo } from "@/ui/Campo";
-import { Entrada } from "@/ui/Entrada";
+import { CamposDaConta } from "@/ui/conta/CamposDaConta";
+import { useCamposDaConta, type CamposDaContaEstado } from "@/ui/conta/useCamposDaConta";
 import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
 
@@ -36,8 +37,9 @@ export function TelaAjustes() {
   const definirResidencia = useCasa((s) => s.definirResidencia);
   const temCasaSemCidade = useCasa((s) => s.comodos.length > 0 || s.aparelhos.length > 0);
   const [mudandoCidade, setMudandoCidade] = useState(false);
-  const [kwh, setKwh] = useState(residencia?.contaReferencia ? String(residencia.contaReferencia.kwh).replace(".", ",") : "");
-  const [valor, setValor] = useState(residencia?.contaReferencia ? residencia.contaReferencia.valor.toFixed(2).replace(".", ",") : "");
+  // A chave muda só quando a pessoa volta para a tarifa da ANEEL: aí os campos ficam em branco de novo.
+  const [chaveDaConta, setChaveDaConta] = useState(0);
+  const camposDaConta = useCamposDaConta({ uso: "ajustes", beneficio: residencia?.beneficio, ids: { kwh: "aj-kwh", valor: "aj-valor" }, inicial: chaveDaConta === 0 ? residencia?.contaReferencia : undefined, chave: chaveDaConta });
   const [contaSalva, setContaSalva] = useState(false);
 
   const municipios = useMunicipios(residencia?.uf);
@@ -71,11 +73,12 @@ export function TelaAjustes() {
       );
     }
 
+    // "Conta salva" só quando a tela conferiu (T5/T6) e o store aceitou: desde a 003a ele recusa em silêncio.
     const salvarConta = () => {
-      const k = Number(kwh.replace(",", "."));
-      const v = Number(valor.replace(/\./g, "").replace(",", "."));
-      atualizar({ contaReferencia: k > 0 && v > 0 ? { kwh: k, valor: v } : undefined });
-      setContaSalva(true);
+      const conta = camposDaConta.conferir();
+      if (!conta) return setContaSalva(false);
+      atualizar({ contaReferencia: conta });
+      setContaSalva(mesmaConta(useCasa.getState().residencia?.contaReferencia, conta));
     };
 
     // No computador (HIS-112, L6): a casa e a conta à esquerda, "Seus dados" à direita. Mesma ordem do código do celular.
@@ -140,25 +143,21 @@ export function TelaAjustes() {
 
         <Secao titulo="Sua conta de luz" id="conta">
           <p className="mb-5 max-w-[56ch] text-tinta-suave">Com o consumo e o valor de uma conta, usamos o preço real do kWh na sua cidade, já com impostos. Fica bem mais perto do que você paga.</p>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Campo rotulo="Consumo do mês" id="aj-kwh" ajuda="“Consumo (kWh)” na conta.">
-              <Entrada id="aj-kwh" inputMode="decimal" sufixo="kWh" placeholder="Ex.: 150" value={kwh} onChange={(e) => (setKwh(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
-            </Campo>
-            <Campo rotulo="Valor total" id="aj-valor" ajuda="O valor a pagar.">
-              <Entrada id="aj-valor" inputMode="decimal" prefixo="R$" placeholder="Ex.: 135,90" value={valor} onChange={(e) => (setValor(e.target.value.replace(/[^\d,.]/g, "")), setContaSalva(false))} />
-            </Campo>
-          </div>
+          <CamposDaConta
+            className="grid gap-5 sm:grid-cols-2"
+            campos={semAvisoAoMudar(camposDaConta, () => setContaSalva(false))}
+            textos={{ consumo: "Consumo do mês", ajudaDoConsumo: "“Consumo (kWh)” na conta.", valor: "Valor total", ajudaDoValor: "O valor a pagar." }}
+          />
           <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Botao onClick={salvarConta} disabled={!kwh || !valor}>
-              Usar estes valores
-            </Botao>
+            {/* Sempre habilitado (T5): botão desabilitado não diz o que falta. */}
+            <Botao onClick={salvarConta}>Usar estes valores</Botao>
             {residencia.contaReferencia && (
               <Botao
                 variante="fantasma"
                 onClick={() => {
                   atualizar({ contaReferencia: undefined });
-                  setKwh("");
-                  setValor("");
+                  setChaveDaConta((chave) => chave + 1);
+                  setContaSalva(false);
                 }}
               >
                 Voltar para a tarifa da ANEEL
@@ -194,6 +193,16 @@ export function TelaAjustes() {
       />
     </div>
   );
+}
+
+function mesmaConta(salva: ContaReferencia | undefined, enviada: ContaReferencia): boolean {
+  return salva?.kwh === enviada.kwh && salva.valor === enviada.valor;
+}
+
+/** Digitar de novo tira o "Pronto": ele fala da conta que foi salva, não da que está nos campos. */
+function semAvisoAoMudar(campos: CamposDaContaEstado, aoMudar: () => void): CamposDaContaEstado {
+  const comAviso = (campo: CamposDaContaEstado["kwh"]) => ({ ...campo, aoMudar: (texto: string) => (campo.aoMudar(texto), aoMudar()) });
+  return { ...campos, kwh: comAviso(campos.kwh), valor: comAviso(campos.valor) };
 }
 
 /**

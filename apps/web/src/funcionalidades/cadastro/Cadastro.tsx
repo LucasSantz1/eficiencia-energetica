@@ -3,7 +3,7 @@
 import { ArrowLeft, ChevronDown, Pencil, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
-import { agregarAparelhos, COMODOS_PADRAO, distribuidorasDaCidade, ehUf, ESTADOS, type Beneficio, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
+import { agregarAparelhos, COMODOS_PADRAO, consumoMensalDaCasaKwh, distribuidorasDaCidade, ehUf, ESTADOS, LIMITES, LIMITES_DE_TEXTO, type Beneficio, type ContaReferencia, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
 import { useAvisoDaCasaSalva, useCasa, useCasaCarregada } from "@/aplicacao/casa";
 import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora } from "@/aplicacao/resumo";
@@ -12,13 +12,14 @@ import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
 import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
 import { horasPorDiaTexto } from "@/ui/aparelho/textosDeUso";
 import type { ItemComodo } from "@/ui/aparelho/tipos";
+import { AvisoConsumoAlto } from "@/ui/AvisoConsumoAlto";
 import { AvisoDaCasaSalva } from "@/ui/AvisoDaCasaSalva";
 import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { BuscaCidade } from "@/ui/BuscaCidade";
-import { Campo } from "@/ui/Campo";
+import { CamposDaConta } from "@/ui/conta/CamposDaConta";
+import { useCamposDaConta } from "@/ui/conta/useCamposDaConta";
 import { Contador } from "@/ui/Contador";
-import { Entrada } from "@/ui/Entrada";
 import { Icone } from "@/ui/Icone";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
@@ -58,8 +59,7 @@ export function Cadastro() {
   const [comodos, setComodos] = useState<ComodoRascunho[]>([]);
   const [visao, setVisao] = useState<"comodos" | "geral">("comodos");
   const [seletorPara, setSeletorPara] = useState<string>();
-  const [contaKwh, setContaKwh] = useState("");
-  const [contaValor, setContaValor] = useState("");
+  const camposDaConta = useCamposDaConta({ uso: "cadastro", beneficio, ids: { kwh: "conta-kwh", valor: "conta-valor" } });
   const [recomecar, setRecomecar] = useState(false);
   // Enquanto o painel abre, continua mostrando o último passo (e não "você já cadastrou").
   const [concluindo, setConcluindo] = useState(false);
@@ -100,6 +100,10 @@ export function Cadastro() {
 
   /** Troca de passo animada: avançar desliza para a esquerda, voltar para a direita. */
   const irPara = (p: Passo, sentido: "adiante" | "volta" = passos.indexOf(p) < indice ? "volta" : "adiante") => {
+    // Perto do fim, já busca o painel (dados e código). Sem isso, a navegação do concluir para (suspende) esperando
+    // o código de /casa; o React roda nesse meio-tempo uma lane adiada que consome os tipos de transição da raiz, e o
+    // painel entra sem a animação "entrar-painel" (DEF-002b-1, causa medida na HIS-002b).
+    if (p === "revisao" || p === "conta") router.prefetch("/casa");
     startTransition(() => {
       addTransitionType(sentido === "volta" ? "nav-back" : "nav-forward");
       setPasso(p);
@@ -143,11 +147,10 @@ export function Cadastro() {
   const painelGeral = useMemo(() => agregarAparelhos(casaFinal.aparelhos, casaFinal.comodos), [casaFinal]);
   const totalAparelhos = casaFinal.aparelhos.reduce((s, a) => s + a.quantidade, 0);
 
-  const concluir = (usarConta: boolean) => {
+  /** Sem conta, a pessoa pulou. Com conta, ela já passou pelo `conferir()` (o store só recebe valor que ele aceita). */
+  const concluir = (contaReferencia?: ContaReferencia) => {
     if (!uf || !municipio || !distribuidoraId || !beneficio) return;
     setConcluindo(true);
-    const kwh = usarConta ? Number(contaKwh.replace(",", ".")) : 0;
-    const valor = usarConta ? Number(contaValor.replace(/\./g, "").replace(",", ".")) : 0;
     criarCasa({
       residencia: {
         uf,
@@ -157,7 +160,7 @@ export function Cadastro() {
         beneficio,
         ligacao: "nao-sei",
         pessoas,
-        contaReferencia: kwh > 0 && valor > 0 ? { kwh, valor } : undefined,
+        contaReferencia,
       },
       ...casaFinal,
     });
@@ -355,7 +358,7 @@ export function Cadastro() {
           </Titulo>
           <div className="mt-8 flex justify-center">
             <div className="scale-125">
-              <Contador valor={pessoas} aoMudar={setPessoas} min={1} max={15} rotulo="pessoas na casa" />
+              <Contador valor={pessoas} aoMudar={setPessoas} min={LIMITES.pessoas.min} max={LIMITES.pessoas.max} rotulo="pessoas na casa" />
             </div>
           </div>
           <Botao largo className="mt-10" onClick={avancar}>
@@ -400,7 +403,7 @@ export function Cadastro() {
             <input
               id="nome-comodo"
               value={comodoAtual.nome}
-              maxLength={40}
+              maxLength={LIMITES_DE_TEXTO.nomeComodo}
               onChange={(e) => mudarComodo(comodoAtual.id, (c) => ({ ...c, nome: e.target.value }))}
               className="min-h-14 w-full bg-transparent text-[1.6rem] leading-tight font-extrabold outline-none"
             />
@@ -432,6 +435,15 @@ export function Cadastro() {
           <Titulo ref={tituloRef} subtitulo={`${comodos.length} cômodos e ${totalAparelhos} aparelhos e lâmpadas. Confira antes de continuar.`}>
             O que tem na sua casa
           </Titulo>
+          <AvisoConsumoAlto
+            className="mt-6"
+            kwhMes={consumoMensalDaCasaKwh(casaFinal.aparelhos)}
+            acao={
+              <Botao variante="secundario" onClick={() => irPara("comodo:0")}>
+                Ver meus aparelhos
+              </Botao>
+            }
+          />
           <div className="mt-6">
             <Pilulas
               rotulo="Ver"
@@ -511,19 +523,24 @@ export function Cadastro() {
           <Titulo ref={tituloRef} subtitulo="Com dois números da sua última conta, o valor fica mais perto do real, porque inclui os impostos da sua cidade.">
             Tem uma conta de luz em mãos?
           </Titulo>
-          <div className="mt-6 space-y-5">
-            <Campo rotulo="Consumo do mês" id="conta-kwh" ajuda="Aparece como “Consumo (kWh)” ou “kWh faturado”.">
-              <Entrada id="conta-kwh" inputMode="decimal" placeholder="Ex.: 150" sufixo="kWh" value={contaKwh} onChange={(e) => setContaKwh(e.target.value.replace(/[^\d,.]/g, ""))} />
-            </Campo>
-            <Campo rotulo="Valor total da conta" id="conta-valor" ajuda="O valor a pagar, com impostos.">
-              <Entrada id="conta-valor" inputMode="decimal" placeholder="Ex.: 135,90" prefixo="R$" value={contaValor} onChange={(e) => setContaValor(e.target.value.replace(/[^\d,.]/g, ""))} />
-            </Campo>
-          </div>
+          {/* Erro e "Confere?" ficam aqui no passo, nunca no painel "Por que perguntamos" (regra 5 do /comecar na 112). */}
+          <CamposDaConta
+            className="mt-6 space-y-5"
+            campos={camposDaConta}
+            textos={{ consumo: "Consumo do mês", ajudaDoConsumo: "Aparece como “Consumo (kWh)” ou “kWh faturado”.", valor: "Valor total da conta", ajudaDoValor: "O valor a pagar, com impostos." }}
+          />
           <div className="mt-8 flex flex-col gap-3">
-            <Botao largo onClick={() => concluir(true)} disabled={!contaKwh || !contaValor}>
+            {/* Sempre habilitado (T5): botão desabilitado não diz o que falta. */}
+            <Botao
+              largo
+              onClick={() => {
+                const conta = camposDaConta.conferir();
+                if (conta) concluir(conta);
+              }}
+            >
               Ver o resultado
             </Botao>
-            <Botao largo variante="secundario" onClick={() => concluir(false)}>
+            <Botao largo variante="secundario" onClick={() => concluir()}>
               Pular, não tenho a conta agora
             </Botao>
           </div>

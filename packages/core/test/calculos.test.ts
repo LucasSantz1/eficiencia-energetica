@@ -3,6 +3,7 @@ import {
   bandeiraDoMes,
   competenciaAtual,
   consumoDiarioKwh,
+  consumoMensalDaCasaKwh,
   consumoMensalKwh,
   estimarConta,
   formatarReais,
@@ -111,6 +112,16 @@ describe("resumo da casa", () => {
     expect(soma).toBeCloseTo(r.conta.valor, 6);
     expect(r.aparelhos.reduce((s, a) => s + a.participacao, 0)).toBeCloseTo(1, 8);
     expect(r.comodos[0]?.comodoId).toBe("banheiro");
+  });
+
+  it("o consumo da casa (aviso \"Confere seus aparelhos?\") é o mesmo que o resumo usa", () => {
+    const aparelhos: Aparelho[] = [
+      { ...base, id: "tv", potenciaW: 100, minutosPorDia: 300 },
+      { ...base, id: "chuveiro", potenciaW: 55_000, minutosPorDia: 32 },
+    ];
+    const preco = precoKwh({}, { tarifaKwh: 0.9 }, undefined);
+    expect(consumoMensalDaCasaKwh(aparelhos)).toBeCloseTo(resumirCasa(aparelhos, semBeneficio, preco).conta.consumoKwh, 9);
+    expect(consumoMensalDaCasaKwh([])).toBe(0);
   });
 
   it("com Tarifa Social a soma dos aparelhos fecha com o valor já descontado", () => {
