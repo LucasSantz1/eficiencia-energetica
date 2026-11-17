@@ -96,7 +96,8 @@ test("caminho principal: 6 perguntas, foco no título, resultado A com a conta e
   await semViolacaoGrave(page);
 
   // Links oficiais abrem em outra página e não levam dados.
-  await expect(page.getByRole("link", { name: "Achar o CRAS mais perto (abre em outra página)" })).toHaveAttribute("href", "https://www.gov.br/pt-br/servicos/acessar-o-cras-centro-de-referencia-da-assistencia-social");
+  // No celular os blocos ficam fechados (o link existe, mas fora da árvore de acessibilidade até abrir).
+  await expect(page.locator("a", { hasText: "Achar o CRAS mais perto" })).toHaveAttribute("href", "https://www.gov.br/pt-br/servicos/acessar-o-cras-centro-de-referencia-da-assistencia-social");
   for (const link of await page.locator("a[target=_blank]").all()) await expect(link).toHaveAttribute("rel", "noopener noreferrer");
 
   // Privacidade: nada no armazenamento nem na URL.
