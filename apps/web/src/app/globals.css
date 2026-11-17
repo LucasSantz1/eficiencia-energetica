@@ -45,6 +45,23 @@
     -webkit-text-size-adjust: 100%;
     color-scheme: light;
   }
+  /*
+   * Leitura (HIS-102), escolhida em Minha casa e marcada no <html> pelo script do layout. "Letra maior": a raiz vai
+   * a 125% e todo texto em rem cresce junto; o --spacing compensa (0,25rem × 16 = 0,2rem × 20 = 4 px), para os
+   * espaços não crescerem e a tela de 390 px não rolar para o lado. As larguras de tela (sm, lg) usam a letra padrão
+   * do navegador e não mudam.
+   */
+  html[data-letra="maior"] {
+    font-size: 125%;
+    --spacing: 0.2rem;
+  }
+  /* "Mais contraste": texto de apoio quase da cor do texto, linhas visíveis e o verde mais escuro. */
+  html[data-contraste="mais"] {
+    --color-tinta-suave: #26354d;
+    --color-linha: #6f7f79;
+    --color-energia: #075a43;
+    --color-energia-forte: #04402f;
+  }
   body {
     background: var(--color-fundo);
     color: var(--color-tinta);
