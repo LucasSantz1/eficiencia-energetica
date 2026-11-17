@@ -126,6 +126,12 @@ export function TelaAjustes() {
             ))}
           </div>
           <p className="mt-3 text-[0.95rem] text-tinta-suave">Para ter direito, a família precisa estar no CadÚnico. A inscrição é feita no CRAS da sua cidade. O desconto vem sozinho quando o CadÚnico está em dia e a conta está no nome de alguém da família. Quem precisa de aparelho para a saúde pede na distribuidora, com atestado médico.</p>
+          {/* Sem prefetch: a Minha casa não baixa o guia a cada visita (tech-lead, HIS-103b). */}
+          <p className="mt-2">
+            <Link href="/tarifa-social" prefetch={false} transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center font-bold text-energia underline underline-offset-4">
+              Ver se pode ter direito
+            </Link>
+          </p>
         </Secao>
 
         <Secao titulo="Tipo de ligação" id="ligacao">

@@ -1,3 +1,6 @@
+## 2026-11-17 · HIS-103 · desenho do guia da Tarifa Social
+Fluxo, textos, blocos fixos, layout e acessibilidade na seção "Fluxo e textos" da história. Respostas só na tela.
+
 # Diário · UX e acessibilidade
 
 Uma entrada por tarefa, da mais nova para a mais antiga. Formato:

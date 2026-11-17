@@ -72,3 +72,5 @@
 ## Orientações do responsável
 
 _(espaço para o dono do projeto escrever orientações a este papel)_
+
+- HIS-103: desenho do guia `/tarifa-social` pronto na história; revisar capturas depois do frontend.

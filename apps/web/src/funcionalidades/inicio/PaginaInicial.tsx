@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BANDEIRAS, formatarCompetencia } from "@ee/core";
 import type { NumerosDoInicio } from "@/aplicacao/numeros-do-inicio.servidor";
 import { EspacoReservado } from "@/ui/EspacoReservado";
+import { classesDeBotao } from "@/ui/estilosDeBotao";
 import { BarraEtiqueta } from "@/ui/Etiqueta";
 import { Icone } from "@/ui/Icone";
 import { Marca } from "@/ui/Marca";
@@ -215,6 +216,12 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
             <p className="flex gap-3 text-white/85">
               <Icone nome="hand-heart" className="mt-0.5 size-6 shrink-0" /> Para se inscrever no CadÚnico, procure o CRAS da sua cidade com os documentos da família.
             </p>
+            {/* Guia da Tarifa Social (HIS-103b): 6 perguntas, documentos e onde ir. */}
+            <div>
+              <Link href="/tarifa-social" transitionTypes={["nav-forward"]} className={classesDeBotao("secundario")}>
+                Ver se posso ter
+              </Link>
+            </div>
           </div>
         </div>
       </section>

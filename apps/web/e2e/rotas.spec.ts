@@ -6,7 +6,8 @@ import { readFileSync } from "node:fs";
 import { lerFixture, semearCasa } from "./apoio/casa";
 import { expect, test } from "./apoio/teste";
 
-const ROTAS = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/casa/aparelhos", "/sobre"];
+// /tarifa-social: guia da HIS-103b, estático (as respostas ficam só no navegador).
+const ROTAS = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/casa/aparelhos", "/sobre", "/tarifa-social"];
 
 /** `.next/prerender-manifest.json` do build que o `next start` está servindo (pnpm build antes). */
 function rotasPreRenderizadas(): Record<string, { initialRevalidateSeconds?: number | false }> {
@@ -19,14 +20,14 @@ function rotasPreRenderizadas(): Record<string, { initialRevalidateSeconds?: num
   return Object.fromEntries(Object.entries(routes));
 }
 
-test("as 8 rotas respondem 200", async ({ request }) => {
+test("as 9 rotas respondem 200", async ({ request }) => {
   for (const rota of ROTAS) {
     const resposta = await request.get(rota, { maxRedirects: 0 });
     expect.soft(resposta.status(), `status de ${rota}`).toBe(200);
   }
 });
 
-test("as 8 rotas continuam pré-renderizadas e a / revalida a cada 86400 s (1 dia)", () => {
+test("as 9 rotas continuam pré-renderizadas e a / revalida a cada 86400 s (1 dia)", () => {
   const rotas = rotasPreRenderizadas();
   for (const rota of ROTAS) expect.soft(Object.keys(rotas), `${rota} no prerender-manifest.json`).toContain(rota);
   // app/page.tsx: os números da página inicial vêm dos dados da ANEEL, atualizados uma vez por dia.
