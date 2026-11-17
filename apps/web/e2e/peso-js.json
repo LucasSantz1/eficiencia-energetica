@@ -1,37 +1,41 @@
 {
-  "medidoNoCommit": "daef13f",
-  "decisao": "HIS-112, L8 (tech-lead, 2026-11-12; revisto em c9e9fbd, 2026-11-13): contra a referência da 003a, 11a até +2 048 B na /casa/comodos (medido +1 998) e +1 024 B nas outras rotas (medido até +694 no /comecar); 11b até +4 096 B (medido até +3 143). Medido com o código do daef13f.",
+  "medidoNoCommit": "49d4741",
+  "decisao": "HIS-103b, tech-lead (d8b7939): /tarifa-social entra como rota nova (sem referência anterior). Depois dos cortes (regra em @ee/core/tarifa-social e prefetch={false} na /casa), contra a referência anterior (daef13f) o 11a das outras rotas sobe de +386 a +729 B e o 11b fica entre −4 867 e +1 186 B, salvo a /casa com casa: +6 577 B, porque o Turbopack refez os pedaços comuns (ícones e ui/) quando a rota nova passou a usá-los; o código do guia não é baixado na /casa. Essa exceção está como pergunta ao tech-lead na HIS-103. Medido com o código do 49d4741.",
   "rotas": {
     "/": {
-      "jsDoHtml": 172199,
-      "totalComPrefetch": 197627
+      "jsDoHtml": 172730,
+      "totalComPrefetch": 192760
     },
     "/comecar": {
-      "jsDoHtml": 184493,
-      "totalComPrefetch": 197627
+      "jsDoHtml": 184879,
+      "totalComPrefetch": 192760
     },
     "/casa": {
-      "jsDoHtml": 187057,
-      "totalComPrefetch": 250339
+      "jsDoHtml": 187744,
+      "totalComPrefetch": 251525
     },
     "/casa/comodos": {
-      "jsDoHtml": 186393,
-      "totalComPrefetch": 250339
+      "jsDoHtml": 187050,
+      "totalComPrefetch": 251525
     },
     "/casa/dicas": {
-      "jsDoHtml": 177736,
-      "totalComPrefetch": 250339
+      "jsDoHtml": 178325,
+      "totalComPrefetch": 251525
     },
     "/casa/ajustes": {
-      "jsDoHtml": 176146,
-      "totalComPrefetch": 250339
+      "jsDoHtml": 176875,
+      "totalComPrefetch": 251525
     },
     "/sobre": {
-      "jsDoHtml": 140398,
-      "totalComPrefetch": 176266
+      "jsDoHtml": 140268,
+      "totalComPrefetch": 176793
+    },
+    "/tarifa-social": {
+      "jsDoHtml": 165524,
+      "totalComPrefetch": 184352
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 228219
+      "totalComPrefetch": 234796
     }
   }
 }

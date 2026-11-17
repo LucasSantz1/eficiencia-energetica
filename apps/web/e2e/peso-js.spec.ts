@@ -28,7 +28,8 @@ interface Medida {
 
 /** Lista fixa: o peso-js.json tem que ter exatamente estas chaves e campos (D16, P-qa-5). */
 const MEDIDAS: readonly Medida[] = [
-  ...["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/sobre"].map(
+  // /tarifa-social: guia da HIS-103b (rota nova, tech-lead em d8b7939).
+  ...["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/sobre", "/tarifa-social"].map(
     (rota): Medida => ({ nome: rota, rota, comCasa: false, campos: ["jsDoHtml", "totalComPrefetch"] }),
   ),
   // Com casa o HTML é o mesmo (página estática); muda o que a tela mostra e, com isso, o que o Next pré-carrega.
