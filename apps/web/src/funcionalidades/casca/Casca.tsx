@@ -10,7 +10,7 @@ import { useLeitura } from "@/aplicacao/useLeitura";
 import { Aviso } from "@/ui/Aviso";
 import { AvisoDaCasaSalva } from "@/ui/AvisoDaCasaSalva";
 import { BotaoLink } from "@/ui/Botao";
-import { InterruptorCompacto } from "@/ui/InterruptorCompacto";
+import { Interruptor } from "@/ui/Interruptor";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
 import { IR_ADIANTE, VOLTAR } from "@/ui/tiposDeTransicao";
@@ -163,7 +163,7 @@ function LetraMaiorSemCasa() {
   const [leitura, mudar] = useLeitura();
   return (
     <div className="-mt-6 mb-4 flex justify-end">
-      <InterruptorCompacto rotulo="Letra maior" ligado={leitura.letraMaior} aoMudar={(letraMaior) => mudar({ letraMaior })} />
+      <Interruptor rotulo="Letra maior" ligado={leitura.letraMaior} aoMudar={(letraMaior) => mudar({ letraMaior })} />
     </div>
   );
 }

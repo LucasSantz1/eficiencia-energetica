@@ -22,7 +22,7 @@ import { CamposDaConta } from "@/ui/conta/CamposDaConta";
 import { useCamposDaConta } from "@/ui/conta/useCamposDaConta";
 import { Contador } from "@/ui/Contador";
 import { Icone } from "@/ui/Icone";
-import { InterruptorCompacto } from "@/ui/InterruptorCompacto";
+import { Interruptor } from "@/ui/Interruptor";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
 import { Opcao } from "@/ui/Opcao";
@@ -614,7 +614,7 @@ function PorQuePerguntamos({ titulo, texto }: { titulo: string; texto: string })
 /** Quem ainda não cadastrou não chega a Minha casa: a letra maior fica também no topo do cadastro (HIS-102). */
 function LetraMaior() {
   const [leitura, mudar] = useLeitura();
-  return <InterruptorCompacto rotulo="Letra maior" ligado={leitura.letraMaior} aoMudar={(letraMaior) => mudar({ letraMaior })} />;
+  return <Interruptor rotulo="Letra maior" ligado={leitura.letraMaior} aoMudar={(letraMaior) => mudar({ letraMaior })} />;
 }
 
 function Titulo({ children, subtitulo, ref }: { children: React.ReactNode; subtitulo?: React.ReactNode; ref: React.Ref<HTMLHeadingElement> }) {
