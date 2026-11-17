@@ -157,8 +157,78 @@ por pessoa (R1, R4), BPC (R1), CRAS para o CadÚnico (R9), consumo mínimo 30/50
 
 ## Fluxo e textos
 
-_(ux-acessibilidade)_ Lapidar as perguntas e os resultados do rascunho acima; onde o guia fica (rota própria ou
-seção) e como o "Não sei" do cadastro leva até ele.
+_(ux-acessibilidade, 2026-11-17)_ Componentes: `Casca`, `Botao`, `Opcao`, `Campo`, `Entrada`, `Aviso`, `Pilulas` (passos), `TransicaoTela`.
+
+### 1. Onde mora
+
+- Página `/tarifa-social`, sem cadastro. Entradas: o link da `/` (`#tarifa-social`) ganha o botão "Ver se posso ter" no fim da seção, e Minha casa (Ajustes, linha Tarifa Social) ganha o link "Ver se pode ter direito". O "Não sei" do cadastro leva para cá (D7).
+- Topo: "Tarifa Social: será que a sua família pode ter?" Abaixo: "São 6 perguntas rápidas. Não pedimos nome nem CPF. Suas respostas ficam só nesta tela e somem quando você sair."
+
+### 2. Perguntas (uma por vez)
+
+Cada passo: "Pergunta 2 de 6" (`Pilulas`), título (`h1`), ajuda curta, botões grandes (mín. 56 px de altura, largura total no celular), "Voltar" no topo. Sim e Não têm o mesmo peso visual; "Não sei" é botão de contorno. Escolher uma opção avança na hora (sem "Continuar"); só número e renda têm "Continuar".
+
+| # | Título | Ajuda | Botões |
+| --- | --- | --- | --- |
+| 1 | Alguém da sua casa recebe o BPC? | BPC é o Benefício de Prestação Continuada: um salário mínimo por mês do INSS para idosos de 65 anos ou mais e pessoas com deficiência. | Sim, recebe / Não / Não sei |
+| 2 | Sua família está no CadÚnico? | CadÚnico é o Cadastro Único do governo. Faz-se no CRAS, de graça. CRAS é o Centro de Referência de Assistência Social da prefeitura. | Sim, está / Não / Não sei |
+| 3 | Quantas pessoas moram na sua casa? | Conte você e todos que dividem a mesma casa e as mesmas despesas. | campo número (1 a 20), "Continuar" |
+| 4 | Somando o que todos ganham por mês, quanto dá? | Conte salário, bico, aposentadoria e BPC. Não conte o Bolsa Família. | campo R$ (0 a 100.000), "Continuar"; "Não sei o valor" explica: some o que cada um ganha em um mês comum |
+| 5 | Alguém da casa precisa de aparelho elétrico ligado para cuidar da saúde? | Por exemplo, aparelho de oxigênio. | Sim / Não |
+| 6 | A conta de luz está no nome de alguém que mora na casa? | Veja o nome que aparece no alto da conta. | Sim / Não / Não sei |
+
+- Se a resposta 1 for "Sim", pula direto para a 6 (a renda não importa): "Pergunta 2 de 3" ajusta o contador.
+- Erros (ao sair do campo, com `aria-invalid` e `aria-describedby`; "Continuar" nunca fica desligado): pessoas "Digite um número de 1 a 20." Renda "Digite quanto a família ganha por mês. Se for nada, digite 0." Sem negativo.
+- "Voltar" mantém o que já foi respondido na tela. Renda vazia nunca vira 0 sozinha.
+- Valor raro (renda acima de R$ 30.000): "Confere?" padrão da HIS-003.
+
+### 3. Resultado
+
+Título (`h1`, recebe o foco): resultado em frase; abaixo, R$ antes de kWh. Nunca "você tem direito". Botão "Responder de novo" (apaga tudo da tela) e "Voltar ao início".
+
+| Caso | Título | Texto |
+| --- | --- | --- |
+| A | Sua família pode ter direito à Tarifa Social | A energia dos primeiros 80 kWh do mês sai de graça. Numa conta de R$ 0,80 por kWh, são cerca de R$ 64,00 por mês (estimativa). Confira no CRAS. |
+| B | Sua família pode ter direito ao Desconto Social | Você paga menos na conta até 120 kWh por mês. O tamanho do desconto muda em cada distribuidora. Confira no CRAS. |
+| C | Sua família pode ter direito à Tarifa Social, por causa do aparelho de saúde | Peça na distribuidora, com relatório e atestado do médico. A família precisa estar no CadÚnico. |
+| D | Pelo que você respondeu, não parece | Hoje a família não se encaixa nas regras. Se a renda ou a casa mudar, responda de novo. Em caso de dúvida, o CRAS pode confirmar. |
+| C13 | (fica na pergunta) | Mostra o erro do campo e não calcula. |
+
+Avisos abaixo do resultado (só com A, B ou C), em `Aviso`:
+- CadÚnico "Não" ou "Não sei": "Primeiro, faça o CadÚnico no CRAS. É de graça. Leve os documentos da lista abaixo."
+- Conta "Não" ou "Não sei": "O desconto só vem se a conta estiver no nome de alguém da família. Peça a troca na distribuidora (a empresa que manda a conta de luz)."
+- Sempre: "Até 31/12/2026, atenda se a distribuidora chamar para atualizar o cadastro. Quem não atender pode perder o desconto." (tom faísca)
+- Salário mínimo vencido (critério 4): sem R$; o texto diz "meio salário mínimo" e "O valor do salário mínimo mudou. Confira o valor de hoje no CRAS."
+- Explicação em R$ (só quando o valor está em vigor): "Renda por pessoa: R$ 750,00. O limite é R$ 810,50 (meio salário mínimo)."
+
+### 4. Blocos fixos (abaixo do resultado ou, antes de responder, no fim da página; `details` fechados no celular, abertos no computador)
+
+1. **Documentos para o CadÚnico** (gratuito, presencial). Quem responde pela família: CPF (de preferência) ou título de eleitor; documento com foto; comprovante de endereço ou declaração de residência assinada. Cada outra pessoa: um destes: CPF ou título de eleitor, certidão de nascimento ou casamento, RG ou carteira de trabalho. Link: "Ver a lista no gov.br".
+2. **Onde ir.** CRAS ou posto do Cadastro Único da prefeitura: fazer ou atualizar o CadÚnico (renda, endereço, pessoas, ou mais de 2 anos). Distribuidora: conta em nome de outra pessoa, caso do aparelho de saúde, ou desconto que não aparece. Dúvida do CadÚnico: ligue 121 (grátis). Link "Achar o CRAS mais perto" (serviço do gov.br).
+3. **Não estou recebendo. O que fazer?** Lista numerada: 1) Veja no CRAS se o CadÚnico está em dia e o endereço é o da conta. 2) Veja se a conta está no nome de alguém da família. 3) Ligue para a distribuidora e anote o número do protocolo. 4) Sem solução: fale com a ouvidoria da distribuidora. 5) Ainda sem solução: ANEEL, órgão do governo que cuida da luz, telefone 167 (segunda a sábado, das 8h às 20h, grátis). Link "Falar com a ANEEL".
+- Telefones são `tel:` com o número no texto. Links externos: `rel="noopener noreferrer"`, `target="_blank"` e "(abre em outra página)" no nome acessível.
+
+### 5. Estados
+
+- Vazio/sem internet: as perguntas funcionam sem rede (conta no aparelho). Só os links externos precisam de internet: "Sem internet agora. Os documentos continuam aqui; os links abrem quando voltar."
+- Carregando: nenhum (a regra vem junto da página).
+- Erro de carga: `TelaDeErro` padrão, foco no `h1`.
+
+### 6. Layout
+
+- 390 px: uma coluna, `Casca` normal, botões de largura total, `Pilulas` no topo, blocos fixos em `details` fechados.
+- A partir de 1024 px (padrão HIS-112): container `lg:max-w-[64rem]`, grade `minmax(0,34rem) minmax(0,1fr)` com intervalo 3rem. Pergunta à esquerda; à direita o `aside aria-label="Por que perguntamos"` (renda e pessoas: "Comparamos a renda de cada pessoa com meio salário mínimo. Nada sai do seu aparelho."), `hidden lg:block`, nunca com instrução obrigatória. Resultado ocupa as 2 colunas: texto à esquerda, blocos fixos abertos à direita. A ordem do código é a do celular.
+
+### 7. Acessibilidade
+
+- A cada passo, o foco vai para o `h1` da pergunta (`tabIndex={-1}`); no resultado, para o `h1` do resultado. Voltar também.
+- Região `role="status"` sempre presente: anuncia "Pergunta 2 de 6" ao trocar e o resultado em uma frase. Nada de `aria-live` no campo enquanto digita.
+- Opções em grupo `role="radiogroup"`/`fieldset` com `legend` igual ao título; nome do botão começa pelo texto visível (WCAG 2.5.3). Todo campo com rótulo e `inputMode="numeric"`.
+- Resultado nunca só em cor: ícone e texto ("Pode ter" / "Não parece"). Contraste AA; alvos de 44 px ou mais; foco visível.
+- Movimento: `TransicaoTela` desliza entre perguntas; com movimento reduzido, troca na hora. Sem contagem animada no resultado.
+- Privacidade: nada em `localStorage`, URL ou analytics; estado só em `useState`.
+
+**O frontend confere:** os textos acima copiados sem alterar; pular da 1 para a 6; limites 1 a 20 e 0 a 100.000; "Voltar" sem perder resposta; foco no `h1`; a 390, 1024 e 1280 px sem rolagem para o lado; links com `rel`; sem R$ vencido.
 
 ## Desenho técnico
 
@@ -208,3 +278,8 @@ _(qa)_ Unidade com C1–C13; e2e do guia em 390 px e 1280 px; conferir D1–D8 c
 - Lint, typecheck, test, build e e2e (121) verdes, sem erro no console. Capturas a 390 px em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/his103/`.
 - Ao integrar: conflito de linha com a HIS-110 (`<dd>` da Tarifa Social na `/`) e com a 003a/112 (Minha casa, acompanhamento, cadastro).
 - Próximo: **dominio-energia** (conferir os textos) ‖ **qa**.
+
+### [ux-acessibilidade] 2026-11-17 — desenho do guia (`/tarifa-social`) pronto
+- Seção "Fluxo e textos" escrita: 6 perguntas (uma por vez, pula para a 6 se BPC = sim), resultados A–D sem prometer direito, 3 blocos fixos, layout 390 px e `lg`, acessibilidade.
+- Decisão: respostas só em `useState`; salário mínimo vencido some do R$.
+- Próximo: **frontend** (tech-lead define a função de elegibilidade).
