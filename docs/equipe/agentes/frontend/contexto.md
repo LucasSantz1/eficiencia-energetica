@@ -24,6 +24,7 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
 | `aplicacao/` | única porta para `infraestrutura/`: `casa.ts` (`useCasa`, `useCasaCarregada`, `novoId`, `useEdicaoDeAparelho`, `useDistribuidoraAtualizada`), `dados-publicos.ts` (`useTarifas`, `useMunicipios`), `resumo.ts` (`useResumo`, `tarifaMedia`, `nomeDistribuidora`), `numeros-do-inicio.servidor.ts` |
 | `infraestrutura/` | `armazenamento/casa.ts` (o único `create` do store: chave `eficiencia-energetica:casa`, versão 2 + `migrate`), `identificador.ts` (`novoId`), `dados-publicos/navegador.ts` (fetch de `/dados`), `dados-publicos/arquivos.servidor.ts` (único `node:fs`) |
 | HIS-003a (a4/a5) | `infraestrutura/armazenamento/armazenamento-local.ts` (nunca lança; `travarGravacao`) e `hidratacao.ts` (`lerCasaNaHidratacao`, `dadosSalvaveis`); `ui/AvisoDaCasaSalva`, `ui/AvisoFalhaDeCarga`, `ui/TelaDeErro`, `ui/foco.ts`, `ui/estilosDeBotao.ts`; `app/error.tsx`, `global-error.tsx`, `not-found.tsx`; testes do store em `apps/web/test/` (vitest) |
+| `funcionalidades/tarifa-social/` (HIS-103b) | `GuiaTarifaSocial` (6 perguntas, só `useState`), `Perguntas`, `Resultado`, `BlocosFixos` (`details` abertos no `lg:`), `textos.ts`; rota estática `app/tarifa-social/page.tsx`; regra em `core/src/tarifa-social.ts` |
 | `config/recursos.ts` | `RECURSOS.espacosReservados = false` |
 
 ## Decisões em vigor
@@ -60,6 +61,10 @@ de outro arquivo (C1–C10, inclusive a S2/C8); os casos ficam em `scripts/teste
   `next/link` no erro: usa `classesDeBotao` (medido: ~8 kB por rota).
 
 ## Pendências
+
+- HIS-103b: guia feito (2026-11-17, branch `his-103b-guia`, com push). Aguarda ux (4 pontos de texto), dominio-energia
+  (link do CRAS), tech-lead (rota no `peso-js.json`), seguranca e qa. O `@ee/core` vai inteiro em toda página que o usa
+  (barril sem poda); `sideEffects: false` muda o chunking das outras rotas para pior: não usar sem medir tudo.
 
 - HIS-103: textos D1–D6, D8 e D9 corrigidos (2026-11-13, branch `his-103-guia-tarifa-social`). Falta o guia (D7 e o link do D4).
 - HIS-112: f1–f7 feitas (2026-11-12/13, sobre a 003a). Aguarda qa (q1–q5; o teto do 11b no spec ainda é +2 048) e o

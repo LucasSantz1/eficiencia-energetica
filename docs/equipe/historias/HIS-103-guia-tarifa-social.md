@@ -257,6 +257,21 @@ _(qa)_ Unidade com C1–C13; e2e do guia em 390 px e 1280 px; conferir D1–D8 c
   kWh grátis, sobretudo na ligação trifásica? Hoje `calculos.ts:107-109` ignora o mínimo para a Tarifa Social. Preciso
   do texto da REN 1.147/2025 (cedoc não abriu). Não bloqueia o guia; pode mudar a estimativa da conta.
 
+- [ ] `[para: ux-acessibilidade]` (frontend, 2026-11-17) Quatro pontos sem texto ou com conflito; usei o mínimo e não
+  inventei regra: (1) "Confere?" da renda: "A família ganha R$ X por mês?"; (2) explicação em R$ no B, C e D no molde
+  da do A ("…O limite é R$ 1.621,00 (um salário mínimo)." / "Renda da família: … (3 salários mínimos)."); (3) no painel,
+  com "Não sei" no cadastro, o link "Ver se pode ter direito à Tarifa Social"; (4) com BPC = sim são 2 perguntas, e a
+  tela diz "Pergunta 2 de 2" (o texto dizia "2 de 3"). Também: um só `h1` (o topo); perguntas e resultado são `h2` e
+  recebem o foco; o progresso é texto + barra, como no cadastro, e não `Pilulas`; a página não usa a `Casca` (ela é da casa).
+- [ ] `[para: dominio-energia]` (frontend) O link "Achar o CRAS mais perto (serviço do gov.br)" ficou de fora: não há
+  endereço oficial nas fontes F1–F9. Qual é?
+- [ ] `[para: tech-lead]` (frontend) A `/tarifa-social` não está no `peso-js.json`: 11a 165.139 B e 11b 183.967 B (o
+  guia é 11,5 kB; o `@ee/core` inteiro, 17,4 kB, vem junto porque o barril não é podado). `sideEffects: false` no core
+  tirou 14,5 kB do guia, mas aumentou o 11b da `/` (+8,9 kB) e da Minha casa (+6,9 kB); não entrou. O `peso-js`
+  reprova: contra o `caece07` (Next 16.4.6 sem o guia), o 11a sobe de +700 a +1.050 B nas rotas com o core (teto
+  +1.024 na `/casa` e na Minha casa) e o 11b da `/casa` com casa sobe +6.864 B. O Turbopack refez os pedaços
+  compartilhados (ícones e `ui/`) quando a página nova passou a usá-los; o guia em si não vai para a `/casa`.
+
 ## Conversa da equipe
 
 ### [dominio-energia] 2026-11-13 — regras da Tarifa Social e do Desconto Social validadas; 9 defeitos no ar
@@ -283,3 +298,11 @@ _(qa)_ Unidade com C1–C13; e2e do guia em 390 px e 1280 px; conferir D1–D8 c
 - Seção "Fluxo e textos" escrita: 6 perguntas (uma por vez, pula para a 6 se BPC = sim), resultados A–D sem prometer direito, 3 blocos fixos, layout 390 px e `lg`, acessibilidade.
 - Decisão: respostas só em `useState`; salário mínimo vencido some do R$.
 - Próximo: **frontend** (tech-lead define a função de elegibilidade).
+
+### [frontend] 2026-11-17 — HIS-103b: guia `/tarifa-social` (`0f16ed8`, `87aa931`, `bde5df4`, `6368c06` e o e2e)
+- Core: `avaliarTarifaSocial` (A–D, ordem A, C, B, D, em centavos), salário mínimo com vigência e prazo da convocação, com fonte; C1–C13 no teste. Página estática, respostas só em `useState`; links da `/`, Minha casa e painel ("Não sei", D7).
+- Barreira: lint, typecheck, test e build ok; e2e 239 ok e só o `peso-js` reprova (pergunta ao tech-lead), com o `tarifa-social.spec.ts` (caminho, A–D, BPC, erros, "Confere?", 2027 sem R$, axe) a 390 e 1440 px. Capturas em `/tmp/claude-0/-home-claude/724c883e-847d-598e-bea6-965ed2231507/scratchpad/capturas-103b/`.
+- Antes: merge do `origin/next-16-4-6`. Não mexi nos arquivos da 003b (campos); `Cadastro.tsx` ficou de fora.
+- Para o qa: leitor de tela no foco do `h2` e no status; `details` aberto a 1024 px; sem internet; nada no armazenamento.
+- Próximo: **ux** e **dominio-energia** (perguntas acima) ‖ **qa** ‖ **seguranca** (critério 3).
+
