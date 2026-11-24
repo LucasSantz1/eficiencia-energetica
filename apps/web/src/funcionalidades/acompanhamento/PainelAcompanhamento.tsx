@@ -79,8 +79,12 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
   // linha (sobraria um intervalo vazio). A meta (HIS-104) tem a linha 'meta' logo depois, nas duas listas. As duas listas ficam escritas por inteiro: o Tailwind precisa da classe literal.
   const consumoAlto = consumoDaCasaForaDoComum(conta.consumoKwh);
   const areas = consumoAlto
-    ? "lg:[grid-template-areas:'resumo_resumo'_'aviso_aviso'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']"
-    : "lg:[grid-template-areas:'resumo_resumo'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']";
+    ? "lg:[grid-template-areas:'resumo_resumo'_'aviso_aviso'_'comodos_lado'_'dicas_lado'_'acompanhamento_acompanhamento'_'nota_nota']"
+    : "lg:[grid-template-areas:'resumo_resumo'_'comodos_lado'_'dicas_lado'_'acompanhamento_acompanhamento'_'nota_nota']";
+  // As 3 dicas que mais economizam (fora as do plano): no computador preenchem o vão embaixo dos cômodos, ao lado do
+  // "Quem mais gasta"; no celular ficam fora, porque o bloco "Melhor dica" já leva para a tela de dicas. Sem link nem
+  // botão: a ordem de foco tem de ser igual à do celular (HIS-112, critério 8); o caminho para as dicas é o bloco.
+  const maisDicas = dicas.filter((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id)).slice(0, 3);
   const topo = resumo.aparelhos[0];
   const nomeDoTopo = topo ? `${topo.aparelho.nome}, ${formatarReais(topo.valorMes)} por mês` : undefined;
   return (
@@ -305,6 +309,30 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
         <EspacoReservado posicao="painel-apos-ranking" />
 
       </div>
+
+      {maisDicas.length > 0 && (
+        <section aria-labelledby="titulo-mais-dicas" className="hidden lg:block lg:[grid-area:dicas]">
+          <div className="flex items-end justify-between gap-4">
+            <h2 id="titulo-mais-dicas" className="text-[1.375rem] font-bold tracking-tight">
+              Dicas para pagar menos
+            </h2>
+          </div>
+          <ul className="mt-3 divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
+            {maisDicas.map((d) => (
+              <li key={d.id} className="flex items-center gap-3 px-4 py-3.5">
+                <span className="grid size-10 shrink-0 place-items-center rounded-[0.7rem] bg-energia-claro text-energia">
+                  <Icone nome={d.icone} className="size-6" />
+                </span>
+                <span className="min-w-0 flex-1 font-bold">{d.titulo}</span>
+                <span className="numeros shrink-0 text-right">
+                  <span className="block font-extrabold text-energia-forte">{formatarReais(d.economiaMes ?? 0)}</span>
+                  <span className="block text-[0.9rem] text-tinta-suave">por mês</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="lg:[grid-area:acompanhamento]">
         <Acompanhamento estimativaKwhMes={conta.consumoKwh} />

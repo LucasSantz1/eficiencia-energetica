@@ -50,3 +50,18 @@ export function periodosDeLeitura(leituras: LeituraRelogio[]): { periodos: Perio
 export function historicoContas(contas: ContaMensal[]): (ContaMensal & { precoKwh: number })[] {
   return [...contas].sort((x, y) => x.competencia.localeCompare(y.competencia)).map((c) => ({ ...c, precoKwh: c.kwh > 0 ? c.valor / c.kwh : 0 }));
 }
+
+export interface MediaDasContas {
+  kwhMes: number;
+  valorMes: number;
+  /** Total pago ÷ total de kWh (não a média dos preços de cada mês, que daria o mesmo peso a um mês de 30 kWh e a um de 300). */
+  precoKwh: number;
+}
+
+/** Média das contas anotadas, para o "Mês a mês". Sem contas, `undefined`. */
+export function mediaDasContas(contas: readonly ContaMensal[]): MediaDasContas | undefined {
+  if (contas.length === 0) return undefined;
+  const kwh = contas.reduce((s, c) => s + c.kwh, 0);
+  const valor = contas.reduce((s, c) => s + c.valor, 0);
+  return { kwhMes: kwh / contas.length, valorMes: valor / contas.length, precoKwh: kwh > 0 ? valor / kwh : 0 };
+}

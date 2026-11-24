@@ -1,41 +1,41 @@
 {
-  "medidoNoCommit": "ab57d7f",
-  "decisao": "HIS-104 (meta de gasto, 2026-11-24): cartão da meta e @ee/core/meta só na /casa (+7,7 kB gzip no 11a, parte é o Turbopack repartindo os pedaços em 14 arquivos); campo opcional de iluminação pública no CamposDaConta (+1,0 a +1,8 kB nas outras rotas, somado ao que HIS-102/105/117 já tinham trazido abaixo do limite desde 0170330). Aceito no modo rápido; revisar na rodada final de verificação.",
+  "medidoNoCommit": "0cad3d1",
+  "decisao": "Painel em blocos (visual-limpo, 2026-11-24): a /casa ganha a grade de resumo, a faixa de cômodos, as dicas ao lado do ranking e os números do Mês a mês (~+1,4 kB gzip no 11a, ícones e o BlocoDeResumo). Pedido do responsável; as outras rotas não mudam.",
   "rotas": {
     "/": {
-      "jsDoHtml": 173483,
-      "totalComPrefetch": 197531
+      "jsDoHtml": 173505,
+      "totalComPrefetch": 197533
     },
     "/comecar": {
-      "jsDoHtml": 189586,
-      "totalComPrefetch": 197531
+      "jsDoHtml": 189582,
+      "totalComPrefetch": 197533
     },
     "/casa": {
-      "jsDoHtml": 199763,
-      "totalComPrefetch": 273515
+      "jsDoHtml": 201206,
+      "totalComPrefetch": 274913
     },
     "/casa/comodos": {
-      "jsDoHtml": 190725,
-      "totalComPrefetch": 273515
+      "jsDoHtml": 190709,
+      "totalComPrefetch": 274913
     },
     "/casa/dicas": {
-      "jsDoHtml": 179728,
-      "totalComPrefetch": 273515
+      "jsDoHtml": 179697,
+      "totalComPrefetch": 274913
     },
     "/casa/ajustes": {
-      "jsDoHtml": 181805,
-      "totalComPrefetch": 273515
+      "jsDoHtml": 181793,
+      "totalComPrefetch": 274913
     },
     "/sobre": {
-      "jsDoHtml": 140266,
-      "totalComPrefetch": 177546
+      "jsDoHtml": 140244,
+      "totalComPrefetch": 177568
     },
     "/tarifa-social": {
-      "jsDoHtml": 166567,
-      "totalComPrefetch": 185546
+      "jsDoHtml": 166573,
+      "totalComPrefetch": 185550
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 252768
+      "totalComPrefetch": 254186
     }
   }
 }
