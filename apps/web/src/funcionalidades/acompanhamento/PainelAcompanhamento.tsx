@@ -17,6 +17,7 @@ import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Acompanhamento } from "./Acompanhamento";
 import { LevarResumo } from "./LevarResumo";
+import { MetaDeGasto } from "./MetaDeGasto";
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
 
@@ -69,11 +70,11 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
   // uma coluna lateral com "Quem mais gasta" e a dica, que ocupa as duas linhas (A-112-1: sem isso sobrava um vão de
   // ~640 px embaixo dos cômodos); a nota embaixo. A ordem do código é a do celular; as áreas só mudam o lugar na tela.
   // Com o "Confere seus aparelhos?" (HIS-003b), a linha 'aviso' entra logo depois da conta; sem ele, a lista não tem a
-  // linha (sobraria um intervalo vazio). As duas listas ficam escritas por inteiro: o Tailwind precisa da classe literal.
+  // linha (sobraria um intervalo vazio). A meta (HIS-104) tem a linha 'meta' logo depois, nas duas listas. As duas listas ficam escritas por inteiro: o Tailwind precisa da classe literal.
   const consumoAlto = consumoDaCasaForaDoComum(conta.consumoKwh);
   const areas = consumoAlto
-    ? "lg:[grid-template-areas:'conta_conta'_'aviso_aviso'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']"
-    : "lg:[grid-template-areas:'conta_conta'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']";
+    ? "lg:[grid-template-areas:'conta_conta'_'aviso_aviso'_'meta_meta'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']"
+    : "lg:[grid-template-areas:'conta_conta'_'meta_meta'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']";
   return (
     <div className={`space-y-12 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0 ${areas}`}>
       {/* Valor da conta */}
@@ -147,6 +148,9 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           </BotaoLink>
         }
       />
+
+      {/* Meta de gasto (HIS-104): logo depois da conta (e do aviso), na ordem do celular. */}
+      <MetaDeGasto dados={dados} className="lg:[grid-area:meta]" />
 
       {/* Cômodos */}
       <section aria-labelledby="titulo-comodos" className="lg:[grid-area:comodos]">

@@ -17,7 +17,7 @@ export function CamposDaConta({
   textos: { consumo: string; ajudaDoConsumo: string; valor: string; ajudaDoValor?: string };
   className?: string;
 }) {
-  const { ids, kwh, valor, alertaDoPreco } = campos;
+  const { ids, kwh, valor, iluminacao, alertaDoPreco } = campos;
   // O "Confere os dois números?" fica embaixo do valor, mas fala dos dois: o consumo também aponta para ele (T6).
   const alertaDoValor = valor.alerta ?? alertaDoPreco;
   const descreveOPreco = alertaDoPreco && !valor.erro && !valor.alerta ? `${ids.valor}-alerta` : undefined;
@@ -38,6 +38,12 @@ export function CamposDaConta({
       <Campo rotulo={textos.valor} id={ids.valor} ajuda={textos.ajudaDoValor} erro={valor.erro} alerta={alertaDoValor}>
         <Entrada id={ids.valor} inputMode="decimal" prefixo="R$" placeholder="Ex.: 135,90" value={valor.texto} onChange={(e) => valor.aoMudar(e.target.value)} onBlur={valor.aoSair} />
       </Campo>
+      {/* Opcional (HIS-104): sem valor médio com fonte, vazio é o caminho "não sei". */}
+      {ids.iluminacao && (
+        <Campo rotulo="Taxa de iluminação pública (opcional)" id={ids.iluminacao} ajuda="Está na sua conta de luz, na linha da iluminação pública. Se não achar, deixe vazio." erro={iluminacao.erro} alerta={iluminacao.alerta}>
+          <Entrada id={ids.iluminacao} inputMode="decimal" prefixo="R$" placeholder="Ex.: 12,50" value={iluminacao.texto} onChange={(e) => iluminacao.aoMudar(e.target.value)} onBlur={iluminacao.aoSair} />
+        </Campo>
+      )}
     </div>
   );
 }

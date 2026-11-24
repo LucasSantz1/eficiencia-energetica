@@ -41,7 +41,7 @@ export function TelaAjustes() {
   const [mudandoCidade, setMudandoCidade] = useState(false);
   // A chave muda só quando a pessoa volta para a tarifa da ANEEL: aí os campos ficam em branco de novo.
   const [chaveDaConta, setChaveDaConta] = useState(0);
-  const camposDaConta = useCamposDaConta({ uso: "ajustes", beneficio: residencia?.beneficio, ids: { kwh: "aj-kwh", valor: "aj-valor" }, inicial: chaveDaConta === 0 ? residencia?.contaReferencia : undefined, chave: chaveDaConta });
+  const camposDaConta = useCamposDaConta({ uso: "ajustes", beneficio: residencia?.beneficio, ids: { kwh: "aj-kwh", valor: "aj-valor", iluminacao: "aj-cip" }, inicial: chaveDaConta === 0 ? residencia?.contaReferencia : undefined, chave: chaveDaConta });
   const [contaSalva, setContaSalva] = useState(false);
 
   const municipios = useMunicipios(residencia?.uf);
@@ -177,6 +177,7 @@ export function TelaAjustes() {
             </div>
           )}
         </Secao>
+        <LinhaDaMeta />
       </div>
 
       <div className="space-y-12 lg:self-start">
@@ -200,13 +201,13 @@ export function TelaAjustes() {
 }
 
 function mesmaConta(salva: ContaReferencia | undefined, enviada: ContaReferencia): boolean {
-  return salva?.kwh === enviada.kwh && salva.valor === enviada.valor;
+  return salva?.kwh === enviada.kwh && salva.valor === enviada.valor && salva.iluminacaoPublica === enviada.iluminacaoPublica;
 }
 
 /** Digitar de novo tira o "Pronto": ele fala da conta que foi salva, não da que está nos campos. */
 function semAvisoAoMudar(campos: CamposDaContaEstado, aoMudar: () => void): CamposDaContaEstado {
   const comAviso = (campo: CamposDaContaEstado["kwh"]) => ({ ...campo, aoMudar: (texto: string) => (campo.aoMudar(texto), aoMudar()) });
-  return { ...campos, kwh: comAviso(campos.kwh), valor: comAviso(campos.valor) };
+  return { ...campos, kwh: comAviso(campos.kwh), valor: comAviso(campos.valor), iluminacao: comAviso(campos.iluminacao) };
 }
 
 /**
@@ -250,6 +251,19 @@ function SeusDados() {
           De onde vêm as tarifas e como o cálculo é feito
         </Link>
       </p>
+    </Secao>
+  );
+}
+
+/** "Meta de luz" (HIS-104): só uma linha aqui; o campo e o resultado ficam no painel, onde a pessoa já vê o R$. */
+function LinhaDaMeta() {
+  const meta = useCasa((s) => s.metaMensal);
+  return (
+    <Secao titulo="Meta de luz">
+      <p className="text-lg">{meta === undefined ? "Você ainda não tem uma meta." : <>Meta de luz: <strong className="numeros">{formatarReais(meta)}</strong> por mês</>}</p>
+      <Link href="/casa#meta" className="mt-3 inline-flex min-h-11 items-center font-bold text-energia underline underline-offset-2">
+        {meta === undefined ? "Definir meta" : "Mudar meta"}
+      </Link>
     </Secao>
   );
 }

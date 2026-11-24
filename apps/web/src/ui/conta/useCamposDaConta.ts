@@ -5,17 +5,20 @@ import { precoDaContaForaDoComum, type Beneficio, type ContaReferencia } from "@
 import type { AlertaDoCampo } from "@/ui/Campo";
 import { indoParaUmBotao, useCampoNumerico, type CampoNumerico } from "@/ui/campos/useCampoNumerico";
 import { focarPrimeiroErro } from "@/ui/foco";
-import { confereOPrecoDaConta, faixaDoConsumoDaConta, faixaDoValorDaConta, mensagensDoConsumoDaConta, mensagensDoValorDaConta, TITULO_CONFERE_OS_DOIS, type UsoDaConta } from "./mensagensDaConta";
+import { confereOPrecoDaConta, faixaDaIluminacao, faixaDoConsumoDaConta, faixaDoValorDaConta, mensagensDaIluminacao, mensagensDoConsumoDaConta, mensagensDoValorDaConta, TITULO_CONFERE_OS_DOIS, type UsoDaConta } from "./mensagensDaConta";
 
 export interface IdsDaConta {
   kwh: string;
   valor: string;
+  /** Campo opcional da iluminação pública (HIS-104). Sem ele, a tela não mostra o campo e a conta sai sem CIP. */
+  iluminacao?: string;
 }
 
 export interface CamposDaContaEstado {
   ids: IdsDaConta;
   kwh: CampoNumerico;
   valor: CampoNumerico;
+  iluminacao: CampoNumerico;
   /** "Confere os dois números?" (preço por kWh fora do comum), quando é para mostrar. Fica no campo do valor. */
   alertaDoPreco: AlertaDoCampo | undefined;
   /** Mostra as mensagens; se algo não passou, põe o foco no primeiro campo e devolve `undefined`. */
@@ -38,6 +41,8 @@ interface EstadoDoPreco {
 export function useCamposDaConta({ uso, beneficio, ids, inicial, chave }: { uso: UsoDaConta; beneficio: Beneficio | undefined; ids: IdsDaConta; inicial?: ContaReferencia; chave?: unknown }): CamposDaContaEstado {
   const kwh = useCampoNumerico({ faixa: faixaDoConsumoDaConta(uso), casas: 2, obrigatorio: true, mensagens: mensagensDoConsumoDaConta(uso), inicial: inicial?.kwh, chave });
   const valor = useCampoNumerico({ faixa: faixaDoValorDaConta(uso), casas: 2, obrigatorio: true, mensagens: mensagensDoValorDaConta(uso), inicial: inicial?.valor, chave, dinheiro: true });
+  const faixaDaCip = faixaDaIluminacao(valor.valorLido);
+  const iluminacao = useCampoNumerico({ faixa: faixaDaCip, casas: 2, obrigatorio: false, mensagens: mensagensDaIluminacao(faixaDaCip), inicial: inicial?.iluminacaoPublica, chave, dinheiro: true });
 
   const parInicial = inicial ? `${inicial.kwh}|${inicial.valor}` : undefined;
   const [guardado, setGuardado] = useState<EstadoDoPreco>({ chave, mostrar: false, confirmado: parInicial });
@@ -66,6 +71,7 @@ export function useCamposDaConta({ uso, beneficio, ids, inicial, chave }: { uso:
     ids,
     kwh: comPreco(kwh),
     valor: comPreco(valor),
+    iluminacao,
     alertaDoPreco:
       estado.mostrar && precoPendente && conta && preco !== undefined
         ? {
@@ -78,12 +84,16 @@ export function useCamposDaConta({ uso, beneficio, ids, inicial, chave }: { uso:
     conferir: () => {
       const resultadoKwh = kwh.conferir();
       const resultadoValor = valor.conferir();
+      const resultadoCip = ids.iluminacao ? iluminacao.conferir() : "ok";
       if (resultadoKwh === "ok" && resultadoValor === "ok" && precoPendente) mudar({ mostrar: true });
       const naoPassou = focarPrimeiroErro([
         { id: ids.kwh, resultado: resultadoKwh },
         { id: ids.valor, resultado: resultadoValor === "ok" && precoPendente ? "alerta" : resultadoValor },
+        ...(ids.iluminacao ? [{ id: ids.iluminacao, resultado: resultadoCip }] : []),
       ]);
-      return naoPassou ? undefined : conta;
+      if (naoPassou || !conta) return undefined;
+      const cip = ids.iluminacao ? iluminacao.valorValido : undefined;
+      return cip ? { ...conta, iluminacaoPublica: cip } : conta;
     },
   };
 }

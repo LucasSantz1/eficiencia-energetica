@@ -57,3 +57,22 @@ export function confereOPrecoDaConta(kwh: number, valor: number, preco: number):
   return `Com ${formatarKwh(kwh)} e ${formatarReais(valor)}, cada kWh sairia por ${formatarReais(preco)}. Costuma ficar entre ${formatarReais(PRECO_DA_CONTA_POR_KWH.min)} e ${formatarReais(PRECO_DA_CONTA_POR_KWH.max)}. Veja se a vírgula está no lugar certo.`;
 }
 
+
+/**
+ * Iluminação pública (CIP, HIS-104): opcional, de R$ 0,00 até o teto do `LIMITES` e sempre menor que o valor total,
+ * porque ela vem dentro da conta (o leitor da casa salva descarta o que passar disso).
+ */
+export function faixaDaIluminacao(valorDaConta: number | undefined): Faixa {
+  const { max } = LIMITES.iluminacaoPublica;
+  return { ...LIMITES.iluminacaoPublica, max: valorDaConta === undefined ? max : Math.min(max, Math.max(0, valorDaConta - 0.01)) };
+}
+
+export function mensagensDaIluminacao(faixa: Faixa): MensagensDoCampo {
+  const fora = `Digite um valor entre ${formatarReais(faixa.min)} e ${formatarReais(faixa.max)}. A taxa vem dentro do valor total da conta.`;
+  return {
+    vazio: fora,
+    malEscrito: MAL_ESCRITO_COM_VIRGULA,
+    fora,
+    confere: (valor) => `${formatarReais(valor)} é muito para a iluminação pública. Veja se você copiou a linha certa da conta.`,
+  };
+}

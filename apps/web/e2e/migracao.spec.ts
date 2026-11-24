@@ -39,5 +39,6 @@ test("/comecar com casa mostra \"Você já cadastrou a sua casa\" e não muda a 
   await semearCasa(context, casa);
   await page.goto("/comecar");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Você já cadastrou a sua casa");
-  expect(await casaSalva(page)).toEqual(casa);
+  // A casa v2 sobe para a versão 3 (HIS-104) quando o persist regrava; o conteúdo continua o mesmo.
+  await expect.poll(async () => casaSalva(page)).toEqual({ ...casa, version: 3 });
 });
