@@ -79,7 +79,7 @@ export function MetaDeGasto({ dados, className = "" }: { dados: Dados; className
   return (
     <section id="meta" aria-labelledby={ID_DO_TITULO} className={`scroll-mt-4 rounded-[var(--radius-cartao)] bg-papel p-5 sm:p-6 lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-x-10 ${className}`}>
       <div>
-        <h2 id={ID_DO_TITULO} className="text-2xl font-extrabold tracking-tight">
+        <h2 id={ID_DO_TITULO} className="text-[1.375rem] font-bold tracking-tight">
           Sua meta
         </h2>
         {mostrarCampo ? (
@@ -193,7 +193,7 @@ function ResultadoDaMeta({ situacao: s, metaReais, dados, aoUsar }: { situacao: 
 
   if (s.tipo === "dentro") {
     return (
-      <div className="rounded-[var(--radius-controle)] bg-energia-claro px-4 py-4 text-tinta">
+      <div className="rounded-[var(--radius-controle)] bg-fundo px-4 py-4 text-tinta">
         {titulo}
         <p className="mt-2">{linhaDoDentro(s.contaCentavos, s.folgaCentavos, metaCentavos, s.confianca)}</p>
         {confianca && s.confianca.tipo === "parcial" && s.confianca.motivo === "divergencia" && <p className="mt-2">{confianca}</p>}
@@ -223,10 +223,10 @@ function ResultadoDaMeta({ situacao: s, metaReais, dados, aoUsar }: { situacao: 
       {s.passos.length > 0 ? (
         <>
           <h4 className="mt-5 font-extrabold">{cabecalhoDasDicas(s.passos.length, s.chegaLa)}</h4>
-          <ul className="mt-2 space-y-2">
+          <ul className="mt-2 divide-y divide-separador rounded-[var(--radius-controle)] bg-fundo">
             {s.passos.map((p) => (
-              <li key={p.dicaId} className="numeros rounded-[var(--radius-controle)] bg-energia-claro px-4 py-3 text-energia-forte">
-                <strong>{titulos.get(p.dicaId)?.titulo ?? "Dica"}</strong>: economiza {reais(p.ganhoCentavos)}
+              <li key={p.dicaId} className="numeros px-4 py-3">
+                <strong>{titulos.get(p.dicaId)?.titulo ?? "Dica"}</strong>: economiza <strong className="text-energia-forte">{reais(p.ganhoCentavos)}</strong>
               </li>
             ))}
           </ul>

@@ -36,18 +36,18 @@ export function TelaDicas() {
       </p>
 
       {/* Resumo do plano */}
-      <section aria-label="Seu plano de economia" aria-live="polite" className="sticky top-2 z-10 mt-6 rounded-[1.5rem] bg-tinta px-5 py-4 text-white shadow-[0_10px_30px_-12px_rgb(19_35_63/0.6)] sm:px-6 lg:col-start-2 lg:row-start-3 lg:shadow-none lateral-fixa">
+      <section aria-label="Seu plano de economia" aria-live="polite" className="sticky top-2 z-10 mt-6 rounded-[var(--radius-cartao)] bg-papel px-5 py-4 shadow-[0_8px_24px_-14px_rgb(19_35_63/0.35)] sm:px-6 lg:col-start-2 lg:row-start-3 lg:shadow-none lateral-fixa">
         {plano.length === 0 ? (
           <p className="text-[1.02rem]">
-            Hoje a conta estimada é de <strong className="numeros text-faisca">{formatarReais(atual)}</strong> por mês. Marque as dicas abaixo para montar o seu plano.
+            Hoje a conta estimada é de <strong className="numeros text-energia-forte">{formatarReais(atual)}</strong> por mês. Marque as dicas abaixo para montar o seu plano.
           </p>
         ) : (
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
             <div>
-              <p className="text-white/80">
+              <p className="text-tinta-suave">
                 Com {plano.length} {plano.length === 1 ? "dica" : "dicas"}, a conta vai de <span className="numeros line-through decoration-2">{formatarReais(atual)}</span> para
               </p>
-              <p className="numeros text-4xl leading-tight font-extrabold text-faisca">
+              <p className="numeros text-4xl leading-tight font-extrabold text-energia-forte">
                 <ValorAnimado valor={comPlano} formatar={(v) => formatarReais(v)} duracao={600} />
               </p>
             </div>
@@ -55,7 +55,7 @@ export function TelaDicas() {
               <p className="numeros text-xl font-extrabold">
                 −<ValorAnimado valor={economia} formatar={(v) => formatarReais(v)} duracao={600} /> por mês
               </p>
-              <p className="numeros text-white/80">
+              <p className="numeros text-tinta-suave">
                 <ValorAnimado valor={economia * 12} formatar={(v) => formatarReais(v)} duracao={600} /> em um ano
               </p>
             </div>

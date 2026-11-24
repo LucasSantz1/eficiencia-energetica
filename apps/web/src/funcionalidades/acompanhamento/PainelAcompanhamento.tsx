@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Info } from "lucide-react";
+import { ChevronRight, Info, Zap } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { COMODOS_PADRAO, consumoDaCasaForaDoComum, ehLampada, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
@@ -78,22 +78,22 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
   return (
     <div className={`space-y-12 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0 ${areas}`}>
       {/* Valor da conta */}
-      <section aria-labelledby="titulo-conta" className="surgir rounded-[1.75rem] bg-tinta px-5 py-6 text-white sm:px-8 sm:py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-x-12 lg:[grid-area:conta]">
-        <h1 id="titulo-conta" className="text-lg font-bold text-white/80">
-          Sua conta estimada por mês
+      <section aria-labelledby="titulo-conta" className="surgir rounded-[var(--radius-cartao)] bg-papel px-5 py-6 sm:px-8 sm:py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-x-12 lg:[grid-area:conta]">
+        <h1 id="titulo-conta" className="flex items-center gap-2 text-[1.0625rem] font-bold text-energia">
+          <Zap className="size-5" aria-hidden /> Sua conta estimada por mês
         </h1>
-        <p className="numeros mt-1 text-[clamp(3rem,13vw,5.25rem)] leading-none font-extrabold tracking-tight text-faisca lg:text-[4.5rem]">
+        <p className="numeros mt-2 text-[clamp(3rem,13vw,4.75rem)] leading-none font-extrabold tracking-tight lg:text-[4.25rem]">
           <ValorAnimado valor={conta.valor} formatar={(v) => formatarReais(v)} duracao={1100} />
         </p>
-        <p className="numeros mt-3 text-lg text-white/85">
+        <p className="numeros mt-3 text-lg text-tinta-suave">
           {formatarKwh(conta.consumoKwh)} por mês, cerca de {formatarReais(conta.valor / 30)} por dia
         </p>
 
         {resumoPlano && (
-          <Link href="/casa/dicas" transitionTypes={["nav-forward"]} className="mt-5 flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 hover:bg-white/15">
+          <Link href="/casa/dicas" transitionTypes={["nav-forward"]} className="mt-5 flex items-center gap-3 rounded-[var(--radius-controle)] bg-fundo px-4 py-3 hover:bg-energia-claro">
             <span className="flex-1">
               Com o seu plano de economia ({plano.length} {plano.length === 1 ? "dica" : "dicas"}), a conta cai para{" "}
-              <strong className="numeros text-faisca">
+              <strong className="numeros text-energia-forte">
                 <ValorAnimado valor={resumoPlano.conta.valor} formatar={(v) => formatarReais(v)} />
               </strong>: {formatarReais(conta.valor - resumoPlano.conta.valor)} a menos por mês.
             </span>
@@ -103,10 +103,10 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
 
         <LevarResumo resumo={resumo} proximaDica={melhor} />
 
-        <div className="mt-6 space-y-2 border-t border-white/15 pt-5 text-[0.98rem] text-white/80 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mt-0 lg:border-t-0 lg:pt-0">
+        <div className="mt-6 space-y-2 border-t border-separador pt-5 text-[0.98rem] text-tinta-suave lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mt-0 lg:border-t-0 lg:pt-0">
           {bandeira && preco.origem === "aneel" && (
-            <p className="text-white">
-              <SeloBandeira bandeira={bandeira.bandeira} exata={bandeira.exata} sobreEscuro />
+            <p className="text-tinta">
+              <SeloBandeira bandeira={bandeira.bandeira} exata={bandeira.exata} />
             </p>
           )}
           {preco.origem === "conta" ? (
@@ -115,7 +115,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
             <p>
               Tarifa da {nomeDistribuidora(distribuidora)}: {formatarReais(preco.valor - preco.adicionalBandeira)} por kWh{preco.adicionalBandeira > 0 && ` + ${formatarReais(preco.adicionalBandeira)} da bandeira`}. Sem impostos, que variam por
               cidade.{" "}
-              <Link href="/casa/ajustes#conta" className="font-bold text-faisca underline underline-offset-2">
+              <Link href="/casa/ajustes#conta" className="font-bold text-energia underline underline-offset-2">
                 Usar minha conta de luz
               </Link>
             </p>
@@ -125,7 +125,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
               a /casa não baixa o guia a cada visita, só quando a pessoa toca (tech-lead, HIS-103b). */}
           {residencia?.beneficio === "nao-sei" && (
             <p>
-              <Link href="/tarifa-social" prefetch={false} transitionTypes={["nav-forward"]} className="font-bold text-faisca underline underline-offset-2">
+              <Link href="/tarifa-social" prefetch={false} transitionTypes={["nav-forward"]} className="font-bold text-energia underline underline-offset-2">
                 Ver se pode ter direito à Tarifa Social
               </Link>
             </p>
@@ -155,14 +155,14 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
       {/* Cômodos */}
       <section aria-labelledby="titulo-comodos" className="lg:[grid-area:comodos]">
         <div className="flex items-end justify-between gap-4">
-          <h2 id="titulo-comodos" className="text-2xl font-extrabold tracking-tight">
+          <h2 id="titulo-comodos" className="text-[1.375rem] font-bold tracking-tight">
             Seus cômodos
           </h2>
           <Link href="/casa/comodos" transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
             Editar <ChevronRight className="size-5" aria-hidden />
           </Link>
         </div>
-        <ul className="mt-4 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+        <ul className="mt-3 divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
           {comodos.map((c, indice) => {
             const dados = resumo.comodos.find((x) => x.comodoId === c.id);
             const doComodo = aparelhos.filter((a) => a.comodoId === c.id);
@@ -171,21 +171,22 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
             const participacao = dados?.participacao ?? 0;
             return (
               <li key={c.id} className="surgir" style={{ animationDelay: `${150 + indice * 70}ms` }}>
-                <Link href={`/casa/comodos#comodo-${c.id}`} transitionTypes={["nav-forward"]} className="flex h-full flex-col gap-3 rounded-[var(--radius-cartao)] bg-papel p-4 hover:ring-2 hover:ring-energia">
+                <Link href={`/casa/comodos#comodo-${c.id}`} transitionTypes={["nav-forward"]} className="flex flex-col gap-2.5 px-4 py-3.5 hover:bg-fundo/60">
                   <span className="flex items-center gap-3">
-                    <span className="grid size-11 place-items-center rounded-xl bg-energia-claro text-energia">
+                    <span className="grid size-10 place-items-center rounded-[0.7rem] bg-energia-claro text-energia">
                       <Icone nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} className="size-6" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-lg font-extrabold">{c.nome}</span>
+                      <span className="block truncate text-[1.0625rem] font-bold">{c.nome}</span>
                       <span className="block text-[0.92rem] text-tinta-suave">
                         {outros} {outros === 1 ? "aparelho" : "aparelhos"}, {lampadas} {lampadas === 1 ? "lâmpada" : "lâmpadas"}
                       </span>
                     </span>
-                    <span className="numeros text-right text-lg font-extrabold">{formatarReais(dados?.valorMes ?? 0)}</span>
+                    <span className="numeros text-right text-[1.0625rem] font-bold">{formatarReais(dados?.valorMes ?? 0)}</span>
+                    <ChevronRight className="size-5 shrink-0 text-tinta-suave/60" aria-hidden />
                   </span>
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 flex-1 overflow-hidden rounded-full bg-fundo">
+                  <span className="flex items-center gap-2 pl-[3.25rem]">
+                    <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-fundo">
                       <span
                         className={`cresce-x block h-full rounded-full transition-[width] duration-500 ${COR_FAIXA[faixaDoPeso(participacao)]}`}
                         style={{ width: `${Math.max(2, participacao * 100)}%`, animationDelay: `${400 + indice * 70}ms` }}
@@ -206,16 +207,15 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
         {/* Quem mais gasta */}
         <section aria-labelledby="titulo-ranking">
           <div className="flex items-end justify-between gap-4">
-            <h2 id="titulo-ranking" className="text-2xl font-extrabold tracking-tight">
+            <h2 id="titulo-ranking" className="text-[1.375rem] font-bold tracking-tight">
               Quem mais gasta
             </h2>
             <Link href="/casa/comodos?visao=geral" transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
               Painel geral <ChevronRight className="size-5" aria-hidden />
             </Link>
           </div>
-          <div className="mt-3">
-            <LegendaEtiqueta />
-          </div>
+          <div className="mt-3 rounded-[var(--radius-cartao)] bg-papel p-4 sm:p-5">
+          <LegendaEtiqueta />
           <ul className="mt-5 space-y-5">
             {resumo.aparelhos.slice(0, 6).map(({ aparelho, kwhMes, valorMes, participacao }, indice) => {
               // O nome acessível repete o texto visível na mesma ordem (WCAG 2.5.3, texto da ux no D-A5-1);
@@ -248,17 +248,18 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
               );
             })}
           </ul>
+          </div>
         </section>
 
         <EspacoReservado posicao="painel-apos-ranking" />
 
         {melhor && (
-          <section aria-labelledby="titulo-economia" className="surgir rounded-[var(--radius-cartao)] border-2 border-energia bg-energia-claro p-5 sm:p-6" style={{ animationDelay: "700ms" }}>
-            <h2 id="titulo-economia" className="text-lg font-bold text-energia-forte">
+          <section aria-labelledby="titulo-economia" className="surgir rounded-[var(--radius-cartao)] bg-papel p-5 sm:p-6" style={{ animationDelay: "700ms" }}>
+            <h2 id="titulo-economia" className="text-[1.0625rem] font-bold text-energia">
               {plano.length > 0 ? "Próxima dica para o seu plano" : "A dica que mais economiza na sua casa"}
             </h2>
             <div className="mt-3 flex items-start gap-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-papel text-energia">
+              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-energia-claro text-energia">
                 <Icone nome={melhor.icone} className="size-6" />
               </span>
               <div className="flex-1">

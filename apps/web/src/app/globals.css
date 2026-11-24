@@ -18,9 +18,12 @@
 
   --color-tinta: #13233f;
   --color-tinta-suave: #4a5a72;
-  --color-fundo: #eef3f0;
+  /* Fundo agrupado, cinza neutro como o dos apps do iPhone: os blocos brancos se destacam sem borda nem sombra. */
+  --color-fundo: #f2f2f7;
   --color-papel: #ffffff;
   --color-linha: #d3ddd8;
+  /* Divisória fina entre linhas de uma lista (decorativa: o texto de cada linha já separa os itens). */
+  --color-separador: #e3e3e8;
   --color-energia: #0a7356;
   --color-energia-forte: #075a43;
   --color-energia-claro: #dcefe6;
@@ -60,6 +63,7 @@
   html[data-contraste="mais"] {
     --color-tinta-suave: #26354d;
     --color-linha: #6f7f79;
+    --color-separador: #6f7f79;
     --color-energia: #075a43;
     --color-energia-forte: #04402f;
   }

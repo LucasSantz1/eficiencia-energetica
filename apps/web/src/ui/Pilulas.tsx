@@ -24,7 +24,7 @@ export function Pilulas<T extends string | number>({
             aria-checked={ativa}
             onClick={() => aoMudar(o.valor)}
             className={`min-h-11 rounded-full border-2 px-4 text-[0.98rem] font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-95 ${
-              ativa ? "border-tinta bg-tinta text-white" : "border-linha bg-papel text-tinta hover:border-tinta-suave"
+              ativa ? "border-energia bg-energia text-white" : "border-linha bg-papel text-tinta hover:border-tinta-suave"
             }`}
           >
             {o.rotulo}
