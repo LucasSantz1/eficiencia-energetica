@@ -365,6 +365,8 @@ dialog[open].folha {
   a {
     text-decoration: none !important;
   }
+}
+
 /* Com a letra maior (HIS-102), cortar com "..." esconderia metade do nome: o texto quebra a linha (decisão em vigor:
    nomes longos quebram, não truncam) e o nome visível continua batendo com o acessível (axe). Fora das camadas de
    propósito: precisa vencer a utilidade `truncate`, que fica na camada utilities. */
