@@ -320,3 +320,31 @@ dialog[open].folha {
     transform: none;
   }
 }
+
+/*
+ * Impressão (HIS-105): folha em preto e branco, sem navegação nem botões. O navegador corta fundos ao imprimir, então
+ * o texto branco do painel escuro sumiria: tudo vira tinta preta sobre papel. Nada é gerado no servidor.
+ */
+@media print {
+  nav,
+  button,
+  [data-sem-impressao] {
+    display: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  body {
+    font-size: 12pt;
+  }
+  a {
+    text-decoration: none !important;
+  }
+}
