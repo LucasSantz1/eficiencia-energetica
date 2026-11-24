@@ -78,7 +78,7 @@ export function TelaDicas() {
                 aoMudar={setFiltro}
               />
             </div>
-            <ul className="mt-5 space-y-3 lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-4 lg:space-y-0 xl:grid-cols-3">
+            <ul className="mt-5 space-y-3 lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-4 lg:space-y-0">
               {visiveis.map((d, i) => (
                 <CartaoDica
                   indice={i}
@@ -104,12 +104,12 @@ export function TelaDicas() {
 
         {outras.length > 0 && (
           <section aria-labelledby="outras" className="mt-12">
-            <h2 id="outras" className="text-2xl font-extrabold tracking-tight">
+            <h2 id="outras" className="text-[1.375rem] font-bold tracking-tight">
               Também ajuda
             </h2>
-            <ul className="mt-4 divide-y divide-linha border-y border-linha">
+            <ul className="mt-3 divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
               {outras.map((d) => (
-                <li key={d.id} className="flex gap-4 py-5">
+                <li key={d.id} className="flex gap-4 px-4 py-4 sm:px-5">
                   <Icone nome={d.icone} className={`mt-1 size-6 shrink-0 ${d.tipo === "aviso" ? "text-faixa-d" : "text-energia"}`} />
                   <div>
                     <h3 className="text-lg leading-snug font-extrabold">{d.titulo}</h3>
@@ -131,8 +131,8 @@ function CartaoDica({ dica, marcada, aoAlternar, onde, indice }: { dica: Dica; m
       className={`surgir rounded-[var(--radius-cartao)] border-2 bg-papel p-4 transition-[border-color,box-shadow] duration-300 sm:p-5 ${marcada ? "border-energia shadow-[0_0_0_4px_var(--color-energia-claro)]" : "border-transparent"}`}
       style={{ animationDelay: `${Math.min(indice, 8) * 60}ms` }}
     >
-      {/* Na grade do computador a coluna é estreita: o ícone vai para cima do texto e o botão desce para o pé do cartão. */}
-      <div className="flex gap-4 lg:h-full lg:flex-col lg:gap-3">
+      {/* Duas colunas no computador (painel limpo, 24/11): cabe o ícone ao lado do texto; o botão desce para o pé do cartão. */}
+      <div className="flex gap-4 lg:h-full">
         <span className={`grid size-12 shrink-0 place-items-center rounded-2xl ${dica.tipo === "troca" ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia"}`}>
           <Icone nome={dica.icone} className="size-6" />
         </span>

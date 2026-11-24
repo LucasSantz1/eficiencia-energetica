@@ -144,6 +144,10 @@ export function TelaAjustes() {
           </div>
         </Secao>
 
+      </div>
+
+      {/* Conta e meta na coluna da direita (24/11): as duas colunas terminam perto uma da outra, sem vão grande. */}
+      <div className="space-y-12 lg:self-start">
         <Secao titulo="Sua conta de luz" id="conta">
           <p className="mb-5 max-w-[56ch] text-tinta-suave">Com o consumo e o valor de uma conta, usamos o preço real do kWh na sua cidade, já com impostos. Fica bem mais perto do que você paga.</p>
           <CamposDaConta
@@ -178,9 +182,6 @@ export function TelaAjustes() {
           )}
         </Secao>
         <LinhaDaMeta />
-      </div>
-
-      <div className="space-y-12 lg:self-start">
         <SecaoLeitura />
         <SeusDados />
       </div>
@@ -271,7 +272,7 @@ function LinhaDaMeta() {
 function Secao({ titulo, id, children }: { titulo: string; id?: string; children: React.ReactNode }) {
   return (
     <section id={id} aria-labelledby={`${id ?? titulo}-titulo`} className="scroll-mt-24">
-      <h2 id={`${id ?? titulo}-titulo`} className="mb-4 text-2xl font-extrabold tracking-tight">
+      <h2 id={`${id ?? titulo}-titulo`} className="mb-3 text-[1.375rem] font-bold tracking-tight">
         {titulo}
       </h2>
       {children}

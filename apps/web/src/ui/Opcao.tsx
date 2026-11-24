@@ -28,7 +28,7 @@ export function Opcao({
       aria-checked={selecionada}
       onClick={onClick}
       className={`flex w-full items-center gap-3 rounded-[var(--radius-controle)] border-2 px-4 py-3 text-left transition-[background-color,border-color,transform] duration-200 active:scale-[0.985] ${
-        selecionada ? "border-energia bg-energia-claro" : "border-linha bg-papel hover:border-tinta-suave"
+        selecionada ? "border-energia bg-energia-claro" : "border-separador bg-papel hover:border-linha"
       } ${className}`}
     >
       {icone && <span className={`shrink-0 ${selecionada ? "text-energia" : "text-tinta-suave"}`}>{icone}</span>}
@@ -39,7 +39,7 @@ export function Opcao({
       <span
         aria-hidden
         className={`grid size-6 shrink-0 place-items-center border-2 ${papel === "radio" ? "rounded-full" : "rounded-md"} ${
-          selecionada ? "border-energia bg-energia" : "border-linha bg-papel"
+          selecionada ? "border-energia bg-energia" : "border-tinta-suave/70 bg-papel"
         }`}
       >
         {selecionada && (papel === "radio" ? <span className="pulo size-2.5 rounded-full bg-white" /> : <Check className="pulo size-4 text-white" strokeWidth={3.5} />)}
