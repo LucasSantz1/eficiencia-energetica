@@ -46,7 +46,7 @@ function focar(id: string) {
  * Meta de gasto (HIS-104): "quero pagar até R$ X". O campo fica à esquerda e o resultado à direita no computador; no
  * celular, um embaixo do outro. A meta só vive no aparelho (store, versão 3). Nenhuma conta aqui: tudo vem do core.
  */
-export function MetaDeGasto({ dados, className = "" }: { dados: Dados; className?: string }) {
+export function MetaDeGasto({ dados, naFolha = false, className = "" }: { dados: Dados; naFolha?: boolean; className?: string }) {
   const { metaReais, situacao, definirMeta } = useMeta(dados);
   const [editando, setEditando] = useState(false);
   const [tirando, setTirando] = useState(false);
@@ -77,15 +77,20 @@ export function MetaDeGasto({ dados, className = "" }: { dados: Dados; className
   };
 
   return (
-    <section id="meta" aria-labelledby={ID_DO_TITULO} className={`scroll-mt-4 rounded-[var(--radius-cartao)] bg-papel p-5 sm:p-6 lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-x-10 ${className}`}>
+    <section
+      id="meta"
+      aria-labelledby={ID_DO_TITULO}
+      className={naFolha ? className : `scroll-mt-4 rounded-[var(--radius-cartao)] bg-papel p-5 sm:p-6 lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-x-10 ${className}`}
+    >
       <div>
-        <h2 id={ID_DO_TITULO} className="text-[1.375rem] font-bold tracking-tight">
+        {/* Na folha o título visível é o da própria folha; este fica só para o leitor de tela (e para o foco ao tirar a meta). */}
+        <h2 id={ID_DO_TITULO} className={naFolha ? "sr-only" : "text-[1.375rem] font-bold tracking-tight"}>
           Sua meta
         </h2>
         {mostrarCampo ? (
           <form
             noValidate
-            className="mt-3"
+            className={naFolha ? "" : "mt-3"}
             onSubmit={(e) => {
               e.preventDefault();
               salvar();
@@ -104,7 +109,7 @@ export function MetaDeGasto({ dados, className = "" }: { dados: Dados; className
             </div>
           </form>
         ) : (
-          <div className="mt-3">
+          <div className={naFolha ? "" : "mt-3"}>
             <p className="text-lg">
               Meta: <strong className="numeros">{formatarReais(metaReais ?? 0)}</strong> por mês
             </p>
@@ -145,7 +150,7 @@ export function MetaDeGasto({ dados, className = "" }: { dados: Dados; className
       </div>
 
       {situacao && metaReais !== undefined && (
-        <div className="mt-6 lg:mt-0">
+        <div className={naFolha ? "mt-6" : "mt-6 lg:mt-0"}>
           <ResultadoDaMeta situacao={situacao} metaReais={metaReais} dados={dados} aoUsar={editarCom} />
         </div>
       )}

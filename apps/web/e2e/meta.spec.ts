@@ -21,12 +21,18 @@ function casaDoC4({ metaMensal, comConta = true }: { metaMensal?: number; comCon
   return { version: 3, state: { ...base.state, residencia, aparelhos, plano: [], ...(metaMensal === undefined ? {} : { metaMensal }) } };
 }
 
-const cartao = (pagina: Page) => pagina.locator("section#meta");
+/** No painel em grade, a meta mora numa folha aberta pelo bloco "Sua meta". */
+async function abrirMeta(pagina: Page) {
+  await pagina.getByRole("button", { name: /^Sua meta/ }).click();
+  const meta = pagina.locator("dialog[open] section#meta");
+  await meta.waitFor();
+  return meta;
+}
 
 test("C4: as dicas ajudam, mas não chegam; a economia é R$ 12,67, nunca R$ 14,08", async ({ page }) => {
   await semearCasa(page.context(), casaDoC4({ metaMensal: 147 }));
   await page.goto("/casa");
-  const meta = cartao(page);
+  const meta = await abrirMeta(page);
   await expect(meta.getByRole("heading", { name: "Estas dicas ajudam, mas ainda não chegam lá." })).toBeVisible();
   await expect(meta).toContainText("Elas economizam R$ 12,67. Ainda faltam R$ 0,33. Com elas, sua conta pode ficar em R$ 147,33.");
   await expect(meta).not.toContainText("R$ 14,08");
@@ -40,7 +46,7 @@ test("C4: as dicas ajudam, mas não chegam; a economia é R$ 12,67, nunca R$ 14,
 test("definir, ver o piso, usar o piso e tirar a meta; tudo fica só no aparelho", async ({ page }) => {
   await semearCasa(page.context(), casaDoC4());
   await page.goto("/casa");
-  const meta = cartao(page);
+  const meta = await abrirMeta(page);
   const campo = meta.getByLabel("Quanto você quer pagar de luz por mês?");
 
   await campo.fill("300");
@@ -70,7 +76,7 @@ test("definir, ver o piso, usar o piso e tirar a meta; tudo fica só no aparelho
 test("valor fora da faixa mostra o erro e não salva", async ({ page }) => {
   await semearCasa(page.context(), casaDoC4());
   await page.goto("/casa");
-  const meta = cartao(page);
+  const meta = await abrirMeta(page);
   await meta.getByLabel("Quanto você quer pagar de luz por mês?").fill("9000");
   await meta.getByRole("button", { name: "Salvar meta" }).click();
   await expect(meta).toContainText("Escreva um valor entre R$ 1,00 e R$ 5.000,00.");
@@ -81,7 +87,7 @@ test("valor fora da faixa mostra o erro e não salva", async ({ page }) => {
 test("sem conta de luz: 'pelo menos' e nunca 'chegam lá'", async ({ page }) => {
   await semearCasa(page.context(), casaDoC4({ metaMensal: 60, comConta: false }));
   await page.goto("/casa");
-  const meta = cartao(page);
+  const meta = await abrirMeta(page);
   await expect(meta.getByRole("heading", { name: /^Falta economizar pelo menos R\$/ })).toBeVisible();
   await expect(meta).not.toContainText("chega");
   await expect(meta.getByRole("link", { name: "Colocar minha conta de luz" })).toBeVisible();
