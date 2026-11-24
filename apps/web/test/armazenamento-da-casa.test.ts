@@ -121,7 +121,7 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
   });
 
   it("casa válida: hidrata sem aviso e o texto salvo fica idêntico", async () => {
-    const texto = JSON.stringify({ state: CASA_VALIDA, version: 2 });
+    const texto = JSON.stringify({ state: CASA_VALIDA, version: 3 });
     local.dados.set(CHAVE, texto);
     const useCasa = await abrirStore(local);
     expect(useCasa.persist.hasHydrated()).toBe(true);
@@ -136,20 +136,20 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
     const useCasa = await abrirStore(local);
     expect(useCasa.persist.hasHydrated()).toBe(true);
     expect(useCasa.getState().avisoDaCasaSalva).toEqual({ tipo: "nada-aproveitavel" });
-    expect(JSON.parse(local.dados.get(CHAVE) ?? "")).toEqual({ state: { comodos: [], aparelhos: [], contas: [], leituras: [], plano: [] }, version: 2 });
+    expect(JSON.parse(local.dados.get(CHAVE) ?? "")).toEqual({ state: { comodos: [], aparelhos: [], contas: [], leituras: [], plano: [] }, version: 3 });
   });
 
   it("aparelho com potência -5: sai só ele, aviso 'parte' e regrava sem ele", async () => {
     const [primeiro, segundo] = CASA_VALIDA.aparelhos;
-    local.dados.set(CHAVE, JSON.stringify({ state: { ...CASA_VALIDA, aparelhos: [primeiro, { ...segundo, potenciaW: -5 }] }, version: 2 }));
+    local.dados.set(CHAVE, JSON.stringify({ state: { ...CASA_VALIDA, aparelhos: [primeiro, { ...segundo, potenciaW: -5 }] }, version: 3 }));
     const useCasa = await abrirStore(local);
     expect(useCasa.getState().avisoDaCasaSalva).toEqual({ tipo: "parte", descartados: { aparelhos: 1, comodos: 0, contas: 0, leituras: 0, plano: 0 } });
     const salvo: unknown = JSON.parse(local.dados.get(CHAVE) ?? "");
-    expect(salvo).toEqual({ state: { ...CASA_VALIDA, aparelhos: [primeiro] }, version: 2 });
+    expect(salvo).toEqual({ state: { ...CASA_VALIDA, aparelhos: [primeiro] }, version: 3 });
   });
 
   it("leitor que lança (pedido 1): merge sem exceção, aviso, e a casa salva nunca é regravada vazia", async () => {
-    const texto = JSON.stringify({ state: CASA_VALIDA, version: 2 });
+    const texto = JSON.stringify({ state: CASA_VALIDA, version: 3 });
     local.dados.set(CHAVE, texto);
     leitor.lancar = true;
     const useCasa = await abrirStore(local);
@@ -173,7 +173,7 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
   });
 
   it("as ações passam pelo leitor: o que ele recusa não muda nada", async () => {
-    local.dados.set(CHAVE, JSON.stringify({ state: CASA_VALIDA, version: 2 }));
+    local.dados.set(CHAVE, JSON.stringify({ state: CASA_VALIDA, version: 3 }));
     const useCasa = await abrirStore(local);
     const antes = useCasa.getState().aparelhos;
     const base = { comodoId: "c1", nome: "Chuveiro", quantidade: 1, potenciaW: 5500, minutosPorDia: 10, diasPorSemana: 7 };
@@ -194,7 +194,7 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
   });
 
   describe("a trava solta (D10, 2)", () => {
-    const TEXTO = JSON.stringify({ state: CASA_VALIDA, version: 2 });
+    const TEXTO = JSON.stringify({ state: CASA_VALIDA, version: 3 });
     const cadastroNovo = { residencia: RESIDENCIA, comodos: [{ id: "n1", tipo: "cozinha" as const, nome: "Cozinha" }], aparelhos: [] };
     async function abrirComLeitorQueLanca() {
       local.dados.set(CHAVE, TEXTO);
@@ -213,7 +213,7 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
       expect(useCasa.getState().avisoDaCasaSalva).toBeUndefined();
       useCasa.getState().adicionarComodo("cozinha");
       const salvo: unknown = JSON.parse(local.dados.get(CHAVE) ?? "");
-      expect(salvo).toMatchObject({ state: { comodos: [{ tipo: "cozinha" }] }, version: 2 });
+      expect(salvo).toMatchObject({ state: { comodos: [{ tipo: "cozinha" }] }, version: 3 });
     });
 
     it("cadastro novo com a trava: guarda o texto que não deu para ler e grava a casa nova", async () => {
@@ -221,7 +221,7 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
       useCasa.getState().criarCasa(cadastroNovo);
       expect(local.dados.get(COPIA)).toBe(TEXTO);
       const salvo: unknown = JSON.parse(local.dados.get(CHAVE) ?? "");
-      expect(salvo).toMatchObject({ state: { residencia: RESIDENCIA, comodos: cadastroNovo.comodos, aparelhos: [] }, version: 2 });
+      expect(salvo).toMatchObject({ state: { residencia: RESIDENCIA, comodos: cadastroNovo.comodos, aparelhos: [] }, version: 3 });
     });
 
     it("cadastro novo com a trava: a cópia é feita uma vez só, sem sobrescrever a que já existe", async () => {
@@ -238,7 +238,7 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
       useCasa.getState().criarCasa(cadastroNovo);
       expect(local.dados.has(COPIA)).toBe(false);
       const salvo: unknown = JSON.parse(local.dados.get(CHAVE) ?? "");
-      expect(salvo).toMatchObject({ state: { comodos: cadastroNovo.comodos }, version: 2 });
+      expect(salvo).toMatchObject({ state: { comodos: cadastroNovo.comodos }, version: 3 });
     });
 
     it("há texto guardado sem ler com a trava ou com a cópia, e some com Apagar tudo (D-3a-1)", async () => {

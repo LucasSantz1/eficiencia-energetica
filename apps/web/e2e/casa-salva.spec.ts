@@ -45,7 +45,7 @@ test("(a) JSON quebrado: T1c em /casa, chave regravada vazia, sem aviso depois d
   await expect(aviso(page)).toContainText("As informações tinham um problema. Cadastre a casa de novo para ver quanto cada aparelho custa.");
   await expect(aviso(page).getByRole("link", { name: "Cadastrar minha casa" })).toHaveAttribute("href", "/comecar");
   await expect(titulo(page)).toHaveText("Vamos cadastrar a sua casa");
-  await expect.poll(() => casaSalva(page)).toEqual({ version: 2, state: { comodos: [], aparelhos: [], contas: [], leituras: [], plano: [] } });
+  await expect.poll(() => casaSalva(page)).toEqual({ version: 3, state: { comodos: [], aparelhos: [], contas: [], leituras: [], plano: [] } });
 
   await aviso(page).getByRole("button", { name: "Entendi" }).click();
   await expect(titulo(page), "Entendi leva o foco ao título, nunca ao body").toBeFocused();
@@ -72,7 +72,7 @@ test("(b) potência -5 num aparelho: \"Tiramos 1 aparelho.\", o resto continua i
 
   // Regravada só com o que ficou, cada item igual ao original.
   await expect.poll(async () => (await casaSalva(page))?.state.aparelhos.length).toBe(resto.length);
-  expect(await casaSalva(page)).toEqual({ version: 2, state: { ...casa.state, aparelhos: resto } });
+  expect(await casaSalva(page)).toEqual({ version: 3, state: { ...casa.state, aparelhos: resto } });
 
   await page.reload();
   await expect(titulo(page)).toHaveText("Sua conta estimada por mês");
@@ -112,8 +112,9 @@ test("(c) uf \"../x\": T1b, nenhum pedido fora das 27 UFs (R7) e a casa volta ao
   await expect(titulo(page)).toHaveText("Sua conta estimada por mês");
 });
 
-test("(d) version 2 válida, com chave extra e __proto__: sem aviso e o texto fica idêntico byte a byte", async ({ page, context }) => {
-  const casa = casaV2();
+test("(d) version 3 válida, com chave extra e __proto__: sem aviso e o texto fica idêntico byte a byte", async ({ page, context }) => {
+  // Na versão atual (3, HIS-104) o persist não regrava ao abrir: o texto fica como estava.
+  const casa = { ...casaV2(), version: 3 };
   // `__proto__` no texto vira propriedade própria no JSON.parse: o leitor não a lê nem a espalha.
   const texto = JSON.stringify(casa).replace('"state":{', '"state":{"__proto__":{"poluido":true},"chaveDeOutraVersao":1,');
   expect(texto).toContain("__proto__");
@@ -128,14 +129,14 @@ test("(d) version 2 válida, com chave extra e __proto__: sem aviso e o texto fi
 });
 
 for (const version of [1, 99]) {
-  test(`(d) version ${version} válida: sem aviso, o persist regrava na versão 2 com o mesmo conteúdo`, async ({ page, context }) => {
+  test(`(d) version ${version} válida: sem aviso, o persist regrava na versão 3 com o mesmo conteúdo`, async ({ page, context }) => {
     const casa = casaV2();
     await semearCasa(context, { ...casa, version });
     await page.goto("/casa");
     await expect(titulo(page)).toHaveText("Sua conta estimada por mês");
     await semAviso(page);
-    await expect.poll(async () => (await casaSalva(page))?.version).toBe(2);
-    expect(await casaSalva(page)).toEqual(casa);
+    await expect.poll(async () => (await casaSalva(page))?.version).toBe(3);
+    expect(await casaSalva(page)).toEqual({ ...casa, version: 3 });
   });
 }
 
@@ -271,7 +272,7 @@ test.describe("trava da gravação (D10 2)", () => {
   async function conferirCasaNova(pagina: Page): Promise<void> {
     expect(await textoGuardado(pagina, CHAVE_CASA) === TEXTO, "o cadastro novo precisa gravar por cima do texto ilegível").toBe(false);
     const nova = await casaSalva(pagina);
-    expect(nova?.version).toBe(2);
+    expect(nova?.version).toBe(3);
     expect(nova?.state).not.toHaveProperty("e2eLancar");
     expect(nova?.state.residencia).toMatchObject({ uf: "SP", municipioIbge: 3541406, beneficio: "nao-sei" });
   }

@@ -2,8 +2,8 @@ import { avisoDaCasaSalva, lerCasaSalva, type AvisoDaCasaSalva, type CasaLida, t
 import type { ArmazenamentoSeguro } from "@/infraestrutura/armazenamento/armazenamento-local";
 
 /** O que vai para o localStorage: só os dados da casa (o aviso e as ações ficam fora). */
-export function dadosSalvaveis({ residencia, comodos, aparelhos, contas, leituras, plano }: DadosCasa): DadosCasa {
-  return { ...(residencia === undefined ? {} : { residencia }), comodos, aparelhos, contas, leituras, plano };
+export function dadosSalvaveis({ residencia, comodos, aparelhos, contas, leituras, plano, metaMensal }: DadosCasa): DadosCasa {
+  return { ...(residencia === undefined ? {} : { residencia }), comodos, aparelhos, contas, leituras, plano, ...(metaMensal === undefined ? {} : { metaMensal }) };
 }
 
 export interface CasaHidratada {
