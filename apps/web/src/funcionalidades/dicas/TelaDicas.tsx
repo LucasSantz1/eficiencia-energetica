@@ -25,7 +25,7 @@ export function TelaDicas() {
   const economia = atual - comPlano;
   const semCusto = simulaveis.filter((d) => d.tipo === "habito");
 
-  // No computador (HIS-112, L5): o plano numa coluna lateral à direita e as dicas em grade à esquerda. A ordem do código
+  // No computador (HIS-112, L5): o plano e o "Também ajuda" numa coluna à direita e as dicas em grade à esquerda. A ordem do código
   // continua a do celular (plano, depois a lista); a grade só muda o lugar na tela.
   return (
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-x-8">
@@ -36,7 +36,7 @@ export function TelaDicas() {
       </p>
 
       {/* Resumo do plano */}
-      <section aria-label="Seu plano de economia" aria-live="polite" className="sticky top-2 z-10 mt-6 rounded-[var(--radius-cartao)] bg-papel px-5 py-4 shadow-[0_8px_24px_-14px_rgb(19_35_63/0.35)] sm:px-6 lg:col-start-2 lg:row-start-3 lg:shadow-none lateral-fixa">
+      <section aria-label="Seu plano de economia" aria-live="polite" className="sticky top-2 z-10 mt-6 rounded-[var(--radius-cartao)] bg-papel px-5 py-4 shadow-[0_8px_24px_-14px_rgb(19_35_63/0.35)] sm:px-6 lg:static lg:col-start-2 lg:row-start-3 lg:self-start lg:shadow-none">
         {plano.length === 0 ? (
           <p className="text-[1.02rem]">
             Hoje a conta estimada é de <strong className="numeros text-energia-forte">{formatarReais(atual)}</strong> por mês. Marque as dicas abaixo para montar o seu plano.
@@ -63,7 +63,7 @@ export function TelaDicas() {
         )}
       </section>
 
-      <div className="lg:col-start-1 lg:row-start-3">
+      <div className="lg:col-start-1 lg:row-span-2 lg:row-start-3">
         {simulaveis.length > 0 && (
           <>
             <div className="mt-8 lg:mt-6">
@@ -101,26 +101,28 @@ export function TelaDicas() {
         <div className="mt-10 empty:hidden">
           <EspacoReservado posicao="dicas-apos-lista" />
         </div>
-
-        {outras.length > 0 && (
-          <section aria-labelledby="outras" className="mt-12">
-            <h2 id="outras" className="text-[1.375rem] font-bold tracking-tight">
-              Também ajuda
-            </h2>
-            <ul className="mt-3 divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
-              {outras.map((d) => (
-                <li key={d.id} className="flex gap-4 px-4 py-4 sm:px-5">
-                  <Icone nome={d.icone} className={`mt-1 size-6 shrink-0 ${d.tipo === "aviso" ? "text-faixa-d" : "text-energia"}`} />
-                  <div>
-                    <h3 className="text-lg leading-snug font-extrabold">{d.titulo}</h3>
-                    <p className="mt-1 max-w-[62ch] text-tinta-suave">{d.texto}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
       </div>
+
+      {/* "Também ajuda" na coluna da direita, embaixo do plano (24/11): preenche o lado das dicas no computador. No
+          código vem depois da lista, então no celular continua no fim da página e a ordem de foco não muda. */}
+      {outras.length > 0 && (
+        <section aria-labelledby="outras" className="mt-12 lg:col-start-2 lg:row-start-4 lg:mt-6 lg:self-start">
+          <h2 id="outras" className="text-[1.375rem] font-bold tracking-tight">
+            Também ajuda
+          </h2>
+          <ul className="mt-3 divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
+            {outras.map((d) => (
+              <li key={d.id} className="flex gap-4 px-4 py-4 sm:px-5">
+                <Icone nome={d.icone} className={`mt-1 size-6 shrink-0 ${d.tipo === "aviso" ? "text-faixa-d" : "text-energia"}`} />
+                <div>
+                  <h3 className="text-lg leading-snug font-extrabold">{d.titulo}</h3>
+                  <p className="mt-1 max-w-[62ch] text-tinta-suave">{d.texto}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
