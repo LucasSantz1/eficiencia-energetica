@@ -34,7 +34,7 @@ const RESTRICOES_COMUNS = [
   { regex: "^/", message: "Sem caminho absoluto no import: use @/ (HIS-002, S1-e)." },
   { regex: "[?#]", message: "Sem sufixo ? ou # no import (HIS-002, S1-e)." },
   // Entradas próprias do core, para regra que só uma rota usa (ADR-001 revisto na HIS-103b): a lista fica aqui.
-  { regex: "^@ee/(?!core(/tarifa-social)?$)", message: "Do monorepo, só o pacote @ee/core inteiro ou @ee/core/tarifa-social, sem caminho interno (ADR-001)." },
+  { regex: "^@ee/(?!core(/tarifa-social|/meta)?$)", message: "Do monorepo, só o pacote @ee/core inteiro, @ee/core/tarifa-social ou @ee/core/meta, sem caminho interno (ADR-001)." },
 ];
 
 /**
@@ -49,7 +49,7 @@ function restricoesDaCamada({ camada, regra, permitidos, podeCore, podeZustand, 
       message: `${camada} só importa ${permitidos.map((pasta) => `@/${pasta}`).join(", ")}${podeCore ? " e @ee/core" : ""} (ADR-001, ${regra}).`,
     },
   ];
-  if (!podeCore) padroes.push({ regex: "^@ee/core(/tarifa-social)?$", message: `${camada} não importa @ee/core (ADR-001, ${regra}).` });
+  if (!podeCore) padroes.push({ regex: "^@ee/core(/tarifa-social|/meta)?$", message: `${camada} não importa @ee/core (ADR-001, ${regra}).` });
   if (!podeZustand) padroes.push({ regex: "^zustand(/|$)", message: "zustand só em infraestrutura (ADR-001)." });
   if (!podeNode) padroes.push({ regex: `^(node:|(${nomesDoNode})(/|$))`, message: "Módulo do Node só em infraestrutura/**/*.servidor.ts (ADR-001)." });
   if (!podeServerOnly) padroes.push({ regex: "^server-only$", message: 'import "server-only" só em arquivos *.servidor.ts (ADR-001).' });

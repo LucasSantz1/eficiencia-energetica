@@ -1,4 +1,4 @@
-import type { Aparelho, BandeiraMes, Distribuidora, Ligacao, Residencia } from "./tipos";
+import type { Aparelho, BandeiraMes, Distribuidora, Ligacao, Residencia, ContaReferencia } from "./tipos";
 
 /** O projeto (e a ANEEL, para estimativas) considera o mês com 30 dias. */
 export const DIAS_NO_MES = 30;
@@ -58,14 +58,22 @@ export function precoKwh(
   // Na Tarifa Social a conta já vem sem os primeiros 80 kWh: o preço real é o valor dividido só pelo que foi cobrado.
   // Se quase tudo foi isento, a conta não diz o preço do kWh, e usamos a tarifa da ANEEL.
   const kwhCobradosNaConta = conta ? (residencia.beneficio === "tarifa-social" ? conta.kwh - TARIFA_SOCIAL_ISENCAO_KWH : conta.kwh) : 0;
-  if (conta && conta.valor > 0 && kwhCobradosNaConta >= 10) {
-    return { valor: conta.valor / kwhCobradosNaConta, origem: "conta", adicionalBandeira: 0, incluiImpostos: true };
+  // A iluminação pública (CIP) é fixa: dividida pelo kWh, ela faria as dicas economizarem mais do que a conta cai
+  // (HIS-104, M1). Sem CIP informada, a regra é a de antes, igual até o centavo.
+  const valorDaEnergia = conta ? conta.valor - iluminacaoPublicaDa(conta) : 0;
+  if (conta && valorDaEnergia > 0 && kwhCobradosNaConta >= 10) {
+    return { valor: valorDaEnergia / kwhCobradosNaConta, origem: "conta", adicionalBandeira: 0, incluiImpostos: true };
   }
   if (distribuidora) {
     const adicional = bandeira?.adicionalKwh ?? 0;
     return { valor: distribuidora.tarifaKwh + adicional, origem: "aneel", adicionalBandeira: adicional, incluiImpostos: false };
   }
   return { valor: 0, origem: "indisponivel", adicionalBandeira: 0, incluiImpostos: false };
+}
+
+/** CIP informada na conta de referência, em R$ (0 quando não informada). */
+function iluminacaoPublicaDa(conta: ContaReferencia | undefined): number {
+  return conta?.iluminacaoPublica ?? 0;
 }
 
 export interface EstimativaConta {
@@ -78,6 +86,8 @@ export interface EstimativaConta {
   valor: number;
   /** Quanto da conta é da bandeira, em R$/mês. */
   valorBandeira: number;
+  /** Taxa de iluminação pública somada no `valor`, em R$/mês (0 quando a pessoa não informou). */
+  valorIluminacaoPublica: number;
   /** Quanto a Tarifa Social deixou de cobrar, em R$/mês. */
   economiaBeneficio: number;
   /** true quando o consumo ficou abaixo do mínimo e a conta foi pelo mínimo. */
@@ -112,11 +122,13 @@ export function estimarConta(consumoKwh: number, residencia: Pick<Residencia, "b
     kwhCobrados = Math.max(consumo, minimo);
   }
 
+  const valorIluminacaoPublica = iluminacaoPublicaDa(residencia.contaReferencia);
   return {
     consumoKwh: consumo,
     kwhCobrados,
     preco,
-    valor: kwhCobrados * preco.valor,
+    valor: kwhCobrados * preco.valor + valorIluminacaoPublica,
+    valorIluminacaoPublica,
     valorBandeira: kwhCobrados * preco.adicionalBandeira,
     economiaBeneficio,
     cobradoPeloMinimo,
@@ -156,7 +168,8 @@ export function resumirCasa(aparelhos: Aparelho[], residencia: Pick<Residencia, 
   const total = consumoMensalDaCasaKwh(aparelhos);
   const conta = estimarConta(total, residencia, preco);
   // Valor dos aparelhos = consumo × preço, menos a parte isenta pelo benefício, rateada.
-  const valorDosAparelhos = residencia.beneficio === "tarifa-social" ? conta.valor : total * preco.valor;
+  // A iluminação pública não é de aparelho nenhum: fica fora do rateio.
+  const valorDosAparelhos = residencia.beneficio === "tarifa-social" ? conta.valor - conta.valorIluminacaoPublica : total * preco.valor;
 
   const lista: ConsumoAparelho[] = itens
     .map((i) => {

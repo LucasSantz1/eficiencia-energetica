@@ -33,7 +33,8 @@ export type { DadosCasa };
 
 /** Mesma chave e mesma versão de antes: o formato salvo não muda na HIS-003a (D1, item 4). */
 const NOME_DA_CHAVE = "eficiencia-energetica:casa";
-const VERSAO_DA_CASA = 2;
+/** 3: entraram a meta de gasto e a iluminação pública da conta (HIS-104), os dois opcionais. */
+const VERSAO_DA_CASA = 3;
 /**
  * Cópia do texto da casa que o leitor não conseguiu abrir, guardada antes de um cadastro novo gravar por cima (D10, 2).
  * Fica só no aparelho, ninguém a lê hoje; serve para uma versão corrigida do leitor recuperar a casa. Sai com
@@ -63,6 +64,8 @@ interface Acoes {
   salvarLeitura: (l: Omit<LeituraRelogio, "id"> & { id?: string }) => void;
   removerLeitura: (id: string) => void;
   alternarNoPlano: (dicaId: string) => void;
+  /** Meta de gasto em R$ (HIS-104); `undefined` tira a meta. Valor fora da faixa não muda nada. */
+  definirMeta: (reais: number | undefined) => void;
   apagarTudo: () => void;
   dispensarAvisoDaCasaSalva: () => void;
 }
@@ -111,7 +114,13 @@ export const useCasa = create<EstadoDaCasa>()(
           armazenamento.copiarTextoUmaVez(NOME_DA_CHAVE, NOME_DA_COPIA_ILEGIVEL);
           armazenamento.liberarGravacao();
         }
-        set({ residencia: casa.residencia, comodos: casa.comodos, aparelhos: casa.aparelhos, contas: casa.contas, leituras: casa.leituras, plano: [] });
+        set({ residencia: casa.residencia, comodos: casa.comodos, aparelhos: casa.aparelhos, contas: casa.contas, leituras: casa.leituras, plano: [], metaMensal: undefined });
+      },
+      definirMeta: (reais) => {
+        if (reais === undefined) return set({ metaMensal: undefined });
+        // O mesmo leitor da casa salva confere a faixa (R$ 1,00 a R$ 5.000,00, 2 casas).
+        const { casa } = lerCasaSalva({ comodos: [], aparelhos: [], contas: [], leituras: [], plano: [], metaMensal: reais });
+        if (casa.metaMensal !== undefined) set({ metaMensal: casa.metaMensal });
       },
       salvarConta: (c) => {
         const conta = lerConta({ ...c, id: c.id ?? novoId() });
@@ -202,7 +211,7 @@ export const useCasa = create<EstadoDaCasa>()(
       // "Apagar tudo" apaga de verdade (LGPD), também com a gravação travada: tira a chave e a cópia ilegível do
       // aparelho e solta a trava. A próxima ação grava do zero.
       apagarTudo: () => {
-        set({ residencia: undefined, comodos: [], aparelhos: [], contas: [], leituras: [], plano: [], avisoDaCasaSalva: undefined, textoGuardadoSemLer: false });
+        set({ residencia: undefined, comodos: [], aparelhos: [], contas: [], leituras: [], plano: [], metaMensal: undefined, avisoDaCasaSalva: undefined, textoGuardadoSemLer: false });
         armazenamento.removeItem(NOME_DA_CHAVE);
         armazenamento.removeItem(NOME_DA_COPIA_ILEGIVEL);
         armazenamento.liberarGravacao();
@@ -214,7 +223,7 @@ export const useCasa = create<EstadoDaCasa>()(
       version: VERSAO_DA_CASA,
       storage: armazenamento,
       partialize: (estado): unknown => dadosSalvaveis(estado),
-      // Da versão 1 para a 2 só entraram listas, e o leitor aceita as duas. Quem confere é o `merge`, que roda sempre.
+      // Da versão 1 para a 2 só entraram listas, e da 2 para a 3 só campos opcionais: o leitor aceita todas. Quem confere é o `merge`, que roda sempre.
       migrate: (salvo) => salvo,
       merge: (salvo, atual) => {
         const { casa, aviso } = lerCasaNaHidratacao(salvo, armazenamento);

@@ -15,7 +15,8 @@ test("casa da versão 2 abre, mostra os 6 cômodos e volta idêntica depois de r
 
   await page.reload();
   await expect(page.getByText("Sua conta estimada por mês")).toBeVisible();
-  expect(await casaSalva(page)).toEqual(casa);
+  // A versão 3 (HIS-104) só trouxe campos opcionais: a casa volta igual, só com o número da versão novo.
+  expect(await casaSalva(page)).toEqual({ ...casa, version: 3 });
 });
 
 test("casa da versão 1 vira versão 2 com contas, leituras e plano vazios e o resto igual", async ({ page, context }) => {
@@ -24,12 +25,12 @@ test("casa da versão 1 vira versão 2 com contas, leituras e plano vazios e o r
   await page.goto("/casa");
   await expect(page.getByText("Sua conta estimada por mês")).toBeVisible();
   // O zustand regrava ao hidratar quando a versão muda.
-  await expect.poll(async () => (await casaSalva(page))?.version).toBe(2);
-  expect(await casaSalva(page)).toEqual({ version: 2, state: { ...antiga.state, contas: [], leituras: [], plano: [] } });
+  await expect.poll(async () => (await casaSalva(page))?.version).toBe(3);
+  expect(await casaSalva(page)).toEqual({ version: 3, state: { ...antiga.state, contas: [], leituras: [], plano: [] } });
 
   await page.reload();
   await expect(page.getByText("Sua conta estimada por mês")).toBeVisible();
-  expect((await casaSalva(page))?.version).toBe(2);
+  expect((await casaSalva(page))?.version).toBe(3);
 });
 
 test("/comecar com casa mostra \"Você já cadastrou a sua casa\" e não muda a casa guardada", async ({ page, context }) => {
@@ -38,5 +39,6 @@ test("/comecar com casa mostra \"Você já cadastrou a sua casa\" e não muda a 
   await semearCasa(context, casa);
   await page.goto("/comecar");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Você já cadastrou a sua casa");
-  expect(await casaSalva(page)).toEqual(casa);
+  // A casa v2 sobe para a versão 3 (HIS-104) quando o persist regrava; o conteúdo continua o mesmo.
+  await expect.poll(async () => casaSalva(page)).toEqual({ ...casa, version: 3 });
 });

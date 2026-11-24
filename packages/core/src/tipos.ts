@@ -99,6 +99,11 @@ export interface ContaReferencia {
   kwh: number;
   /** Valor total pago, em R$. */
   valor: number;
+  /**
+   * Taxa de iluminação pública (CIP) da mesma conta, em R$ (opcional). É municipal (CF, art. 149-A) e não muda com o
+   * consumo: sai antes de calcular o preço do kWh e volta somada na conta estimada (HIS-104, M1).
+   */
+  iluminacaoPublica?: number;
 }
 
 export interface Residencia {
@@ -195,4 +200,6 @@ export interface DadosCasa {
   leituras: LeituraRelogio[];
   /** Dicas que a pessoa marcou no plano de economia. */
   plano: string[];
+  /** Quanto a pessoa quer pagar de luz por mês, em R$ (HIS-104). Fica só no aparelho. */
+  metaMensal?: number;
 }
