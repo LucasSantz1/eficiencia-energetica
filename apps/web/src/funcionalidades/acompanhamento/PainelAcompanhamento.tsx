@@ -16,6 +16,7 @@ import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Acompanhamento } from "./Acompanhamento";
+import { LevarResumo } from "./LevarResumo";
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
 
@@ -98,6 +99,8 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
             <ChevronRight className="size-5 shrink-0" aria-hidden />
           </Link>
         )}
+
+        <LevarResumo resumo={resumo} proximaDica={melhor} />
 
         <div className="mt-6 space-y-2 border-t border-white/15 pt-5 text-[0.98rem] text-white/80 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mt-0 lg:border-t-0 lg:pt-0">
           {bandeira && preco.origem === "aneel" && (
