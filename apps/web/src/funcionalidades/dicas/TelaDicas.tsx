@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { formatarKwh, formatarReais, type Dica } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
@@ -28,10 +28,10 @@ export function TelaDicas() {
   // No computador (HIS-112, L5): o plano e o "Também ajuda" numa coluna à direita e as dicas em grade à esquerda. A ordem do código
   // continua a do celular (plano, depois a lista); a grade só muda o lugar na tela.
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-x-8">
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_auto_auto_1fr] lg:gap-x-8">
       <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight lg:col-span-2">Dicas e plano de economia</h1>
       <p className="mt-2 max-w-[56ch] text-lg text-tinta-suave lg:col-span-2">
-        Cada dica foi calculada com os aparelhos da sua casa. Marque as que você vai seguir e veja quanto a conta cai.
+        Marque as que você vai fazer e veja quanto a conta cai.
         {semCusto.length > 0 && ` ${semCusto.length} delas não custam nada.`}
       </p>
 
@@ -112,12 +112,15 @@ export function TelaDicas() {
           </h2>
           <ul className="mt-3 divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
             {outras.map((d) => (
-              <li key={d.id} className="flex gap-4 px-4 py-4 sm:px-5">
-                <Icone nome={d.icone} className={`mt-1 size-6 shrink-0 ${d.tipo === "aviso" ? "text-faixa-d" : "text-energia"}`} />
-                <div>
-                  <h3 className="text-lg leading-snug font-extrabold">{d.titulo}</h3>
-                  <p className="mt-1 max-w-[62ch] text-tinta-suave">{d.texto}</p>
-                </div>
+              <li key={d.id}>
+                <details className="group px-4 sm:px-5">
+                  <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 py-3 [&::-webkit-details-marker]:hidden">
+                    <Icone nome={d.icone} className={`size-6 shrink-0 ${d.tipo === "aviso" ? "text-faixa-d" : "text-energia"}`} />
+                    <h3 className="flex-1 leading-snug font-bold">{d.titulo}</h3>
+                    <ChevronDown className="size-5 shrink-0 text-tinta-suave transition-transform group-open:rotate-180" aria-hidden />
+                  </summary>
+                  <p className="pb-4 pl-9 text-tinta-suave">{d.texto}</p>
+                </details>
               </li>
             ))}
           </ul>
@@ -128,45 +131,51 @@ export function TelaDicas() {
 }
 
 function CartaoDica({ dica, marcada, aoAlternar, onde, indice }: { dica: Dica; marcada: boolean; aoAlternar: () => void; onde?: string; indice: number }) {
+  const troca = dica.tipo === "troca";
   return (
     <li
-      className={`surgir rounded-[var(--radius-cartao)] border-2 bg-papel p-4 transition-[border-color,box-shadow] duration-300 sm:p-5 ${marcada ? "border-energia shadow-[0_0_0_4px_var(--color-energia-claro)]" : "border-transparent"}`}
+      className={`surgir flex flex-col rounded-[var(--radius-cartao)] border-2 bg-papel p-4 transition-[border-color,box-shadow] duration-300 sm:p-5 ${marcada ? "border-energia shadow-[0_0_0_4px_var(--color-energia-claro)]" : "border-transparent"}`}
       style={{ animationDelay: `${Math.min(indice, 8) * 60}ms` }}
     >
-      {/* Duas colunas no computador (painel limpo, 24/11): cabe o ícone ao lado do texto; o botão desce para o pé do cartão. */}
-      <div className="flex gap-4 lg:h-full">
-        <span className={`grid size-12 shrink-0 place-items-center rounded-2xl ${dica.tipo === "troca" ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia"}`}>
+      {/* Cartão curto (pedido do responsável, 24/11: "muito texto"): o quê, onde e quanto. A explicação fica no "Como fazer". */}
+      <div className="flex items-start gap-3">
+        <span className={`grid size-11 shrink-0 place-items-center rounded-[0.8rem] ${troca ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia"}`}>
           <Icone nome={dica.icone} className="size-6" />
         </span>
-        <div className="min-w-0 flex-1 lg:flex lg:flex-col">
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.92rem] font-bold text-tinta-suave">
-            {onde && <span>{onde}</span>}
-            <span className={`rounded-full px-2 py-0.5 text-[0.82rem] ${dica.tipo === "troca" ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia-forte"}`}>
-              {dica.tipo === "troca" ? "Precisa comprar algo" : "Não custa nada"}
-            </span>
-          </p>
-          <h2 className="mt-0.5 text-xl leading-snug font-extrabold">{dica.titulo}</h2>
-          <p className="mt-1.5 text-tinta-suave">{dica.texto}</p>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 lg:mt-auto lg:pt-4">
-            <p className="numeros">
-              <strong className="text-lg">{formatarReais(dica.economiaMes ?? 0)} por mês</strong>
-              <span className="text-tinta-suave">
-                {" "}
-                ({formatarReais((dica.economiaMes ?? 0) * 12)} no ano, {formatarKwh(dica.economiaKwh ?? 0)} a menos)
-              </span>
-            </p>
-            <button
-              type="button"
-              role="checkbox"
-              aria-checked={marcada}
-              onClick={aoAlternar}
-              className={`inline-flex min-h-12 items-center gap-2 rounded-full border-2 px-4 font-bold transition-[background-color,border-color,color,transform] duration-200 active:scale-95 ${marcada ? "border-energia bg-energia text-white" : "border-linha bg-papel hover:border-energia"}`}
-            >
-              <span className={`grid size-6 place-items-center rounded-md border-2 ${marcada ? "border-white" : "border-linha"}`}>{marcada && <Check className="pulo size-4" strokeWidth={3.5} />}</span>
-              {marcada ? "No meu plano" : "Vou fazer"}
-            </button>
-          </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[1.0625rem] leading-snug font-bold">{dica.titulo}</h2>
+          {onde && <p className="mt-0.5 text-[0.92rem] text-tinta-suave">{onde}</p>}
         </div>
+        <p className="numeros shrink-0 text-right">
+          <strong className="block text-xl leading-tight font-extrabold text-energia-forte">{formatarReais(dica.economiaMes ?? 0)}</strong>
+          <span className="text-[0.85rem] text-tinta-suave">por mês</span>
+        </p>
+      </div>
+
+      <details className="group mt-2 pl-14">
+        <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 font-bold text-energia [&::-webkit-details-marker]:hidden">
+          Como fazer <ChevronDown className="size-5 transition-transform group-open:rotate-180" aria-hidden />
+        </summary>
+        <p className="text-tinta-suave">{dica.texto}</p>
+        <p className="numeros mt-1 text-[0.92rem] text-tinta-suave">
+          {formatarReais((dica.economiaMes ?? 0) * 12)} no ano, {formatarKwh(dica.economiaKwh ?? 0)} a menos por mês.
+        </p>
+      </details>
+
+      <div className="mt-3 flex items-center justify-between gap-3 border-t border-separador pt-3 lg:mt-auto">
+        <span className={`rounded-full px-2.5 py-1 text-[0.85rem] font-bold ${troca ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia-forte"}`}>
+          {troca ? "Precisa comprar algo" : "Não custa nada"}
+        </span>
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={marcada}
+          onClick={aoAlternar}
+          className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 font-bold transition-[background-color,color,transform] duration-200 active:scale-95 ${marcada ? "bg-energia text-white" : "bg-energia-claro text-energia-forte hover:bg-[#cde8db]"}`}
+        >
+          <span className={`grid size-5 place-items-center rounded-md border-2 ${marcada ? "border-white" : "border-energia-forte/60"}`}>{marcada && <Check className="pulo size-3.5" strokeWidth={3.5} />}</span>
+          {marcada ? "No meu plano" : "Vou fazer"}
+        </button>
       </div>
     </li>
   );
