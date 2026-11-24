@@ -51,7 +51,9 @@ const SUBSTITUIDAS = typeof substituidasBrutas === "object" && substituidasBruta
 if (!eMapaDeIds(SUBSTITUIDAS)) throw new Error("fixture substituidas-his111.json sem { substituidas: { id: id } }");
 
 const PUBLICADO = publicadoBruto;
-const CASA_RGE_SUL = casaBruta;
+// A fixture é v2; o site grava a casa na versão 3 desde a HIS-104 e regravaria só por causa da migração. Semeando já
+// na 3, cada gravação que o teste conta é da troca de distribuidora.
+const CASA_RGE_SUL: CasaGuardada = { ...casaBruta, version: 3 };
 /** O arquivo como a rotina da HIS-111 grava: sem as empresas que saíram e com `substituidas`. */
 const TARIFAS_NOVAS: ArquivoDeTarifas = {
   ...PUBLICADO,
@@ -60,6 +62,8 @@ const TARIFAS_NOVAS: ArquivoDeTarifas = {
 };
 const RGE = PUBLICADO.distribuidoras.find((d) => d.id === "rge");
 if (!RGE) throw new Error("rge não está no tarifas.json publicado");
+// No painel em blocos (visual limpo) a frase da tarifa fica dentro do "Como calculamos", fechado: o teste confere que
+// ela está na página com o preço certo, não que está aberta.
 const reais = (valor: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor).replace(/\s/g, " ");
 
 declare global {
@@ -149,7 +153,7 @@ test.describe("troca de distribuidora (HIS-111, critério 8)", () => {
     );
     await expect(regiaoStatus(page), "nunca o id nem a sigla solta").not.toContainText(/rge-sul|RGE SUL/);
     await expect(page.locator("main [role=status] [role=status], main [role=status] [role=alert]"), "sem status dentro de status").toHaveCount(0);
-    await expect(page.getByText(`Tarifa da RGE: ${reais(RGE.tarifaKwh)} por kWh`)).toBeVisible();
+    await expect(page.getByText(`Tarifa da RGE: ${reais(RGE.tarifaKwh)} por kWh`)).toBeAttached();
 
     // Uma gravação só, e só o id mudou.
     await expect.poll(() => idSalvo(page)).toBe("rge");
@@ -188,7 +192,7 @@ test.describe("troca de distribuidora (HIS-111, critério 8)", () => {
 
     // Próxima visita: o id já é o novo, nada é regravado e o aviso não volta.
     await page.goto("/casa");
-    await expect(page.getByText(`Tarifa da RGE: ${reais(RGE.tarifaKwh)} por kWh`)).toBeVisible();
+    await expect(page.getByText(`Tarifa da RGE: ${reais(RGE.tarifaKwh)} por kWh`)).toBeAttached();
     await expect(regiaoStatus(page)).toHaveText("");
     expect(await gravacoes(page)).toHaveLength(0);
     expect(await casaSalva(page)).toEqual(depois);
@@ -232,7 +236,7 @@ test.describe("troca de distribuidora (HIS-111, critério 8)", () => {
     await vigiarCasaETela(context);
     await servirDados(context, antigo);
     await page.goto("/casa");
-    await expect(page.getByText(`Tarifa da RGE: ${reais(RGE.tarifaKwh)} por kWh`)).toBeVisible();
+    await expect(page.getByText(`Tarifa da RGE: ${reais(RGE.tarifaKwh)} por kWh`)).toBeAttached();
     await expect(regiaoStatus(page)).toHaveText("");
     expect(await gravacoes(page)).toHaveLength(0);
     expect(await casaSalva(page)).toEqual(casa);
@@ -313,7 +317,7 @@ test.describe("troca de distribuidora (HIS-111, critério 8)", () => {
     await page.getByRole("button", { name: "Pular, não tenho a conta agora" }).click();
     await expect(page).toHaveURL(/\/casa$/);
     expect(await idSalvo(page)).toBe("rge");
-    await expect(page.getByText(`Tarifa da RGE: ${reais(RGE.tarifaKwh)} por kWh`)).toBeVisible();
+    await expect(page.getByText(`Tarifa da RGE: ${reais(RGE.tarifaKwh)} por kWh`)).toBeAttached();
     await expect(regiaoStatus(page), "casa nova não tem troca a avisar").toHaveText("");
   });
 });
