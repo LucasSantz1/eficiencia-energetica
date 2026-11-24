@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SCRIPT_DA_PRIMEIRA_PINTURA } from "@/aplicacao/leitura";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,7 +25,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     // data-scroll-behavior: o Next tira a rolagem suave ao trocar de página (essa troca já tem a transição própria) e
     // deixa a rolagem suave só para os links de seção dentro da mesma página.
-    <html lang="pt-BR" data-scroll-behavior="smooth">
+    // suppressHydrationWarning: o script abaixo pode marcar o <html> (data-letra, data-contraste) antes do React.
+    <html lang="pt-BR" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        {/* Letra maior e mais contraste já na primeira pintura, sem piscar (HIS-102). Texto filho, sem
+            dangerouslySetInnerHTML; a CSP da HIS-003a permite script inline. */}
+        <script>{SCRIPT_DA_PRIMEIRA_PINTURA}</script>
+      </head>
       <body className="min-h-dvh">{children}</body>
     </html>
   );

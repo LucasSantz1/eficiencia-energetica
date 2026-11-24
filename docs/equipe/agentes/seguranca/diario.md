@@ -1,3 +1,8 @@
+## 2026-11-17 · HIS-117 · CSP sem 'unsafe-inline': hash/SRI quebra o site; proposta script-src-attr 'none'
+- O que fiz: provei numa cópia (porta 3817) que `experimental.sri` + `script-src 'self'` deixa as páginas sem hidratar (scripts inline `__next_f`), que hash por página não aguenta a revalidação diária da `/` e que hash junto com `'unsafe-inline'` também quebra. Validei `script-src-attr 'none'` (0 violações em 8 rotas, 390/1440 px; `onerror` injetado não roda) e um `csp.spec.ts` com negativo provado. Barreira na cópia: lint, typecheck, test (152 + 25 + 104), build, e2e 270 passaram (6 pulados de antes).
+- Decisões e porquê: manter `'unsafe-inline'` até o nonce no E4; não pôr o hash da HIS-102 no cabeçalho. Não editei código (papel): patch em `scratchpad/his117/his117-csp.patch` para o frontend.
+- Arquivos: `historias/HIS-117-csp-sem-unsafe-inline.md`, este diário, `contexto.md`.
+
 ## 2026-11-12 · HIS-112 · textos de privacidade do painel de /comecar
 Conferi frase fixa e 9 textos contra o código: 3 pedidos de ajuste (frase "Nada sai", "Não sei" inexistente, Conta não recalibra). Arquivos: história, contexto.
 
