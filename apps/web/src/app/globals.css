@@ -45,6 +45,24 @@
     -webkit-text-size-adjust: 100%;
     color-scheme: light;
   }
+  /*
+   * Leitura (HIS-102), escolhida em Minha casa e marcada no <html> pelo script do layout. "Letra maior": a raiz vai
+   * a 125% e todo texto em rem cresce junto; o --spacing compensa (0,25rem × 16 = 0,2rem × 20 = 4 px), para os
+   * espaços não crescerem e a tela de 390 px não rolar para o lado. As larguras de tela (sm, lg) usam a letra padrão
+   * do navegador e não mudam.
+   */
+  html[data-letra="maior"] {
+    font-size: 125%;
+    --spacing: 0.2rem;
+  }
+
+  /* "Mais contraste": texto de apoio quase da cor do texto, linhas visíveis e o verde mais escuro. */
+  html[data-contraste="mais"] {
+    --color-tinta-suave: #26354d;
+    --color-linha: #6f7f79;
+    --color-energia: #075a43;
+    --color-energia-forte: #04402f;
+  }
   body {
     background: var(--color-fundo);
     color: var(--color-tinta);
@@ -319,4 +337,39 @@ dialog[open].folha {
     opacity: 1;
     transform: none;
   }
+}
+
+/*
+ * Impressão (HIS-105): folha em preto e branco, sem navegação nem botões. O navegador corta fundos ao imprimir, então
+ * o texto branco do painel escuro sumiria: tudo vira tinta preta sobre papel. Nada é gerado no servidor.
+ */
+@media print {
+  nav,
+  button,
+  [data-sem-impressao] {
+    display: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  body {
+    font-size: 12pt;
+  }
+  a {
+    text-decoration: none !important;
+  }
+/* Com a letra maior (HIS-102), cortar com "..." esconderia metade do nome: o texto quebra a linha (decisão em vigor:
+   nomes longos quebram, não truncam) e o nome visível continua batendo com o acessível (axe). Fora das camadas de
+   propósito: precisa vencer a utilidade `truncate`, que fica na camada utilities. */
+html[data-letra="maior"] .truncate {
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
 }

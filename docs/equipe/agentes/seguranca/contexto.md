@@ -29,6 +29,7 @@
 | SQL injection | não se aplica ainda (sem banco); regra já vale para o E4 | E4 |
 | XSS | React escapa texto; não há `dangerouslySetInnerHTML`, `innerHTML`, `eval` nem `new Function` | — |
 | Dados pessoais | nenhum coletado; tudo no aparelho | — |
+| CSP com `'unsafe-inline'` no `script-src` | baixo, aceito até o E4 (nonce). Hash/SRI não serve (prova na HIS-117); `script-src-attr 'none'` proposto, à espera do tech-lead | HIS-117 |
 | Espaços para parceiros | desligados; ligar exige revisão de rastreamento e consentimento | E11 |
 
 ## Linha de base do build (main `57700ab`, conferida em 2026-10-29)
@@ -62,6 +63,8 @@
 - CSP sem nonce enquanto não houver Auth nem script de terceiro: `script-src`/`style-src 'self' 'unsafe-inline'`, sem
   `unsafe-eval`, tudo `'self'`, `connect-src 'self'`. Nonce em `proxy.ts` volta à mesa no E4/E11 (doc do Next 16: nonce
   = tudo dinâmico; hash não cobre o `__next_f` inline).
+  HIS-117 provou: SRI + `script-src 'self'` = site sem hidratar; hash junto com `'unsafe-inline'` anula o
+  `'unsafe-inline'` (nunca pôr hash/nonce ao lado dele); `script-src-attr 'none'` não quebra nada.
 - Validação de dado de fora: só o rígido do domínio descarta; nunca corrigir número (exceto os 2 consertos do
   domínio na HIS-003); retorno do validador só com contagens/`boolean`, em memória.
 - Leitores escritos à mão no `@ee/core`, sem zod (ADR-004, P-tl-1 de 2026-10-30). Condições: todo leitor cobre todos
@@ -101,6 +104,8 @@
   gatilho `push` por `pull_request`. Na a3: leitor do `tarifas.json` com `Object.fromEntries`, limite de 500 (caso 501
   no P8) e `distribuidoras: [null]` sem lançar. Sondas em `scratchpad/seg-his111/` (`sondas.ts`, `rodar-ruim.mts`).
 - **HIS-112:** nota de 2026-11-12: frase do painel e textos Empresa e Conta pedem ajuste (ver história).
+- **HIS-117:** tech-lead decide (manter + `script-src-attr 'none'` ou nonce já, com ADR); frontend aplica o patch
+  (`scratchpad/his117/his117-csp.patch`); HIS-102 não põe hash no cabeçalho.
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

@@ -2,13 +2,18 @@ import type { NextConfig } from "next";
 
 /**
  * CSP sem nonce (que obrigaria toda página a ser dinâmica, contra "internet fraca" e custo zero). Por isso
- * `'unsafe-inline'` em script e estilo: o Next põe scripts inline em toda página e o React vira `style="..."`.
- * Tudo é `'self'`: nada sai do aparelho para terceiros (A10). Domínio novo aqui = revisão da seguranca. Valores e
- * motivos em "Ameaças" da HIS-003a. `'unsafe-eval'` só no `next dev`, que precisa dele; o build de produção, não.
+ * `'unsafe-inline'` em script e estilo: o Next põe o conteúdo da página em scripts inline (`self.__next_f.push`), que
+ * mudam a cada página e a cada revalidação da `/`; hash e `experimental.sri` não os cobrem (provado na HIS-117).
+ * `script-src-attr 'none'` fecha o caminho mais comum de XSS (`<img onerror=...>`): nem o React nem o Next usam
+ * atributo de evento no HTML. NUNCA pôr hash ou nonce no `script-src` junto com `'unsafe-inline'`: o navegador passa a
+ * ignorar o `'unsafe-inline'` e o site para de funcionar (HIS-117; o csp.spec reprova). Estilo: o React vira
+ * `style="..."` e o `global-error` usa `<style>`. Tudo é `'self'`: nada sai do aparelho para terceiros (A10). Domínio
+ * novo aqui = revisão da seguranca. `'unsafe-eval'` só no `next dev`, que precisa dele; o build de produção, não.
  */
 const POLITICA_DE_CONTEUDO = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+  "script-src-attr 'none'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
