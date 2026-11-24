@@ -7,6 +7,7 @@ import { agregarAparelhos, COMODOS_PADRAO, consumoMensalDaCasaKwh, distribuidora
 import { useAvisoDaCasaSalva, useCasa, useCasaCarregada } from "@/aplicacao/casa";
 import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora } from "@/aplicacao/resumo";
+import { useLeitura } from "@/aplicacao/useLeitura";
 import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
 import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
 import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
@@ -21,6 +22,7 @@ import { CamposDaConta } from "@/ui/conta/CamposDaConta";
 import { useCamposDaConta } from "@/ui/conta/useCamposDaConta";
 import { Contador } from "@/ui/Contador";
 import { Icone } from "@/ui/Icone";
+import { Interruptor } from "@/ui/Interruptor";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
 import { Opcao } from "@/ui/Opcao";
@@ -581,8 +583,9 @@ function AvisoDaCasaNoCadastro() {
 function Moldura({ children, progresso, lado }: { children: React.ReactNode; progresso?: React.ReactNode; lado?: React.ReactNode }) {
   return (
     <div className="mx-auto min-h-dvh max-w-2xl px-4 pt-4 pb-10 sm:px-6 lg:max-w-[75rem] lg:px-8">
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between gap-3">
         <Marca />
+        <LetraMaior />
       </header>
       {progresso && <div className="mt-6 lg:max-w-[34rem]">{progresso}</div>}
       <main className="mt-6 lg:grid lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:gap-x-12">
@@ -606,6 +609,12 @@ function PorQuePerguntamos({ titulo, texto }: { titulo: string; texto: string })
       <p className="mt-4 border-t border-energia/20 pt-4 text-tinta-suave">{NADA_SAI_DA_CASA}</p>
     </aside>
   );
+}
+
+/** Quem ainda não cadastrou não chega a Minha casa: a letra maior fica também no topo do cadastro (HIS-102). */
+function LetraMaior() {
+  const [leitura, mudar] = useLeitura();
+  return <Interruptor rotulo="Letra maior" ligado={leitura.letraMaior} aoMudar={(letraMaior) => mudar({ letraMaior })} />;
 }
 
 function Titulo({ children, subtitulo, ref }: { children: React.ReactNode; subtitulo?: React.ReactNode; ref: React.Ref<HTMLHeadingElement> }) {
