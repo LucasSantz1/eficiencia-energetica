@@ -67,3 +67,18 @@ export function linhasDoPiso(pisoCentavos: number, ligacao: Ligacao | undefined,
   if (!ligacao || ligacao === "nao-sei") linhas.push("Se a sua ligação tiver 2 ou 3 fases, o mínimo é maior. Veja na sua conta.");
   return linhas;
 }
+
+/** Linha curta do bloco "Sua meta" no painel em grade: o detalhe fica na folha. */
+export function legendaDoBlocoDaMeta(s: SituacaoDaMeta | undefined): string {
+  if (!s) return "Toque para dizer quanto quer pagar.";
+  switch (s.tipo) {
+    case "sem-dados":
+      return "Falta o preço da luz.";
+    case "abaixo-do-piso":
+      return `Abaixo do mínimo de ${reais(s.pisoCentavos)}.`;
+    case "dentro":
+      return s.confianca.tipo === "completa" ? "Sua conta já cabe." : "Pela estimativa, cabe.";
+    case "falta":
+      return s.confianca.tipo === "parcial" ? `Faltam pelo menos ${reais(s.faltaCentavos)}.` : `Faltam ${reais(s.faltaCentavos)}.`;
+  }
+}

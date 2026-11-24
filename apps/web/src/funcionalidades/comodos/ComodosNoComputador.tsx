@@ -59,7 +59,7 @@ export function ComodosNoComputador({
       {/* A margem negativa com o mesmo recuo deixa o contorno de foco (5 px) aparecer dentro da rolagem da coluna. */}
       <div className="lateral-fixa -m-1.5 p-1.5">
         <nav aria-label="Cômodos">
-          <ul className="space-y-2">
+          <ul className="divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
             {comodos.map((c) => {
               const valor = valores.find((v) => v.comodoId === c.id);
               const participacao = valor?.participacao ?? 0;
@@ -71,7 +71,7 @@ export function ComodosNoComputador({
                     type="button"
                     onClick={() => setEscolhido(c.id)}
                     aria-current={ehAberto || undefined}
-                    className={`block min-h-[4.25rem] w-full rounded-[var(--radius-cartao)] border-2 px-4 py-3 text-left ${ehAberto ? "border-energia bg-energia-claro" : "border-transparent bg-papel hover:border-linha"}`}
+                    className={`block min-h-[4.25rem] w-full border-l-4 px-4 py-3 text-left ${ehAberto ? "border-energia bg-energia-claro" : "border-transparent hover:bg-fundo/70"}`}
                   >
                     <span className="flex items-baseline justify-between gap-3">
                       <span className="min-w-0 text-lg font-extrabold">{c.nome}</span>

@@ -11,6 +11,7 @@ import {
   historicoContas,
   lerNumeroDigitado,
   LIMITES,
+  mediaDasContas,
   periodosDeLeitura,
   validarFaixa,
   type ContaMensal,
@@ -58,11 +59,15 @@ export function Acompanhamento({ estimativaKwhMes }: { estimativaKwhMes: number 
   const [aba, setAba] = useState<"contas" | "relogio">("contas");
   return (
     <section aria-labelledby="titulo-acompanhamento">
-      <h2 id="titulo-acompanhamento" className="text-2xl font-extrabold tracking-tight">
+      {/* No computador o "Mês a mês" ocupa a largura toda (pedido do responsável, 24/11): título e escolha numa linha só. */}
+      <div className="lg:flex lg:items-end lg:justify-between lg:gap-8">
+      <div>
+      <h2 id="titulo-acompanhamento" className="text-[1.375rem] font-bold tracking-tight">
         Mês a mês
       </h2>
       <p className="mt-1 max-w-[56ch] text-tinta-suave">Anote suas contas de luz ou o número do relógio de luz para ver como o consumo real se compara com a estimativa.</p>
-      <div className="mt-4">
+      </div>
+      <div className="mt-4 lg:mt-0 lg:shrink-0">
         <Pilulas
           rotulo="Tipo de registro"
           opcoes={[
@@ -72,6 +77,7 @@ export function Acompanhamento({ estimativaKwhMes }: { estimativaKwhMes: number 
           valor={aba}
           aoMudar={setAba}
         />
+      </div>
       </div>
       <div className="mt-5 rounded-[var(--radius-cartao)] bg-papel p-4 sm:p-6">{aba === "contas" ? <Contas estimativaKwhMes={estimativaKwhMes} /> : <Relogio estimativaKwhDia={estimativaKwhMes / 30} />}</div>
     </section>
@@ -110,15 +116,19 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
           </Botao>
         </div>
       ) : (
-        <>
+        <div className="lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-10">
+          <div>
           <Barras
             rotulo="Consumo das contas de luz por mês"
             unidade="kWh por mês"
             barras={ultimas.map((c) => ({ id: c.id, rotulo: mesCurto(c.competencia), valor: c.kwh, detalhe: `${formatarCompetencia(c.competencia)}: ${formatarKwh(c.kwh)}, ${formatarReais(c.valor)} (${formatarReais(c.precoKwh)} por kWh)` }))}
             referencia={estimativaKwhMes > 0 ? { valor: estimativaKwhMes, rotulo: `Estimativa: ${formatarKwh(estimativaKwhMes)}` } : undefined}
           />
-          <ComparacaoConta ultima={historico.at(-1)!} anterior={historico.at(-2)} estimativaKwhMes={estimativaKwhMes} />
-          <ul className="mt-5 divide-y divide-linha border-t border-linha">
+          <NumerosDasContas contas={historico} estimativaKwhMes={estimativaKwhMes} />
+          </div>
+          <div className="mt-6 lg:mt-0">
+          <h3 className="font-bold text-tinta-suave">Contas anotadas</h3>
+          <ul className="mt-2 divide-y divide-separador border-t border-separador">
             {[...historico].reverse().map((c) => (
               <li key={c.id} className="flex items-center gap-3 py-3">
                 <span className="flex-1 font-bold capitalize">{formatarCompetencia(c.competencia)}</span>
@@ -140,7 +150,9 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
           <Botao variante="secundario" className="mt-4" onClick={abrirNova}>
             <Plus className="size-5" aria-hidden /> Anotar outra conta
           </Botao>
-        </>
+          <ComparacaoConta ultima={historico.at(-1)!} anterior={historico.at(-2)} estimativaKwhMes={estimativaKwhMes} />
+          </div>
+        </div>
       )}
 
       <Folha
@@ -192,6 +204,29 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
   );
 }
 
+/** Três números curtos embaixo do gráfico: média por mês, preço médio do kWh e a última conta. */
+function NumerosDasContas({ contas, estimativaKwhMes }: { contas: ContaMensal[]; estimativaKwhMes: number }) {
+  const media = mediaDasContas(contas);
+  const ultima = contas.at(-1);
+  if (!media || !ultima) return null;
+  const itens = [
+    { rotulo: "Média por mês", valor: formatarReais(media.valorMes), detalhe: formatarKwh(media.kwhMes) },
+    { rotulo: "Preço médio", valor: formatarReais(media.precoKwh), detalhe: "por kWh, com impostos" },
+    { rotulo: "Última conta", valor: formatarReais(ultima.valor), detalhe: `${formatarKwh(ultima.kwh)}; a estimativa é ${formatarKwh(estimativaKwhMes)}` },
+  ];
+  return (
+    <dl className="mt-4 grid grid-cols-1 gap-2 min-[480px]:grid-cols-3">
+      {itens.map((i) => (
+        <div key={i.rotulo} className="rounded-[var(--radius-controle)] bg-fundo px-4 py-3">
+          <dt className="text-[0.92rem] font-bold text-tinta-suave">{i.rotulo}</dt>
+          <dd className="numeros text-lg font-extrabold">{i.valor}</dd>
+          <dd className="numeros text-[0.9rem] text-tinta-suave">{i.detalhe}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function ComparacaoConta({ ultima, anterior, estimativaKwhMes }: { ultima: ContaMensal; anterior?: ContaMensal; estimativaKwhMes: number }) {
   const frases: string[] = [];
   if (anterior) {
@@ -239,6 +274,20 @@ function Relogio({ estimativaKwhDia }: { estimativaKwhDia: number }) {
         }
       : undefined;
 
+  const listaDeLeituras = ordenadas.length > 0 && (
+    <ul className="mt-2 divide-y divide-separador border-t border-separador">
+      {ordenadas.map((l) => (
+        <li key={l.id} className="flex items-center gap-3 py-3">
+          <span className="flex-1 font-bold">{new Date(`${l.data}T12:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}</span>
+          <span className="numeros font-extrabold">{l.valorKwh.toLocaleString("pt-BR")}</span>
+          <button type="button" aria-label="Editar leitura" onClick={() => setEditando({ id: l.id, data: l.data, valor: String(l.valorKwh) })} className="grid size-11 place-items-center rounded-full text-tinta-suave hover:bg-fundo">
+            <Pencil className="size-5" />
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <>
       {leituras.length < 2 ? (
@@ -253,7 +302,8 @@ function Relogio({ estimativaKwhDia }: { estimativaKwhDia: number }) {
           </Botao>
         </div>
       ) : (
-        <>
+        <div className="lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-10">
+          <div>
           <Barras
             rotulo="Consumo por dia entre as leituras do relógio"
             unidade="kWh por dia"
@@ -275,26 +325,19 @@ function Relogio({ estimativaKwhDia }: { estimativaKwhDia: number }) {
           <Botao variante="secundario" className="mt-4" onClick={() => setEditando({ data: hojeISO(), valor: "" })}>
             <Plus className="size-5" aria-hidden /> Anotar leitura de hoje
           </Botao>
-        </>
+          </div>
+          <div className="mt-6 lg:mt-0">
+            <h3 className="font-bold text-tinta-suave">Leituras anotadas</h3>
+            {listaDeLeituras}
+          </div>
+        </div>
       )}
       {ignoradas.length > 0 && (
         <div className="mt-4">
           <Aviso tom="faisca">Algumas leituras ficaram menores que a anterior e foram ignoradas. Confira se o número foi digitado certo.</Aviso>
         </div>
       )}
-      {ordenadas.length > 0 && (
-        <ul className="mt-5 divide-y divide-linha border-t border-linha">
-          {ordenadas.map((l) => (
-            <li key={l.id} className="flex items-center gap-3 py-3">
-              <span className="flex-1 font-bold">{new Date(`${l.data}T12:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}</span>
-              <span className="numeros font-extrabold">{l.valorKwh.toLocaleString("pt-BR")}</span>
-              <button type="button" aria-label="Editar leitura" onClick={() => setEditando({ id: l.id, data: l.data, valor: String(l.valorKwh) })} className="grid size-11 place-items-center rounded-full text-tinta-suave hover:bg-fundo">
-                <Pencil className="size-5" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {leituras.length < 2 && listaDeLeituras && <div className="mt-5">{listaDeLeituras}</div>}
 
       <Folha
         aberta={Boolean(editando)}

@@ -8,7 +8,7 @@ export function SecaoLeitura() {
   const [leitura, mudar] = useLeitura();
   return (
     <section aria-labelledby="leitura-titulo" className="scroll-mt-24">
-      <h2 id="leitura-titulo" className="mb-4 text-2xl font-extrabold tracking-tight">
+      <h2 id="leitura-titulo" className="mb-3 text-[1.375rem] font-bold tracking-tight">
         Leitura
       </h2>
       <div className="space-y-2">

@@ -133,11 +133,13 @@ test.describe("com a casa salva", () => {
     expect(repetidos).toEqual([]);
   });
 
-  test("/casa/dicas: 2 colunas a 1024 px, 3 a 1280 px, plano à direita (critério 5)", async ({ page }) => {
+  // Desde o visual limpo (24/11) as dicas ficam em 2 colunas também a 1280 px e 1440 px: cartões mais largos e baixos,
+  // e o "Também ajuda" ocupa a coluna do plano.
+  test("/casa/dicas: 2 colunas de 1024 px a 1440 px, plano à direita (critério 5)", async ({ page }) => {
     for (const [largura, colunas] of [
       [1024, 2],
-      [1280, 3],
-      [1440, 3],
+      [1280, 2],
+      [1440, 2],
     ] as const) {
       await abrir(page, "/casa/dicas", largura);
       const cartoes = page.locator("main ul").filter({ has: page.locator("li h2") }).first().locator(":scope > li");

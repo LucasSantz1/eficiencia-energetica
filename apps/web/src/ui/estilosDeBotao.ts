@@ -2,8 +2,9 @@
 export type Variante = "principal" | "secundario" | "fantasma" | "perigo";
 
 export const estilosBotao: Record<Variante, string> = {
-  principal: "bg-energia text-white hover:bg-energia-forte active:bg-energia-forte shadow-[0_2px_0_0_var(--color-energia-forte)]",
-  secundario: "bg-papel text-tinta border-2 border-linha hover:border-tinta-suave",
+  principal: "bg-energia text-white hover:bg-energia-forte active:bg-energia-forte",
+  // Botão "tingido" (como os do iPhone): fundo verde-claro, sem borda. O texto verde-escuro passa de 7:1 no fundo.
+  secundario: "bg-energia-claro text-energia-forte hover:bg-[#cde8db]",
   fantasma: "text-energia hover:bg-energia-claro",
   perigo: "bg-papel text-alerta border-2 border-alerta/30 hover:bg-alerta-claro",
 };

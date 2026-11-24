@@ -19,7 +19,7 @@ export function Interruptor({ rotulo, descricao, ligado, aoMudar }: { rotulo: st
       onClick={() => aoMudar(!ligado)}
       className={
         descricao
-          ? `flex min-h-11 w-full items-center gap-4 rounded-[var(--radius-controle)] border-2 bg-papel px-4 py-3 text-left ${ligado ? "border-energia" : "border-linha hover:border-tinta-suave"}`
+          ? `flex min-h-11 w-full items-center gap-4 rounded-[var(--radius-controle)] border-2 bg-papel px-4 py-3 text-left ${ligado ? "border-energia" : "border-separador hover:border-linha"}`
           : "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-2 text-[0.95rem] hover:bg-fundo"
       }
     >

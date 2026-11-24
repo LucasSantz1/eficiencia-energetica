@@ -1,23 +1,27 @@
 "use client";
 
-import { ChevronRight, Info } from "lucide-react";
+import { ChevronRight, Info, Lightbulb, Tag, Target, TrendingUp, Zap } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { COMODOS_PADRAO, consumoDaCasaForaDoComum, ehLampada, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
+import { COMODOS_PADRAO, consumoDaCasaForaDoComum, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
 import { useEdicaoDeAparelho } from "@/aplicacao/casa";
+import { useMeta } from "@/aplicacao/meta";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
 import { descreverUso } from "@/ui/aparelho/textosDeUso";
 import { AvisoConsumoAlto } from "@/ui/AvisoConsumoAlto";
 import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
+import { BlocoDeResumo } from "@/ui/BlocoDeResumo";
 import { BotaoLink } from "@/ui/Botao";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
+import { Folha } from "@/ui/Folha";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Acompanhamento } from "./Acompanhamento";
 import { LevarResumo } from "./LevarResumo";
 import { MetaDeGasto } from "./MetaDeGasto";
+import { legendaDoBlocoDaMeta } from "./textosDaMeta";
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
 
@@ -47,6 +51,8 @@ export function PainelAcompanhamento() {
 function ConteudoDoPainel({ dados }: { dados: Resumo }) {
   const { resumo, resumoPlano, plano, preco, bandeira, distribuidora, residencia, comodos, aparelhos, dicas, carregando } = dados;
   const [editando, setEditando] = useState<Aparelho>();
+  const [metaAberta, setMetaAberta] = useState(false);
+  const meta = useMeta(dados);
   const edicao = useEdicaoDeAparelho();
   const { conta } = resumo;
   const maior = resumo.aparelhos[0]?.kwhMes ?? 0;
@@ -73,71 +79,124 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
   // linha (sobraria um intervalo vazio). A meta (HIS-104) tem a linha 'meta' logo depois, nas duas listas. As duas listas ficam escritas por inteiro: o Tailwind precisa da classe literal.
   const consumoAlto = consumoDaCasaForaDoComum(conta.consumoKwh);
   const areas = consumoAlto
-    ? "lg:[grid-template-areas:'conta_conta'_'aviso_aviso'_'meta_meta'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']"
-    : "lg:[grid-template-areas:'conta_conta'_'meta_meta'_'comodos_lado'_'acompanhamento_lado'_'nota_nota']";
+    ? "lg:[grid-template-areas:'resumo_resumo'_'aviso_aviso'_'comodos_lado'_'dicas_lado'_'acompanhamento_acompanhamento'_'nota_nota']"
+    : "lg:[grid-template-areas:'resumo_resumo'_'comodos_lado'_'dicas_lado'_'acompanhamento_acompanhamento'_'nota_nota']";
+  // As 3 dicas que mais economizam (fora as do plano): no computador preenchem o vão embaixo dos cômodos, ao lado do
+  // "Quem mais gasta"; no celular ficam fora, porque o bloco "Melhor dica" já leva para a tela de dicas. Sem link nem
+  // botão: a ordem de foco tem de ser igual à do celular (HIS-112, critério 8); o caminho para as dicas é o bloco.
+  const maisDicas = dicas.filter((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id)).slice(0, 3);
+  const topo = resumo.aparelhos[0];
+  const nomeDoTopo = topo ? `${topo.aparelho.nome}, ${formatarReais(topo.valorMes)} por mês` : undefined;
   return (
-    <div className={`space-y-12 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0 ${areas}`}>
-      {/* Valor da conta */}
-      <section aria-labelledby="titulo-conta" className="surgir rounded-[1.75rem] bg-tinta px-5 py-6 text-white sm:px-8 sm:py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-x-12 lg:[grid-area:conta]">
-        <h1 id="titulo-conta" className="text-lg font-bold text-white/80">
-          Sua conta estimada por mês
-        </h1>
-        <p className="numeros mt-1 text-[clamp(3rem,13vw,5.25rem)] leading-none font-extrabold tracking-tight text-faisca lg:text-[4.5rem]">
-          <ValorAnimado valor={conta.valor} formatar={(v) => formatarReais(v)} duracao={1100} />
-        </p>
-        <p className="numeros mt-3 text-lg text-white/85">
-          {formatarKwh(conta.consumoKwh)} por mês, cerca de {formatarReais(conta.valor / 30)} por dia
-        </p>
+    <div className={`space-y-10 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0 ${areas}`}>
+      {/* Resumo em grade (pedido do responsável, 24/11): a conta grande e quatro blocos curtos; o detalhe de cada um fica
+          na tela dele ou numa folha. No celular, 2 colunas; no computador, a conta à esquerda e os blocos 2 × 2 à direita. */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:[grid-area:resumo]">
+        <section aria-labelledby="titulo-conta" className="surgir col-span-2 rounded-[var(--radius-cartao)] bg-papel px-5 py-5 lg:row-span-2 lg:px-7 lg:py-6">
+          <h1 id="titulo-conta" className="flex items-center gap-1.5 text-[0.95rem] font-bold text-energia">
+            <Zap className="size-[1.125rem]" aria-hidden /> Sua conta estimada por mês
+          </h1>
+          <p className="numeros mt-2 text-[clamp(2.75rem,12vw,4.25rem)] leading-none font-extrabold tracking-tight">
+            <ValorAnimado valor={conta.valor} formatar={(v) => formatarReais(v)} duracao={1100} />
+          </p>
+          <p className="numeros mt-2 text-tinta-suave">
+            Cerca de {formatarReais(conta.valor / 30)} por dia, {formatarKwh(conta.consumoKwh)} por mês
+          </p>
 
-        {resumoPlano && (
-          <Link href="/casa/dicas" transitionTypes={["nav-forward"]} className="mt-5 flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-3 hover:bg-white/15">
-            <span className="flex-1">
-              Com o seu plano de economia ({plano.length} {plano.length === 1 ? "dica" : "dicas"}), a conta cai para{" "}
-              <strong className="numeros text-faisca">
-                <ValorAnimado valor={resumoPlano.conta.valor} formatar={(v) => formatarReais(v)} />
-              </strong>: {formatarReais(conta.valor - resumoPlano.conta.valor)} a menos por mês.
-            </span>
-            <ChevronRight className="size-5 shrink-0" aria-hidden />
-          </Link>
-        )}
-
-        <LevarResumo resumo={resumo} proximaDica={melhor} />
-
-        <div className="mt-6 space-y-2 border-t border-white/15 pt-5 text-[0.98rem] text-white/80 lg:col-start-2 lg:row-span-4 lg:row-start-1 lg:mt-0 lg:border-t-0 lg:pt-0">
-          {bandeira && preco.origem === "aneel" && (
-            <p className="text-white">
-              <SeloBandeira bandeira={bandeira.bandeira} exata={bandeira.exata} sobreEscuro />
-            </p>
+          {resumoPlano && (
+            <Link href="/casa/dicas" transitionTypes={["nav-forward"]} className="mt-4 flex items-center gap-3 rounded-[var(--radius-controle)] bg-fundo px-4 py-3 hover:bg-energia-claro">
+              <span className="flex-1">
+                Com o seu plano ({plano.length} {plano.length === 1 ? "dica" : "dicas"}), cai para{" "}
+                <strong className="numeros text-energia-forte">
+                  <ValorAnimado valor={resumoPlano.conta.valor} formatar={(v) => formatarReais(v)} />
+                </strong>
+              </span>
+              <ChevronRight className="size-5 shrink-0" aria-hidden />
+            </Link>
           )}
-          {preco.origem === "conta" ? (
-            <p>Calculado com o preço do kWh da sua conta de luz ({formatarReais(preco.valor)}), que já inclui impostos.</p>
-          ) : (
-            <p>
-              Tarifa da {nomeDistribuidora(distribuidora)}: {formatarReais(preco.valor - preco.adicionalBandeira)} por kWh{preco.adicionalBandeira > 0 && ` + ${formatarReais(preco.adicionalBandeira)} da bandeira`}. Sem impostos, que variam por
-              cidade.{" "}
-              <Link href="/casa/ajustes#conta" className="font-bold text-faisca underline underline-offset-2">
-                Usar minha conta de luz
-              </Link>
-            </p>
+
+          {/* O "como calculamos" fica fechado: quem quer saber abre, quem não quer não rola por ele. Sem JS. */}
+          <details className="group mt-4 border-t border-separador pt-3 text-[0.98rem] text-tinta-suave">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 font-bold text-energia [&::-webkit-details-marker]:hidden">
+              Como calculamos <ChevronRight className="size-5 transition-transform group-open:rotate-90" aria-hidden />
+            </summary>
+            <div className="mt-1 space-y-2">
+              {preco.origem === "conta" ? (
+                <p>Calculado com o preço do kWh da sua conta de luz ({formatarReais(preco.valor)}), que já inclui impostos.</p>
+              ) : (
+                <p>
+                  Tarifa da {nomeDistribuidora(distribuidora)}: {formatarReais(preco.valor - preco.adicionalBandeira)} por kWh{preco.adicionalBandeira > 0 && ` + ${formatarReais(preco.adicionalBandeira)} da bandeira`}. Sem impostos, que
+                  variam por cidade.{" "}
+                  <Link href="/casa/ajustes#conta" className="font-bold text-energia underline underline-offset-2">
+                    Usar minha conta de luz
+                  </Link>
+                </p>
+              )}
+              {residencia?.beneficio === "desconto-social" && <p>Esta estimativa não tira o Desconto Social, porque o valor muda em cada distribuidora. A sua conta deve vir um pouco menor.</p>}
+              <p>Os valores são estimativas feitas com os tempos de uso que você informou.</p>
+            </div>
+          </details>
+          {residencia?.beneficio === "tarifa-social" && conta.economiaBeneficio > 0 && (
+            <p className="mt-3 text-[0.98rem] text-tinta-suave">A Tarifa Social tira cerca de {formatarReais(conta.economiaBeneficio)} da conta: a energia dos primeiros 80 kWh é de graça.</p>
           )}
-          {residencia?.beneficio === "tarifa-social" && conta.economiaBeneficio > 0 && <p>A Tarifa Social tira cerca de {formatarReais(conta.economiaBeneficio)} da conta: a energia dos primeiros 80 kWh é de graça.</p>}
           {/* "Não sei" no cadastro: o fim do cadastro leva ao guia, como a opção promete (HIS-103, D7). Sem prefetch:
               a /casa não baixa o guia a cada visita, só quando a pessoa toca (tech-lead, HIS-103b). */}
           {residencia?.beneficio === "nao-sei" && (
-            <p>
-              <Link href="/tarifa-social" prefetch={false} transitionTypes={["nav-forward"]} className="font-bold text-faisca underline underline-offset-2">
+            <p className="mt-3">
+              <Link href="/tarifa-social" prefetch={false} transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center font-bold text-energia underline underline-offset-2">
                 Ver se pode ter direito à Tarifa Social
               </Link>
             </p>
           )}
-          {residencia?.beneficio === "desconto-social" && <p>Esta estimativa não tira o Desconto Social, porque o valor muda em cada distribuidora. A sua conta deve vir um pouco menor.</p>}
           {conta.cobradoPeloMinimo && (
-            <p className="flex gap-2">
+            <p className="mt-3 flex gap-2 text-[0.98rem] text-tinta-suave">
               <Info className="mt-0.5 size-4 shrink-0" aria-hidden /> Seu consumo ficou abaixo do mínimo que a distribuidora cobra ({conta.consumoMinimoKwh} kWh), então a conta vem pelo mínimo.
             </p>
           )}
-        </div>
-      </section>
+        </section>
+
+        <BlocoDeResumo
+          icone={<Target />}
+          rotulo="Sua meta"
+          valor={meta.metaReais === undefined ? "Sem meta" : formatarReais(meta.metaReais)}
+          legenda={legendaDoBlocoDaMeta(meta.situacao)}
+          aoTocar={() => setMetaAberta(true)}
+          className="surgir [animation-delay:80ms]"
+        />
+        <BlocoDeResumo
+          icone={<Tag />}
+          rotulo="Preço da luz"
+          valor={formatarReais(preco.valor)}
+          legenda={preco.origem === "conta" ? "por kWh, da sua conta" : "por kWh, sem impostos"}
+          href="/casa/ajustes#conta"
+          className="surgir [animation-delay:140ms]"
+        >
+          {bandeira && preco.origem === "aneel" && (
+            <span className="mt-2 block text-[0.92rem]">
+              <SeloBandeira bandeira={bandeira.bandeira} exata={bandeira.exata} />
+            </span>
+          )}
+        </BlocoDeResumo>
+        {topo && (
+          <BlocoDeResumo icone={<TrendingUp />} rotulo="Gasta mais" valor={formatarPorcentagem(topo.participacao)} legenda={nomeDoTopo} href="#ranking" className="surgir [animation-delay:200ms]">
+            <span className="mt-auto block pt-3" aria-hidden>
+              <span className="block h-1.5 overflow-hidden rounded-full bg-fundo">
+                <span className={`cresce-x block h-full rounded-full ${COR_FAIXA[faixaDoPeso(topo.participacao)]}`} style={{ width: `${Math.max(4, topo.participacao * 100)}%` }} />
+              </span>
+            </span>
+          </BlocoDeResumo>
+        )}
+        {melhor && (
+          <BlocoDeResumo
+            icone={<Lightbulb />}
+            rotulo="Melhor dica"
+            valor={formatarReais(melhor.economiaMes ?? 0)}
+            legenda={`a menos por mês: ${melhor.titulo.charAt(0).toLowerCase()}${melhor.titulo.slice(1)}`}
+            href="/casa/dicas"
+            className="surgir [animation-delay:260ms]"
+          />
+        )}
+      </div>
 
       <AvisoConsumoAlto
         className="lg:[grid-area:aviso]"
@@ -149,49 +208,46 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
         }
       />
 
-      {/* Meta de gasto (HIS-104): logo depois da conta (e do aviso), na ordem do celular. */}
-      <MetaDeGasto dados={dados} className="lg:[grid-area:meta]" />
+      {/* Meta de gasto (HIS-104): o bloco "Sua meta" abre a folha com o campo e o resultado. */}
+      <Folha aberta={metaAberta} aoFechar={() => setMetaAberta(false)} titulo="Sua meta">
+        <MetaDeGasto dados={dados} naFolha />
+      </Folha>
 
       {/* Cômodos */}
       <section aria-labelledby="titulo-comodos" className="lg:[grid-area:comodos]">
         <div className="flex items-end justify-between gap-4">
-          <h2 id="titulo-comodos" className="text-2xl font-extrabold tracking-tight">
+          <h2 id="titulo-comodos" className="text-[1.375rem] font-bold tracking-tight">
             Seus cômodos
           </h2>
           <Link href="/casa/comodos" transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
             Editar <ChevronRight className="size-5" aria-hidden />
           </Link>
         </div>
-        <ul className="mt-4 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
+        <ul className="-mx-4 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0">
           {comodos.map((c, indice) => {
             const dados = resumo.comodos.find((x) => x.comodoId === c.id);
             const doComodo = aparelhos.filter((a) => a.comodoId === c.id);
-            const lampadas = doComodo.filter(ehLampada).reduce((s, a) => s + a.quantidade, 0);
-            const outros = doComodo.filter((a) => !ehLampada(a)).reduce((s, a) => s + a.quantidade, 0);
+            const itens = doComodo.reduce((s, a) => s + a.quantidade, 0);
             const participacao = dados?.participacao ?? 0;
             return (
-              <li key={c.id} className="surgir" style={{ animationDelay: `${150 + indice * 70}ms` }}>
-                <Link href={`/casa/comodos#comodo-${c.id}`} transitionTypes={["nav-forward"]} className="flex h-full flex-col gap-3 rounded-[var(--radius-cartao)] bg-papel p-4 hover:ring-2 hover:ring-energia">
-                  <span className="flex items-center gap-3">
-                    <span className="grid size-11 place-items-center rounded-xl bg-energia-claro text-energia">
+              <li key={c.id} className="surgir w-[10.5rem] shrink-0 snap-start lg:w-auto" style={{ animationDelay: `${150 + indice * 70}ms` }}>
+                <Link href={`/casa/comodos#comodo-${c.id}`} transitionTypes={["nav-forward"]} className="flex h-full flex-col rounded-[var(--radius-cartao)] bg-papel p-4 hover:bg-white/70">
+                  <span className="flex items-center justify-between">
+                    <span className="grid size-10 place-items-center rounded-[0.7rem] bg-energia-claro text-energia">
                       <Icone nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} className="size-6" />
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-lg font-extrabold">{c.nome}</span>
-                      <span className="block text-[0.92rem] text-tinta-suave">
-                        {outros} {outros === 1 ? "aparelho" : "aparelhos"}, {lampadas} {lampadas === 1 ? "lâmpada" : "lâmpadas"}
-                      </span>
-                    </span>
-                    <span className="numeros text-right text-lg font-extrabold">{formatarReais(dados?.valorMes ?? 0)}</span>
+                    <span className="numeros text-[0.9rem] text-tinta-suave">{formatarPorcentagem(participacao)}</span>
+                  </span>{" "}
+                  <span className="mt-3 block truncate font-bold">{c.nome}</span>{" "}
+                  <span className="numeros block text-xl font-extrabold">{formatarReais(dados?.valorMes ?? 0)}</span>{" "}
+                  <span className="block text-[0.9rem] text-tinta-suave">
+                    {itens} {itens === 1 ? "item" : "itens"}
                   </span>
-                  <span className="flex items-center gap-2">
-                    <span className="h-2 flex-1 overflow-hidden rounded-full bg-fundo">
-                      <span
-                        className={`cresce-x block h-full rounded-full transition-[width] duration-500 ${COR_FAIXA[faixaDoPeso(participacao)]}`}
-                        style={{ width: `${Math.max(2, participacao * 100)}%`, animationDelay: `${400 + indice * 70}ms` }}
-                      />
-                    </span>
-                    <span className="numeros w-12 text-right text-[0.9rem] text-tinta-suave">{formatarPorcentagem(participacao)}</span>
+                  <span className="mt-3 block h-1.5 overflow-hidden rounded-full bg-fundo" aria-hidden>
+                    <span
+                      className={`cresce-x block h-full rounded-full transition-[width] duration-500 ${COR_FAIXA[faixaDoPeso(participacao)]}`}
+                      style={{ width: `${Math.max(2, participacao * 100)}%`, animationDelay: `${400 + indice * 70}ms` }}
+                    />
                   </span>
                 </Link>
               </li>
@@ -202,21 +258,20 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
 
       {/* Coluna lateral no computador; no celular, a mesma margem de antes entre os três blocos. Sem lateral-fixa: com 6
           aparelhos e a dica ela passa da altura da janela, e a utilidade a transformaria numa caixa com rolagem própria. */}
-      <div className="space-y-12 lg:self-start lg:[grid-area:lado]">
+      <div className="space-y-10 lg:self-start lg:[grid-area:lado]">
         {/* Quem mais gasta */}
-        <section aria-labelledby="titulo-ranking">
+        <section id="ranking" aria-labelledby="titulo-ranking" className="scroll-mt-4">
           <div className="flex items-end justify-between gap-4">
-            <h2 id="titulo-ranking" className="text-2xl font-extrabold tracking-tight">
+            <h2 id="titulo-ranking" className="text-[1.375rem] font-bold tracking-tight">
               Quem mais gasta
             </h2>
             <Link href="/casa/comodos?visao=geral" transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center gap-1 font-bold text-energia">
               Painel geral <ChevronRight className="size-5" aria-hidden />
             </Link>
           </div>
-          <div className="mt-3">
-            <LegendaEtiqueta />
-          </div>
-          <ul className="mt-5 space-y-5">
+          <div className="mt-3 rounded-[var(--radius-cartao)] bg-papel p-4 sm:p-5">
+          <LegendaEtiqueta />
+          <ul className="mt-4 space-y-4">
             {resumo.aparelhos.slice(0, 6).map(({ aparelho, kwhMes, valorMes, participacao }, indice) => {
               // O nome acessível repete o texto visível na mesma ordem (WCAG 2.5.3, texto da ux no D-A5-1);
               // por isso tela e nome saem das mesmas variáveis.
@@ -248,40 +303,47 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
               );
             })}
           </ul>
+          </div>
         </section>
 
         <EspacoReservado posicao="painel-apos-ranking" />
 
-        {melhor && (
-          <section aria-labelledby="titulo-economia" className="surgir rounded-[var(--radius-cartao)] border-2 border-energia bg-energia-claro p-5 sm:p-6" style={{ animationDelay: "700ms" }}>
-            <h2 id="titulo-economia" className="text-lg font-bold text-energia-forte">
-              {plano.length > 0 ? "Próxima dica para o seu plano" : "A dica que mais economiza na sua casa"}
-            </h2>
-            <div className="mt-3 flex items-start gap-3">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-papel text-energia">
-                <Icone nome={melhor.icone} className="size-6" />
-              </span>
-              <div className="flex-1">
-                <p className="text-xl leading-snug font-extrabold">{melhor.titulo}</p>
-                <p className="numeros mt-1 text-energia-forte">
-                  <strong>{formatarReais(melhor.economiaMes ?? 0)} por mês</strong>, ou {formatarReais((melhor.economiaMes ?? 0) * 12)} em um ano
-                </p>
-              </div>
-            </div>
-            <BotaoLink href="/casa/dicas" transitionTypes={["nav-forward"]} variante="secundario" className="mt-5">
-              Montar meu plano de economia
-            </BotaoLink>
-          </section>
-        )}
       </div>
+
+      {maisDicas.length > 0 && (
+        <section aria-labelledby="titulo-mais-dicas" className="hidden lg:block lg:[grid-area:dicas]">
+          <div className="flex items-end justify-between gap-4">
+            <h2 id="titulo-mais-dicas" className="text-[1.375rem] font-bold tracking-tight">
+              Dicas para pagar menos
+            </h2>
+          </div>
+          <ul className="mt-3 divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
+            {maisDicas.map((d) => (
+              <li key={d.id} className="flex items-center gap-3 px-4 py-3.5">
+                <span className="grid size-10 shrink-0 place-items-center rounded-[0.7rem] bg-energia-claro text-energia">
+                  <Icone nome={d.icone} className="size-6" />
+                </span>
+                <span className="min-w-0 flex-1 font-bold">{d.titulo}</span>
+                <span className="numeros shrink-0 text-right">
+                  <span className="block font-extrabold text-energia-forte">{formatarReais(d.economiaMes ?? 0)}</span>
+                  <span className="block text-[0.9rem] text-tinta-suave">por mês</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="lg:[grid-area:acompanhamento]">
         <Acompanhamento estimativaKwhMes={conta.consumoKwh} />
       </div>
 
-      <p className="text-[0.95rem] text-tinta-suave lg:max-w-[68ch] lg:[grid-area:nota]">
-        Os valores são estimativas feitas com os tempos de uso que você informou. A conta real pode variar com impostos, taxa de iluminação pública e dias de leitura.
-      </p>
+      <div className="lg:[grid-area:nota]">
+        <LevarResumo resumo={resumo} proximaDica={melhor} />
+        <p className="mt-4 text-[0.95rem] text-tinta-suave lg:max-w-[68ch]">
+          Os valores são estimativas feitas com os tempos de uso que você informou. A conta real pode variar com impostos, taxa de iluminação pública e dias de leitura.
+        </p>
+      </div>
 
       <EditorAparelho aparelho={editando} aberto={Boolean(editando)} aoFechar={() => setEditando(undefined)} preco={preco} comodos={edicao.comodos} aoSalvar={edicao.salvar} aoRemover={edicao.remover} />
     </div>
