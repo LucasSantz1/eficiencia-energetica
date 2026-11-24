@@ -25,7 +25,7 @@ import {
 
 // Fixture `casa-completa` (R4c): todo campo, inclusive todo opcional, preenchido. `Required` faz o typecheck reprovar
 // se o tipo ganhar campo e a fixture não.
-const contaReferencia: Required<ContaReferencia> = { kwh: 150, valor: 135.9 };
+const contaReferencia: Required<ContaReferencia> = { kwh: 150, valor: 135.9, iluminacaoPublica: 12.5 };
 const residencia: Required<Residencia> = {
   uf: "SP",
   municipioIbge: 3_541_406,
@@ -63,6 +63,7 @@ const casaCompleta = {
   contas: [conta],
   leituras: [leituraUm, leituraDois],
   plano: ["a1:banho-curto"],
+  metaMensal: 120.5,
 };
 
 /** Simula o que vem do localStorage: texto JSON lido de novo. */
@@ -439,5 +440,35 @@ describe("medida só com limite físico; contagem só inteira (pedido 2 da segur
     });
     expect(lida.descartados).toEqual({ ...nenhumDescarte, aparelhos: 3 });
     expect(lida.casa.residencia).toEqual({ ...residencia, pessoas: undefined });
+  });
+});
+
+describe("meta de gasto e iluminação pública (HIS-104, M3)", () => {
+  it("CIP maior ou igual ao valor da conta sai sozinha e conta como descarte; a conta fica", () => {
+    const lida = lerCasaSalva(doArmazenamento({ ...casaCompleta, residencia: { ...residencia, contaReferencia: { kwh: 150, valor: 135.9, iluminacaoPublica: 135.9 } } }));
+    expect(lida.casa.residencia?.contaReferencia).toEqual({ kwh: 150, valor: 135.9 });
+    expect(lida.descartados).toEqual({ ...nenhumDescarte, contas: 1 });
+  });
+
+  it("CIP acima de R$ 500 ou negativa sai", () => {
+    for (const iluminacaoPublica of [500.01, -1, "12"]) {
+      const lida = lerCasaSalva(doArmazenamento({ ...casaCompleta, residencia: { ...residencia, contaReferencia: { kwh: 2000, valor: 3000, iluminacaoPublica } } }));
+      expect(lida.casa.residencia?.contaReferencia?.iluminacaoPublica).toBeUndefined();
+    }
+  });
+
+  it("meta fora de R$ 1,00 a R$ 5.000,00, ou que não é número, sai e conta como descarte", () => {
+    for (const metaMensal of [0, 0.99, 5000.01, -10, "120", null]) {
+      const lida = lerCasaSalva(doArmazenamento({ ...casaCompleta, metaMensal }));
+      expect(lida.casa.metaMensal).toBeUndefined();
+      expect(lida.descartados).toEqual({ ...nenhumDescarte, contas: 1 });
+    }
+  });
+
+  it("casa sem meta (versão 2) não ganha meta nem aviso", () => {
+    const { metaMensal: _semMeta, ...semMeta } = casaCompleta;
+    const lida = lerCasaSalva(doArmazenamento(semMeta));
+    semAviso(lida);
+    expect("metaMensal" in lida.casa).toBe(false);
   });
 });

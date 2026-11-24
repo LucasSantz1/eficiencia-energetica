@@ -61,6 +61,16 @@ export const LIMITES = {
   contaValorCalibracao: { min: 0.01, max: 200_000, casas: 2, alerta: 3_000 },
   /** R$ 0 é possível com a Tarifa Social. */
   contaValorAcompanhamento: { min: 0, max: 200_000, casas: 2, alerta: 3_000 },
+  /**
+   * Iluminação pública (CIP) da conta, R$/mês. É municipal, sem teto nacional: o máximo é suposição de produto (não é regra
+   * do setor) e o alerta pega a vírgula no lugar errado (HIS-104, M1). O leitor ainda exige CIP menor que o valor da conta.
+   */
+  iluminacaoPublica: { min: 0, max: 500, casas: 2, alerta: 150 },
+  /**
+   * Meta de gasto com luz, R$/mês (HIS-104). De R$ 1,00 a R$ 5.000,00 é limite técnico (suposição de produto, não é regra
+   * do setor); o alerta, perto de 5 vezes uma conta comum, pega a vírgula no lugar errado.
+   */
+  metaMensal: { min: 1, max: 5_000, casas: 2, alerta: 1_000 },
   /** O mostrador do relógio tem de 4 a 6 dígitos (justificativa do dominio-energia, sem norma consultada). */
   leituraKwh: { min: 0, max: 999_999, inteiro: true },
   /** Média de 2,79 moradores por domicílio (IBGE, Censo 2022); 20 combina com o máximo de banhos por dia. */

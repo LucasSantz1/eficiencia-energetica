@@ -43,9 +43,9 @@ const LIGACOES = listaCompleta<Ligacao>()(["monofasica", "bifasica", "trifasica"
  * As listas só servem ao `typecheck` e aos testes: marcadas com `@__PURE__`, saem do JS do site (D10, 1b).
  */
 export const CAMPOS_DA_CASA_SALVA = {
-  casa: /* @__PURE__ */ listaCompleta<keyof DadosCasa>()(["residencia", "comodos", "aparelhos", "contas", "leituras", "plano"]),
+  casa: /* @__PURE__ */ listaCompleta<keyof DadosCasa>()(["residencia", "comodos", "aparelhos", "contas", "leituras", "plano", "metaMensal"]),
   residencia: /* @__PURE__ */ listaCompleta<keyof Residencia>()(["uf", "municipioIbge", "municipioNome", "distribuidoraId", "beneficio", "ligacao", "contaReferencia", "pessoas"]),
-  contaReferencia: /* @__PURE__ */ listaCompleta<keyof ContaReferencia>()(["kwh", "valor"]),
+  contaReferencia: /* @__PURE__ */ listaCompleta<keyof ContaReferencia>()(["kwh", "valor", "iluminacaoPublica"]),
   comodo: /* @__PURE__ */ listaCompleta<keyof Comodo>()(["id", "tipo", "nome"]),
   aparelho: /* @__PURE__ */ listaCompleta<keyof Aparelho>()([
     "id",
@@ -83,6 +83,8 @@ const NA_CASA_SALVA = {
   contaValor: soLimiteFisico(LIMITES.contaValorAcompanhamento),
   contaReferenciaKwh: soLimiteFisico(LIMITES.contaKwhCalibracao),
   contaReferenciaValor: soLimiteFisico(LIMITES.contaValorCalibracao),
+  iluminacaoPublica: soLimiteFisico(LIMITES.iluminacaoPublica),
+  metaMensal: soLimiteFisico(LIMITES.metaMensal),
 } as const;
 
 /** Chave de `variantes`: barra `__proto__`, `constructor` e texto gigante. As de hoje (`modelo`, `tipo`, `idade`...) passam. */
@@ -203,14 +205,21 @@ function lerContaReferencia(bruto: unknown): ContaReferencia | undefined {
   const kwh = numeroNaFaixa(propriedade(bruto, "kwh"), NA_CASA_SALVA.contaReferenciaKwh);
   const valor = numeroNaFaixa(propriedade(bruto, "valor"), NA_CASA_SALVA.contaReferenciaValor);
   if (kwh === undefined || valor === undefined) return undefined;
-  return { kwh, valor };
+  // A CIP precisa deixar sobra de energia na conta (HIS-104, M3). Inválida, sai só ela: a conta continua valendo.
+  const iluminacaoPublica = numeroNaFaixa(propriedade(bruto, "iluminacaoPublica"), NA_CASA_SALVA.iluminacaoPublica);
+  return iluminacaoPublica !== undefined && iluminacaoPublica < valor ? { kwh, valor, iluminacaoPublica } : { kwh, valor };
+}
+
+/** CIP que existia na conta salva e não passou no leitor. */
+function iluminacaoPublicaDescartada(bruto: unknown, lida: ContaReferencia | undefined): boolean {
+  return lida !== undefined && ehObjeto(bruto) && propriedade(bruto, "iluminacaoPublica") !== undefined && lida.iluminacaoPublica === undefined;
 }
 
 /**
  * Residência e se a conta de referência saiu. A conta inválida sai sozinha e a residência fica (P-tl-1 b).
  * `pessoas` inválido sai sem aviso: só serve de sugestão no cadastro.
  */
-function lerResidenciaContando(bruto: unknown): { residencia?: Residencia; contaDescartada: boolean } {
+function lerResidenciaContando(bruto: unknown): { residencia?: Residencia; contaDescartada: boolean; cipDescartada?: boolean } {
   if (!ehObjeto(bruto)) return { contaDescartada: false };
   const uf = propriedade(bruto, "uf");
   const municipioIbge = numeroNaFaixa(propriedade(bruto, "municipioIbge"), LIMITES.municipioIbge);
@@ -235,6 +244,7 @@ function lerResidenciaContando(bruto: unknown): { residencia?: Residencia; conta
       ...(pessoas === undefined || pessoas === INVALIDO ? {} : { pessoas }),
     },
     contaDescartada: contaReferencia === INVALIDO,
+    cipDescartada: contaReferencia !== undefined && contaReferencia !== INVALIDO && iluminacaoPublicaDescartada(propriedade(bruto, "contaReferencia"), contaReferencia),
   };
 }
 
@@ -299,7 +309,7 @@ export function lerCasaSalva(bruto: unknown): CasaLida {
     const lida = lerResidenciaContando(propriedade(bruto, "residencia"));
     residencia = lida.residencia;
     residenciaDescartada = lida.residencia === undefined;
-    contaReferenciaDescartada = lida.contaDescartada;
+    contaReferenciaDescartada = lida.contaDescartada || lida.cipDescartada === true;
   }
 
   const comodos = lerLista(propriedade(bruto, "comodos"), LIMITES_DE_LISTA.comodos, lerComodo, (c) => [c.id]);
@@ -314,6 +324,10 @@ export function lerCasaSalva(bruto: unknown): CasaLida {
   const contas = lerLista(propriedade(bruto, "contas"), LIMITES_DE_LISTA.contas, lerConta, (c) => [`id:${c.id}`, `mes:${c.competencia}`]);
   const leituras = lerLista(propriedade(bruto, "leituras"), LIMITES_DE_LISTA.leituras, lerLeitura, (l) => [`id:${l.id}`, `dia:${l.data}`]);
   const plano = lerLista(propriedade(bruto, "plano"), LIMITES_DE_LISTA.plano, lerIdDoPlano, (d) => [d]);
+  // Meta inválida sai sozinha e conta junto com as contas (é dado de dinheiro, como elas).
+  const metaBruta = propriedade(bruto, "metaMensal");
+  const metaMensal = numeroNaFaixa(metaBruta, NA_CASA_SALVA.metaMensal);
+  const metaDescartada = metaBruta !== undefined && metaMensal === undefined;
 
   return {
     casa: {
@@ -323,11 +337,12 @@ export function lerCasaSalva(bruto: unknown): CasaLida {
       contas: contas.itens,
       leituras: leituras.itens,
       plano: plano.itens,
+      ...(metaMensal === undefined ? {} : { metaMensal }),
     },
     descartados: {
       aparelhos: aparelhos.descartados,
       comodos: comodos.descartados,
-      contas: contas.descartados + (contaReferenciaDescartada ? 1 : 0),
+      contas: contas.descartados + (contaReferenciaDescartada ? 1 : 0) + (metaDescartada ? 1 : 0),
       leituras: leituras.descartados,
       plano: plano.descartados,
     },
