@@ -34,7 +34,7 @@ const RESTRICOES_COMUNS = [
   { regex: "^/", message: "Sem caminho absoluto no import: use @/ (HIS-002, S1-e)." },
   { regex: "[?#]", message: "Sem sufixo ? ou # no import (HIS-002, S1-e)." },
   // Entradas próprias do core, para regra que só uma rota usa (ADR-001 revisto na HIS-103b): a lista fica aqui.
-  { regex: "^@ee/(?!core(/tarifa-social|/meta)?$)", message: "Do monorepo, só o pacote @ee/core inteiro, @ee/core/tarifa-social ou @ee/core/meta, sem caminho interno (ADR-001)." },
+  { regex: "^@ee/(?!core(/tarifa-social|/meta|/reconhecer)?$)", message: "Do monorepo, só o pacote @ee/core inteiro, @ee/core/tarifa-social ou @ee/core/meta, sem caminho interno (ADR-001)." },
 ];
 
 /**
@@ -49,7 +49,7 @@ function restricoesDaCamada({ camada, regra, permitidos, podeCore, podeZustand, 
       message: `${camada} só importa ${permitidos.map((pasta) => `@/${pasta}`).join(", ")}${podeCore ? " e @ee/core" : ""} (ADR-001, ${regra}).`,
     },
   ];
-  if (!podeCore) padroes.push({ regex: "^@ee/core(/tarifa-social|/meta)?$", message: `${camada} não importa @ee/core (ADR-001, ${regra}).` });
+  if (!podeCore) padroes.push({ regex: "^@ee/core(/tarifa-social|/meta|/reconhecer)?$", message: `${camada} não importa @ee/core (ADR-001, ${regra}).` });
   if (!podeZustand) padroes.push({ regex: "^zustand(/|$)", message: "zustand só em infraestrutura (ADR-001)." });
   if (!podeNode) padroes.push({ regex: `^(node:|(${nomesDoNode})(/|$))`, message: "Módulo do Node só em infraestrutura/**/*.servidor.ts (ADR-001)." });
   if (!podeServerOnly) padroes.push({ regex: "^server-only$", message: 'import "server-only" só em arquivos *.servidor.ts (ADR-001).' });
@@ -69,7 +69,9 @@ function camada(pasta, opcoes) {
 /** Sintaxe proibida no site e no domínio (CLAUDE.md, Segurança; HIS-002, S1). */
 const SINTAXE_PROIBIDA = [
   { selector: "CallExpression[callee.name='require']", message: "O projeto é ESM: use import (HIS-002)." },
-  { selector: "ImportExpression", message: "import() dinâmico ainda não é permitido: a regra de camadas não o confere. Quando precisar (ex.: OCR), o tech-lead amplia a regra (HIS-002)." },
+  // import() só para um arquivo da MESMA pasta ("./Nome"): carrega sob demanda sem atravessar camada, então a regra de
+  // camadas não precisa conferir (ampliado no modo "não sei qual é o meu", 24/11). Qualquer outro caminho continua proibido.
+  { selector: "ImportExpression:not([source.value=/^\\.\\/[A-Za-z]+$/])", message: "import() dinâmico só para um arquivo da mesma pasta (\"./Nome\"): a regra de camadas não confere outros caminhos (HIS-002)." },
   { selector: "TSImportEqualsDeclaration", message: "Use import ... from (HIS-002)." },
   { selector: "TSImportType", message: "Use import type ... from, que a regra de camadas confere (HIS-002)." },
   { selector: "Identifier[name='getBuiltinModule'], Literal[value='getBuiltinModule']", message: "process.getBuiltinModule fura a regra dos módulos do Node (HIS-002, S1-f)." },

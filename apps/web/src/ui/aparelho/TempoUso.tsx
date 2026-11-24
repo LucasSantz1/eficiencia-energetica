@@ -1,19 +1,61 @@
 "use client";
 
-import { useState } from "react";
-import { aplicarVariantes, formatarTempo, FREQUENCIAS, frequenciaMaisProxima, TEMPOS_RAPIDOS, type Aparelho, type ItemCatalogo } from "@ee/core";
+import { lazy, Suspense, useState } from "react";
+import { aplicarVariantes, formatarTempo, FREQUENCIAS, frequenciaMaisProxima, TEMPOS_RAPIDOS, type Aparelho, type ItemCatalogo, type PrecoKwh } from "@ee/core";
 import { Contador } from "@/ui/Contador";
 import { Pilulas } from "@/ui/Pilulas";
+import type { BaseDoGuia } from "./GuiaVisual";
+
+// As perguntas e os desenhos do "não sei qual é o meu" só baixam quando a pessoa toca no botão (~4 kB a menos em cada
+// tela com aparelho). O import() é de um arquivo da mesma pasta, o único caso que a regra de lint aceita.
+const GuiaVisual = lazy(() => import("./GuiaVisual").then((m) => ({ default: m.GuiaVisual })));
 
 /**
  * Perguntas sobre o modelo do aparelho (tipo, tamanho, idade...). Cada resposta recalcula
  * potência, consumo e quanto o motor trabalha, a partir do catálogo.
  */
-export function SeletorVariantes({ catalogo, escolhas, aoMudar }: { catalogo: ItemCatalogo; escolhas?: Record<string, string>; aoMudar: (parcial: Partial<Aparelho>) => void }) {
+export function SeletorVariantes({
+  catalogo,
+  escolhas,
+  aoMudar,
+  base,
+  preco,
+}: {
+  catalogo: ItemCatalogo;
+  escolhas?: Record<string, string>;
+  aoMudar: (parcial: Partial<Aparelho>) => void;
+  /** Uso atual do aparelho, para o modo "não sei qual é o meu" mostrar a faixa em R$. */
+  base?: BaseDoGuia;
+  preco?: PrecoKwh;
+}) {
+  const [guia, setGuia] = useState(false);
   if (!catalogo.variantes?.length) return null;
   const atuais = { ...Object.fromEntries(catalogo.variantes.map((v) => [v.id, v.padrao])), ...escolhas };
+  if (guia) {
+    return (
+      <Suspense fallback={<p className="rounded-[var(--radius-controle)] bg-fundo p-4 text-tinta-suave">Carregando as perguntas…</p>}>
+      <GuiaVisual
+        catalogo={catalogo}
+        escolhas={escolhas}
+        base={base}
+        preco={preco}
+        aoUsar={(mudancas) => {
+          aoMudar(mudancas);
+          setGuia(false);
+        }}
+        aoVoltar={() => setGuia(false)}
+      />
+      </Suspense>
+    );
+  }
   return (
     <div className="space-y-4">
+      {catalogo.guiaVisual && (
+        <button type="button" onClick={() => setGuia(true)} className="flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-controle)] bg-energia-claro px-4 py-2 text-left font-bold text-energia-forte">
+          <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-papel text-lg">?</span>
+          Não sei qual é o meu
+        </button>
+      )}
       {catalogo.variantes.map((v) => {
         const escolhida = v.opcoes.find((o) => o.id === atuais[v.id]);
         return (
