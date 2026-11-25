@@ -15,6 +15,7 @@ import { BlocoDeResumo } from "@/ui/BlocoDeResumo";
 import { BotaoLink } from "@/ui/Botao";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
+import { ExplicaKwh } from "@/ui/ExplicaKwh";
 import { Folha } from "@/ui/Folha";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
@@ -103,6 +104,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           <p className="numeros mt-2 text-tinta-suave">
             Cerca de {formatarReais(conta.valor / 30)} por dia, {formatarKwh(conta.consumoKwh)} por mês
           </p>
+          <ExplicaKwh />
 
           {resumoPlano && (
             <Link href="/casa/dicas" transitionTypes={["nav-forward"]} className="mt-4 flex items-center gap-3 rounded-[var(--radius-controle)] bg-fundo px-4 py-3 hover:bg-energia-claro">

@@ -223,49 +223,43 @@ test.describe("com a casa salva", () => {
   }
 });
 
-test("/comecar: o painel Por que perguntamos aparece a 1024 px, muda com o passo e não existe na tela a 390 px (critério 6)", async ({ page }) => {
-  const painel = page.getByRole("complementary");
-  await abrir(page, "/comecar", 390);
-  await expect(painel).toBeHidden();
-  await abrir(page, "/comecar", 1024);
-  await expect(painel).toBeVisible();
-  const primeiro = await painel.innerText();
-  const passo = await caixa(page.getByRole("heading", { level: 1 }));
-  const lado = await caixa(painel);
-  expect(lado.x, "o painel fica à direita do passo").toBeGreaterThan(passo.x + passo.width);
-  expect(passo.width, "o passo tem até 34rem").toBeLessThanOrEqual(544);
+// Desde o cadastro mais lúdico (25/11), o passo fica no centro em toda largura e o "Por que perguntamos" é um botão que
+// abre embaixo do título (antes era um painel à direita só no computador, critério 6 da HIS-112).
+test("/comecar: o passo fica no centro e o Por que perguntamos abre embaixo do título, em toda largura", async ({ page }) => {
+  for (const largura of [390, 1024, 1440]) {
+    await abrir(page, "/comecar", largura);
+    const titulo = await caixa(page.getByRole("heading", { level: 1 }));
+    const sobraEsquerda = titulo.x;
+    const sobraDireita = largura - (titulo.x + titulo.width);
+    expect(Math.abs(sobraEsquerda - sobraDireita), `a ${largura} px o título fica no centro`).toBeLessThanOrEqual(24);
+    expect(titulo.width, "o passo tem até 34rem").toBeLessThanOrEqual(544);
+    await expect(page.getByRole("complementary")).toHaveCount(0);
+  }
+  const porque = page.getByText("Por que perguntamos o estado?");
+  await porque.click();
+  await expect(page.getByText(/Cada estado tem empresas de luz diferentes/)).toBeVisible();
   await page.locator("select#estado").selectOption("SP");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Qual é a sua cidade?");
-  await expect(painel).not.toHaveText(primeiro);
-  await expect(painel.getByRole("button")).toHaveCount(0); // só explica: nada para tocar lá dentro
+  await expect(page.getByText("Por que perguntamos a cidade?")).toBeVisible();
 });
 
-test("/comecar a 1280 px: o erro da conta fica no passo, e o painel Por que perguntamos não muda (HIS-003b)", async ({ page }) => {
+test("/comecar a 1280 px: o erro e o Confere? da conta ficam embaixo do campo, no passo (HIS-003b)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: ALTURA });
   await irAteAConta(page, /^Não sei/);
-  const painel = page.getByRole("complementary");
-  await expect(painel).toBeVisible();
-  const textoDoPainel = await painel.innerText();
+  await expect(page.getByRole("img", { name: /Exemplo de conta de luz/ })).toBeVisible();
   await page.locator("input#conta-kwh").fill("0");
   await page.locator("input#conta-valor").fill("0");
   await page.getByRole("button", { name: "Ver o resultado" }).click();
   const erro = page.locator("#conta-kwh-erro");
   await expect(erro).toBeVisible();
-  const caixaDoErro = await caixa(erro);
-  const caixaDoPainel = await caixa(painel);
-  expect(caixaDoErro.x + caixaDoErro.width, "o erro fica na coluna do passo, à esquerda do painel").toBeLessThan(caixaDoPainel.x);
-  expect(await painel.innerText()).toBe(textoDoPainel);
-  await expect(painel.locator("[id$='-erro'], [id$='-alerta']")).toHaveCount(0);
+  const campo = await caixa(page.locator("input#conta-kwh"));
+  expect((await caixa(erro)).y, "o erro fica embaixo do campo").toBeGreaterThan(campo.y);
 
-  // O "Confere?" também fica no passo.
   await page.locator("input#conta-kwh").fill("150");
   await page.locator("input#conta-valor").fill("1.359,00");
   await page.locator("input#conta-valor").blur();
-  const alerta = page.locator("#conta-valor-alerta");
-  await expect(alerta).toBeVisible();
-  expect((await caixa(alerta)).x).toBeLessThan(caixaDoPainel.x);
-  expect(await painel.innerText()).toBe(textoDoPainel);
+  await expect(page.locator("#conta-valor-alerta")).toBeVisible();
 });
 
 test("/comecar: container, 68 caracteres, zoom e axe (critérios 1, 7, 10; q4)", async ({ page }) => {

@@ -1,30 +1,30 @@
 {
-  "medidoNoCommit": "1f0c53c",
-  "decisao": "HIS-201 (conta detalhada, 25/11): linhas da fatura no cartão da conta (detalharConta no core + ContaDetalhada), +1,2 kB gzip na /casa. Aceito no modo rápido; rever na rodada final.",
+  "medidoNoCommit": "40b71aa",
+  "decisao": "Cadastro lúdico (25/11): ícones por passo, conta de exemplo, O que é kWh e Por que perguntamos em details; pedido do responsável. Rever na rodada final.",
   "rotas": {
     "/": {
       "jsDoHtml": 173687,
-      "totalComPrefetch": 204414
+      "totalComPrefetch": 206116
     },
     "/comecar": {
-      "jsDoHtml": 191207,
-      "totalComPrefetch": 204414
+      "jsDoHtml": 192909,
+      "totalComPrefetch": 206116
     },
     "/casa": {
-      "jsDoHtml": 202487,
-      "totalComPrefetch": 277637
+      "jsDoHtml": 201976,
+      "totalComPrefetch": 279488
     },
     "/casa/comodos": {
       "jsDoHtml": 191510,
-      "totalComPrefetch": 277637
+      "totalComPrefetch": 279488
     },
     "/casa/dicas": {
       "jsDoHtml": 180248,
-      "totalComPrefetch": 277637
+      "totalComPrefetch": 279488
     },
     "/casa/ajustes": {
-      "jsDoHtml": 182118,
-      "totalComPrefetch": 277637
+      "jsDoHtml": 182993,
+      "totalComPrefetch": 279488
     },
     "/sobre": {
       "jsDoHtml": 140246,
@@ -35,7 +35,7 @@
       "totalComPrefetch": 186929
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 250426
+      "totalComPrefetch": 250575
     }
   }
 }

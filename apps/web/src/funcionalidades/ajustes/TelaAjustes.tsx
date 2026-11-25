@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -14,6 +15,7 @@ import { Botao } from "@/ui/Botao";
 import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Campo } from "@/ui/Campo";
 import { CamposDaConta } from "@/ui/conta/CamposDaConta";
+import { ExemploDeConta } from "@/ui/conta/ExemploDeConta";
 import { useCamposDaConta, type CamposDaContaEstado } from "@/ui/conta/useCamposDaConta";
 import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
@@ -149,11 +151,17 @@ export function TelaAjustes() {
       {/* Conta e meta na coluna da direita (24/11): as duas colunas terminam perto uma da outra, sem vão grande. */}
       <div className="space-y-12 lg:self-start">
         <Secao titulo="Sua conta de luz" id="conta">
-          <p className="mb-5 max-w-[56ch] text-tinta-suave">Com o consumo e o valor de uma conta, usamos o preço real do kWh na sua cidade, já com impostos. Fica bem mais perto do que você paga.</p>
+          <p className="max-w-[56ch] text-tinta-suave">Com dois números da conta, o valor fica mais certinho.</p>
+          <details className="group mb-5">
+            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 font-bold text-energia [&::-webkit-details-marker]:hidden">
+              Onde acho esses números? <ChevronDown className="size-5 transition-transform group-open:rotate-180" aria-hidden />
+            </summary>
+            <ExemploDeConta className="mt-3" />
+          </details>
           <CamposDaConta
             className="grid gap-5 sm:grid-cols-2"
             campos={semAvisoAoMudar(camposDaConta, () => setContaSalva(false))}
-            textos={{ consumo: "Consumo do mês", ajudaDoConsumo: "“Consumo (kWh)” na conta.", valor: "Valor total", ajudaDoValor: "O valor a pagar." }}
+            textos={{ consumo: "Consumo do mês (kWh)", ajudaDoConsumo: "O número 1 do exemplo.", valor: "Total a pagar", ajudaDoValor: "O número 2 do exemplo." }}
           />
           <div className="mt-5 flex flex-wrap items-center gap-3">
             {/* Sempre habilitado (T5): botão desabilitado não diz o que falta. */}

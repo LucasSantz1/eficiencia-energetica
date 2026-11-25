@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ChevronDown, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Building2, ChevronDown, CircleHelp, ClipboardCheck, HeartHandshake, House, MapPin, Pencil, Plus, ReceiptText, Users, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { agregarAparelhos, COMODOS_PADRAO, consumoMensalDaCasaKwh, distribuidorasDaCidade, ehUf, ESTADOS, LIMITES, LIMITES_DE_TEXTO, type Beneficio, type ContaReferencia, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
@@ -19,8 +19,10 @@ import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { BuscaCidade } from "@/ui/BuscaCidade";
 import { CamposDaConta } from "@/ui/conta/CamposDaConta";
+import { ExemploDeConta } from "@/ui/conta/ExemploDeConta";
 import { useCamposDaConta } from "@/ui/conta/useCamposDaConta";
 import { Contador } from "@/ui/Contador";
+import { ExplicaKwh } from "@/ui/ExplicaKwh";
 import { Icone } from "@/ui/Icone";
 import { Interruptor } from "@/ui/Interruptor";
 import { Marca } from "@/ui/Marca";
@@ -34,10 +36,10 @@ import { ajustarComodos, itemDoCatalogoParaComodo, rascunhoParaCasa, type Comodo
 type Passo = "estado" | "cidade" | "distribuidora" | "beneficio" | "pessoas" | "comodos" | `comodo:${number}` | "revisao" | "conta";
 
 const BENEFICIOS: { id: Beneficio; titulo: string; descricao: string }[] = [
-  { id: "tarifa-social", titulo: "Sim, tenho Tarifa Social", descricao: "Família no CadÚnico com renda de até meio salário mínimo por pessoa, alguém recebe o BPC, ou renda de até 3 salários mínimos com alguém que precisa de aparelho elétrico para a saúde." },
-  { id: "desconto-social", titulo: "Sim, com renda até 1 salário mínimo por pessoa", descricao: "Família no CadÚnico com renda entre meio e um salário mínimo por pessoa." },
-  { id: "nenhum", titulo: "Não", descricao: "A conta vem com a tarifa normal." },
-  { id: "nao-sei", titulo: "Não sei", descricao: "Sem problema. No fim mostramos como descobrir se você tem direito." },
+  { id: "tarifa-social", titulo: "Sim, tenho Tarifa Social", descricao: "Renda de até meio salário mínimo por pessoa, BPC, ou aparelho de saúde em casa." },
+  { id: "desconto-social", titulo: "Sim, com renda até 1 salário mínimo por pessoa", descricao: "Renda entre meio e 1 salário mínimo por pessoa." },
+  { id: "nenhum", titulo: "Não", descricao: "Conta com a tarifa normal." },
+  { id: "nao-sei", titulo: "Não sei", descricao: "Sem problema. Depois mostramos como descobrir." },
 ];
 
 /** Quantidade inicial de cada cômodo — o jeito mais comum de uma casa brasileira. */
@@ -209,7 +211,6 @@ export function Cadastro() {
 
   return (
     <Moldura
-      lado={<PorQuePerguntamos {...textoDoPasso(passo)} />}
       progresso={
         <div className="flex items-center gap-3">
           <button type="button" onClick={voltar} className="inline-flex min-h-11 items-center gap-1.5 rounded-full pr-3 font-bold text-energia hover:bg-energia-claro">
@@ -250,7 +251,7 @@ export function Cadastro() {
 
       {passo === "estado" && (
         <>
-          <Titulo ref={tituloRef} subtitulo="Usamos isso para achar a tarifa da empresa que manda a sua conta de luz.">
+          <Titulo ref={tituloRef} icone={<MapPin />} porque={textoDoPasso(passo)} subtitulo="Para achar o preço da luz da sua região.">
             Em qual estado você mora?
           </Titulo>
           {tarifas.carregando && !tarifas.dados ? (
@@ -291,7 +292,7 @@ export function Cadastro() {
 
       {passo === "cidade" && (
         <>
-          <Titulo ref={tituloRef} subtitulo={estados.find((e) => e.uf === uf)?.nome}>
+          <Titulo ref={tituloRef} icone={<Building2 />} porque={textoDoPasso(passo)} subtitulo={estados.find((e) => e.uf === uf)?.nome}>
             Qual é a sua cidade?
           </Titulo>
           {municipios.carregando ? <Carregando /> : <BuscaCidade municipios={municipios.dados?.municipios ?? []} selecionado={municipio} aoEscolher={escolherMunicipio} />}
@@ -300,14 +301,7 @@ export function Cadastro() {
 
       {passo === "distribuidora" && (
         <>
-          <Titulo
-            ref={tituloRef}
-            subtitulo={
-              daCidade.length > 1
-                ? `Mais de uma empresa atende ${municipio?.nome}. Veja o nome no topo da sua conta de luz.`
-                : `Não sabemos qual empresa atende ${municipio?.nome}. Veja o nome no topo da sua conta de luz.`
-            }
-          >
+          <Titulo ref={tituloRef} icone={<Zap />} porque={textoDoPasso(passo)} subtitulo="O nome está no alto da conta de luz.">
             Qual empresa manda a sua conta de luz?
           </Titulo>
           <ul className="mt-6 space-y-2">
@@ -331,7 +325,7 @@ export function Cadastro() {
 
       {passo === "beneficio" && (
         <>
-          <Titulo ref={tituloRef} subtitulo="Famílias de baixa renda pagam menos na conta de luz. Isso muda o cálculo.">
+          <Titulo ref={tituloRef} icone={<HeartHandshake />} porque={textoDoPasso(passo)} subtitulo="Quem tem, paga menos na luz.">
             Sua família está no CadÚnico?
           </Titulo>
           <ul className="mt-6 space-y-2">
@@ -355,7 +349,7 @@ export function Cadastro() {
 
       {passo === "pessoas" && (
         <>
-          <Titulo ref={tituloRef} subtitulo="Ajuda a estimar os banhos e os carregadores de celular.">
+          <Titulo ref={tituloRef} icone={<Users />} porque={textoDoPasso(passo)} subtitulo="Contando você.">
             Quantas pessoas moram na casa?
           </Titulo>
           <div className="mt-8 flex justify-center">
@@ -371,7 +365,7 @@ export function Cadastro() {
 
       {passo === "comodos" && (
         <>
-          <Titulo ref={tituloRef} subtitulo="Conte os cômodos da sua casa. Cada um vai ter a sua lista de aparelhos e lâmpadas.">
+          <Titulo ref={tituloRef} icone={<House />} porque={textoDoPasso(passo)} subtitulo="Toque no + para cada cômodo.">
             Quais cômodos a sua casa tem?
           </Titulo>
           <ul className="mt-6 divide-y divide-linha rounded-[var(--radius-cartao)] bg-papel px-4">
@@ -410,7 +404,8 @@ export function Cadastro() {
               className="min-h-14 w-full bg-transparent text-[1.6rem] leading-tight font-extrabold outline-none"
             />
           </div>
-          <p className="mt-2 text-tinta-suave">Toque no nome para mudar (ex.: “Quarto do casal”). Use o + e o − para dizer quantos de cada aparelho tem aqui.</p>
+          <p className="mt-2 text-tinta-suave">Use + e − em cada aparelho. Toque no nome para mudar.</p>
+          <PorQuePerguntamos {...textoDoPasso(passo)} />
 
           <div className="mt-6">
             <BlocoIluminacao lampada={comodoAtual.lampada} aoMudar={(p) => mudarComodo(comodoAtual.id, (c) => ({ ...c, lampada: { ...c.lampada, ...p } }))} />
@@ -434,7 +429,7 @@ export function Cadastro() {
 
       {passo === "revisao" && (
         <>
-          <Titulo ref={tituloRef} subtitulo={`${comodos.length} cômodos e ${totalAparelhos} aparelhos e lâmpadas. Confira antes de continuar.`}>
+          <Titulo ref={tituloRef} icone={<ClipboardCheck />} porque={textoDoPasso(passo)} subtitulo={`${comodos.length} cômodos e ${totalAparelhos} aparelhos e lâmpadas.`}>
             O que tem na sua casa
           </Titulo>
           <AvisoConsumoAlto
@@ -522,14 +517,17 @@ export function Cadastro() {
 
       {passo === "conta" && (
         <>
-          <Titulo ref={tituloRef} subtitulo="Com dois números da sua última conta, o valor fica mais perto do real, porque inclui os impostos da sua cidade.">
+          <Titulo ref={tituloRef} icone={<ReceiptText />} porque={textoDoPasso(passo)} subtitulo="Com dois números dela, o valor fica mais certinho.">
             Tem uma conta de luz em mãos?
           </Titulo>
           {/* Erro e "Confere?" ficam aqui no passo, nunca no painel "Por que perguntamos" (regra 5 do /comecar na 112). */}
+          <ExemploDeConta className="mt-6" />
+          {/* Antes dos campos: do valor, o Tab vai direto para "Ver o resultado" (a mensagem de erro espera o botão). */}
+          <ExplicaKwh className="mt-3 text-center" />
           <CamposDaConta
             className="mt-6 space-y-5"
             campos={camposDaConta}
-            textos={{ consumo: "Consumo do mês", ajudaDoConsumo: "Aparece como “Consumo (kWh)” ou “kWh faturado”.", valor: "Valor total da conta", ajudaDoValor: "O valor a pagar, com impostos." }}
+            textos={{ consumo: "Consumo do mês (kWh)", ajudaDoConsumo: "É o número 1 do exemplo.", valor: "Total a pagar", ajudaDoValor: "É o número 2 do exemplo." }}
           />
           <div className="mt-8 flex flex-col gap-3">
             {/* Sempre habilitado (T5): botão desabilitado não diz o que falta. */}
@@ -576,24 +574,21 @@ function AvisoDaCasaNoCadastro() {
 }
 
 /**
- * No computador (HIS-112, L7) o passo fica à esquerda (até 34rem) e o `lado` (o painel "Por que perguntamos") à direita,
- * depois do passo no código. O painel some por CSS abaixo de 1024 px: o cadastro renderiza já na hidratação, e um hook
- * o faria aparecer depois, com pulo.
+ * O passo fica no centro, até 34rem, em qualquer largura. O "Por que perguntamos" virou um botão que abre embaixo do
+ * título (antes era um painel à direita só no computador, HIS-112 L7).
  */
-function Moldura({ children, progresso, lado }: { children: React.ReactNode; progresso?: React.ReactNode; lado?: React.ReactNode }) {
+function Moldura({ children, progresso }: { children: React.ReactNode; progresso?: React.ReactNode }) {
   return (
     <div className="mx-auto min-h-dvh max-w-2xl px-4 pt-4 pb-10 sm:px-6 lg:max-w-[75rem] lg:px-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <Marca />
         <LetraMaior />
       </header>
-      {progresso && <div className="mt-6 lg:max-w-[34rem]">{progresso}</div>}
-      <main className="mt-6 lg:grid lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:gap-x-12">
-        <div>
-          <AvisoDaCasaNoCadastro />
-          {children}
-        </div>
-        {lado}
+      {/* Fluxo no centro da tela, em uma coluna, no celular e no computador (pedido do responsável, 25/11). */}
+      {progresso && <div className="mx-auto mt-6 max-w-[34rem]">{progresso}</div>}
+      <main className="mx-auto mt-6 max-w-[34rem]">
+        <AvisoDaCasaNoCadastro />
+        {children}
       </main>
     </div>
   );
@@ -601,13 +596,15 @@ function Moldura({ children, progresso, lado }: { children: React.ReactNode; pro
 
 function PorQuePerguntamos({ titulo, texto }: { titulo: string; texto: string }) {
   return (
-    <aside aria-labelledby="titulo-por-que-perguntamos" className="lateral-fixa hidden rounded-[var(--radius-cartao)] bg-energia-claro p-6 lg:block">
-      <h2 id="titulo-por-que-perguntamos" className="text-xl font-extrabold">
-        {titulo}
-      </h2>
-      <p className="mt-2 max-w-[68ch] text-lg">{texto}</p>
-      <p className="mt-4 border-t border-energia/20 pt-4 text-tinta-suave">{NADA_SAI_DA_CASA}</p>
-    </aside>
+    <details className="group mx-auto mt-2 w-fit max-w-full text-left">
+      <summary className="mx-auto flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded-full px-3 font-bold text-energia hover:bg-energia-claro [&::-webkit-details-marker]:hidden">
+        <CircleHelp className="size-5" aria-hidden /> {titulo}
+      </summary>
+      <div className="mt-2 rounded-[var(--radius-controle)] bg-energia-claro px-4 py-3">
+        <p>{texto}</p>
+        <p className="mt-2 text-[0.95rem] text-tinta-suave">{NADA_SAI_DA_CASA}</p>
+      </div>
+    </details>
   );
 }
 
@@ -617,13 +614,31 @@ function LetraMaior() {
   return <Interruptor rotulo="Letra maior" ligado={leitura.letraMaior} aoMudar={(letraMaior) => mudar({ letraMaior })} />;
 }
 
-function Titulo({ children, subtitulo, ref }: { children: React.ReactNode; subtitulo?: React.ReactNode; ref: React.Ref<HTMLHeadingElement> }) {
+function Titulo({
+  children,
+  subtitulo,
+  icone,
+  porque,
+  ref,
+}: {
+  children: React.ReactNode;
+  subtitulo?: React.ReactNode;
+  icone?: React.ReactNode;
+  porque?: { titulo: string; texto: string };
+  ref: React.Ref<HTMLHeadingElement>;
+}) {
   return (
-    <div>
-      <h1 ref={ref} tabIndex={-1} className="text-[clamp(1.85rem,6vw,2.4rem)] leading-tight font-extrabold tracking-tight outline-none">
+    <div className="text-center">
+      {icone && (
+        <span aria-hidden className="surgir mx-auto mb-4 grid size-16 place-items-center rounded-full bg-energia-claro text-energia [&>svg]:size-8">
+          {icone}
+        </span>
+      )}
+      <h1 ref={ref} tabIndex={-1} className="text-[clamp(1.85rem,6vw,2.4rem)] leading-tight font-extrabold tracking-tight [text-wrap:balance] outline-none">
         {children}
       </h1>
-      {subtitulo && <p className="mt-2 max-w-[52ch] text-lg text-tinta-suave">{subtitulo}</p>}
+      {subtitulo && <p className="mx-auto mt-2 max-w-[40ch] text-lg text-tinta-suave">{subtitulo}</p>}
+      {porque && <PorQuePerguntamos {...porque} />}
     </div>
   );
 }
