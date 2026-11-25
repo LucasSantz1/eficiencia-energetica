@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { SCRIPT_DA_PRIMEIRA_PINTURA } from "@/aplicacao/leitura";
+import { LigarOffline } from "@/funcionalidades/offline/LigarOffline";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,7 +33,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             dangerouslySetInnerHTML; a CSP da HIS-003a permite script inline. */}
         <script>{SCRIPT_DA_PRIMEIRA_PINTURA}</script>
       </head>
-      <body className="min-h-dvh">{children}</body>
+      <body className="min-h-dvh">
+        {children}
+        <LigarOffline />
+      </body>
     </html>
   );
 }

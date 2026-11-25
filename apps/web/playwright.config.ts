@@ -22,6 +22,9 @@ export default defineConfig({
     baseURL: `http://127.0.0.1:${PORTA}`,
     locale: "pt-BR",
     timezoneId: "America/Sao_Paulo",
+    // O service worker (HIS-301) responderia por fora do page.route dos testes de falha: fica desligado, e só o
+    // offline.spec liga.
+    serviceWorkers: "block",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },

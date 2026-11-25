@@ -19,6 +19,7 @@ import { ExemploDeConta } from "@/ui/conta/ExemploDeConta";
 import { useCamposDaConta, type CamposDaContaEstado } from "@/ui/conta/useCamposDaConta";
 import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
+import { SecaoInstalar } from "./SecaoInstalar";
 import { SecaoLeitura } from "./SecaoLeitura";
 
 const BENEFICIOS: { id: Beneficio; titulo: string; descricao: string }[] = [
@@ -191,6 +192,7 @@ export function TelaAjustes() {
         </Secao>
         <LinhaDaMeta />
         <SecaoLeitura />
+        <SecaoInstalar />
         <SeusDados />
       </div>
 

@@ -49,6 +49,11 @@ const config: NextConfig = {
       // Vale para páginas, /dados, /_next/static e a 404.
       { source: "/:caminho*", headers: CABECALHOS_DE_SEGURANCA },
       {
+        // O navegador confere o service worker a cada visita; sem cópia em cache, a versão nova chega logo (HIS-301).
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, max-age=0" }],
+      },
+      {
         // Os dados da ANEEL mudam no máximo uma vez por dia. Chave diferente: o Next aplica as duas regras.
         source: "/dados/:caminho*",
         headers: [{ key: "Cache-Control", value: "public, max-age=3600, stale-while-revalidate=86400" }],

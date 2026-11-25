@@ -27,6 +27,7 @@ import {
 import { criarArmazenamentoSeguro } from "@/infraestrutura/armazenamento/armazenamento-local";
 import { dadosSalvaveis, lerCasaNaHidratacao } from "@/infraestrutura/armazenamento/hidratacao";
 import { novoId } from "@/infraestrutura/identificador";
+import { apagarDadosGuardadosOffline } from "@/infraestrutura/offline/servico";
 
 /** O formato da casa salva mora no domínio (`DadosCasa` em `@ee/core`), junto do leitor que o confere. */
 export type { DadosCasa };
@@ -215,6 +216,8 @@ export const useCasa = create<EstadoDaCasa>()(
         armazenamento.removeItem(NOME_DA_CHAVE);
         armazenamento.removeItem(NOME_DA_COPIA_ILEGIVEL);
         armazenamento.liberarGravacao();
+        // As cópias de /dados do modo sem internet dizem o estado da cidade: saem junto (HIS-301).
+        void apagarDadosGuardadosOffline();
       },
       dispensarAvisoDaCasaSalva: () => set({ avisoDaCasaSalva: undefined }),
     }),
