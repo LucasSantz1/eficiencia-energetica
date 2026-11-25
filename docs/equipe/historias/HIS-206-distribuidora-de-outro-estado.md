@@ -6,7 +6,7 @@
 | Sprint | backlog (proposta: Sprint 2, primeira da "Precisão I") |
 | Tamanho | P (se a confirmação mostrar mais de ~10 cidades, reavaliar e quebrar) |
 | Papéis principais | dominio-energia, backend (qa confere) |
-| Status | Preparando |
+| Status | Em revisão (PR aberta; publicados corrigem na próxima rodada da rotina) |
 | Branch | `his-206-distribuidora-de-outro-estado` (sai do `main` depois da HIS-111 integrada) |
 
 ## Problema e valor
@@ -64,7 +64,20 @@ nome de uma cidade gaúcha. O dominio-energia confirma a lista completa no passo
 
 ## Regras de negócio e fontes
 
-_(dominio-energia)_ Passo 1: conferir os três casos e montar a lista completa (critérios 1 e 2).
+_(quem orquestra, modo rápido, 2026-11-25; o dominio-energia confere na rodada final)_ A ANEEL bloqueia o GitHub e
+este ambiente desde 12/11, então a análise usou os arquivos publicados em 10/11 (IndQual Município e atributos dos
+conjuntos, dadosabertos.aneel.gov.br).
+
+**Achado:** a lista de UFs de cada distribuidora era tirada das próprias cidades ligadas. Uma ligação errada criava uma
+UF nova para a distribuidora e nada a pegava. Em 10/11, 16 distribuidoras tinham cidades em mais de uma UF.
+
+**Critério 1 e 2 (lista completa):** 10 ligações são **código trocado** (erro da ANEEL): cooperativa do RS ou de SC
+ligada a uma cidade de outro estado com o mesmo nome de uma cidade da região dela. A cidade certa ficava sem a
+ligação. Movidas para a cidade certa em `CODIGOS_TROCADOS` (`packages/core/src/correcoes-de-municipio.ts`):
+CERTAJA (Nova Santa Rita PI→RS, Triunfo PB→RS), COPREL (Soledade PB→RS, Colorado/Sarandi/Tapejara PR→RS),
+ELETROCAR (Colorado/Sarandi PR→RS), CERAÇÁ (Maravilha AL→SC, São Carlos SP→SC). As outras 24 ligações ficam em
+`packages/dados/src/aneel/outra-uf.ts`: 20 de **fronteira** e 4 **a conferir** (CEMIG-D em Urandi BA e São Simão GO;
+Light em São José do Rio Preto SP; ESS em Guarapuava PR), que seguem publicadas até a confirmação.
 
 ## Fluxo e textos
 
@@ -73,8 +86,12 @@ usar o aviso da HIS-111 (D7).
 
 ## Desenho técnico
 
-_(tech-lead / backend)_ Onde fica a tabela de correções, como é a barreira do critério 4 e se o `substituidas` serve
-para o critério 5.
+- **Tabela no core:** os códigos trocados ficam no core, para a rotina e o site usarem a mesma tabela.
+- **Rotina:** `moverCodigosTrocados` move a ligação antes de contar as UFs. Se a ANEEL já tiver corrigido, não move nada.
+- **Barreira V11** em `conferirCoerencia`, que não passa com `--forcar`: a rotina para se uma cidade estiver ligada a uma distribuidora fora das UFs principais dela e a ligação não estiver em `outra-uf.ts`.
+  - UF principal: a que tem 5 ou mais cidades da distribuidora, ou pelo menos 20% delas, ou a que tem mais.
+- **Critério 5:** o `substituidas` não serve, porque a CERTAJA continua válida no RS. Por isso o `trocaPorCodigoTrocado` troca só a casa salva naquela cidade, uma vez, com o aviso "Corrigimos a empresa de luz da sua cidade".
+- **Critério 6:** os arquivos publicados só mudam na próxima rodada da rotina. O teste `outra-uf.test.ts` já confere que os publicados, com as correções, passam no V11.
 
 ## Ameaças
 
@@ -105,3 +122,9 @@ dos publicados (critério 6).
 - Decisões e porquê: vai para o backlog, primeira da Sprint 2. É número errado (~18% menor), mas numa cidade, e a
   família costuma escolher a distribuidora da conta dela. Entra depois da HIS-111 porque mexe na mesma rotina.
 - Para o próximo: **dominio-energia** (pergunta aberta, critérios 1 e 2) ‖ **backend** (UFs por distribuidora).
+
+### [quem orquestra] 2026-11-25 — implementado em modo rápido
+- O que fiz: lista completa a partir dos publicados (10 códigos trocados, 24 ligações aceitas), correção na rotina,
+  barreira V11 com testes e troca da casa salva com aviso próprio (e2e `cidade-corrigida.spec.ts`).
+- Para o próximo: **dominio-energia** confere na rodada final os 4 "a conferir" e o critério dos códigos trocados;
+  avisar a ANEEL (Fala.BR) dos 10 códigos trocados.

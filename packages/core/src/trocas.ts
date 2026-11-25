@@ -16,13 +16,17 @@ export interface TrocaDescrita {
   /** Ausente quando não sabemos o nome comercial do id antigo, ou quando ele é igual ao novo: o texto sai sem ele. */
   nomeAntigo?: string | undefined;
   nomeNovo: string;
+  /** HIS-206: a empresa não mudou; a ligação da cidade é que estava errada nos dados da ANEEL. Traz o nome da cidade. */
+  cidadeCorrigida?: string | undefined;
 }
 
 /** Os nomes que a família conhece para a troca. `undefined` se `para` não está no arquivo. */
-export function descreverTroca(arquivo: ArquivoParaBusca, troca: { de: string; para: string }): TrocaDescrita | undefined {
+export function descreverTroca(arquivo: ArquivoParaBusca, troca: { de: string; para: string }, cidadeCorrigida?: string): TrocaDescrita | undefined {
   const nova = acharDistribuidora(arquivo, troca.para);
   if (!nova) return undefined;
   const nomeNovo = nomeDaDistribuidora(nova.sigla);
-  const nomeAntigo = nomeComercialDoId(troca.de);
-  return { nomeAntigo: nomeAntigo === nomeNovo ? undefined : nomeAntigo, nomeNovo };
+  // Na correção de cidade a empresa antiga continua publicada: o nome dela vem do arquivo, e não da tabela de nomes.
+  const antiga = cidadeCorrigida ? acharDistribuidora(arquivo, troca.de) : undefined;
+  const nomeAntigo = antiga ? nomeDaDistribuidora(antiga.sigla) : nomeComercialDoId(troca.de);
+  return { nomeAntigo: nomeAntigo === nomeNovo ? undefined : nomeAntigo, nomeNovo, ...(cidadeCorrigida ? { cidadeCorrigida } : {}) };
 }
