@@ -3,7 +3,7 @@
 import { MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { confirmarEmail, mensagemDoErro } from "@/aplicacao/conta";
+import { confirmarEmail, mensagemDoErro, sair, useConta } from "@/aplicacao/conta";
 import { Aviso } from "@/ui/Aviso";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { esquecerCodigoDoEndereco, useCodigoDoEndereco } from "./useCodigoDoEndereco";
@@ -14,6 +14,7 @@ import { esquecerCodigoDoEndereco, useCodigoDoEndereco } from "./useCodigoDoEnde
  */
 export function TelaConfirmar() {
   const codigo = useCodigoDoEndereco("token_hash");
+  const conta = useConta();
   const [situacao, setSituacao] = useState<{ tipo: "esperando" } | { tipo: "enviando" } | { tipo: "pronto" } | { tipo: "erro"; mensagem: string }>({ tipo: "esperando" });
 
   const confirmar = async () => {
@@ -35,7 +36,15 @@ export function TelaConfirmar() {
         {situacao.tipo === "pronto" ? "Conta confirmada" : "Confirmar o e-mail"}
       </h1>
       <div role="status" className="mt-4 text-left">
-        {situacao.tipo === "pronto" && <Aviso anunciar={false}>Pronto! A sua casa agora fica guardada na conta.</Aviso>}
+        {situacao.tipo === "pronto" && (
+          // O e-mail à vista (A1 da seguranca): quem recebeu o link de outra pessoa vê que a conta não é a sua.
+          <Aviso anunciar={false}>
+            Pronto! Você entrou na conta <strong className="break-all">{conta.tipo === "conectada" ? conta.email : ""}</strong>. Não é você?{" "}
+            <button type="button" onClick={() => void sair()} className="min-h-11 font-bold underline underline-offset-2">
+              Sair da conta
+            </button>
+          </Aviso>
+        )}
         {situacao.tipo === "erro" && <Aviso tom="alerta" anunciar={false}>{situacao.mensagem}</Aviso>}
       </div>
       {situacao.tipo === "pronto" ? (

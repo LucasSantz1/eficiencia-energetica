@@ -131,8 +131,9 @@ export function TelaEntrar() {
             <label className="flex min-h-11 items-start gap-3 rounded-[var(--radius-controle)] bg-papel p-4">
               <input type="checkbox" checked={concordo} onChange={(e) => setConcordo(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-energia)]" />
               <span>
-                Concordo em guardar a minha casa (cidade, cômodos, aparelhos e contas de luz) na conta, para abrir em outro aparelho. Fica guardado só isso e o
-                meu e-mail: nada de nome, CPF ou endereço. Posso apagar tudo quando quiser em Minha casa.
+                Concordo em guardar na conta o meu e-mail e a minha casa: cidade e empresa de luz, benefício (Tarifa Social), quantas pessoas moram, cômodos,
+                aparelhos, contas de luz, leituras do relógio, meta e dicas marcadas. Serve para abrir em outro aparelho e para os links da família. Nada de
+                nome, CPF ou endereço. Posso apagar tudo quando quiser em Minha casa.
               </span>
             </label>
           )}

@@ -3,7 +3,7 @@
 import { KeyRound } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { mensagemDoErro, trocarSenhaPeloLink } from "@/aplicacao/conta";
+import { mensagemDoErro, sair, trocarSenhaPeloLink, useConta } from "@/aplicacao/conta";
 import { Aviso } from "@/ui/Aviso";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
@@ -13,6 +13,7 @@ import { esquecerCodigoDoEndereco, useCodigoDoEndereco } from "./useCodigoDoEnde
 /** O link de "esqueci a senha" (E4): a senha nova e pronto, já dentro da conta. */
 export function TelaNovaSenha() {
   const codigo = useCodigoDoEndereco("token_hash");
+  const conta = useConta();
   const [senha, setSenha] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string>();
@@ -38,7 +39,12 @@ export function TelaNovaSenha() {
       </h1>
       {pronto ? (
         <div className="mt-6 text-center">
-          <Aviso>Pronto! Você já está na sua conta.</Aviso>
+          <Aviso>
+            Pronto! Você entrou na conta <strong className="break-all">{conta.tipo === "conectada" ? conta.email : ""}</strong>. Não é você?{" "}
+            <button type="button" onClick={() => void sair()} className="min-h-11 font-bold underline underline-offset-2">
+              Sair da conta
+            </button>
+          </Aviso>
           <BotaoLink href="/casa" className="mt-6">
             Abrir minha casa
           </BotaoLink>

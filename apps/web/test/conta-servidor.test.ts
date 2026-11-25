@@ -115,7 +115,10 @@ describe("conta (casos de uso do servidor)", () => {
     expect([acesso, dono, conhecida]).toEqual([TOKENS.acesso, USUARIO.id, undefined]);
     expect(casa).toEqual({ dados: { comodos: [], aparelhos: [], contas: [], leituras: [], plano: [] }, versaoDoFormato: 3 });
     expect((await conta.gravarCasa(contexto(gateway), undefined, corpo)).status).toBe(401);
-    expect((await conta.gravarCasa(contexto(gateway), cookieValido(), { ...corpo, versaoDoFormato: 99999 })).status).toBe(400);
+    // Outra versão do formato (aba antiga, código guardado sem internet): 409 "versao", nada gravado (M4).
+    const antes = gateway.chamadas["gravarCasa"]?.length;
+    expect((await conta.gravarCasa(contexto(gateway), cookieValido(), { ...corpo, versaoDoFormato: 2 })).corpo).toEqual({ erro: "versao" });
+    expect(gateway.chamadas["gravarCasa"]?.length).toBe(antes);
   });
 
   it("criar convite: o código volta uma vez, e o banco recebe só o SHA-256 dele", async () => {
@@ -149,5 +152,42 @@ describe("conta (casos de uso do servidor)", () => {
   it("sair apaga o cookie mesmo se o Supabase falhar", async () => {
     const gateway = gatewayDeMentira({ sair: async () => Promise.reject(new Error("fora do ar")) });
     expect((await conta.sair(contexto(gateway), cookieValido())).cookie).toEqual({ tipo: "apagar" });
+  });
+
+  it("M3: toda rota com sessão confere a sessão no Supabase (cookie copiado depois de 'Sair' não lê nem apaga nada)", async () => {
+    const saiu = gatewayDeMentira({ quemEsta: async () => ({ ok: false, erro: "sessao" }) });
+    for (const resposta of [
+      await conta.lerCasa(contexto(saiu), cookieValido()),
+      await conta.listarConvites(contexto(saiu), cookieValido()),
+      await conta.apagarConvite(contexto(saiu), cookieValido(), { id: "11111111-1111-4111-8111-111111111111" }),
+      await conta.apagarConta(contexto(saiu), cookieValido()),
+    ]) {
+      expect(resposta.status).toBe(401);
+      expect(resposta.cookie).toEqual({ tipo: "apagar" });
+    }
+    expect(saiu.chamadas["lerCasa"]).toBeUndefined();
+    expect(saiu.chamadas["apagarConta"]).toBeUndefined();
+  });
+
+  it("M2: falha passageira do Supabase não tira a pessoa da conta (o cookie fica)", async () => {
+    const lotado = gatewayDeMentira({ renovar: async () => ({ ok: false, erro: "muitas-tentativas" }) });
+    const quase = cookieValido({ ...TOKENS, expiraEm: AGORA_MS / 1000 + 10 });
+    const r1 = await conta.lerCasa(contexto(lotado), quase);
+    expect([r1.status, r1.cookie]).toEqual([429, undefined]);
+    const fora = gatewayDeMentira({ quemEsta: async () => ({ ok: false, erro: "indisponivel" }) });
+    const r2 = await conta.estado(contexto(fora), cookieValido());
+    expect([r2.status, r2.cookie]).toEqual([503, undefined]);
+  });
+
+  it("M5: o convidado recebe só o que a tela dele usa (sem pessoas, meta, leituras, plano nem contas antigas)", async () => {
+    const contas = ["2026-06", "2026-07", "2026-08", "2026-09", "2026-10"].map((competencia, i) => ({ id: `c${i}`, competencia, kwh: 100 + i, valor: 80 + i }));
+    const residencia = { uf: "SP", municipioIbge: 3541406, municipioNome: "Presidente Prudente", distribuidoraId: "ess", beneficio: "tarifa-social", ligacao: "monofasica", pessoas: 4 };
+    const dados = { residencia, comodos: [], aparelhos: [], contas, leituras: [{ id: "l1", data: "2026-10-01", valorKwh: 1000 }], plano: ["x"], metaMensal: 100 };
+    const gateway = gatewayDeMentira({ casaDoConvite: async () => ({ ok: true, valor: { dados, versaoDoFormato: 3, atualizadaEm: "x" } }) });
+    const resposta = await conta.casaDoConvidado(contexto(gateway), { codigo: "a".repeat(43) });
+    const casa = resposta.corpo["casa"];
+    expect(casa).toMatchObject({ leituras: [], plano: [] });
+    expect(JSON.stringify(casa)).not.toMatch(/pessoas|metaMensal|2026-06|2026-07/);
+    expect(JSON.stringify(casa)).toContain("2026-10");
   });
 });

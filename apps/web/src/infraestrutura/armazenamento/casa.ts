@@ -5,6 +5,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   aparelhoInicial,
+  VERSAO_DO_FORMATO_DA_CASA,
   COMODOS_PADRAO,
   itemDoCatalogo,
   lerAparelho,
@@ -34,8 +35,8 @@ export type { DadosCasa };
 
 /** Mesma chave e mesma versão de antes: o formato salvo não muda na HIS-003a (D1, item 4). */
 const NOME_DA_CHAVE = "eficiencia-energetica:casa";
-/** 3: entraram a meta de gasto e a iluminação pública da conta (HIS-104), os dois opcionais. */
-export const VERSAO_DA_CASA = 3;
+/** O número mora no core (`VERSAO_DO_FORMATO_DA_CASA`): o servidor da conta confere o mesmo (E4). */
+export const VERSAO_DA_CASA = VERSAO_DO_FORMATO_DA_CASA;
 /**
  * Cópia do texto da casa que o leitor não conseguiu abrir, guardada antes de um cadastro novo gravar por cima (D10, 2).
  * Fica só no aparelho, ninguém a lê hoje; serve para uma versão corrigida do leitor recuperar a casa. Sai com

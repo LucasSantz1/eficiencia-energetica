@@ -23,7 +23,7 @@ const RANKING = [
 const PERGUNTAS = [
   {
     p: "Precisa pagar ou criar conta?",
-    r: "Não. É grátis e não pede nome, CPF nem e-mail. O que você cadastra fica guardado só no seu celular ou computador.",
+    r: "Não. É grátis e não pede nome, CPF nem e-mail. O que você cadastra fica guardado só no seu celular ou computador. Se quiser abrir em outro aparelho, dá para criar uma conta, mas ela é opcional.",
   },
   {
     p: "O valor vai ser igual ao da minha conta?",
@@ -231,7 +231,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
         <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-10 px-4 py-16 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
           {[
             ["badge-check", "Feito com dados públicos", "Tarifas e bandeiras da ANEEL, a agência que regula a energia elétrica no Brasil."],
-            ["plug-zap", "Seus dados ficam com você", "Nada sai do seu aparelho. Não pedimos nome, CPF, e-mail nem endereço."],
+            ["plug-zap", "Seus dados ficam com você", "Sem conta, nada sai do seu aparelho. Não pedimos nome, CPF nem endereço. A conta é opcional."],
             ["smartphone", "Pensado para o celular", "Letras grandes, botões fáceis de tocar e leve para celulares simples."],
             ["lightbulb", "Dicas com valor em reais", "Cada dica mostra quanto economiza na sua casa, por mês e por ano."],
           ].map(([icone, titulo, texto], i) => (

@@ -9,7 +9,7 @@ import type { TokensDaSessao } from "./sessao.servidor";
  * (supabase/migrations), não este arquivo. Os erros viram códigos curtos; a mensagem do Supabase nunca vai à tela.
  */
 
-export type ErroDaConta = "credenciais" | "nao-confirmado" | "muitas-tentativas" | "link-vencido" | "sessao" | "conflito" | "limite" | "indisponivel";
+export type ErroDaConta = "credenciais" | "nao-confirmado" | "muitas-tentativas" | "link-vencido" | "sessao" | "conflito" | "limite" | "senha-fraca" | "indisponivel";
 export type Resultado<T> = { ok: true; valor: T } | { ok: false; erro: ErroDaConta };
 
 export interface CasaNoServidor {
@@ -39,6 +39,7 @@ function tokensDe(sessao: Session | null | undefined): TokensDaSessao | undefine
 /** O erro do Supabase em código nosso. O texto dele não sai daqui (pode trazer o e-mail). */
 function erroDe(erro: { status?: number; code?: string; message?: string } | null): ErroDaConta {
   if (!erro) return "indisponivel";
+  if (erro.code === "weak_password" || erro.code === "same_password") return "senha-fraca";
   if (erro.status === 429 || erro.code === "over_request_rate_limit" || erro.code === "over_email_send_rate_limit") return "muitas-tentativas";
   if (erro.code === "email_not_confirmed") return "nao-confirmado";
   if (erro.code === "invalid_credentials") return "credenciais";
@@ -54,8 +55,21 @@ function erroDe(erro: { status?: number; code?: string; message?: string } | nul
  */
 export async function cadastrar(config: ConfiguracaoDaConta, email: string, senha: string, enderecoDoSite: string): Promise<Resultado<null>> {
   const { error } = await cliente(config).auth.signUp({ email, password: senha, options: { emailRedirectTo: `${enderecoDoSite}/conta/confirmar` } });
-  if (error && erroDe(error) === "muitas-tentativas") return { ok: false, erro: "muitas-tentativas" };
-  return error && erroDe(error) === "indisponivel" && error.status !== 400 && error.status !== 422 ? { ok: false, erro: "indisponivel" } : { ok: true, valor: null };
+  return respostaQueNaoRevela(error);
+}
+
+/**
+ * Cadastro e "esqueci a senha" respondem igual, exista ou não a conta (M1 da seguranca):
+ * - `over_email_send_rate_limit` ("espere 60 s para outro e-mail") só acontece com e-mail QUE TEM conta: vira sucesso;
+ * - só o limite por pedidos (`over_request_rate_limit`, de todos) vira "muitas tentativas";
+ * - senha fraca vira mensagem; Supabase fora do ar vira erro (a pessoa não pode achar que o e-mail saiu, B6).
+ */
+function respostaQueNaoRevela(error: { status?: number; code?: string } | null): Resultado<null> {
+  if (!error || error.code === "over_email_send_rate_limit" || error.code === "user_already_exists" || error.code === "email_exists") return { ok: true, valor: null };
+  if (error.code === "over_request_rate_limit" || error.status === 429) return { ok: false, erro: "muitas-tentativas" };
+  if (error.code === "weak_password") return { ok: false, erro: "senha-fraca" };
+  if (error.status === 400 || error.status === 422) return { ok: true, valor: null };
+  return { ok: false, erro: "indisponivel" };
 }
 
 export async function entrar(config: ConfiguracaoDaConta, email: string, senha: string): Promise<Resultado<TokensDaSessao>> {
@@ -73,10 +87,21 @@ export async function confirmarLink(config: ConfiguracaoDaConta, hashDoToken: st
   return { ok: true, valor: tokens };
 }
 
+/** Só "sessao" quando o Supabase diz que a sessão acabou; o resto é passageiro e não tira a pessoa da conta (M2). */
+const SESSAO_ACABOU = new Set(["refresh_token_not_found", "refresh_token_already_used", "session_not_found", "session_expired", "user_not_found", "bad_jwt"]);
+
+function erroDeSessao(error: { status?: number; code?: string } | null): ErroDaConta {
+  if (!error) return "sessao";
+  if (error.code && SESSAO_ACABOU.has(error.code)) return "sessao";
+  if (error.status === 429) return "muitas-tentativas";
+  if (error.status === 401 || error.status === 403) return "sessao";
+  return "indisponivel";
+}
+
 export async function renovar(config: ConfiguracaoDaConta, renovacao: string): Promise<Resultado<TokensDaSessao>> {
   const { data, error } = await cliente(config).auth.refreshSession({ refresh_token: renovacao });
   const tokens = tokensDe(data.session);
-  if (error || !tokens) return { ok: false, erro: erroDe(error) === "muitas-tentativas" ? "muitas-tentativas" : "sessao" };
+  if (error || !tokens) return { ok: false, erro: erroDeSessao(error) };
   return { ok: true, valor: tokens };
 }
 
@@ -89,8 +114,7 @@ export async function sair(config: ConfiguracaoDaConta, tokens: TokensDaSessao):
 
 export async function pedirNovaSenha(config: ConfiguracaoDaConta, email: string, enderecoDoSite: string): Promise<Resultado<null>> {
   const { error } = await cliente(config).auth.resetPasswordForEmail(email, { redirectTo: `${enderecoDoSite}/conta/nova-senha` });
-  if (error && erroDe(error) === "muitas-tentativas") return { ok: false, erro: "muitas-tentativas" };
-  return { ok: true, valor: null };
+  return respostaQueNaoRevela(error);
 }
 
 export async function trocarSenha(config: ConfiguracaoDaConta, tokens: TokensDaSessao, senha: string): Promise<Resultado<null>> {
@@ -98,13 +122,14 @@ export async function trocarSenha(config: ConfiguracaoDaConta, tokens: TokensDaS
   const entrou = await sessao.auth.setSession({ access_token: tokens.acesso, refresh_token: tokens.renovacao });
   if (entrou.error) return { ok: false, erro: "sessao" };
   const { error } = await sessao.auth.updateUser({ password: senha });
-  return error ? { ok: false, erro: erroDe(error) === "indisponivel" ? "credenciais" : erroDe(error) } : { ok: true, valor: null };
+  return error ? { ok: false, erro: erroDe(error) } : { ok: true, valor: null };
 }
 
 /** E-mail e id de quem está logado. Confere o token no Supabase (não confia só no que está no cookie). */
 export async function quemEsta(config: ConfiguracaoDaConta, acesso: string): Promise<Resultado<{ id: string; email: string }>> {
   const { data, error } = await cliente(config).auth.getUser(acesso);
-  if (error || !data.user?.email) return { ok: false, erro: erroDe(error) === "indisponivel" ? "indisponivel" : "sessao" };
+  if (error) return { ok: false, erro: erroDeSessao(error) };
+  if (!data.user?.email) return { ok: false, erro: "sessao" };
   return { ok: true, valor: { id: data.user.id, email: data.user.email } };
 }
 

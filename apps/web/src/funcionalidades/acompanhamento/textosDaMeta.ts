@@ -10,7 +10,7 @@ export const reais = (centavos: number) => formatarReais(centavos / 100);
 export const ROTULO_DA_META = "Quanto você quer pagar de luz por mês?";
 export const AJUDA_DA_META = "Escreva o valor que cabe no seu bolso. A gente mostra quanto falta.";
 export const META_SALVA = "Meta salva neste aparelho.";
-export const SO_NESTE_APARELHO = "Sua meta fica só neste aparelho. Não enviamos para ninguém.";
+export const SO_NESTE_APARELHO = "Sua meta fica neste aparelho (e na sua conta, se você tiver uma). O link da família não mostra a meta.";
 export const E_ESTIMATIVA = "É uma estimativa. A conta de verdade pode ser um pouco diferente.";
 export const SEM_CIP_NA_ECONOMIA = "A economia pode ser um pouco menor, porque a iluminação pública não muda com o quanto você gasta.";
 

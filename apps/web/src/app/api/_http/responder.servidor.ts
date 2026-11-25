@@ -49,7 +49,9 @@ export async function responder(pedido: NextRequest, acao: Acao): Promise<NextRe
     }
   }
   try {
-    return json(await acao(contextoReal(site), pedido.cookies.get(NOME_DO_COOKIE)?.value, corpo));
+    // Os links dos e-mails usam o endereço fixo, quando há (B1 da seguranca): nunca o Host que veio no pedido.
+    const enderecoFixo = process.env.ENDERECO_DO_SITE?.trim().replace(/\/$/, "");
+    return json(await acao(contextoReal(enderecoFixo || site), pedido.cookies.get(NOME_DO_COOKIE)?.value, corpo));
   } catch {
     // Nada vai para o log nem para a tela: o erro do Supabase pode trazer o e-mail.
     return json({ status: 502, corpo: { erro: "indisponivel" } });

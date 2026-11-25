@@ -16,7 +16,9 @@ const TEXTO_DA_SINCRONIA = {
   "em-dia": "A sua casa está guardada na conta.",
   pendente: "Falta guardar na conta a última mudança. Vai sozinho quando a internet voltar.",
   escolher: "Escolha, no topo da tela, qual casa fica.",
-  "atualizada-de-outro-aparelho": "Trouxemos a casa que foi salva em outro aparelho.",
+  "perguntar-envio": "Ainda não guardamos a casa deste aparelho na conta: responda no topo da tela.",
+  "sem-envio": "A casa deste aparelho não está indo para a conta nesta visita.",
+  "versao-antiga": "Abra o site com internet para atualizar: a conta foi salva por uma versão mais nova.",
 } as const;
 
 /** "Sua conta" em Minha casa (E4): entrar/criar, quem está na conta, sair e os links de convidado (HIS-407). */
@@ -106,7 +108,10 @@ function LinksDeConvidado() {
       <h3 className="flex items-center gap-2 text-lg font-extrabold">
         <Link2 className="size-5 text-energia" aria-hidden /> Links para a família acompanhar
       </h3>
-      <p className="mt-1 max-w-[56ch] text-tinta-suave">Quem abrir o link vê a conta e os aparelhos, mas não muda nada. Apague o link quando quiser e ele para de funcionar na hora.</p>
+      <p className="mt-1 max-w-[56ch] text-tinta-suave">
+        Quem abrir o link vê a cidade, a conta estimada (com a Tarifa Social, se você tiver), os cômodos, os aparelhos e as 3 últimas contas de luz. Não
+        vê o seu e-mail nem quantas pessoas moram aí, e não muda nada. Apague o link quando quiser e ele para de funcionar na hora.
+      </p>
 
       {novo && (
         <div className="mt-4 space-y-3 rounded-[var(--radius-controle)] bg-energia-claro p-4">

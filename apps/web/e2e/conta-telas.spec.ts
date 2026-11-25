@@ -40,12 +40,17 @@ async function simularConta(page: Page, casaNaConta: unknown) {
   return { gravadas };
 }
 
-test("conectada: a casa do aparelho vai para a conta, e o link de convidado aparece uma vez e some ao apagar", async ({ page, context }) => {
+test("conectada: a casa só vai para a conta depois do 'Guardar na conta' (A1), e o link de convidado aparece uma vez", async ({ page, context }) => {
   await semearCasa(context, CASA);
   const { gravadas } = await simularConta(page, null);
   await page.goto("/casa/ajustes");
   const secao = page.getByRole("region", { name: "Sua conta" });
   await expect(secao.getByText("ana@exemplo.org")).toBeVisible();
+  // A conta está vazia e o aparelho tem casa: pergunta, com o e-mail à vista, e nada vai antes do toque.
+  await expect(page.getByText("Guardar a casa deste aparelho na conta ana@exemplo.org?")).toBeVisible();
+  await page.waitForTimeout(2500);
+  expect(gravadas).toHaveLength(0);
+  await page.getByRole("button", { name: "Guardar na conta" }).click();
   await expect(secao.getByText("A sua casa está guardada na conta.")).toBeVisible();
   expect(gravadas).toHaveLength(1);
 
@@ -93,4 +98,13 @@ test("convidado com link apagado: aviso simples", async ({ page, errosEsperados 
   await page.route("**/api/convidado", (rota) => rota.fulfill({ status: 404, json: { erro: "convite" } }));
   await page.goto(`/convidado#${CODIGO}`);
   await expect(page.getByText("Este link não vale mais. Peça um novo a quem mandou.")).toBeVisible();
+});
+
+test("'Agora não': a casa do aparelho não vai para a conta", async ({ page, context }) => {
+  await semearCasa(context, CASA);
+  const { gravadas } = await simularConta(page, null);
+  await page.goto("/casa");
+  await page.getByRole("button", { name: "Agora não" }).click();
+  await page.waitForTimeout(2500);
+  expect(gravadas).toHaveLength(0);
 });

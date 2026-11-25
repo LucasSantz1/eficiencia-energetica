@@ -19,10 +19,17 @@ export type Sincronia =
   | { tipo: "sincronizando" }
   | { tipo: "em-dia" }
   | { tipo: "pendente" }
-  /** Casas diferentes no aparelho e na conta: a pessoa escolhe qual fica. */
-  | { tipo: "escolher"; daConta: DadosCasa }
-  /** Outro aparelho mudou a casa: trouxemos a versão da conta. */
-  | { tipo: "atualizada-de-outro-aparelho" };
+  /**
+   * A conta está vazia e o aparelho tem casa: a pessoa diz se quer guardar ESTA casa NESTA conta (A1 da seguranca).
+   * Nunca sem perguntar: a conta pode não ser dela (link de confirmação alheio, celular emprestado).
+   */
+  | { tipo: "perguntar-envio" }
+  /** A pessoa disse "Agora não": nada vai para a conta nesta visita. */
+  | { tipo: "sem-envio" }
+  /** Casas diferentes no aparelho e na conta (no começo ou depois de outro aparelho gravar): a pessoa escolhe. */
+  | { tipo: "escolher"; daConta: DadosCasa; porOutroAparelho: boolean }
+  /** A conta tem uma casa de uma versão mais nova do site: esta página antiga não sincroniza (M4 da seguranca). */
+  | { tipo: "versao-antiga" };
 
 /** Textos de erro das rotas /api, em linguagem simples. */
 export function mensagemDoErro(resposta: { status: number; corpo: Record<string, unknown> }): string {
@@ -43,6 +50,8 @@ export function mensagemDoErro(resposta: { status: number; corpo: Record<string,
       return "Você chegou ao limite de 20 links. Apague um para criar outro.";
     case "desligada":
       return "A conta ainda não está ligada neste site.";
+    case "senha-fraca":
+      return "Essa senha é fácil de adivinhar. Use uma mais longa, misturando letras e números.";
     default:
       return resposta.status === 0 ? "Sem internet. Confira a conexão e tente de novo." : "Não deu certo agora. Tente de novo daqui a pouco.";
   }
@@ -174,7 +183,11 @@ async function gravar(): Promise<void> {
     atualizadaEm = nova;
     return mudarSincronia({ tipo: "em-dia" });
   }
-  if (resposta.status === 409) return trazerDaConta(true);
+  if (resposta.status === 409 && resposta.corpo["erro"] === "versao") {
+    pararDeOuvir();
+    return mudarSincronia({ tipo: "versao-antiga" });
+  }
+  if (resposta.status === 409) return conflitoComOutroAparelho();
   if (resposta.status === 401) {
     pararSincronia();
     return atualizarConta(true);
@@ -182,14 +195,21 @@ async function gravar(): Promise<void> {
   mudarSincronia({ tipo: "pendente" });
 }
 
-/** Outro aparelho gravou antes: a versão da conta vale, e a pessoa é avisada. */
-async function trazerDaConta(porConflito: boolean): Promise<void> {
+/**
+ * Outro aparelho gravou antes. Nada é trocado sozinho (M4 da seguranca: as mudanças feitas sem internet sumiriam): a
+ * pessoa escolhe entre a casa deste aparelho e a da conta.
+ */
+async function conflitoComOutroAparelho(): Promise<void> {
+  pararDeOuvir();
   const { status, corpo } = await pedirApi("/api/casa");
-  const data = corpo["atualizadaEm"];
   if (status !== 200) return mudarSincronia({ tipo: "pendente" });
+  const data = corpo["atualizadaEm"];
   atualizadaEm = typeof data === "string" ? data : null;
-  if (corpo["casa"]) useCasa.getState().trocarPelaCasaDaConta(corpo["casa"]);
-  mudarSincronia({ tipo: porConflito ? "atualizada-de-outro-aparelho" : "em-dia" });
+  if (!corpo["casa"]) {
+    ouvirMudancas();
+    return gravar();
+  }
+  mudarSincronia({ tipo: "escolher", daConta: lerCasaSalva(corpo["casa"]).casa, porOutroAparelho: true });
 }
 
 function ouvirMudancas() {
@@ -202,32 +222,42 @@ function ouvirMudancas() {
   });
 }
 
-function pararSincronia() {
+function pararDeOuvir() {
   deixarDeOuvir?.();
   deixarDeOuvir = undefined;
   clearTimeout(espera);
+}
+
+function pararSincronia() {
+  pararDeOuvir();
   atualizadaEm = null;
   mudarSincronia({ tipo: "parada" });
 }
 
 /**
  * Começa quando há conta e a casa do aparelho já foi lida:
- * - conta sem casa: envia a do aparelho (a pessoa concordou ao criar a conta);
+ * - conta sem casa e aparelho com casa: PERGUNTA antes de enviar, mostrando o e-mail da conta (A1 da seguranca);
  * - aparelho sem casa: traz a da conta;
  * - as duas iguais: nada a fazer;
- * - as duas diferentes: a pessoa escolhe qual fica.
+ * - as duas diferentes: a pessoa escolhe qual fica;
+ * - casa da conta de uma versão mais nova do site: não mexe em nada (M4).
  */
 async function comecarSincronia(): Promise<void> {
   if (sincronia.tipo !== "parada" || useCasa.getState().versaoAntigaDoSite) return;
   mudarSincronia({ tipo: "sincronizando" });
   const { status, corpo } = await pedirApi("/api/casa");
   if (status !== 200) return mudarSincronia({ tipo: status === 401 ? "parada" : "pendente" });
+  const versaoDaConta = corpo["versaoDoFormato"];
+  if (typeof versaoDaConta === "number" && versaoDaConta > VERSAO_DA_CASA) return mudarSincronia({ tipo: "versao-antiga" });
   const data = corpo["atualizadaEm"];
   atualizadaEm = typeof data === "string" ? data : null;
   const local = casaDoAparelho();
   if (!corpo["casa"]) {
-    ouvirMudancas();
-    return temCasa(local) ? gravar() : mudarSincronia({ tipo: "em-dia" });
+    if (!temCasa(local)) {
+      ouvirMudancas();
+      return mudarSincronia({ tipo: "em-dia" });
+    }
+    return mudarSincronia({ tipo: "perguntar-envio" });
   }
   const daConta = lerCasaSalva(corpo["casa"]).casa;
   if (!temCasa(local)) {
@@ -239,7 +269,7 @@ async function comecarSincronia(): Promise<void> {
     ouvirMudancas();
     return mudarSincronia({ tipo: "em-dia" });
   }
-  mudarSincronia({ tipo: "escolher", daConta });
+  mudarSincronia({ tipo: "escolher", daConta, porOutroAparelho: false });
 }
 
 /** A escolha da pessoa quando as casas são diferentes. */
@@ -251,8 +281,12 @@ export function escolherCasa(qual: "deste-aparelho" | "da-conta") {
   else mudarSincronia({ tipo: "em-dia" });
 }
 
-export function dispensarAvisoDeOutroAparelho() {
-  if (sincronia.tipo === "atualizada-de-outro-aparelho") mudarSincronia({ tipo: "em-dia" });
+/** A resposta à pergunta "Guardar a casa deste aparelho na conta x@y?". */
+export function responderEnvio(guardar: boolean) {
+  if (sincronia.tipo !== "perguntar-envio") return;
+  if (!guardar) return mudarSincronia({ tipo: "sem-envio" });
+  ouvirMudancas();
+  void gravar();
 }
 
 const assinarSincronia = (avisar: () => void) => {

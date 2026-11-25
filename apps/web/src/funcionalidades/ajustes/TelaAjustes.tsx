@@ -233,13 +233,13 @@ function SeusDados() {
   const apagarTudo = useCasa((s) => s.apagarTudo);
   const [confirmarApagar, setConfirmarApagar] = useState(false);
   const comConta = useConta().tipo === "conectada";
-  const [erroDaConta, setErroDaConta] = useState(false);
+  const [erroDaConta, setErroDaConta] = useState<"sessao" | "falha">();
   return (
     <Secao titulo="Seus dados">
       <p className="max-w-[56ch] text-tinta-suave">
         {comConta
           ? "O que você cadastrou fica neste navegador e na sua conta (para abrir em outro aparelho e para os links da família)."
-          : "Tudo o que você cadastrou fica guardado só neste navegador. Se limpar os dados do navegador, as informações são apagadas."}
+          : "O que você cadastrou fica guardado neste navegador. Se você criou uma conta, entre nela antes de apagar, para apagar também o que está lá."}
       </p>
       <div className="mt-4">
         {!confirmarApagar ? (
@@ -254,7 +254,10 @@ function SeusDados() {
               onClick={async () => {
                 // LGPD: com conta, "todos os meus dados" inclui o que está no servidor. Se o servidor não responder, nada
                 // é apagado no aparelho, para a pessoa poder tentar de novo sem achar que apagou tudo.
-                if (comConta && (await (await import("./apagarComConta")).apagarConta()).status !== 200) return setErroDaConta(true);
+                if (comConta) {
+                  const resposta = await (await import("./apagarComConta")).apagarConta();
+                  if (resposta.status !== 200) return setErroDaConta(resposta.status === 401 ? "sessao" : "falha");
+                }
                 apagarTudo();
                 // A escolha de leitura mora numa chave própria: "todos os meus dados" inclui ela (LGPD, HIS-102).
                 apagarPreferenciaDeLeitura();
@@ -271,7 +274,9 @@ function SeusDados() {
         <div role="status" className="mt-3">
           {erroDaConta && (
             <Aviso tom="alerta" anunciar={false}>
-              Não deu para apagar a conta agora (sem internet?). Nada foi apagado. Tente de novo.
+              {erroDaConta === "sessao"
+                ? "Você saiu da conta. Entre de novo para apagar também o que está nela. Nada foi apagado."
+                : "Não deu para apagar a conta agora. Confira a internet e tente de novo. Nada foi apagado."}
             </Aviso>
           )}
         </div>

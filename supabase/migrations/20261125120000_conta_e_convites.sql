@@ -53,6 +53,8 @@ grant select, insert, delete on public.convites to authenticated;
 create function public.limitar_convites() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
+  -- Trava a casa do dono antes de contar: dois pedidos ao mesmo tempo não passam juntos do limite (B2 da seguranca).
+  perform 1 from public.casas where dono = new.dono for update;
   if (select count(*) from public.convites where dono = new.dono) >= 20 then
     raise exception 'limite de 20 convites por casa' using errcode = 'check_violation';
   end if;

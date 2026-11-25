@@ -1,7 +1,8 @@
 # ADR-007 · Conta opcional com e-mail e senha, sessão em cookie cifrado e link de convidado só de leitura
 
-- **Status:** proposto (2026-11-25, quem orquestra, a pedido do dono no modo turbo). Vai para a rodada de verificação
-  (seguranca, tech-lead e qa) antes de juntar.
+- **Status:** proposto (2026-11-25, quem orquestra, a pedido do dono no modo turbo). A seguranca vetou a primeira versão
+  (`d7e33ee`) por A1 e A2. Revisto no mesmo dia com A1, A2, M1 a M5 e parte das baixas (ver "Revisão da seguranca");
+  volta à seguranca antes de juntar.
 - **Data:** 2026-11-25
 - **Responsável:** quem orquestra; revisão: seguranca (poder de veto) e tech-lead
 
@@ -74,6 +75,35 @@ Princípios que pesam:
     - o "Concordo em guardar a minha casa na conta" é obrigatório para criar a conta;
     - "Apagar todos os meus dados" apaga também a conta, a casa no servidor e os links;
     - se o servidor falhar, nada é apagado no aparelho.
+
+## Revisão da seguranca (25/11)
+
+- **A1, corrigido.** A casa do aparelho nunca vai para uma conta sem a pessoa tocar em "Guardar na conta", com o e-mail
+  da conta à vista. As telas de confirmar e de senha nova mostram o e-mail e têm "Não é você? Sair".
+- **A2, corrigido.** Os textos de privacidade mudaram no início, no Sobre, no cadastro, na meta, no consentimento e no
+  link da família: agora dizem o que vai para a conta e o que o convidado vê.
+- **M1, corrigido.** `over_email_send_rate_limit` responde como sucesso no cadastro e no "esqueci".
+- **M2, corrigido em parte.** Falha passageira não apaga o cookie. Ficam para antes de divulgar o limite próprio por IP
+  nas rotas e a limpeza de contas não confirmadas.
+- **M3, corrigido.** Toda rota com sessão confere a sessão no Supabase.
+- **M4, corrigido.**
+  - Conflito com outro aparelho: a pessoa escolhe, e nada é trocado sozinho.
+  - Versão do formato: o servidor só aceita `VERSAO_DO_FORMATO_DA_CASA` (no core), e o cliente não sincroniza com casa
+    de versão mais nova.
+- **M5, corrigido.** O convidado recebe a casa sem pessoas, meta, leituras, plano e contas antigas.
+- **Baixas corrigidas:**
+  - B1: `ENDERECO_DO_SITE` fixo para os links dos e-mails;
+  - B2: trava de 20 links com `for update`;
+  - B3: o teste do banco roda a migração com um dono sem superusuário;
+  - B6: "esqueci" com o Supabase fora responde erro;
+  - B7: senha recusada mantém a pessoa na conta e explica;
+  - B8: variáveis só em *Production*;
+  - B9: funções em `gru1`;
+  - B11: apagar a conta entrou na conferência do guia.
+- **Baixas que ficam:**
+  - B4: limite total da sessão e "Sair de todos os aparelhos";
+  - B5: aviso ao sair sem internet;
+  - B10: registro da data e da versão do "concordo".
 
 ## Alternativas
 

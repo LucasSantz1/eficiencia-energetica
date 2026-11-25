@@ -56,7 +56,7 @@ Em **Authentication**:
      <p>Se não foi você que pediu, é só ignorar este e-mail: a senha continua a mesma.</p>
      ```
 
-4. **Rate Limits:** deixe como está. Atenção: o Supabase conta as tentativas por IP, e todas as tentativas chegam do
+4. **Rate Limits:** deixe como está. As funções do site rodam em São Paulo (`gru1`), perto do banco. Atenção: o Supabase conta as tentativas por IP, e todas as tentativas chegam do
    servidor da Vercel. Com muita gente entrando ao mesmo tempo, o limite vale para todos juntos (ADR-007).
 
 ## 4. E-mail de verdade (antes de divulgar)
@@ -79,14 +79,16 @@ O e-mail grátis do Supabase manda **poucos e-mails por hora** e só serve para 
    node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
    ```
 
-3. Na Vercel, abra **Project → Settings → Environment Variables** e crie as três variáveis, para *Production* e
-   *Preview*:
+3. Na Vercel, abra **Project → Settings → Environment Variables** e crie as quatro variáveis **só para *Production***.
+   Não marque *Preview*: as versões de teste de cada PR usariam o banco e o segredo de verdade. Se quiser testar a conta
+   numa versão de teste, crie outro projeto no Supabase só para isso.
 
    | Nome | Valor |
    | --- | --- |
    | `SUPABASE_URL` | o Project URL |
    | `SUPABASE_ANON_KEY` | a chave anon |
    | `SESSAO_SEGREDO` | o segredo gerado no item 2 |
+   | `ENDERECO_DO_SITE` | o mesmo Site URL do passo 3, sem barra no fim (os links dos e-mails usam este endereço) |
 
    Os nomes **não** começam com `NEXT_PUBLIC_`, de propósito: só o servidor os lê.
 4. Faça um novo deploy (**Deployments → Redeploy**).
@@ -98,6 +100,9 @@ O e-mail grátis do Supabase manda **poucos e-mails por hora** e só serve para 
 3. Em Minha casa, deve aparecer "A sua casa está guardada na conta". Em **Links para a família acompanhar**, crie um
    link e abra-o numa janela anônima. A casa aparece com "Só para ver".
 4. Apague o link e recarregue a janela anônima. Deve aparecer "Este link não vale mais".
+5. Em **Minha casa → Seus dados → Apagar todos os meus dados**, apague tudo. No Supabase, em **Authentication → Users**, a
+   conta deve ter sumido, e em **Table Editor** a casa e os links também. Se aparecer "Não deu para apagar a conta",
+   avise: a permissão da função `apagar_minha_conta` precisa ser conferida no projeto.
 
 Se trocar o `SESSAO_SEGREDO`, todo mundo sai da conta (os cookies antigos deixam de abrir). Faça isso se suspeitar que
 o segredo vazou.
