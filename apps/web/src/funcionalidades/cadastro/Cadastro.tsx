@@ -522,12 +522,13 @@ export function Cadastro() {
           </Titulo>
           {/* Erro e "Confere?" ficam aqui no passo, nunca no painel "Por que perguntamos" (regra 5 do /comecar na 112). */}
           <ExemploDeConta className="mt-6" />
+          {/* Antes dos campos: do valor, o Tab vai direto para "Ver o resultado" (a mensagem de erro espera o botão). */}
+          <ExplicaKwh className="mt-3 text-center" />
           <CamposDaConta
             className="mt-6 space-y-5"
             campos={camposDaConta}
             textos={{ consumo: "Consumo do mês (kWh)", ajudaDoConsumo: "É o número 1 do exemplo.", valor: "Total a pagar", ajudaDoValor: "É o número 2 do exemplo." }}
           />
-          <ExplicaKwh className="mt-3" />
           <div className="mt-8 flex flex-col gap-3">
             {/* Sempre habilitado (T5): botão desabilitado não diz o que falta. */}
             <Botao
