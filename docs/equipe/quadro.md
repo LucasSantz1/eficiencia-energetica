@@ -21,9 +21,36 @@ A única mudança visível de propósito é a correção da HIS-111 (conta errad
 | História | Status | Etapa atual | Próximo papel |
 | --- | --- | --- | --- |
 | HIS-110 · Contraste das cores padrão | **No `main`** (PR #11) | integrada | — |
-| HIS-103 · Guia da Tarifa Social | Em preparação pelo domínio | textos do ar corrigidos, à espera de PR; regras de quem tem direito ainda com a dominio-energia | quem orquestra abre a PR; dominio-energia entrega as regras; depois ux (textos) e scrum-master (história e critérios) |
-| HIS-107 · Zoom de 200% | Backlog da sprint | falta critério verificável | scrum-master refina |
-| HIS-102 · Letra maior e alto contraste | Backlog da sprint (passa primeiro se não couber) | — | — |
+| [HIS-103 · Guia da Tarifa Social](historias/HIS-103-guia-tarifa-social.md) | **No `main`** (103a PR #14, 103b PR #24) | integrada | — |
+| HIS-107 · Zoom de 200% | **No `main`** (PR #35, com a HIS-116) | integrada; `zoom.spec.ts` a 320 e 195 px | — |
+| [HIS-102 · Letra maior e alto contraste](historias/HIS-102-letra-e-contraste.md) | **No `main`** (PR #28) | integrada | — |
+| HIS-003b · Campos com limite e "Confere?" | **No `main`** (PR #21) | integrada | — |
+| [HIS-117 · CSP sem `unsafe-inline`](historias/HIS-117-csp-sem-unsafe-inline.md) | **No `main`** (PR #27) | `script-src-attr 'none'`; nonce fica para o E4, com ADR | — |
+| DEF-002b-1 · Animação perdida ao terminar o cadastro | **No `main`** (PR #22) | integrada | — |
+
+## Bloco de 24 e 25/11 · Transparência e "não sei" (modo turbo)
+
+Combinado com o dono: quem orquestra implementa direto, o CI é a barreira, e os agentes entram numa rodada de
+verificação no fim do bloco (dominio-energia, seguranca e qa). O dono junta as PRs.
+
+| História | Status | PR |
+| --- | --- | --- |
+| [HIS-104 · Meta de gasto](historias/HIS-104-meta-de-gasto.md) | **No `main`** | #32 |
+| [HIS-105 · Compartilhar e imprimir](historias/HIS-105-compartilhar-e-imprimir.md) | **No `main`** | #30 (e #31, CSS de impressão) |
+| Visual limpo (painel em blocos, Dicas, Minha casa) | **No `main`** | #33 |
+| "Não sei qual é o meu aparelho" | **No `main`** | #34 |
+| HIS-116 · Esqueleto da Casca | **No `main`** | #35 |
+| [HIS-206 · Distribuidora de outro estado](historias/HIS-206-distribuidora-de-outro-estado.md) | **No `main`** | #36 |
+| HIS-201 · Conta detalhada | **No `main`** | #37 |
+| Cadastro mais leve (conta de exemplo, o que é kWh) | **No `main`** | #38 |
+| HIS-205 · Nomes de distribuidoras | **No `main`** | #39 |
+| Correções da rodada de verificação | **Aberta** (a #40 foi juntada no branch da #39, depois de a #39 já estar no `main`) | #41 |
+
+Achados baixos da rodada que ficaram para depois (qa, 25/11): texto duplo do cadastro sem internet ("sem internet" e
+"nenhuma cidade com esse nome", já existia); `/casa/dicas` rola para o lado com letra maior e zoom de 200%; vão nos
+blocos do computador com a conta detalhada aberta; "150,999" na meta mostra a mensagem de faixa; "Digite" × "Escreva";
+Enter num campo da conta não salva; título "Sua meta" duplicado na folha; texto do Mês a mês logo depois do cadastro.
+Próximo bloco: Sprint 3, offline (HIS-109, 301, 302, 303).
 
 Ordem (scrum-master, revista em 2026-11-03): HIS-001 → HIS-002a → **HIS-111 → HIS-002b → HIS-003a** → HIS-003b.
 A 111 entra primeiro (defeito no ar); a 002b depois dela (a 111 faz o rebase com `--fix` da ordem dos imports e a
@@ -64,6 +91,11 @@ scratchpad e porta própria (retro da HIS-001). A implementação (etapa 4) **n�
   continuam obrigatórios. Sem isso, um PR pode ser integrado com o e2e vermelho.
 
 ## Diário
+
+- 2026-11-25 — Bloco de 24 e 25/11 no `main` (#30 a #39). Rodada de verificação: dominio-energia achou 3 números
+  errados na tela (Tarifa Social com mínimo trifásico, Light em São José do Rio Preto, chuveiro do "O que é kWh?"),
+  seguranca nada bloqueante (V11 com ponto cego e `lazy` sem barreira, médios), qa 306 e2e ✓ e 4 defeitos médios.
+  Tudo corrigido na #41 (e2e 308 ✓). Documentação do bloco: CHANGELOG, guia de uso e cálculos e fontes.
 
 - 2026-10-29 — sprint planejada; HIS-004 entregue junto com a criação da equipe.
 - 2026-10-29 — HIS-001: desenho técnico pronto (tech-lead), pergunta aberta respondida, ADR-001 revisado; próximo: seguranca.
