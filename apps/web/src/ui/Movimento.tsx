@@ -29,17 +29,14 @@ export function useValorAnimado(valor: number, { duracao = 900, inicio = 0, ativ
   const anterior = useRef(inicio);
   useEffect(() => {
     if (!ativo) return;
-    if (prefereMenosMovimento()) {
-      anterior.current = valor;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- com movimento reduzido, mostra o valor final de uma vez (HIS-109)
-      setMostrado(valor);
-      return;
-    }
+    // Com movimento reduzido, a duração é zero: o primeiro quadro já mostra o valor final. O valor muda dentro do
+    // quadro, nunca direto no efeito, que faria a tela renderizar de novo logo depois de abrir.
+    const tempo = prefereMenosMovimento() ? 0 : duracao;
     const de = anterior.current;
     const t0 = performance.now();
     let quadro = 0;
     const passo = (t: number) => {
-      const p = Math.min(1, (t - t0) / duracao);
+      const p = tempo === 0 ? 1 : Math.min(1, (t - t0) / tempo);
       const suave = 1 - Math.pow(1 - p, 3);
       const atual = de + (valor - de) * suave;
       anterior.current = atual;
@@ -70,9 +67,9 @@ export function useVisivel<T extends Element>(margem = "0px 0px -12% 0px") {
     const el = ref.current;
     if (!el || visivel) return;
     if (typeof IntersectionObserver === "undefined") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sem IntersectionObserver, mostra o conteúdo de uma vez (HIS-109)
-      setVisivel(true);
-      return;
+      // Navegador sem IntersectionObserver: mostra o conteúdo no próximo quadro (fora do corpo do efeito).
+      const quadro = requestAnimationFrame(() => setVisivel(true));
+      return () => cancelAnimationFrame(quadro);
     }
     const obs = new IntersectionObserver(
       (entradas) => {

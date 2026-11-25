@@ -25,7 +25,7 @@ function ehLargaNoServidor(): boolean {
 
 /**
  * Diz se a tela tem 1024 px ou mais. É `useSyncExternalStore` (e não estado + efeito) para não copiar estado num
- * efeito (HIS-109) e para o desenho certo já aparecer no primeiro render no navegador.
+ * efeito e para o desenho certo já aparecer no primeiro render no navegador.
  */
 export function useTelaLarga(): boolean {
   return useSyncExternalStore(assinar, ehLarga, ehLargaNoServidor);

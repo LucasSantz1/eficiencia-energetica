@@ -33,13 +33,12 @@ const CAMADAS_SIMPLES = new Set(["app", "ui", "aplicacao", "infraestrutura", "co
 const ARQUIVO_SERVIDOR = /\.servidor\.(js|jsx|cjs|mjs|ts|tsx|cts|mts)$/;
 const ESPECIFICADOR_SERVIDOR = /\.servidor(\.[a-z]+)?$/;
 
-// C10 (Ab3 da seguranca): a única forma aceita de comentário que muda regra do ESLint é a da HIS-109.
-const EXCECAO_HIS_109 = /^\/\/ eslint-disable-next-line react-hooks\/set-state-in-effect -- \S.{9,} \(HIS-109\)$/;
+// C10 (Ab3 da seguranca): nenhum comentário pode mudar regra do ESLint. A única exceção que existia (efeitos que copiam
+// estado) fechou na HIS-109, que levou esses comentários a 0.
 const COMECO_DE_DIRETIVA = /^(eslint|(global|globals|exported)\s)/;
 const DIRETIVA_EM_QUALQUER_PONTO = /eslint-(disable|enable)/;
 
 const problemas = [];
-let comentariosDaHis109 = 0;
 
 function relativoARaiz(arquivo) {
   return path.relative(RAIZ, arquivo).split(path.sep).join("/");
@@ -130,10 +129,6 @@ function lerComentarios(arquivoTs) {
   return [...porPosicao].map(([posicao, comentario]) => ({ posicao, comentario }));
 }
 
-function ehComentarioDeLinhaInteira(texto, posicao) {
-  const inicioDaLinha = texto.lastIndexOf("\n", posicao - 1) + 1;
-  return texto.slice(inicioDaLinha, posicao).trim() === "";
-}
 
 /** C10: comentário que muda regra do ESLint (Ab3 da seguranca; critério 11 automático). */
 function conferirComentarios(arquivo, arquivoTs) {
@@ -141,12 +136,8 @@ function conferirComentarios(arquivo, arquivoTs) {
     const corpo = comentario.startsWith("//") ? comentario.slice(2) : comentario.slice(2, -2);
     const semComeco = corpo.replace(/^[\s*]+/, "");
     if (!COMECO_DE_DIRETIVA.test(semComeco) && !DIRETIVA_EM_QUALQUER_PONTO.test(comentario)) continue;
-    if (EXCECAO_HIS_109.test(comentario) && ehComentarioDeLinhaInteira(arquivoTs.text, posicao)) {
-      comentariosDaHis109 += 1;
-      continue;
-    }
     const linha = arquivoTs.getLineAndCharacterOfPosition(posicao).line + 1;
-    anotar(arquivo, undefined, `comentário que muda regra do ESLint não é permitido (só o da HIS-109): ${relativoARaiz(arquivo)}:${linha}`);
+    anotar(arquivo, undefined, `comentário que muda regra do ESLint não é permitido: ${relativoARaiz(arquivo)}:${linha}`);
   }
 }
 
@@ -278,5 +269,5 @@ if (problemas.length > 0) {
   console.error(`${problemas.length} problema(s)`);
   process.exitCode = 1;
 } else {
-  console.log(`Camadas: tudo certo (${total} arquivos; ${comentariosDaHis109} comentário(s) da HIS-109)`);
+  console.log(`Camadas: tudo certo (${total} arquivos)`);
 }
