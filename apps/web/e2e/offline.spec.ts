@@ -40,6 +40,30 @@ test("sem internet: as telas da casa abrem, até as que a pessoa não tinha aber
   await expect(page.getByRole("link", { name: "Abrir minha casa" })).toBeVisible();
 });
 
+test("sem internet, as perguntas do 'Não sei qual é o meu' abrem (o arquivo delas foi guardado na instalação)", async ({ page, context, errosEsperados }) => {
+  errosEsperados.push(/ERR_INTERNET_DISCONNECTED|Failed to fetch/);
+  await semearCasa(context, { ...lerFixture("casa-v2.json"), version: 3 });
+  await page.goto("/casa");
+  await esperarServicoOffline(page);
+
+  await context.setOffline(true);
+  await page.goto("/casa/comodos");
+  const linha = page.locator("li").filter({ has: page.getByText("Geladeira de 1 porta", { exact: true }) }).first();
+  await linha.getByRole("button", { name: /Escolher o tipo/ }).click();
+  await linha.getByRole("button", { name: "Não sei qual é o meu" }).click();
+  await expect(page.getByRole("radiogroup", { name: "Como são as portas?" })).toBeVisible();
+});
+
+test("página antiga guardada abrindo uma casa de versão mais nova: avisa e não regrava (A1 da seguranca)", async ({ page, context }) => {
+  const casaV4 = { ...lerFixture("casa-v2.json"), version: 4 };
+  const texto = JSON.stringify({ ...casaV4, state: { ...casaV4.state, campoDaV4: "fica" } });
+  await context.addInitScript((t) => localStorage.setItem("eficiencia-energetica:casa", t), texto);
+  await page.goto("/casa");
+  await expect(page.getByText("Esta é uma cópia antiga do site, guardada para usar sem internet.")).toBeVisible();
+  await page.getByRole("link", { name: "Dicas" }).first().click();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("eficiencia-energetica:casa"))).toBe(texto);
+});
+
 test("'Apagar todos os meus dados' apaga também as cópias de /dados (dizem o estado da cidade)", async ({ page, context }) => {
   await semearCasa(context, { ...lerFixture("casa-v2.json"), version: 3 });
   await page.goto("/casa/ajustes");

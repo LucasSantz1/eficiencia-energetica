@@ -172,6 +172,20 @@ describe("store da casa (persist com o armazenamento seguro)", () => {
     expect(local.dados.get(CHAVE)).toBe(texto);
   });
 
+  it("casa de uma versão mais nova (página antiga do modo sem internet): abre, avisa e nunca regrava (A1 da seguranca)", async () => {
+    const texto = JSON.stringify({ state: { ...CASA_VALIDA, campoDaV4: "fica" }, version: 4 });
+    local.dados.set(CHAVE, texto);
+    const useCasa = await abrirStore(local);
+    expect(useCasa.persist.hasHydrated()).toBe(true);
+    expect(useCasa.getState().versaoAntigaDoSite).toBe(true);
+    expect(useCasa.getState().aparelhos).toEqual(CASA_VALIDA.aparelhos);
+    // Ações que antes regravariam no formato antigo, apagando o campo novo.
+    useCasa.getState().adicionarComodo("cozinha");
+    useCasa.getState().definirMeta(100);
+    expect(local.gravacoes).toBe(0);
+    expect(local.dados.get(CHAVE)).toBe(texto);
+  });
+
   it("as ações passam pelo leitor: o que ele recusa não muda nada", async () => {
     local.dados.set(CHAVE, JSON.stringify({ state: CASA_VALIDA, version: 3 }));
     const useCasa = await abrirStore(local);
