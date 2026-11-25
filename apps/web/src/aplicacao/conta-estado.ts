@@ -30,7 +30,8 @@ function mudarConta(novo: EstadoDaConta) {
 export function atualizarConta(deNovo = false): Promise<void> {
   if (pedido && !deNovo) return pedido;
   pedido = pedirApi("/api/conta").then(({ status, corpo }) => {
-    if (status === 0) return mudarConta({ tipo: "sem-internet" });
+    // Sem rede, ou o Supabase fora/lotado (429, 503): a conta não sumiu, só não deu para conferir agora (R2).
+    if (status === 0 || status === 429 || status >= 500) return mudarConta({ tipo: "sem-internet" });
     const email = corpo["email"];
     if (corpo["conta"] === "conectada" && typeof email === "string") return mudarConta({ tipo: "conectada", email });
     mudarConta({ tipo: corpo["conta"] === "sem-conta" ? "sem-conta" : "desligada" });

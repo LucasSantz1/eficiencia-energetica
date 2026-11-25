@@ -71,7 +71,9 @@ test("casas diferentes no aparelho e na conta: a pessoa escolhe, e 'Usar a da co
   const daConta = { ...CASA.state, aparelhos: CASA.state.aparelhos.slice(0, 1) };
   await simularConta(page, daConta);
   await page.goto("/casa");
-  await expect(page.getByText("A casa deste aparelho é diferente da que está na sua conta.")).toBeVisible();
+  // O e-mail da conta e o "Sair" à vista (R1 da seguranca): a conta pode ser de outra pessoa.
+  await expect(page.getByText("A casa deste aparelho é diferente da que está na conta ana@exemplo.org.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sair da conta" })).toBeVisible();
   await page.getByRole("button", { name: "Usar a da conta" }).click();
   await expect(page.getByText("A casa deste aparelho é diferente")).toHaveCount(0);
   await expect.poll(async () => (await casaSalva(page))?.state.aparelhos.length).toBe(1);

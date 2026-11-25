@@ -43,15 +43,19 @@ export function Sincronia({ carregada }: { carregada: boolean }) {
           <strong>
             {sincronia.porOutroAparelho
               ? "A casa mudou em outro aparelho, e este aparelho também tem mudanças."
-              : "A casa deste aparelho é diferente da que está na sua conta."}
+              : "A casa deste aparelho é diferente da que está na conta"}{" "}
+            {!sincronia.porOutroAparelho && <span className="break-all">{email}.</span>}
           </strong>{" "}
-          Qual delas fica? A outra é trocada.
+          Qual delas fica? A outra é trocada. Se essa conta não é sua, toque em &quot;Sair da conta&quot;.
           <span className="mt-3 flex flex-wrap gap-2">
             <Botao variante="secundario" onClick={() => escolherCasa("deste-aparelho")}>
               Usar a deste aparelho
             </Botao>
             <Botao variante="secundario" onClick={() => escolherCasa("da-conta")}>
               Usar a da conta
+            </Botao>
+            <Botao variante="fantasma" onClick={() => void sair()}>
+              Sair da conta
             </Botao>
           </span>
         </Aviso>
