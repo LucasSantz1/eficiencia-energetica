@@ -8,6 +8,7 @@ export * from "./ids";
 export * from "./distribuidoras";
 export * from "./trocas";
 export * from "./correcoes-de-municipio";
+export * from "./conta-detalhada";
 export * from "./comodos";
 export * from "./acompanhamento";
 export * from "./limites";
