@@ -1,41 +1,41 @@
 {
-  "medidoNoCommit": "40b71aa",
-  "decisao": "Cadastro lúdico (25/11): ícones por passo, conta de exemplo, O que é kWh e Por que perguntamos em details; pedido do responsável. Rever na rodada final.",
+  "medidoNoCommit": "cc6d2dd",
+  "decisao": "Sprint 3 offline (HIS-301/302/303, 25/11, modo turbo): +0,6 a +0,75 kB em toda rota pelo registro do service worker e o aviso de instalação; /casa* +1,3 a +1,8 kB pelos avisos de sem internet e da idade dos preços e pela seção 'Usar sem internet'. Aceito na rodada do bloco.",
   "rotas": {
     "/": {
-      "jsDoHtml": 173687,
-      "totalComPrefetch": 206116
+      "jsDoHtml": 174432,
+      "totalComPrefetch": 206867
     },
     "/comecar": {
-      "jsDoHtml": 192909,
-      "totalComPrefetch": 206116
+      "jsDoHtml": 193652,
+      "totalComPrefetch": 206867
     },
     "/casa": {
-      "jsDoHtml": 201976,
-      "totalComPrefetch": 279488
+      "jsDoHtml": 203301,
+      "totalComPrefetch": 281457
     },
     "/casa/comodos": {
-      "jsDoHtml": 191510,
-      "totalComPrefetch": 279488
+      "jsDoHtml": 192935,
+      "totalComPrefetch": 281457
     },
     "/casa/dicas": {
-      "jsDoHtml": 180248,
-      "totalComPrefetch": 279488
+      "jsDoHtml": 181566,
+      "totalComPrefetch": 281457
     },
     "/casa/ajustes": {
-      "jsDoHtml": 182993,
-      "totalComPrefetch": 279488
+      "jsDoHtml": 184834,
+      "totalComPrefetch": 281457
     },
     "/sobre": {
-      "jsDoHtml": 140246,
-      "totalComPrefetch": 177750
+      "jsDoHtml": 140871,
+      "totalComPrefetch": 178506
     },
     "/tarifa-social": {
-      "jsDoHtml": 166454,
-      "totalComPrefetch": 186929
+      "jsDoHtml": 167082,
+      "totalComPrefetch": 187688
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 250575
+      "totalComPrefetch": 252538
     }
   }
 }

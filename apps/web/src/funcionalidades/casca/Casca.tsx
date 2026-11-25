@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
 import { useAvisoDaCasaSalva, useCasa, useCasaCarregada, useDistribuidoraAtualizada, useHaDadosGuardados } from "@/aplicacao/casa";
-import { useIdadeDosPrecos, useSemInternet } from "@/aplicacao/offline";
+import { useIdadeDosPrecos } from "@/aplicacao/idade-dos-precos";
+import { useSemInternet } from "@/aplicacao/offline";
 import { useResumo } from "@/aplicacao/resumo";
 import { useLeitura } from "@/aplicacao/useLeitura";
 import { Aviso } from "@/ui/Aviso";
@@ -94,21 +95,22 @@ export function Casca({ children }: { children: ReactNode }) {
               </Aviso>
             </div>
           )}
-          {/* Com a conta de luz, o preço vem dela: a data da ANEEL não muda nada (HIS-303). */}
-          {idade && residencia && preco.origem === "aneel" && caminho === "/casa" && (
-            <div className="mb-6">
-              <Aviso anunciar={false} tom="faisca">
-                Os preços da luz são de {idade.data}, há {idade.dias} dias. Se a sua conta de luz é mais nova, use o preço dela em{" "}
-                <Link href="/casa/ajustes#conta" className="font-bold underline underline-offset-2">
-                  Minha casa
-                </Link>
-                .
-              </Aviso>
-            </div>
-          )}
           {/* Com a conta de luz, o preço vem da conta e não muda com a troca: não há o que avisar (F1). */}
           {troca && <AvisoTrocaDistribuidora troca={troca} mostrar={preco.origem === "aneel"} />}
         </div>
+        {/* Com a conta de luz, o preço vem dela: a data da ANEEL não muda nada (HIS-303). Fora da região de status:
+            é informação fixa da tela, não uma novidade para o leitor de tela anunciar. */}
+        {idade && residencia && preco.origem === "aneel" && caminho === "/casa" && (
+          <div className="mb-6">
+            <Aviso anunciar={false} tom="faisca">
+              Os preços da luz são de {idade.data}, há {idade.dias} dias. Se a sua conta de luz é mais nova, use o preço dela em{" "}
+              <Link href="/casa/ajustes#conta" className="font-bold underline underline-offset-2">
+                Minha casa
+              </Link>
+              .
+            </Aviso>
+          </div>
+        )}
         {!carregada ? (
           // No computador o esqueleto tem a forma da /casa (conta em cima; cômodos e coluna lateral embaixo), para a
           // tela não pular quando os dados chegam (HIS-112, L2).

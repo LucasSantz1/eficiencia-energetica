@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { idadeDosPrecos, type IdadeDosPrecos } from "@ee/core";
+// Sem @ee/core aqui: o LigarOffline vai em toda página (até na /sobre, quase sem JS) e não pode puxar o domínio junto.
+
+import { useEffect, useSyncExternalStore } from "react";
 import {
   abertoComoAplicativo,
   assinarConexao,
@@ -37,11 +38,3 @@ export function useInstalacao(): { podeInstalar: boolean; instalado: boolean; in
   return { podeInstalar, instalado, instalar: pedirInstalacao };
 }
 
-/**
- * A data dos preços da ANEEL quando eles têm uma semana ou mais (HIS-303). `agora` é lido uma vez, ao abrir a tela: a
- * idade não precisa andar enquanto a pessoa olha.
- */
-export function useIdadeDosPrecos(geradoEm: string | undefined): IdadeDosPrecos | undefined {
-  const [agora] = useState(() => new Date());
-  return geradoEm === undefined ? undefined : idadeDosPrecos(geradoEm, agora);
-}
