@@ -77,12 +77,12 @@ export function LegendaEtiqueta() {
 export function SeloBandeira({ bandeira, exata, sobreEscuro = false }: { bandeira: BandeiraMes; exata: boolean; sobreEscuro?: boolean }) {
   const info = BANDEIRAS[bandeira.bandeira];
   return (
-    <span className="inline-flex items-center gap-2 font-bold">
+    <span className="inline-flex max-w-full items-center gap-2 font-bold">
       <svg viewBox="0 0 20 24" className="h-6 w-5 shrink-0" aria-hidden>
         <path d="M2 1v22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         <path d="M3 2h14l-3.5 5L17 12H3z" fill={info.cor} />
       </svg>
-      <span>
+      <span className="min-w-0">
         Bandeira {info.nome.toLowerCase()}
         <span className={`font-normal ${sobreEscuro ? "text-white/75" : "text-tinta-suave"}`}> {exata ? `em ${formatarCompetencia(bandeira.competencia)}` : `(última publicada, ${formatarCompetencia(bandeira.competencia)})`}</span>
       </span>

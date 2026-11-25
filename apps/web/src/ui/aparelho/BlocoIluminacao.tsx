@@ -28,11 +28,11 @@ export function BlocoIluminacao({ lampada, aoMudar, preco }: { lampada: ItemComo
   const horas = [...new Set([...HORAS_LUZ.map((h) => h.valor), lampada.minutosPorDia])].sort((a, b) => a - b);
   return (
     <div className="rounded-[var(--radius-controle)] border-2 border-faisca/60 bg-faisca-claro px-3 py-3 sm:px-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-faisca text-tinta">
           <Icone nome="lightbulb" className="size-6" />
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[7rem] flex-1">
           <span className="block font-bold">Lâmpadas</span>
           <span className="block text-[0.95rem] text-tinta-suave">{ativo ? `Acesas ${lampada.minutosPorDia >= 720 ? "a noite toda" : formatarTempo(lampada.minutosPorDia)} por dia` : "Nenhuma lâmpada neste cômodo"}</span>
         </div>

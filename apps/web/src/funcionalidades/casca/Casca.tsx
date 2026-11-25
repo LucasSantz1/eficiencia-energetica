@@ -90,7 +90,8 @@ export function Casca({ children }: { children: ReactNode }) {
         {!carregada ? (
           // No computador o esqueleto tem a forma da /casa (conta em cima; cômodos e coluna lateral embaixo), para a
           // tela não pular quando os dados chegam (HIS-112, L2).
-          <div className="space-y-4 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0" aria-busy aria-label="Carregando">
+          // gap em vez de space-y (HIS-116): o bloco escondido no celular não deixa 1rem a mais embaixo do 2º bloco.
+          <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8" aria-busy aria-label="Carregando">
             <div className="h-40 animate-pulse rounded-[var(--radius-cartao)] bg-papel lg:col-span-2" />
             <div className="h-64 animate-pulse rounded-[var(--radius-cartao)] bg-papel" />
             <div className="hidden h-64 animate-pulse rounded-[var(--radius-cartao)] bg-papel lg:block" />
@@ -135,7 +136,7 @@ export function Casca({ children }: { children: ReactNode }) {
                   aria-current={ativo ? "page" : undefined}
                   className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[0.78rem] font-bold transition-colors ${ativo ? "text-energia" : "text-tinta-suave"}`}
                 >
-                  <span className="relative grid h-8 w-14 place-items-center">
+                  <span className="relative grid h-8 w-full max-w-14 place-items-center">
                     {ativo && (
                       // A pílula verde desliza até o item tocado.
                       <ViewTransition name="pilula-ativa">

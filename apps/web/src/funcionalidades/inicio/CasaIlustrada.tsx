@@ -53,7 +53,7 @@ export function CasaIlustrada() {
                 }`}
               >
                 <span className="flex flex-wrap items-start justify-between gap-1">
-                  <span className="text-[0.9rem] font-bold sm:text-base">{c.nome}</span>{" "}
+                  <span className="text-[0.9rem] font-bold [overflow-wrap:anywhere] sm:text-base">{c.nome}</span>{" "}
                   {/* O espaço não aparece (entre itens flex, só espaço em branco não é desenhado), mas separa "Quarto" de
                       "19%" para o axe, que junta o texto dos filhos sem espaço e leria "quarto19%". */}
                   <span className={`numeros rounded-full px-2 py-0.5 text-[0.8rem] font-extrabold sm:text-[0.9rem] ${corDaParte(c.parte)}`}>{Math.round(c.parte * 100)}%</span>
