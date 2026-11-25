@@ -14,4 +14,7 @@ describe("mediaDasContas", () => {
     expect(m?.valorMes).toBe(140);
     expect(m?.precoKwh).toBeCloseTo(0.7, 10);
   });
+  it("só contas de 0 kWh: não há preço por kWh (nem R$ 0,00)", () => {
+    expect(mediaDasContas([{ id: "a", competencia: "2026-09", kwh: 0, valor: 50 }])?.precoKwh).toBeUndefined();
+  });
 });

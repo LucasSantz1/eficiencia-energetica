@@ -9,14 +9,17 @@ Projeto independente e gratuito, feito para as famílias que mais precisam econo
 - **Cadastro da casa em poucos toques:** estado, cidade, distribuidora (escolhida sozinha quando só uma atende a cidade), benefício (Tarifa Social) e pessoas na casa.
 - **Cômodo por cômodo:** quantos cômodos de cada tipo, com nome próprio ("Quarto do casal"); cada um já vem com os aparelhos comuns, a quantidade de cada (2 TVs, 3 lâmpadas), o tempo de uso estimado e a iluminação.
 - **Catálogo com quase 60 aparelhos**, com perguntas que mudam o consumo: ar-condicionado split inverter, split comum, de janela ou portátil e os BTUs; geladeira por modelo e idade; TV por tecnologia e tamanho; chuveiro por potência e aquecimento solar, entre outros.
+- **"Não sei qual é o meu":** perguntas pelo que se vê, com desenhos e "Não sei", para quem não conhece potência, BTU ou inverter; quando não dá para saber o modelo, uma faixa de valor e onde olhar no aparelho. Regras locais, sem IA.
 - **Tempo de uso flexível:** de 2 minutos ao dia inteiro (com ajuste minuto a minuto), todo dia, alguns dias por semana ou só 1 ou 2 vezes por mês.
 - **Painel geral:** junta os aparelhos iguais de todos os cômodos, com quantidade total, onde estão, uso médio por dia, kWh e R$.
-- **Acompanhamento editável:** conta estimada, cômodos, quem mais gasta, histórico das contas de luz mês a mês e leituras do relógio de luz, com gráfico comparando o real com a estimativa.
+- **Acompanhamento em blocos:** conta estimada com a **conta detalhada** linha por linha (energia, bandeira, mínimo, Tarifa Social, iluminação pública), **meta de gasto** ("quero pagar até R$ X") com as dicas que chegam lá, cômodos, quem mais gasta, histórico das contas mês a mês e leituras do relógio de luz. O resumo pode ser compartilhado (sem cidade nem nome) ou impresso.
+- **Guia da Tarifa Social** (`/tarifa-social`): 6 perguntas dizem se a família pode ter direito, com documentos e onde pedir. Nada é guardado.
+- **Leitura fácil:** letra maior, mais contraste, zoom de 200% sem rolar para o lado, e uma conta de exemplo que mostra onde ficam o kWh e o total.
 - **Tarifa real:** TE + TUSD residencial (B1, convencional) vigente da distribuidora, mais o adicional da bandeira do mês, direto dos dados abertos da ANEEL.
 - **Conta de luz opcional:** com o consumo e o valor de uma conta, o cálculo passa a usar o preço real do kWh, já com impostos.
 - **Quem mais gasta:** ranking dos aparelhos nas cores da etiqueta do INMETRO, com valor por aparelho e por cômodo.
 - **Dicas e plano de economia:** cada dica recalcula a conta da casa para mostrar quanto economiza; a pessoa marca as que vai seguir e vê a nova conta e a economia no mês e no ano.
-- **Regras consideradas:** consumo mínimo (30/50/100 kWh), Tarifa Social (80 kWh isentos, Lei 15.235/2025) e aviso do Desconto Social.
+- **Regras consideradas:** consumo mínimo (30/50/100 kWh), Tarifa Social (80 kWh isentos e o mínimo acima disso; Lei 12.212/2010, na redação da Lei 15.235/2025), iluminação pública informada e aviso do Desconto Social.
 
 ## Como rodar
 

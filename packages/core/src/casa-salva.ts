@@ -78,6 +78,8 @@ export const CAMPOS_DA_CASA_SALVA = {
  * Para medidas, a casa salva confere só o limite físico, sem "inteiro" nem casas decimais. As telas antigas salvavam
  * "12340,5" na leitura e "135,905" na conta; o número é possível e não estraga a conta, e tirar o item seria perder
  * anotação verdadeira (risco 1 do D9: o rígido é o limite físico). As telas novas usam a faixa completa.
+ * Vale também para a iluminação pública e a meta: aqui só a faixa (R$ 0 a R$ 500, R$ 1 a R$ 5.000); as 2 casas decimais
+ * são conferidas no formulário, e um valor com mais casas só é arredondado ao aparecer (`formatarReais`).
  */
 function soLimiteFisico(faixa: Faixa): Faixa {
   return { min: faixa.min, max: faixa.max, minExclusivo: faixa.minExclusivo, tolerancia: faixa.tolerancia };

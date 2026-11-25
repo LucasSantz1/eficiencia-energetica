@@ -75,7 +75,7 @@ export interface DadosDoDiagnostico {
   comMaisDeUmValor: (SelecaoDeTarifas["comMaisDeUmValor"][number] & { ehSucessora: boolean })[];
   /** Portão (b): cada sucessora do `sucessoes.json` e quantos valores ela tem na vigência (0 = sem tarifa). */
   sucessoras: { sigla: string; cnpj: string; valores: number }[];
-  /** Critério 3: V1–V4 e V7–V10 sobre a montagem real (o que a rotina vai publicar). */
+  /** Critério 3: V1–V4 e V7–V11 sobre a montagem real (o que a rotina vai publicar). */
   errosDaCoerencia: string[];
   errosDaValidacao: string[];
   avisosDasSucessoes: string[];

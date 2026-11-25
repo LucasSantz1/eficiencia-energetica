@@ -124,7 +124,9 @@ function guloso(candidatas: readonly Dica[], contaAgora: number, metaCentavos: n
     }
     // Ganho zero (a dica deixou de valer, ou o mínimo da ligação segura a conta) não entra na lista.
     if (!melhor || centavos(atual.valor - melhor.valor) <= 0) break;
-    passos.push({ dicaId: melhor.id, ganhoCentavos: centavos(contaDepois - melhor.valor) });
+    // Diferença dos valores já arredondados: assim os ganhos somam, centavo a centavo, o total que a tela mostra (qa,
+    // 25/11: 12,75 + 7,65 aparecia como "juntas, R$ 20,41").
+    passos.push({ dicaId: melhor.id, ganhoCentavos: centavos(contaDepois) - centavos(melhor.valor) });
     ids.push(melhor.id);
     atual = melhor;
     contaDepois = melhor.valor;

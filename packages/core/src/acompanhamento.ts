@@ -46,16 +46,22 @@ export function periodosDeLeitura(leituras: LeituraRelogio[]): { periodos: Perio
   return { periodos, ignoradas };
 }
 
-/** Contas em ordem do mês mais antigo para o mais novo, com o preço médio do kWh de cada uma. */
-export function historicoContas(contas: ContaMensal[]): (ContaMensal & { precoKwh: number })[] {
-  return [...contas].sort((x, y) => x.competencia.localeCompare(y.competencia)).map((c) => ({ ...c, precoKwh: c.kwh > 0 ? c.valor / c.kwh : 0 }));
+/**
+ * Contas em ordem do mês mais antigo para o mais novo, com o preço médio do kWh de cada uma. Conta de 0 kWh (casa
+ * fechada, que paga só o mínimo e as taxas) não tem preço por kWh: `undefined`, nunca "R$ 0,00 por kWh" (qa, 25/11).
+ */
+export function historicoContas(contas: ContaMensal[]): (ContaMensal & { precoKwh: number | undefined })[] {
+  return [...contas].sort((x, y) => x.competencia.localeCompare(y.competencia)).map((c) => ({ ...c, precoKwh: c.kwh > 0 ? c.valor / c.kwh : undefined }));
 }
 
 export interface MediaDasContas {
   kwhMes: number;
   valorMes: number;
-  /** Total pago ÷ total de kWh (não a média dos preços de cada mês, que daria o mesmo peso a um mês de 30 kWh e a um de 300). */
-  precoKwh: number;
+  /**
+   * Total pago ÷ total de kWh (não a média dos preços de cada mês, que daria o mesmo peso a um mês de 30 kWh e a um de
+   * 300). Sem nenhum kWh anotado, `undefined`.
+   */
+  precoKwh: number | undefined;
 }
 
 /** Média das contas anotadas, para o "Mês a mês". Sem contas, `undefined`. */
@@ -63,5 +69,5 @@ export function mediaDasContas(contas: readonly ContaMensal[]): MediaDasContas |
   if (contas.length === 0) return undefined;
   const kwh = contas.reduce((s, c) => s + c.kwh, 0);
   const valor = contas.reduce((s, c) => s + c.valor, 0);
-  return { kwhMes: kwh / contas.length, valorMes: valor / contas.length, precoKwh: kwh > 0 ? valor / kwh : 0 };
+  return { kwhMes: kwh / contas.length, valorMes: valor / contas.length, precoKwh: kwh > 0 ? valor / kwh : undefined };
 }

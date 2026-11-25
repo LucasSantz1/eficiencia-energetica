@@ -3,7 +3,7 @@
  *
  *   pnpm dados:atualizar              baixa, confere e grava em apps/web/public/dados
  *   pnpm dados:atualizar --forcar     grava mesmo se a validação de cobertura reclamar (V5, V6...);
- *                                     a conferência de coerência (V1–V4, V7–V10) nunca é pulada
+ *                                     a conferência de coerência (V1–V4, V7–V11) nunca é pulada
  *   pnpm dados:atualizar --sem-baixar reaproveita os CSVs já baixados (útil para depurar)
  *
  * Roda todo dia pela GitHub Action .github/workflows/atualizar-dados.yml, sempre sem --forcar (o --forcar é só para

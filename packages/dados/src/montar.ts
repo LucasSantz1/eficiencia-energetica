@@ -1,6 +1,6 @@
 import { CODIGOS_TROCADOS, type ArquivoMunicipios, type ArquivoTarifas, type BandeiraMes, type Distribuidora, type Estado, type Municipio } from "@ee/core";
 import type { VinculoMunicipio } from "./aneel/municipios";
-import { CIDADES_PARA_UF_PRINCIPAL, LIGACOES_DE_OUTRA_UF, PARTE_PARA_UF_PRINCIPAL } from "./aneel/outra-uf";
+import { CIDADES_DA_DISTRIBUIDORA_MINUSCULA, CIDADES_PARA_UF_PRINCIPAL, LIGACOES_DE_OUTRA_UF, PARTE_PARA_UF_PRINCIPAL } from "./aneel/outra-uf";
 import type { AgenteDaTarifa, SelecaoDeTarifas, TarifaVencida, TarifaVigente } from "./aneel/tarifas";
 import { MESES_DE_TOLERANCIA_DA_TARIFA_VENCIDA } from "./aneel/tarifas";
 import { conferirSucessoesNaAneel, indexarSucessoes, seguirCadeia, type DadosDaAneelParaSucessoes, type Sucessao } from "./sucessoes";
@@ -528,6 +528,7 @@ export function moverCodigosTrocados(municipios: { ibge: number; distribuidoras:
     const publicado = porIbge.get(c.publicado);
     if (!publicado?.distribuidoras.includes(c.distribuidora)) continue;
     publicado.distribuidoras = publicado.distribuidoras.filter((id) => id !== c.distribuidora);
+    if (c.correto === undefined) continue;
     const correto = porIbge.get(c.correto);
     if (correto && !correto.distribuidoras.includes(c.distribuidora)) correto.distribuidoras.push(c.distribuidora);
   }
@@ -544,9 +545,12 @@ export function conferirOutraUf(municipios: readonly { ibge: number; nome: strin
   for (const [id, contagem] of porUf) {
     const maior = Math.max(...contagem.values());
     const total = [...contagem.values()].reduce((a, b) => a + b, 0);
-    // UF principal: muitas cidades, ou uma parte grande das cidades da distribuidora (cooperativa pequena que atende
-    // 2 cidades em cada lado da divisa), ou a UF com mais cidades.
-    const principal = (n: number) => n >= CIDADES_PARA_UF_PRINCIPAL || n / total >= PARTE_PARA_UF_PRINCIPAL || n === maior;
+    // UF principal: muitas cidades, ou a UF com mais cidades, ou uma parte grande das cidades da distribuidora
+    // (cooperativa pequena com 2 cidades de cada lado da divisa). A parte grande pede 2 cidades ou mais: com 1 só, uma
+    // cooperativa de 4 cidades e 1 código trocado (1 em 5 = 20%) passaria sem ninguém conferir (seguranca, 25/11).
+    // A exceção é a distribuidora minúscula (até 3 cidades, como a CERES: 2 no RJ e 1 em MG), onde 1 cidade já é a divisa.
+    const parteGrande = (n: number) => n / total >= PARTE_PARA_UF_PRINCIPAL && (n >= 2 || total <= CIDADES_DA_DISTRIBUIDORA_MINUSCULA);
+    const principal = (n: number) => n >= CIDADES_PARA_UF_PRINCIPAL || n === maior || parteGrande(n);
     principais.set(id, new Set([...contagem].filter(([, n]) => principal(n)).map(([uf]) => uf)));
   }
   const aceitas = new Set(LIGACOES_DE_OUTRA_UF.map((l) => `${l.distribuidora}\u0000${l.ibge}`));

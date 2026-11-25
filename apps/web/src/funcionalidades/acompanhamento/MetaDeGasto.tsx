@@ -229,9 +229,9 @@ function ResultadoDaMeta({ situacao: s, metaReais, dados, aoUsar }: { situacao: 
         <>
           <h4 className="mt-5 font-extrabold">{cabecalhoDasDicas(s.passos.length, s.chegaLa)}</h4>
           <ul className="mt-2 divide-y divide-separador rounded-[var(--radius-controle)] bg-fundo">
-            {s.passos.map((p) => (
+            {s.passos.map((p, i) => (
               <li key={p.dicaId} className="numeros px-4 py-3">
-                <strong>{titulos.get(p.dicaId)?.titulo ?? "Dica"}</strong>: economiza <strong className="text-energia-forte">{reais(p.ganhoCentavos)}</strong>
+                <strong>{titulos.get(p.dicaId)?.titulo ?? "Dica"}</strong>: {i === 0 ? "economiza" : "economiza mais"} <strong className="text-energia-forte">{reais(p.ganhoCentavos)}</strong>
               </li>
             ))}
           </ul>
@@ -249,7 +249,7 @@ function ResultadoDaMeta({ situacao: s, metaReais, dados, aoUsar }: { situacao: 
             <p className="mt-3 numeros">
               {s.passos.length > 1 ? "Juntas, economizam" : "Ela economiza"} {completa ? "" : "cerca de "}
               {reais(s.totalCentavos)}.{completa && ` A sua conta fica em ${reais(s.contaDepoisCentavos)}.`}
-              {s.passos.length > 1 && " Já descontamos o que as dicas têm em comum, por isso não é a soma simples."}
+              {s.passos.length > 1 && " Cada valor é o que a dica economiza depois das de cima, por isso pode ser menor que na aba Dicas."}
             </p>
           )}
           <p className="mt-2">{temTroca ? "A troca pede comprar algo." : s.passos.length > 1 ? "Todas são sem gastar nada." : "É sem gastar nada."}</p>

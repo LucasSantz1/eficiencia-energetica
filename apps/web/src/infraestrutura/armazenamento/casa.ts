@@ -127,7 +127,7 @@ export const useCasa = create<EstadoDaCasa>()(
       },
       definirMeta: (reais) => {
         if (reais === undefined) return set({ metaMensal: undefined });
-        // O mesmo leitor da casa salva confere a faixa (R$ 1,00 a R$ 5.000,00, 2 casas).
+        // O mesmo leitor da casa salva confere a faixa (R$ 1,00 a R$ 5.000,00); as 2 casas, o formulário da meta.
         const { casa } = lerCasaSalva({ comodos: [], aparelhos: [], contas: [], leituras: [], plano: [], metaMensal: reais });
         if (casa.metaMensal !== undefined) set({ metaMensal: casa.metaMensal });
       },

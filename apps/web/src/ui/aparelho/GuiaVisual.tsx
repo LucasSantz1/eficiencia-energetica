@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { aplicarVariantes, formatarKwh, formatarReais, type Aparelho, type ItemCatalogo, type PrecoKwh } from "@ee/core";
 import { faixaDeConsumo, GUIAS_VISUAIS, NAO_SEI, reconhecer } from "@ee/core/reconhecer";
 import { Botao } from "@/ui/Botao";
@@ -33,10 +33,14 @@ export function GuiaVisual({
   const faixa = base ? faixaDeConsumo(catalogo, { ...base, quantidade: Math.max(1, base.quantidade) }, resultado) : undefined;
   const dinheiro = (kwh: number) => (preco && preco.valor > 0 ? formatarReais(kwh * preco.valor) : formatarKwh(kwh));
   const nome = aplicarVariantes(catalogo, resultado.escolhas).nome ?? catalogo.nome;
+  // O botão "Não sei qual é o meu" some quando as perguntas abrem: o foco vem para a primeira frase, e o leitor de tela
+  // começa daqui (qa, 25/11: o foco caía no <body>).
+  const inicio = useRef<HTMLParagraphElement>(null);
+  useEffect(() => inicio.current?.focus(), []);
 
   return (
     <div className="space-y-6 rounded-[var(--radius-controle)] bg-fundo p-4">
-      <p className="font-bold">Responda pelo que você vê. Se não souber alguma, toque em “Não sei”.</p>
+      <p ref={inicio} tabIndex={-1} className="font-bold">Responda pelo que você vê. Se não souber alguma, toque em “Não sei”.</p>
       {perguntas.map((p) => (
         <fieldset key={p.id} className="space-y-2">
           <legend className="font-bold">{p.pergunta}</legend>

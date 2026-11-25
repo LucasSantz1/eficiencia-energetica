@@ -34,7 +34,7 @@ const RESTRICOES_COMUNS = [
   { regex: "^/", message: "Sem caminho absoluto no import: use @/ (HIS-002, S1-e)." },
   { regex: "[?#]", message: "Sem sufixo ? ou # no import (HIS-002, S1-e)." },
   // Entradas próprias do core, para regra que só uma rota usa (ADR-001 revisto na HIS-103b): a lista fica aqui.
-  { regex: "^@ee/(?!core(/tarifa-social|/meta|/reconhecer)?$)", message: "Do monorepo, só o pacote @ee/core inteiro, @ee/core/tarifa-social ou @ee/core/meta, sem caminho interno (ADR-001)." },
+  { regex: "^@ee/(?!core(/tarifa-social|/meta|/reconhecer)?$)", message: "Do monorepo, só o pacote @ee/core inteiro, @ee/core/tarifa-social, @ee/core/meta ou @ee/core/reconhecer, sem caminho interno (ADR-001)." },
 ];
 
 /**

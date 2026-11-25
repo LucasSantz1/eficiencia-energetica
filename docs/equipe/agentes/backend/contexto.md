@@ -25,7 +25,7 @@
   - `base/sucessoes.json` (10 linhas, com ato e fonte) e `sucessoes.ts` (leitor que lança com a linha; V9 e V10).
   - D4: tarifa vencida há mais de 6 meses sai; de 1 dia a 6 meses, aviso. V7 conta os valores da vigência.
   - D1 (mesmo CNPJ), D2 (sucessão) e D3 (regra segura) em `montar.ts`; `substituidas` no `tarifas.json`.
-  - Duas barreiras: `conferirCoerencia` (V1–V4, V7–V10), que nunca passa com `--forcar`; `validar` (inclui V5 e V6),
+  - Duas barreiras: `conferirCoerencia` (V1–V4, V7–V11), que nunca passa com `--forcar`; `validar` (inclui V5 e V6),
     que passa.
   - `pnpm dados:diagnosticar` e `diagnosticar-dados.yml`: o passo 0, só leitura.
   - Core: `acharDistribuidora`, `distribuidorasDaCidade` e `trocaDeDistribuidora`.

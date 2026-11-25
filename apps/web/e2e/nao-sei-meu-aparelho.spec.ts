@@ -43,3 +43,23 @@ test("chuveiro: sem pergunta que diga a potência, mostra a faixa toda e onde ol
   await expect(page.getByText(/^Fica entre R\$ [\d,]+ e R\$ [\d,]+ por mês\./)).toBeVisible();
   await expect(page.getByText(/gravado no próprio chuveiro/)).toBeVisible();
 });
+
+test("sem internet na hora de abrir as perguntas: aviso no lugar delas, e 'Tentar de novo' abre quando a internet volta", async ({ page, errosEsperados }) => {
+  // O navegador reclama no console de cada arquivo que não chegou (o Turbopack tenta 2 vezes), e o React registra o erro
+  // que a barreira segurou.
+  errosEsperados.push(/Failed to load resource: net::ERR_INTERNET_DISCONNECTED/, /ChunkLoadError: Failed to load chunk/);
+  await semearCasa(page.context(), { ...lerFixture("casa-v2.json"), version: 3 });
+  await page.goto("/casa/comodos");
+  const linha = page.locator("li").filter({ has: page.getByText("Geladeira de 1 porta", { exact: true }) }).first();
+  await linha.getByRole("button", { name: /Escolher o tipo/ }).click();
+
+  // A tela já carregou; daqui em diante nenhum arquivo .js novo chega (o pedaço das perguntas é baixado só agora).
+  await page.route("**/*.js", (rota) => rota.abort("internetdisconnected"));
+  await linha.getByRole("button", { name: "Não sei qual é o meu" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Não deu para abrir as perguntas." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible(); // a tela dos cômodos continua de pé
+
+  await page.unroute("**/*.js");
+  await page.getByRole("button", { name: "Tentar de novo" }).click();
+  await expect(page.getByRole("radiogroup", { name: "Como são as portas?" })).toBeVisible();
+});
