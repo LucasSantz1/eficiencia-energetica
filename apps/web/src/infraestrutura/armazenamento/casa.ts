@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
@@ -240,15 +240,18 @@ export const useCasa = create<EstadoDaCasa>()(
   ),
 );
 
-/** true depois que os dados guardados no aparelho foram carregados (evita piscar a tela vazia). */
+const assinarCarga = (avisar: () => void) => useCasa.persist.onFinishHydration(avisar);
+const casaJaLida = () => useCasa.persist.hasHydrated();
+/** No servidor (e na hidratação) a casa ainda não foi lida: a primeira pintura é igual nos dois lados. */
+const casaNaoLidaNoServidor = () => false;
+
+/**
+ * true depois que os dados guardados no aparelho foram carregados (evita piscar a tela vazia). É
+ * `useSyncExternalStore`, e não estado copiado num efeito: numa navegação dentro do site, com a casa já lida,
+ * a tela vem certa no primeiro render, sem o esqueleto por um instante.
+ */
 export function useCasaCarregada(): boolean {
-  const [carregada, setCarregada] = useState(false);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- marca como carregada quando a casa já foi lida antes (HIS-109)
-    if (useCasa.persist.hasHydrated()) setCarregada(true);
-    return useCasa.persist.onFinishHydration(() => setCarregada(true));
-  }, []);
-  return carregada;
+  return useSyncExternalStore(assinarCarga, casaJaLida, casaNaoLidaNoServidor);
 }
 
 /** true quando há qualquer dado da pessoa guardado no aparelho, lido ou não: é quando "Apagar tudo" precisa aparecer. */

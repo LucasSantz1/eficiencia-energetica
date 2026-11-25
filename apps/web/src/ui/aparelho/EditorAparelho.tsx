@@ -1,7 +1,7 @@
 "use client";
 
 import { CircleHelp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { consumoMensalKwh, formatarKwh, formatarReais, itemDoCatalogo, LIMITES, LIMITES_DE_TEXTO, type Aparelho, type Comodo, type PrecoKwh } from "@ee/core";
 import { Botao } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
@@ -50,13 +50,16 @@ export function EditorAparelho({
   const potencia = useCampoNumerico({ faixa: LIMITES.potenciaW, casas: 0, obrigatorio: true, mensagens: mensagensDaPotencia(), inicial: aparelho?.potenciaW || undefined, chave: aparelho });
   const etiqueta = useCampoNumerico({ faixa: LIMITES.kwhMesInformado, casas: 2, obrigatorio: true, mensagens: mensagensDaEtiqueta(), inicial: aparelho?.kwhMesInformado, chave: aparelho });
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reinicia o rascunho quando muda o aparelho em edição (HIS-109)
+  // Outro aparelho em edição: o rascunho recomeça já nesta renderização, não num efeito depois dela (que desenharia a
+  // folha uma vez com o aparelho antigo). É o "guardar o valor da renderização anterior" da documentação do React.
+  const [emEdicao, setEmEdicao] = useState(aparelho);
+  if (emEdicao !== aparelho) {
+    setEmEdicao(aparelho);
     setR(aparelho);
     setSemEtiqueta(false);
     setConfirmarRemocao(false);
     setConferirNome(false);
-  }, [aparelho]);
+  }
 
   if (!r) return <Folha aberta={false} aoFechar={aoFechar} titulo="">{null}</Folha>;
 

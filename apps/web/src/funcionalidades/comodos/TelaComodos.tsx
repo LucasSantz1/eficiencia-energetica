@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { agregarAparelhos, COMODOS_PADRAO, formatarKwh, formatarReais, itemDoCatalogo, LIMITES_DE_TEXTO, type Aparelho, type Comodo as TipoComodoCasa, type TipoComodo } from "@ee/core";
 import { useCasa, useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { useResumo } from "@/aplicacao/resumo";
@@ -25,7 +25,10 @@ import { ConteudoDoComodo } from "./ConteudoDoComodo";
 export function TelaComodos() {
   const { resumo, preco, comodos, aparelhos } = useResumo();
   const adicionarComodo = useCasa((s) => s.adicionarComodo);
-  const [visao, setVisao] = useState<"comodos" | "geral">("comodos");
+  // A visão que a pessoa tocou; antes disso, a do endereço (?visao=geral).
+  const [visaoEscolhida, setVisao] = useState<"comodos" | "geral">();
+  const visaoDoEndereco = useVisaoDoEndereco();
+  const visao = visaoEscolhida ?? visaoDoEndereco;
   const [seletorPara, setSeletorPara] = useState<string>();
   const [detalhes, setDetalhes] = useState<Aparelho>();
   const edicao = useEdicaoDeAparelho();
@@ -33,18 +36,12 @@ export function TelaComodos() {
   const [editandoComodo, setEditandoComodo] = useState<TipoComodoCasa>();
   const adicionarDoCatalogo = useCasa((s) => s.adicionarDoCatalogo);
 
-  // Abre direto no painel geral (?visao=geral) ou rola até o cômodo (#comodo-id).
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- lê ?visao da URL só depois da hidratação (HIS-109)
-    if (new URLSearchParams(window.location.search).get("visao") === "geral") setVisao("geral");
-  }, []);
-
   // No computador, um desenho por vez (lista + painel); no celular, a sanfona de sempre (HIS-112, L4).
   const telaLarga = useTelaLarga();
   const titulo = useRef<HTMLHeadingElement>(null);
   const ultimoFoco = useRef<Element>(null);
   // Ao cruzar os 1024 px (zoom) com o foco dentro do desenho que saiu, o foco cairia no body: leva ao h1. Só quando o
-  // elemento focado sumiu de fato, para nunca puxar o foco ao abrir a tela. Só lê o DOM e uma ref, sem copiar estado (HIS-109).
+  // elemento focado sumiu de fato, para nunca puxar o foco ao abrir a tela. Só lê o DOM e uma ref, sem copiar estado.
   useEffect(() => {
     if (document.activeElement === document.body && ultimoFoco.current?.isConnected === false) titulo.current?.focus();
   }, [telaLarga]);
@@ -148,14 +145,15 @@ function CartaoComodo({
   aoDetalhes: (a: Aparelho) => void;
   aoEditarNome: () => void;
 }) {
-  const [aberto, setAberto] = useState(abertoInicial);
+  // O que a pessoa tocou vale; antes disso, abre o primeiro cômodo e o do endereço (#comodo-id).
+  const [inicial] = useState(abertoInicial);
+  const [abertoEscolhido, setAberto] = useState<boolean>();
+  const doEndereco = useComodoDoEndereco(comodo.id);
+  const aberto = abertoEscolhido ?? (inicial || doEndereco);
 
+  // Só rola até o cômodo do endereço; não copia estado.
   useEffect(() => {
-    if (window.location.hash === `#comodo-${comodo.id}`) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- abre o cômodo do #comodo-id da URL só depois da hidratação (HIS-109)
-      setAberto(true);
-      document.getElementById(`comodo-${comodo.id}`)?.scrollIntoView({ block: "start" });
-    }
+    if (window.location.hash === `#comodo-${comodo.id}`) document.getElementById(`comodo-${comodo.id}`)?.scrollIntoView({ block: "start" });
   }, [comodo.id]);
 
   const icone = COMODOS_PADRAO.find((c) => c.tipo === comodo.tipo)?.icone;
@@ -167,7 +165,7 @@ function CartaoComodo({
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-energia-claro text-energia">
           <Icone nome={icone} className="size-6" />
         </span>
-        <button type="button" onClick={() => setAberto((v) => !v)} aria-expanded={aberto} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <button type="button" onClick={() => setAberto(!aberto)} aria-expanded={aberto} className="flex min-w-0 flex-1 items-center gap-3 text-left">
           <span className="min-w-0 flex-1">
             <span id={`titulo-${comodo.id}`} className="block truncate text-xl font-extrabold">
               {comodo.nome}
@@ -304,16 +302,18 @@ function NovoComodo({ aberto, aoFechar, aoCriar }: { aberto: boolean; aoFechar: 
 function EditarComodo({ comodo, aoFechar, quantidade }: { comodo?: TipoComodoCasa; aoFechar: () => void; quantidade: number }) {
   const renomear = useCasa((s) => s.renomearComodo);
   const remover = useCasa((s) => s.removerComodo);
-  const [nome, setNome] = useState("");
+  const [nome, setNome] = useState(comodo?.nome ?? "");
   const [confirmar, setConfirmar] = useState(false);
   // T5 do nome vazio: aparece ao sair do campo ou ao salvar, e some na tecla que dá nome de novo.
   const [conferirNome, setConferirNome] = useState(false);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reinicia o formulário quando muda o cômodo em edição (HIS-109)
+  // Outro cômodo em edição: o formulário recomeça já nesta renderização, sem efeito.
+  const [emEdicao, setEmEdicao] = useState(comodo);
+  if (emEdicao !== comodo) {
+    setEmEdicao(comodo);
     setNome(comodo?.nome ?? "");
     setConfirmar(false);
     setConferirNome(false);
-  }, [comodo]);
+  }
   const erroDoNome = conferirNome && !nome.trim() ? NOME_DO_COMODO_VAZIO : undefined;
 
   return (
@@ -377,4 +377,28 @@ function EditarComodo({ comodo, aoFechar, quantidade }: { comodo?: TipoComodoCas
       )}
     </Folha>
   );
+}
+
+/*
+ * O endereço só é lido no navegador e depois da hidratação (o servidor não sabe o ?visao nem o #comodo-id): o
+ * `useSyncExternalStore` usa o valor do servidor na hidratação e já renderiza de novo com o do endereço, sem estado
+ * copiado num efeito. O #comodo-id acompanha o `hashchange`.
+ */
+const semAssinatura = () => () => {};
+const lerVisaoDoEndereco = () => (new URLSearchParams(window.location.search).get("visao") === "geral" ? "geral" : "comodos");
+const visaoNoServidor = () => "comodos" as const;
+
+function useVisaoDoEndereco(): "comodos" | "geral" {
+  return useSyncExternalStore(semAssinatura, lerVisaoDoEndereco, visaoNoServidor);
+}
+
+function assinarEndereco(avisar: () => void): () => void {
+  window.addEventListener("hashchange", avisar);
+  return () => window.removeEventListener("hashchange", avisar);
+}
+const hashDoEndereco = () => window.location.hash;
+const hashNoServidor = () => "";
+
+function useComodoDoEndereco(id: string): boolean {
+  return useSyncExternalStore(assinarEndereco, hashDoEndereco, hashNoServidor) === `#comodo-${id}`;
 }

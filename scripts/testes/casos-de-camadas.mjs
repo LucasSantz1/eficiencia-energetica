@@ -212,7 +212,7 @@ const MATRIZ = [
 ];
 
 /** Script com o parser do TypeScript (B5): links, extensões, destino inexistente e comentários que mudam regra (C10). */
-const C10 = "comentário que muda regra do ESLint não é permitido (só o da HIS-109)";
+const C10 = "comentário que muda regra do ESLint não é permitido";
 const MOTIVO_HIS_109 = "-- lê ?visao da URL só depois da hidratação (HIS-109)";
 const SCRIPT_TS = [
   script("C4", "C4", {}, "link simbólico não é permitido", { links: [[`${SITE}/funcionalidades/exemplo/Tela.tsx`, `${SITE}/ui/Atalho.tsx`]] }),
@@ -230,7 +230,8 @@ const SCRIPT_TS = [
   script("seguranca-24", "seguranca-24", { [T]: '/* eslint no-restricted-imports: "off" */\nexport const a = 1;\n' }, C10),
   script("seguranca-25", "seguranca-25", { [T]: "export function f(e: HTMLElement, t: string) {\n  // eslint-disable-next-line no-restricted-syntax\n  e.innerHTML = t;\n}\n" }, C10),
   script("seguranca-26", "seguranca-26", { [T]: "// eslint-disable-next-line react-hooks/set-state-in-effect\nexport const a = 1;\n" }, C10),
-  script("controle-seguranca-26", "controle", { [T]: `// eslint-disable-next-line react-hooks/set-state-in-effect ${MOTIVO_HIS_109}\nexport const a = 1;\n` }, null),
+  // Era a única forma aceita até a HIS-109 levar esses comentários a 0; agora reprova como qualquer outra.
+  script("seguranca-26-com-motivo", "HIS-109", { [T]: `// eslint-disable-next-line react-hooks/set-state-in-effect ${MOTIVO_HIS_109}\nexport const a = 1;\n` }, C10),
   script("C10", "C10", { [UI_TSX]: "export function F() {\n  return (\n    <div>\n      {/* eslint-disable-next-line no-restricted-syntax */}\n      <p>x</p>\n    </div>\n  );\n}\n" }, C10),
   script("C10-global", "C10", { [T]: "/* global fetch */\nexport const a = 1;\n" }, C10),
   script("C10-mesma-linha", "C10", { [T]: "export const a = 1; // eslint-disable-line no-console\n" }, C10),
@@ -295,7 +296,7 @@ export const OBRIGATORIOS = [
   "permite-servidor-server-only", "permite-config-config", "permite-dominio-relativo",
   "nega-ui-servidor-node", "nega-server-only-fora", "nega-config-ui", "nega-config-core", "nega-core-caminho-interno", "nega-infraestrutura-aplicacao", "nega-pasta-antiga",
   "C4", "S1-d", "C5", "S1-c-script", "C9", "C9-relativo", "seguranca-14b",
-  "seguranca-22", "seguranca-23", "seguranca-24", "seguranca-25", "seguranca-26", "controle-seguranca-26",
+  "seguranca-22", "seguranca-23", "seguranca-24", "seguranca-25", "seguranca-26", "seguranca-26-com-motivo",
   "C10", "C10-global", "C10-mesma-linha", "C10-motivo-curto", "C10-his109-no-fim-da-linha", "controle-C10-texto",
   "C8", "C8-novoId", "C8-import-asterisco", "C8-export-asterisco", "C8-default-minuscula", "C8-reexporta-valor", "C8-varias-linhas",
   "controle-C8-import-type", "controle-C8-componente", "controle-C8-cliente",

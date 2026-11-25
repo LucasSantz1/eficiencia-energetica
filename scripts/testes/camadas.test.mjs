@@ -106,17 +106,15 @@ function listarComGit() {
   return saida.split("\n").filter((linha) => EXTENSOES.has(path.extname(linha)));
 }
 
-/** Da linha "Camadas: tudo certo (N arquivos; M comentário(s) da HIS-109)". */
+/** Da linha "Camadas: tudo certo (N arquivos)". */
 function lerResumoDoScript(saida) {
-  const casamento = /tudo certo \((\d+) arquivos; (\d+) comentário\(s\) da HIS-109\)/.exec(saida);
+  const casamento = /tudo certo \((\d+) arquivos\)/.exec(saida);
   assert.ok(casamento, `saída inesperada do script: ${saida}`);
-  return { arquivos: Number(casamento[1]), his109: Number(casamento[2]) };
+  return { arquivos: Number(casamento[1]) };
 }
 
-// Critério 11: os efeitos da HIS-109 só podem diminuir (a HIS-109 leva a 0). O teto é o número de hoje, para um
-// efeito novo nunca entrar por uma vaga (D17 do tech-lead). Com o bloco provisório fora (HIS-003a), o casa.ts ganhou o
-// seu comentário e o navegador.ts perdeu o dele (o useArquivo da 003a não copia estado no efeito): seguem 7.
-const TETO_HIS_109 = 7;
+// Critério 11: a HIS-109 levou a 0 os comentários que desligavam `react-hooks/set-state-in-effect`, e a exceção do C10
+// fechou: qualquer comentário que muda regra do ESLint reprova (caso "seguranca-26-com-motivo").
 
 const casosDoEslint = CASOS.filter((caso) => caso.verificador === "eslint");
 const casosDoScript = CASOS.filter((caso) => caso.verificador === "script");
@@ -180,7 +178,6 @@ const TESTES_DE_CONTROLE = {
     assert.equal(codigo, 0, erro);
     const resumo = lerResumoDoScript(saida);
     assert.equal(resumo.arquivos, doGit, "o script leu um número de arquivos diferente do git ls-files");
-    assert.ok(resumo.his109 <= TETO_HIS_109, `${resumo.his109} comentários da HIS-109; o teto é ${TETO_HIS_109}`);
     // Ab4: nenhuma pasta do site pode ficar fora do lint por um ignore solto.
     const resultados = await eslint.lintFiles(PASTAS_LIDAS);
     assert.equal(resultados.length, doGit, "o ESLint leu um número de arquivos diferente do git ls-files");

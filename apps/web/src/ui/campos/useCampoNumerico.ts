@@ -38,7 +38,7 @@ export interface CampoNumerico {
 
 /**
  * Estado de um campo de número (T5 e T6 da HIS-003b). Só estado derivado e handlers: nenhum efeito que copia estado
- * (a HIS-109 só desce). A troca de `chave` volta o campo ao `inicial` já na renderização, sem efeito.
+ * (a regra `set-state-in-effect` fica ligada, sem exceção). A troca de `chave` volta o campo ao `inicial` já na renderização, sem efeito.
  */
 export function useCampoNumerico({
   faixa,
