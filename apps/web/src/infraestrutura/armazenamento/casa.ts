@@ -79,6 +79,8 @@ interface EstadoDoAviso {
    * Mesmo sem casa em memória, "Apagar todos os meus dados" precisa aparecer (LGPD; D-3a-1 do qa).
    */
   textoGuardadoSemLer?: boolean;
+  /** A casa é de uma versão mais nova do site, e esta página é antiga (do modo sem internet): nada é gravado. */
+  versaoAntigaDoSite?: boolean;
 }
 
 type EstadoDaCasa = DadosCasa & EstadoDoAviso & Acoes;
@@ -217,7 +219,7 @@ export const useCasa = create<EstadoDaCasa>()(
         armazenamento.removeItem(NOME_DA_COPIA_ILEGIVEL);
         armazenamento.liberarGravacao();
         // As cópias de /dados do modo sem internet dizem o estado da cidade: saem junto (HIS-301).
-        void apagarDadosGuardadosOffline();
+        apagarDadosGuardadosOffline();
       },
       dispensarAvisoDaCasaSalva: () => set({ avisoDaCasaSalva: undefined }),
     }),
@@ -227,12 +229,14 @@ export const useCasa = create<EstadoDaCasa>()(
       storage: armazenamento,
       partialize: (estado): unknown => dadosSalvaveis(estado),
       // Da versão 1 para a 2 só entraram listas, e da 2 para a 3 só campos opcionais: o leitor aceita todas. Quem confere é o `merge`, que roda sempre.
+      // Versão salva MAIOR que esta (página antiga do modo sem internet): o armazenamento trava a gravação antes daqui,
+      // e o zustand não consegue regravar no formato antigo (A1 da seguranca). Mudar VERSAO_DA_CASA conta com isso.
       migrate: (salvo) => salvo,
       merge: (salvo, atual) => {
         const { casa, aviso } = lerCasaNaHidratacao(salvo, armazenamento);
         const textoGuardadoSemLer = armazenamento.gravacaoTravada() || armazenamento.existe(NOME_DA_COPIA_ILEGIVEL);
         // `residencia` sempre presente na troca, para uma casa sem cidade não herdar a do estado atual.
-        return { ...atual, residencia: casa.residencia, ...casa, avisoDaCasaSalva: aviso, textoGuardadoSemLer };
+        return { ...atual, residencia: casa.residencia, ...casa, avisoDaCasaSalva: aviso, textoGuardadoSemLer, versaoAntigaDoSite: armazenamento.casaDeVersaoMaisNova() };
       },
       // Existe aviso exatamente quando algo saiu: só então a versão limpa é regravada, e o aviso não volta (T1).
       // Com a gravação travada (leitor falhou), o setItem não grava nada.

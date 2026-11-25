@@ -128,6 +128,17 @@ export default defineConfig([
     },
   },
   { name: "projeto/site", files: [`${SITE}/**/*.${EXTENSOES}`], rules: { "no-restricted-syntax": ["error", ...SINTAXE_PROIBIDA] } },
+  {
+    // M2 da seguranca (Sprint 3): o public/sw.js vê todo pedido do site e não passa pelo verificar-camadas. Aqui ele tem
+    // a mesma sintaxe proibida do site, sem importScripts (código de fora dentro do service worker) e sem comentário
+    // que desliga regra (o C10 só lê src/).
+    name: "projeto/public",
+    files: ["apps/web/public/**/*.{js,mjs,cjs}"],
+    linterOptions: { noInlineConfig: true },
+    rules: {
+      "no-restricted-syntax": ["error", ...SINTAXE_PROIBIDA, { selector: "CallExpression[callee.name='importScripts'], CallExpression[callee.property.name='importScripts']", message: "Sem importScripts no service worker: todo o código dele fica no próprio arquivo (ADR-006)." }],
+    },
+  },
   ...camada("app", { camada: "app", regra: "regra 1", permitidos: ["app", "funcionalidades/[^/]+", "ui", "aplicacao", "config"], podeCore: false }),
   ...FUNCIONALIDADES.flatMap((nome) =>
     camada(`funcionalidades/${nome}`, { camada: `funcionalidades/${nome}`, regra: "regra 2", permitidos: [`funcionalidades/${nome}`, "ui", "aplicacao", "config"], podeCore: true }),

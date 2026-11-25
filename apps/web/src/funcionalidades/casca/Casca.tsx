@@ -38,6 +38,7 @@ export function Casca({ children }: { children: ReactNode }) {
   const { arquivo, preco } = useResumo();
   const troca = useDistribuidoraAtualizada();
   const semInternet = useSemInternet();
+  const versaoAntigaDoSite = useCasa((s) => s.versaoAntigaDoSite === true);
   const idade = useIdadeDosPrecos(arquivo?.geradoEm);
   const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
   // Ir para uma aba à direita desliza para a esquerda, e vice-versa.
@@ -84,6 +85,14 @@ export function Casca({ children }: { children: ReactNode }) {
         {arquivo?.origem === "exemplo" && (
           <div className="mb-6">
             <Aviso tom="faisca">Estes são dados de exemplo para testes. As tarifas reais da ANEEL entram na próxima atualização automática.</Aviso>
+          </div>
+        )}
+        {versaoAntigaDoSite && (
+          <div className="mb-6">
+            <Aviso tom="alerta">
+              <strong>Esta é uma cópia antiga do site, guardada para usar sem internet.</strong> Abra o site com internet para
+              atualizar. Até lá, o que você mudar aqui não fica salvo, para não estragar a sua casa.
+            </Aviso>
           </div>
         )}
         {/* Região sempre presente e vazia: o leitor de tela anuncia o aviso quando ele entra (HIS-003). */}

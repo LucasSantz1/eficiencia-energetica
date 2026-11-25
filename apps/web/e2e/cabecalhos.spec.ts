@@ -30,6 +30,8 @@ test("os 7 cabeçalhos de segurança, com o valor exato, em página, 404, /dados
     ["/casa", 200],
     ["/sobre", 200],
     ["/dados/tarifas.json", 200],
+    // O service worker vê todo pedido do site: ele também tem a CSP (M2 da seguranca, Sprint 3).
+    ["/sw.js", 200],
     [script ?? "/_next/static/sem-script.js", 200],
     ["/nao-existe", 404],
   ];
@@ -46,4 +48,9 @@ test("os 7 cabeçalhos de segurança, com o valor exato, em página, 404, /dados
 test("/dados continua com o cache de 1 hora (a regra própria não some com os cabeçalhos novos)", async ({ request }) => {
   const resposta = await request.get("/dados/tarifas.json");
   expect(resposta.headers()["cache-control"]).toBe("public, max-age=3600, stale-while-revalidate=86400");
+});
+
+test("/sw.js sem cópia no cache do navegador, para a versão nova chegar logo (HIS-301)", async ({ request }) => {
+  const resposta = await request.get("/sw.js");
+  expect(resposta.headers()["cache-control"]).toBe("no-cache, max-age=0");
 });
