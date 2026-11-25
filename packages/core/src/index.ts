@@ -17,3 +17,4 @@ export * from "./estados";
 export * from "./casa-salva";
 export * from "./arquivos-publicos";
 export * from "./idade-dos-dados";
+export * from "./conta";

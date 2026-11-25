@@ -5,6 +5,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   aparelhoInicial,
+  VERSAO_DO_FORMATO_DA_CASA,
   COMODOS_PADRAO,
   itemDoCatalogo,
   lerAparelho,
@@ -34,8 +35,8 @@ export type { DadosCasa };
 
 /** Mesma chave e mesma versão de antes: o formato salvo não muda na HIS-003a (D1, item 4). */
 const NOME_DA_CHAVE = "eficiencia-energetica:casa";
-/** 3: entraram a meta de gasto e a iluminação pública da conta (HIS-104), os dois opcionais. */
-const VERSAO_DA_CASA = 3;
+/** O número mora no core (`VERSAO_DO_FORMATO_DA_CASA`): o servidor da conta confere o mesmo (E4). */
+export const VERSAO_DA_CASA = VERSAO_DO_FORMATO_DA_CASA;
 /**
  * Cópia do texto da casa que o leitor não conseguiu abrir, guardada antes de um cadastro novo gravar por cima (D10, 2).
  * Fica só no aparelho, ninguém a lê hoje; serve para uma versão corrigida do leitor recuperar a casa. Sai com
@@ -69,6 +70,11 @@ interface Acoes {
   definirMeta: (reais: number | undefined) => void;
   apagarTudo: () => void;
   dispensarAvisoDaCasaSalva: () => void;
+  /**
+   * Troca a casa inteira pela que veio da conta (E4: outro aparelho, ou a escolha "usar a da conta"). Passa pelo mesmo
+   * leitor da casa salva; com a gravação travada (casa de versão mais nova), não troca nada.
+   */
+  trocarPelaCasaDaConta: (bruto: unknown) => void;
 }
 
 /** Fica só em memória (fora do `partialize`): só o tipo do aviso e números, nada do que saiu (T1). */
@@ -222,6 +228,11 @@ export const useCasa = create<EstadoDaCasa>()(
         apagarDadosGuardadosOffline();
       },
       dispensarAvisoDaCasaSalva: () => set({ avisoDaCasaSalva: undefined }),
+      trocarPelaCasaDaConta: (bruto) => {
+        if (armazenamento.gravacaoTravada()) return;
+        const { casa } = lerCasaSalva(bruto);
+        set({ residencia: casa.residencia, comodos: casa.comodos, aparelhos: casa.aparelhos, contas: casa.contas, leituras: casa.leituras, plano: casa.plano, metaMensal: casa.metaMensal });
+      },
     }),
     {
       name: NOME_DA_CHAVE,

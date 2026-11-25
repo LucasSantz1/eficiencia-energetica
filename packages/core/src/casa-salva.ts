@@ -13,6 +13,14 @@ import type { Aparelho, Beneficio, Comodo, ContaMensal, ContaReferencia, DadosCa
  */
 
 /** Quantos itens de cada tipo saíram. Só números: nenhum nome, valor ou id do que saiu. */
+
+/**
+ * Versão do formato da casa salva (no aparelho e na conta). 3: entraram a meta de gasto e a iluminação pública
+ * (HIS-104). Mudar este número exige a trava de versão mais nova do armazenamento (A1 da Sprint 3) e a do servidor
+ * (M4 do E4), para um código antigo nunca regravar uma casa nova no formato velho.
+ */
+export const VERSAO_DO_FORMATO_DA_CASA = 3;
+
 export interface ContagemDeDescartes {
   aparelhos: number;
   comodos: number;

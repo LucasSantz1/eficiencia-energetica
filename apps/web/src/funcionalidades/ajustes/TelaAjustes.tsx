@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { distribuidorasDaCidade, ehUf, ESTADOS, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type ContaReferencia, type Ligacao, type Municipio } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
+import { useConta } from "@/aplicacao/conta-estado";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
 import { apagarPreferenciaDeLeitura } from "@/aplicacao/leitura";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
@@ -19,6 +20,7 @@ import { ExemploDeConta } from "@/ui/conta/ExemploDeConta";
 import { useCamposDaConta, type CamposDaContaEstado } from "@/ui/conta/useCamposDaConta";
 import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
+import { SecaoConta } from "./SecaoConta";
 import { SecaoInstalar } from "./SecaoInstalar";
 import { SecaoLeitura } from "./SecaoLeitura";
 
@@ -192,6 +194,7 @@ export function TelaAjustes() {
         </Secao>
         <LinhaDaMeta />
         <SecaoLeitura />
+        <SecaoConta />
         <SecaoInstalar />
         <SeusDados />
       </div>
@@ -229,9 +232,15 @@ function SeusDados() {
   const router = useRouter();
   const apagarTudo = useCasa((s) => s.apagarTudo);
   const [confirmarApagar, setConfirmarApagar] = useState(false);
+  const comConta = useConta().tipo === "conectada";
+  const [erroDaConta, setErroDaConta] = useState<"sessao" | "falha">();
   return (
     <Secao titulo="Seus dados">
-      <p className="max-w-[56ch] text-tinta-suave">Tudo o que você cadastrou fica guardado só neste navegador. Se limpar os dados do navegador, as informações são apagadas.</p>
+      <p className="max-w-[56ch] text-tinta-suave">
+        {comConta
+          ? "O que você cadastrou fica neste navegador e na sua conta (para abrir em outro aparelho e para os links da família)."
+          : "O que você cadastrou fica guardado neste navegador. Se você criou uma conta, entre nela antes de apagar, para apagar também o que está lá."}
+      </p>
       <div className="mt-4">
         {!confirmarApagar ? (
           <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
@@ -239,10 +248,16 @@ function SeusDados() {
           </Botao>
         ) : (
           <div className="flex flex-wrap items-center gap-3">
-            <span className="font-bold">Apagar a casa e todos os aparelhos?</span>
+            <span className="font-bold">{comConta ? "Apagar a casa, todos os aparelhos, a sua conta e os links da família?" : "Apagar a casa e todos os aparelhos?"}</span>
             <Botao
               variante="perigo"
-              onClick={() => {
+              onClick={async () => {
+                // LGPD: com conta, "todos os meus dados" inclui o que está no servidor. Se o servidor não responder, nada
+                // é apagado no aparelho, para a pessoa poder tentar de novo sem achar que apagou tudo.
+                if (comConta) {
+                  const resposta = await (await import("./apagarComConta")).apagarConta();
+                  if (resposta.status !== 200) return setErroDaConta(resposta.status === 401 ? "sessao" : "falha");
+                }
                 apagarTudo();
                 // A escolha de leitura mora numa chave própria: "todos os meus dados" inclui ela (LGPD, HIS-102).
                 apagarPreferenciaDeLeitura();
@@ -256,6 +271,15 @@ function SeusDados() {
             </Botao>
           </div>
         )}
+        <div role="status" className="mt-3">
+          {erroDaConta && (
+            <Aviso tom="alerta" anunciar={false}>
+              {erroDaConta === "sessao"
+                ? "Você saiu da conta. Entre de novo para apagar também o que está nela. Nada foi apagado."
+                : "Não deu para apagar a conta agora. Confira a internet e tente de novo. Nada foi apagado."}
+            </Aviso>
+          )}
+        </div>
       </div>
       <p className="mt-6">
         <Link href="/sobre" className="font-bold text-energia underline underline-offset-4">

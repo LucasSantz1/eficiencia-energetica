@@ -11,6 +11,7 @@
     "lint": "eslint . --max-warnings 0 --cache --cache-location node_modules/.cache/eslint/",
     "test": "pnpm -r --if-present test && pnpm test:camadas",
     "test:camadas": "node --test --test-reporter=spec \"scripts/testes/**/*.test.mjs\"",
+    "test:banco": "bash scripts/testar-banco.sh",
     "camadas": "node scripts/verificar-camadas.mjs",
     "typecheck": "pnpm camadas && pnpm -r --if-present typecheck",
     "test:e2e": "pnpm --filter @ee/web test:e2e",

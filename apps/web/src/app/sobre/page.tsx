@@ -66,7 +66,18 @@ export default function Sobre() {
 
         <section className="space-y-3">
           <h2 className="text-2xl font-extrabold">Privacidade</h2>
-          <p>Não pedimos nome, CPF, e-mail nem endereço. O que você cadastra fica guardado apenas no seu navegador.</p>
+          <p>Não pedimos nome, CPF nem endereço. Sem conta, o que você cadastra fica guardado apenas no seu navegador e nada sai do seu aparelho.</p>
+          <p>
+            <strong>Conta (opcional).</strong> Se você criar uma conta, guardamos o seu e-mail e a sua casa: a cidade e a empresa de luz, o benefício
+            (Tarifa Social), quantas pessoas moram, os cômodos, os aparelhos, as contas de luz, as leituras do relógio, a meta e as dicas marcadas. Para quê:
+            abrir a casa em outro aparelho e mostrar a casa nos links que você mandar para a família. Onde: no Supabase, com os dados em São Paulo, e no
+            servidor do site (Vercel). Até quando: até você apagar. Em Minha casa, &quot;Apagar todos os meus dados&quot; apaga a conta, a casa guardada nela
+            e os links.
+          </p>
+          <p>
+            <strong>Link da família.</strong> Quem abre o link vê a cidade, a conta estimada, os cômodos, os aparelhos e as 3 últimas contas de luz. Não vê
+            o seu e-mail, quantas pessoas moram, a meta nem as leituras, e não muda nada. O link para de funcionar quando você o apaga.
+          </p>
         </section>
 
         <p>

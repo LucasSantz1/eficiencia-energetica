@@ -24,7 +24,7 @@ export const PORQUE_PERGUNTAMOS = {
 } satisfies Record<string, { titulo: string; texto: string }>;
 
 /** Linha fixa embaixo de todo texto do painel (redação da seguranca: o site busca /dados, mas nada sobre a casa sai). */
-export const NADA_SAI_DA_CASA = "Suas respostas ficam só neste aparelho. Não enviamos nada sobre a sua casa.";
+export const NADA_SAI_DA_CASA = "Suas respostas ficam neste aparelho. Só vão para a internet se você criar uma conta e concordar.";
 
 type PassoComTexto = Exclude<keyof typeof PORQUE_PERGUNTAMOS, "comodo"> | `comodo:${number}`;
 

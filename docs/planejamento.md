@@ -137,11 +137,12 @@ Critérios gerais da E0: nenhuma mudança visível para quem usa (exceto a tela 
 | ID | História | Papéis | Tam. |
 | --- | --- | --- | --- |
 | HIS-401 | Supabase: projeto, migrações, tabelas espelhando `@ee/core`, RLS em todas, testes de RLS | backend, seguranca | G |
-| HIS-402 | Conta opcional sem senha (link mágico e Google), com explicação clara de para que serve | backend, ux, frontend | M |
+| HIS-402 | Conta opcional com e-mail e senha, confirmada por link no e-mail (escolha do dono em 25/11; antes: link mágico e Google), com explicação clara de para que serve | backend, ux, frontend | M |
 | HIS-403 | Sincronização: enviar os dados locais na criação da conta e manter sincronizado entre aparelhos | backend, frontend | G |
 | HIS-404 | LGPD: exportar meus dados (JSON), apagar tudo (local e servidor), política de privacidade simples | seguranca, backend, documentacao | M |
 | HIS-405 | Métricas anônimas opcionais (contagens agregadas, sem identificador, só com "sim") | backend, seguranca | M |
 | HIS-406 | Lembretes por Web Push: "registre a conta deste mês" e "a bandeira mudou" (opt-in) | backend, frontend | M |
+| HIS-407 | Link de convidado só de leitura: a família acompanha a conta da casa por um link que o dono cria e apaga quando quiser (pedido do dono, 25/11; ADR-007) | backend, seguranca, frontend | M |
 
 ### E5 · Ler a conta pela câmera
 

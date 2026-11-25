@@ -3,8 +3,9 @@
 import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ViewTransition, type ReactNode } from "react";
+import { lazy, Suspense, ViewTransition, type ReactNode } from "react";
 import { useAvisoDaCasaSalva, useCasa, useCasaCarregada, useDistribuidoraAtualizada, useHaDadosGuardados } from "@/aplicacao/casa";
+import { useConta } from "@/aplicacao/conta-estado";
 import { useIdadeDosPrecos } from "@/aplicacao/idade-dos-precos";
 import { useSemInternet } from "@/aplicacao/offline";
 import { useResumo } from "@/aplicacao/resumo";
@@ -12,11 +13,14 @@ import { useLeitura } from "@/aplicacao/useLeitura";
 import { Aviso } from "@/ui/Aviso";
 import { AvisoDaCasaSalva } from "@/ui/AvisoDaCasaSalva";
 import { BotaoLink } from "@/ui/Botao";
+import { IgnorarFalha } from "@/ui/IgnorarFalha";
 import { Interruptor } from "@/ui/Interruptor";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
 import { IR_ADIANTE, VOLTAR } from "@/ui/tiposDeTransicao";
 import { AvisoTrocaDistribuidora } from "./AvisoTrocaDistribuidora";
+
+const Sincronia = lazy(() => import("./Sincronia").then((m) => ({ default: m.Sincronia })));
 
 const ITENS: { href: string; rotulo: string; curto?: string; Icone: typeof Lightbulb }[] = [
   { href: "/casa", rotulo: "Acompanhamento", curto: "Acompanhar", Icone: ChartNoAxesColumn },
@@ -39,6 +43,8 @@ export function Casca({ children }: { children: ReactNode }) {
   const troca = useDistribuidoraAtualizada();
   const semInternet = useSemInternet();
   const versaoAntigaDoSite = useCasa((s) => s.versaoAntigaDoSite === true);
+  // Com conta (E4), a casa também vai para o servidor. Sem conta, a sincronização nem baixa.
+  const comConta = useConta().tipo === "conectada";
   const idade = useIdadeDosPrecos(arquivo?.geradoEm);
   const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
   // Ir para uma aba à direita desliza para a esquerda, e vice-versa.
@@ -94,6 +100,13 @@ export function Casca({ children }: { children: ReactNode }) {
               atualizar. Até lá, o que você mudar aqui não fica salvo, para não estragar a sua casa.
             </Aviso>
           </div>
+        )}
+        {comConta && (
+          <IgnorarFalha>
+            <Suspense fallback={null}>
+              <Sincronia carregada={carregada} />
+            </Suspense>
+          </IgnorarFalha>
         )}
         {/* Região sempre presente e vazia: o leitor de tela anuncia o aviso quando ele entra (HIS-003). */}
         <div role="status">
