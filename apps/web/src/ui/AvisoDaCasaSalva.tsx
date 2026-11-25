@@ -65,7 +65,7 @@ function Acao({ aviso, naTelaDaCidade }: { aviso: Aviso; naTelaDaCidade: boolean
   }
   const saiuAparelhoOuComodo = aviso.descartados.aparelhos > 0 || aviso.descartados.comodos > 0;
   return saiuAparelhoOuComodo ? (
-    <BotaoLink href="/casa/aparelhos" variante="secundario" largo className={classe}>
+    <BotaoLink href="/casa/comodos" variante="secundario" largo className={classe}>
       Ver meus aparelhos
     </BotaoLink>
   ) : null;

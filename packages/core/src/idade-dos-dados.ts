@@ -11,12 +11,22 @@
 export const DIAS_PARA_MOSTRAR_A_IDADE = 7;
 
 const MS_POR_DIA = 86_400_000;
+const FUSO = "America/Sao_Paulo";
 
-/** Dias inteiros entre a data dos preços e agora; `undefined` se a data não for uma data válida. Nunca negativo. */
+/** O dia do calendário em Brasília, como número de dias desde 1970 (para subtrair um do outro). */
+function diaEmBrasilia(instante: Date): number {
+  const partes = new Intl.DateTimeFormat("en-CA", { timeZone: FUSO, year: "numeric", month: "2-digit", day: "2-digit" }).format(instante);
+  return Date.parse(`${partes}T00:00:00Z`) / MS_POR_DIA;
+}
+
+/**
+ * Dias do calendário, em Brasília, entre a data dos preços e hoje (10/11 → 25/11 = 15, a qualquer hora do dia: QA da
+ * Sprint 3, D-S3-2). `undefined` se a data não for válida. Nunca negativo.
+ */
 export function diasDesde(dataIso: string, agora: Date): number | undefined {
   const quando = Date.parse(dataIso);
   if (Number.isNaN(quando)) return undefined;
-  return Math.max(0, Math.floor((agora.getTime() - quando) / MS_POR_DIA));
+  return Math.max(0, diaEmBrasilia(agora) - diaEmBrasilia(new Date(quando)));
 }
 
 export interface IdadeDosPrecos {

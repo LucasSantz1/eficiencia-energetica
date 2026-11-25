@@ -21,6 +21,12 @@ export interface ArmazenamentoSeguro extends PersistStorage<unknown, void> {
   copiarTextoUmaVez(origem: string, destino: string): void;
   /** Diz se há texto guardado na chave (sem ler o conteúdo). Não lança. */
   existe(nome: string): boolean;
+  /**
+   * true quando a casa foi salva por uma versão mais nova do site do que este código (ex.: página antiga guardada pelo
+   * modo sem internet, HIS-301, abrindo uma casa da versão 4). A gravação fica travada: regravar com o formato antigo
+   * apagaria o que a versão nova guardou (A1 da seguranca, 25/11).
+   */
+  casaDeVersaoMaisNova(): boolean;
 }
 
 /** O localStorage, ou `undefined` no servidor e quando o navegador o bloqueia (o acesso pode lançar `SecurityError`). */
@@ -54,6 +60,7 @@ function lerEnvelope(texto: string, versaoAtual: number): StorageValue<unknown> 
  */
 export function criarArmazenamentoSeguro(versaoAtual: number, obterArmazenamento: () => Storage | undefined = localStorageDoNavegador): ArmazenamentoSeguro {
   let travada = false;
+  let versaoMaisNova = false;
   return {
     getItem: (nome) => {
       const armazenamento = obterArmazenamento();
@@ -64,7 +71,13 @@ export function criarArmazenamentoSeguro(versaoAtual: number, obterArmazenamento
       } catch {
         return null;
       }
-      return texto === null ? null : lerEnvelope(texto, versaoAtual);
+      if (texto === null) return null;
+      const envelope = lerEnvelope(texto, versaoAtual);
+      if (envelope.version !== undefined && envelope.version > versaoAtual) {
+        versaoMaisNova = true;
+        travada = true;
+      }
+      return envelope;
     },
     setItem: (nome, valor) => {
       if (travada) return;
@@ -88,6 +101,7 @@ export function criarArmazenamentoSeguro(versaoAtual: number, obterArmazenamento
       travada = false;
     },
     gravacaoTravada: () => travada,
+    casaDeVersaoMaisNova: () => versaoMaisNova,
     existe: (nome) => {
       try {
         return obterArmazenamento()?.getItem(nome) != null;

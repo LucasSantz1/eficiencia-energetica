@@ -16,7 +16,7 @@ export function SecaoInstalar() {
         Usar sem internet
       </h2>
       <p className="max-w-[56ch] text-tinta-suave">
-        Depois de abrir o site uma vez com internet, ele funciona sem internet neste celular. A sua casa fica guardada aqui.
+        Depois de abrir o site uma vez com internet, ele funciona sem internet neste aparelho. A sua casa fica guardada aqui.
       </p>
       {instalado ? (
         <p className="mt-3 font-bold">Você já está usando o site como aplicativo.</p>

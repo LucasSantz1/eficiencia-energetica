@@ -14,10 +14,17 @@ export function registrarServicoOffline(): void {
  * "Apagar todos os meus dados" (LGPD): as cópias de /dados dizem de que estado é a cidade da pessoa (municipios/SP.json).
  * As páginas e os arquivos do site não dizem nada sobre ela e ficam.
  */
-export async function apagarDadosGuardadosOffline(): Promise<void> {
+export function apagarDadosGuardadosOffline(): void {
   if (typeof caches === "undefined") return;
-  const nomes = await caches.keys();
-  await Promise.all(nomes.filter((nome) => nome.startsWith("dados-")).map((nome) => caches.delete(nome)));
+  const apagar = () =>
+    caches
+      .keys()
+      .then((nomes) => Promise.all(nomes.filter((nome) => nome.startsWith("dados-")).map((nome) => caches.delete(nome))))
+      .catch(() => undefined);
+  void apagar();
+  // Um municipios/UF.json que ainda estava chegando pode recriar a cópia logo depois: uma segunda passada (B3 da
+  // seguranca). O cache HTTP do próprio navegador o JavaScript não alcança; ele expira sozinho (Cache-Control de /dados).
+  setTimeout(() => void apagar(), 3000);
 }
 
 /* Conexão: `navigator.onLine` e os eventos `online`/`offline`. */
