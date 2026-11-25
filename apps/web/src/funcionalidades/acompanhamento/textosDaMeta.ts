@@ -49,7 +49,11 @@ export function tituloDaMeta(s: SituacaoDaMeta): string {
 export function linhaDaConfianca(confianca: Confianca, contaCentavos: number): string | undefined {
   if (confianca.tipo === "completa") return undefined;
   if (confianca.motivo === "sem-conta") return "Esse valor é só da energia, sem impostos. Coloque sua última conta de luz para ver o valor completo.";
-  return `Os aparelhos que você colocou somam ${reais(contaCentavos)}, mas sua última conta foi ${reais(confianca.contaInformadaCentavos)}. Pode faltar algum aparelho.`;
+  const inicio = `Os aparelhos que você colocou somam ${reais(contaCentavos)}, mas sua última conta foi ${reais(confianca.contaInformadaCentavos)}.`;
+  // Nos dois sentidos a estimativa não explica a conta, mas o conselho muda (qa, 25/11).
+  return contaCentavos < confianca.contaInformadaCentavos
+    ? `${inicio} Pode faltar algum aparelho.`
+    : `${inicio} Confira o tempo de uso: algum aparelho pode estar com horas a mais.`;
 }
 
 export function linhaDoDentro(contaCentavos: number, folgaCentavos: number, metaCentavos: number, confianca: Confianca): string {

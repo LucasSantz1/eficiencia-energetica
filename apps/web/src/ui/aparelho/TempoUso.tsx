@@ -1,14 +1,30 @@
 "use client";
 
-import { lazy, Suspense, useState } from "react";
+import { Suspense, use, useEffect, useRef, useState, type ComponentProps } from "react";
 import { aplicarVariantes, formatarTempo, FREQUENCIAS, frequenciaMaisProxima, TEMPOS_RAPIDOS, type Aparelho, type ItemCatalogo, type PrecoKwh } from "@ee/core";
 import { Contador } from "@/ui/Contador";
 import { Pilulas } from "@/ui/Pilulas";
-import type { BaseDoGuia } from "./GuiaVisual";
+import { FalhaAoAbrirGuia } from "./FalhaAoAbrirGuia";
+import type { BaseDoGuia, GuiaVisual as TipoDoGuia } from "./GuiaVisual";
 
 // As perguntas e os desenhos do "não sei qual é o meu" só baixam quando a pessoa toca no botão (~4 kB a menos em cada
 // tela com aparelho). O import() é de um arquivo da mesma pasta, o único caso que a regra de lint aceita.
-const GuiaVisual = lazy(() => import("./GuiaVisual").then((m) => ({ default: m.GuiaVisual })));
+// A promessa fica guardada, mesmo se falhar: o React renderiza de novo depois de um erro, e uma promessa nova a cada
+// renderização baixaria o arquivo sem parar. Só o "Tentar de novo" a esquece e baixa outra vez (o `lazy` guardaria a
+// falha para sempre, sem essa saída).
+let guiaBaixando: Promise<{ GuiaVisual: typeof TipoDoGuia }> | undefined;
+function baixarGuia() {
+  guiaBaixando ??= import("./GuiaVisual");
+  return guiaBaixando;
+}
+function esquecerGuiaQueFalhou() {
+  guiaBaixando = undefined;
+}
+
+function GuiaBaixado(props: ComponentProps<typeof TipoDoGuia>) {
+  const { GuiaVisual } = use(baixarGuia());
+  return <GuiaVisual {...props} />;
+}
 
 /**
  * Perguntas sobre o modelo do aparelho (tipo, tamanho, idade...). Cada resposta recalcula
@@ -29,29 +45,47 @@ export function SeletorVariantes({
   preco?: PrecoKwh;
 }) {
   const [guia, setGuia] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
+  // Ao fechar as perguntas ("Usar este" ou "Voltar"), o foco volta ao botão que as abriu, e não cai no <body> (qa, 25/11).
+  const botaoNaoSei = useRef<HTMLButtonElement>(null);
+  const fechou = useRef(false);
+  const fecharGuia = () => {
+    fechou.current = true;
+    setGuia(false);
+  };
+  useEffect(() => {
+    if (guia || !fechou.current) return;
+    fechou.current = false;
+    botaoNaoSei.current?.focus();
+  }, [guia]);
   if (!catalogo.variantes?.length) return null;
   const atuais = { ...Object.fromEntries(catalogo.variantes.map((v) => [v.id, v.padrao])), ...escolhas };
   if (guia) {
     return (
-      <Suspense fallback={<p className="rounded-[var(--radius-controle)] bg-fundo p-4 text-tinta-suave">Carregando as perguntas…</p>}>
-      <GuiaVisual
-        catalogo={catalogo}
-        escolhas={escolhas}
-        base={base}
-        preco={preco}
-        aoUsar={(mudancas) => {
-          aoMudar(mudancas);
-          setGuia(false);
-        }}
-        aoVoltar={() => setGuia(false)}
-      />
-      </Suspense>
+      <FalhaAoAbrirGuia key={tentativa} aoTentarDeNovo={() => {
+          esquecerGuiaQueFalhou();
+          setTentativa((t) => t + 1);
+        }} aoVoltar={fecharGuia}>
+        <Suspense fallback={<p className="rounded-[var(--radius-controle)] bg-fundo p-4 text-tinta-suave">Carregando as perguntas…</p>}>
+          <GuiaBaixado
+            catalogo={catalogo}
+            escolhas={escolhas}
+            base={base}
+            preco={preco}
+            aoUsar={(mudancas) => {
+              aoMudar(mudancas);
+              fecharGuia();
+            }}
+            aoVoltar={fecharGuia}
+          />
+        </Suspense>
+      </FalhaAoAbrirGuia>
     );
   }
   return (
     <div className="space-y-4">
       {catalogo.guiaVisual && (
-        <button type="button" onClick={() => setGuia(true)} className="flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-controle)] bg-energia-claro px-4 py-2 text-left font-bold text-energia-forte">
+        <button ref={botaoNaoSei} type="button" onClick={() => setGuia(true)} className="flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-controle)] bg-energia-claro px-4 py-2 text-left font-bold text-energia-forte">
           <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-papel text-lg">?</span>
           Não sei qual é o meu
         </button>

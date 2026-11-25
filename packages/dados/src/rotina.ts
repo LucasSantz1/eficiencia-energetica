@@ -123,7 +123,7 @@ export async function executarAtualizacao(o: OpcoesDaAtualizacao): Promise<{ cod
   if (coerencia.length > 0) {
     registrarErro("\nA conferência de coerência encontrou problemas (número errado ou contrato quebrado):");
     for (const e of coerencia) registrarErro(umaLinha(`  ✗ ${e}`));
-    registrarErro("\nNada foi gravado. Estas regras (V1–V4, V7–V10) não passam com --forcar.");
+    registrarErro("\nNada foi gravado. Estas regras (V1–V4, V7–V11) não passam com --forcar.");
     return { codigo: 1, gravou: false };
   }
   if (validacao.length > 0) {

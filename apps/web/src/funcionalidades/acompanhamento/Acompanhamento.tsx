@@ -1,7 +1,7 @@
 "use client";
 
 import { Gauge, Pencil, Plus, Receipt } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   alertaDaLeitura,
   competenciaAtual,
@@ -104,6 +104,15 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
   const ultimas = historico.slice(-12);
 
   const abrirNova = () => setEditando({ competencia: competenciaAtual(), sessao: {} });
+  // A primeira conta troca "Anotar conta" por "Anotar outra conta": a folha devolveria o foco a um botão que sumiu, e ele
+  // cairia no <body> (qa, 25/11). Depois de salvar, o foco vai para o botão novo.
+  const botaoOutraConta = useRef<HTMLButtonElement>(null);
+  const focarOutraConta = useRef(false);
+  useEffect(() => {
+    if (editando || !focarOutraConta.current) return;
+    focarOutraConta.current = false;
+    requestAnimationFrame(() => botaoOutraConta.current?.focus());
+  }, [editando]);
 
   return (
     <>
@@ -121,7 +130,7 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
           <Barras
             rotulo="Consumo das contas de luz por mês"
             unidade="kWh por mês"
-            barras={ultimas.map((c) => ({ id: c.id, rotulo: mesCurto(c.competencia), valor: c.kwh, detalhe: `${formatarCompetencia(c.competencia)}: ${formatarKwh(c.kwh)}, ${formatarReais(c.valor)} (${formatarReais(c.precoKwh)} por kWh)` }))}
+            barras={ultimas.map((c) => ({ id: c.id, rotulo: mesCurto(c.competencia), valor: c.kwh, detalhe: `${formatarCompetencia(c.competencia)}: ${formatarKwh(c.kwh)}, ${formatarReais(c.valor)}${c.precoKwh === undefined ? "" : ` (${formatarReais(c.precoKwh)} por kWh)`}` }))}
             referencia={estimativaKwhMes > 0 ? { valor: estimativaKwhMes, rotulo: `Estimativa: ${formatarKwh(estimativaKwhMes)}` } : undefined}
           />
           <NumerosDasContas contas={historico} estimativaKwhMes={estimativaKwhMes} />
@@ -131,7 +140,7 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
           <ul className="mt-2 divide-y divide-separador border-t border-separador">
             {[...historico].reverse().map((c) => (
               <li key={c.id} className="flex items-center gap-3 py-3">
-                <span className="flex-1 font-bold capitalize">{formatarCompetencia(c.competencia)}</span>
+                <span className="flex-1 font-bold first-letter:uppercase">{formatarCompetencia(c.competencia)}</span>
                 <span className="numeros text-right">
                   <span className="block font-extrabold">{formatarReais(c.valor)}</span>
                   <span className="block text-[0.9rem] text-tinta-suave">{formatarKwh(c.kwh)}</span>
@@ -147,7 +156,7 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
               </li>
             ))}
           </ul>
-          <Botao variante="secundario" className="mt-4" onClick={abrirNova}>
+          <Botao ref={botaoOutraConta} variante="secundario" className="mt-4" onClick={abrirNova}>
             <Plus className="size-5" aria-hidden /> Anotar outra conta
           </Botao>
           <ComparacaoConta ultima={historico.at(-1)!} anterior={historico.at(-2)} estimativaKwhMes={estimativaKwhMes} />
@@ -170,6 +179,7 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
                   const conta = camposDaConta.conferir();
                   if (!conta) return;
                   salvar({ id: editando.id, competencia: editando.competencia, ...conta });
+                  if (historico.length === 0) focarOutraConta.current = true;
                   setEditando(undefined);
                 }}
               >
@@ -211,7 +221,9 @@ function NumerosDasContas({ contas, estimativaKwhMes }: { contas: ContaMensal[];
   if (!media || !ultima) return null;
   const itens = [
     { rotulo: "Média por mês", valor: formatarReais(media.valorMes), detalhe: formatarKwh(media.kwhMes) },
-    { rotulo: "Preço médio", valor: formatarReais(media.precoKwh), detalhe: "por kWh, com impostos" },
+    media.precoKwh === undefined
+      ? { rotulo: "Preço médio", valor: "Sem consumo", detalhe: "as contas anotadas têm 0 kWh" }
+      : { rotulo: "Preço médio", valor: formatarReais(media.precoKwh), detalhe: "por kWh, com impostos" },
     { rotulo: "Última conta", valor: formatarReais(ultima.valor), detalhe: `${formatarKwh(ultima.kwh)}; a estimativa é ${formatarKwh(estimativaKwhMes)}` },
   ];
   return (
@@ -233,7 +245,10 @@ function ComparacaoConta({ ultima, anterior, estimativaKwhMes }: { ultima: Conta
     const dif = ultima.kwh - anterior.kwh;
     if (Math.abs(dif) >= 1) frases.push(`Em ${formatarCompetencia(ultima.competencia)} você gastou ${formatarKwh(Math.abs(dif))} ${dif > 0 ? "a mais" : "a menos"} que no mês anterior.`);
   }
-  if (estimativaKwhMes > 0) {
+  if (ultima.kwh === 0) {
+    // Comparar 0 kWh com a estimativa diria "o tempo de uso pode estar maior", e não é isso (qa, 25/11).
+    frases.push("Esta conta veio sem consumo (0 kWh). Com a casa fechada, paga-se só o mínimo da ligação e as taxas, por isso ela fica fora da comparação com a estimativa.");
+  } else if (estimativaKwhMes > 0) {
     const razao = ultima.kwh / estimativaKwhMes;
     if (razao > 1.25) frases.push("A conta real está bem acima da estimativa: talvez algum aparelho fique ligado mais tempo do que o cadastrado. Vale revisar o tempo de uso do chuveiro e do ar-condicionado.");
     else if (razao < 0.75) frases.push("A conta real está abaixo da estimativa: o tempo de uso de algum aparelho pode estar maior que o real.");

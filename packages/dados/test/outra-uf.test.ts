@@ -49,6 +49,23 @@ describe("V11: ligação com distribuidora de outro estado", () => {
     expect(erros).toEqual([expect.stringMatching(/^V11: Cidade da PB \(PB, IBGE 2500000\) aparece ligada à coop-nova/)]);
   });
 
+  it("cooperativa pequena: 4 cidades no RS e 1 código trocado na PB (20%) também para a rotina", () => {
+    const rs = Array.from({ length: 4 }, (_, i) => cidade(4300000 + i, `C${i}`, "RS", ["coop-pequena"]));
+    const erros = conferirOutraUf([...rs, cidade(2500000, "Cidade da PB", "PB", ["epb", "coop-pequena"])]);
+    expect(erros).toEqual([expect.stringMatching(/^V11: Cidade da PB \(PB, IBGE 2500000\) aparece ligada à coop-pequena/)]);
+  });
+
+  it("cooperativa de divisa: 2 cidades de cada lado são as duas UFs principais", () => {
+    const sc = [cidade(4200001, "A", "SC", ["coop-divisa"]), cidade(4200002, "B", "SC", ["coop-divisa"])];
+    const rs = [cidade(4300001, "C", "RS", ["coop-divisa"]), cidade(4300002, "D", "RS", ["coop-divisa"])];
+    expect(conferirOutraUf([...sc, ...rs])).toEqual([]);
+  });
+
+  it("distribuidora minúscula (2 cidades no RJ e 1 em MG, como a CERES): a cidade de MG é divisa, não para", () => {
+    const rj = [cidade(3300001, "A", "RJ", ["coop-minuscula"]), cidade(3300002, "B", "RJ", ["coop-minuscula"])];
+    expect(conferirOutraUf([...rj, cidade(3100001, "C", "MG", ["cemig-d", "coop-minuscula"])])).toEqual([]);
+  });
+
   it("aceita a ligação conferida como fronteira", () => {
     const sp = Array.from({ length: 40 }, (_, i) => cidade(3500000 + i, `C${i}`, "SP", ["cpfl-santa-cruz"]));
     expect(conferirOutraUf([...sp, cidade(4111803, "Jacarezinho", "PR", ["cpfl-santa-cruz"])])).toEqual([]);

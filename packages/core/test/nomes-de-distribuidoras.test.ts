@@ -4,7 +4,7 @@ import { nomeDaDistribuidora } from "../src";
 describe("nomeDaDistribuidora (HIS-205)", () => {
   it("usa o nome da conta quando ele é diferente da sigla", () => {
     expect(nomeDaDistribuidora("ELFSM")).toBe("Santa Maria");
-    expect(nomeDaDistribuidora("EFLUL")).toBe("Força e Luz Urussanga");
+    expect(nomeDaDistribuidora("EFLUL")).toBe("Força e Luz de Urussanga");
     expect(nomeDaDistribuidora("MUXENERGIA")).toBe("Mux Energia");
   });
   it("tira os sufixos da ANEEL que não aparecem na conta", () => {
