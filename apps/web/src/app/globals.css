@@ -76,6 +76,13 @@
     font-feature-settings: "tnum" 0;
     -webkit-font-smoothing: antialiased;
   }
+  /* Zoom de 200% num celular de 390 px dá 195 px de largura (HIS-107). Só nessa faixa estreita uma palavra longa pode
+     quebrar no meio ("distribui-dora") em vez de empurrar a tela para o lado; nas larguras comuns nada muda. */
+  @media (max-width: 22rem) {
+    body {
+      overflow-wrap: anywhere;
+    }
+  }
   :focus-visible {
     outline: 3px solid var(--color-faisca);
     outline-offset: 2px;
@@ -378,4 +385,13 @@ html[data-letra="maior"] .truncate {
   overflow: visible;
   white-space: normal;
   text-overflow: clip;
+}
+
+/* Mesma regra com zoom de 200% (HIS-107): na largura estreita o "..." esconderia o cômodo do aparelho; quebra a linha. */
+@media (max-width: 22rem) {
+  .truncate {
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
+  }
 }

@@ -55,7 +55,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
     <div className="min-h-dvh bg-papel">
       {/* Topo e abertura, em fundo noturno de largura total */}
       <div className="bg-noite text-white">
-        <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 pt-4 sm:px-8">
+        <header className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 pt-4 sm:px-8">
           <Marca />
           <nav aria-label="Página inicial" className="hidden items-center gap-7 font-bold text-white/80 md:flex">
             <a href="#como-funciona" className="hover:text-white">
@@ -72,9 +72,9 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
         </header>
         <AvisoDaCasaNoInicio />
 
-        <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pt-14 pb-16 sm:px-8 lg:min-h-[calc(92dvh-4.5rem)] lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pt-10">
+        <section className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] items-center gap-12 px-4 pt-14 pb-16 sm:px-8 lg:min-h-[calc(92dvh-4.5rem)] lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:pt-10">
           <div>
-            <h1 className="titulo-largo surgir text-[clamp(2.6rem,8.4vw,4.3rem)]" style={{ animationDelay: "80ms", animationDuration: "700ms" }}>
+            <h1 className="titulo-largo surgir text-[clamp(2.6rem,8.4vw,4.3rem)] break-words" style={{ animationDelay: "80ms", animationDuration: "700ms" }}>
               A conta de luz, cômodo por cômodo.
             </h1>
             <p className="surgir mt-7 max-w-[44ch] text-lg leading-relaxed text-white/80 sm:text-xl" style={{ animationDelay: "220ms" }}>
@@ -95,25 +95,25 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
           <h2 id="numeros" className="max-w-[24ch] text-[1.6rem] leading-tight font-extrabold tracking-tight sm:text-[2rem]">
             Dados oficiais, conferidos todos os dias
           </h2>
-          <dl className="mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+          <dl className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
             <Revelar className="border-t-4 border-tinta pt-4">
               <dt className="sr-only">Distribuidoras</dt>
-              <dd className="titulo-largo numeros text-[3.4rem]">{numeros ? <Contagem valor={numeros.distribuidoras} /> : "100+"}</dd>
+              <dd className="titulo-largo numeros text-[clamp(2.2rem,15vw,3.4rem)]">{numeros ? <Contagem valor={numeros.distribuidoras} /> : "100+"}</dd>
               <dd className="mt-2 text-tinta-suave">distribuidoras de energia com a tarifa residencial vigente</dd>
             </Revelar>
             <Revelar className="border-t-4 border-tinta pt-4" atraso={100}>
               <dt className="sr-only">Cidades</dt>
-              <dd className="titulo-largo numeros text-[3.4rem]">{numeros ? <Contagem valor={numeros.cidades} /> : "5.500+"}</dd>
+              <dd className="titulo-largo numeros text-[clamp(2.2rem,15vw,3.4rem)]">{numeros ? <Contagem valor={numeros.cidades} /> : "5.500+"}</dd>
               <dd className="mt-2 text-tinta-suave">cidades do Brasil já sabem qual empresa as atende</dd>
             </Revelar>
             <RevelarBandeira cor={infoBandeira?.cor}>
               <dt className="sr-only">Bandeira do mês</dt>
-              <dd className="titulo-largo text-[3.4rem]">{infoBandeira ? infoBandeira.nome.split(" ")[0] : "Bandeira"}</dd>
+              <dd className="titulo-largo text-[clamp(2.2rem,15vw,3.4rem)]">{infoBandeira ? infoBandeira.nome.split(" ")[0] : "Bandeira"}</dd>
               <dd className="mt-2 text-tinta-suave">{numeros?.bandeira ? `é a bandeira tarifária de ${formatarCompetencia(numeros.bandeira.competencia)}` : "do mês, direto da ANEEL"}</dd>
             </RevelarBandeira>
             <Revelar className="border-t-4 border-energia pt-4" atraso={300}>
               <dt className="sr-only">Tarifa Social</dt>
-              <dd className="titulo-largo numeros text-[3.4rem]">
+              <dd className="titulo-largo numeros text-[clamp(2.2rem,15vw,3.4rem)]">
                 <Contagem valor={80} sufixo=" kWh" />
               </dd>
               <dd className="mt-2 text-tinta-suave">de energia de graça por mês para famílias com Tarifa Social</dd>
@@ -124,7 +124,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
 
       {/* Simulador */}
       <section aria-labelledby="experimente" className="bg-fundo">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] items-center gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
           <Revelar>
             <h2 id="experimente" className="titulo-largo text-[clamp(2.2rem,5.5vw,3.6rem)]">
               Quanto custa um banho de 10 minutos?
@@ -154,7 +154,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
                 ["Conte os cômodos e o que tem em cada um", "Quartos, banheiro, cozinha… Cada cômodo já vem com os aparelhos comuns. É só dizer quantos tem: 2 TVs, 3 lâmpadas, 1 chuveiro."],
                 ["Acompanhe e economize", "Veja quanto cada cômodo e cada aparelho custa, anote suas contas de luz mês a mês e monte um plano com as dicas que mais economizam."],
               ].map(([titulo, texto], i) => (
-                <Revelar como="li" key={titulo} atraso={i * 120} className="grid grid-cols-[auto_1fr] gap-5">
+                <Revelar como="li" key={titulo} atraso={i * 120} className="grid grid-cols-[auto_minmax(0,1fr)] gap-5">
                   <span className="titulo-largo numeros text-[3.2rem] text-energia">{i + 1}</span>
                   <div className="pt-1">
                     <h3 className="text-2xl font-extrabold tracking-tight">{titulo}</h3>
@@ -184,7 +184,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
 
       {/* Tarifa Social: faixa de largura total */}
       <section id="tarifa-social" aria-labelledby="titulo-social" className="scroll-mt-4 bg-energia text-white">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:gap-20">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-12 px-4 py-20 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:gap-20">
           <Revelar>
             <h2 id="titulo-social" className="titulo-largo text-[clamp(2.2rem,5.5vw,3.6rem)]">
               Sua família pode pagar menos na conta de luz
@@ -228,7 +228,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
 
       {/* Garantias */}
       <section aria-label="Como o sistema cuida de você" className="border-b border-linha">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-10 px-4 py-16 sm:grid-cols-2 sm:px-8 lg:grid-cols-4">
           {[
             ["badge-check", "Feito com dados públicos", "Tarifas e bandeiras da ANEEL, a agência que regula a energia elétrica no Brasil."],
             ["plug-zap", "Seus dados ficam com você", "Nada sai do seu aparelho. Não pedimos nome, CPF, e-mail nem endereço."],
@@ -248,7 +248,7 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
 
       {/* Perguntas */}
       <section id="perguntas" aria-labelledby="titulo-perguntas" className="scroll-mt-4">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1fr_1.6fr] lg:gap-20">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1fr_1.6fr] lg:gap-20">
           <h2 id="titulo-perguntas" className="titulo-largo text-[clamp(2.2rem,5.5vw,3.6rem)]">
             Perguntas comuns
           </h2>

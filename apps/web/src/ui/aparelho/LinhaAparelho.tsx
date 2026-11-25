@@ -35,11 +35,11 @@ export function LinhaAparelho({
 
   return (
     <li className={`rounded-[var(--radius-controle)] border-2 px-3 py-3 transition-[background-color,border-color] duration-300 sm:px-4 ${ativo ? "border-linha bg-papel" : "border-transparent bg-papel/50"}`}>
-      <div className="flex items-center gap-2.5">
+      <div className="flex flex-wrap items-center gap-2.5">
         <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${ativo ? "bg-energia-claro text-energia" : "bg-fundo text-tinta-suave"}`}>
           <Icone nome={catalogo?.icone} className="size-6" />
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[7rem] flex-1">
           {aoAbrirDetalhes ? (
             <button type="button" onClick={aoAbrirDetalhes} className="block max-w-full text-left leading-snug font-bold [overflow-wrap:anywhere] underline-offset-4 hover:underline">
               {item.nome}

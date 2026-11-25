@@ -583,7 +583,7 @@ function AvisoDaCasaNoCadastro() {
 function Moldura({ children, progresso, lado }: { children: React.ReactNode; progresso?: React.ReactNode; lado?: React.ReactNode }) {
   return (
     <div className="mx-auto min-h-dvh max-w-2xl px-4 pt-4 pb-10 sm:px-6 lg:max-w-[75rem] lg:px-8">
-      <header className="flex items-center justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <Marca />
         <LetraMaior />
       </header>

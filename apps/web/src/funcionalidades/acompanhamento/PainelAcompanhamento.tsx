@@ -91,8 +91,8 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
     <div className={`space-y-10 lg:grid lg:grid-cols-[minmax(0,1fr)_23.5rem] lg:gap-8 lg:space-y-0 ${areas}`}>
       {/* Resumo em grade (pedido do responsável, 24/11): a conta grande e quatro blocos curtos; o detalhe de cada um fica
           na tela dele ou numa folha. No celular, 2 colunas; no computador, a conta à esquerda e os blocos 2 × 2 à direita. */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:[grid-area:resumo]">
-        <section aria-labelledby="titulo-conta" className="surgir col-span-2 rounded-[var(--radius-cartao)] bg-papel px-5 py-5 lg:row-span-2 lg:px-7 lg:py-6">
+      <div className="grid grid-cols-1 gap-3 min-[22rem]:grid-cols-2 lg:grid-cols-4 lg:[grid-area:resumo]">
+        <section aria-labelledby="titulo-conta" className="surgir rounded-[var(--radius-cartao)] bg-papel px-5 py-5 min-[22rem]:col-span-2 lg:row-span-2 lg:px-7 lg:py-6">
           <h1 id="titulo-conta" className="flex items-center gap-1.5 text-[0.95rem] font-bold text-energia">
             <Zap className="size-[1.125rem]" aria-hidden /> Sua conta estimada por mês
           </h1>
@@ -287,7 +287,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
                         visível que o axe junta sem espaço; sem eles, "Banheiro" e "41%" viram uma palavra só. */}
                     <span className="flex items-center gap-2">
                       <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-5 text-tinta-suave" />
-                      <span className="flex-1 truncate font-bold">
+                      <span className="min-w-0 flex-1 truncate font-bold">
                         {aparelho.quantidade > 1 && <span className="numeros">{quantidade}</span>}
                         {aparelho.nome}
                         <span className="font-normal text-tinta-suave"> em {nomeComodo}</span>

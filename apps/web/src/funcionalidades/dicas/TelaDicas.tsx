@@ -162,7 +162,7 @@ function CartaoDica({ dica, marcada, aoAlternar, onde, indice }: { dica: Dica; m
         </p>
       </details>
 
-      <div className="mt-3 flex items-center justify-between gap-3 border-t border-separador pt-3 lg:mt-auto">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-separador pt-3 lg:mt-auto">
         <span className={`rounded-full px-2.5 py-1 text-[0.85rem] font-bold ${troca ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia-forte"}`}>
           {troca ? "Precisa comprar algo" : "Não custa nada"}
         </span>
