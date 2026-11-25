@@ -65,7 +65,7 @@ export const NOMES_COMERCIAIS: Readonly<Record<string, string>> = {
   // Força Santa Maria S/A (A Tribuna, 11/04/2025) e notícias da ANEEL sobre o reajuste "da Santa Maria" (Cenário
   // Energia, 17/09/2025); Empresa Força e Luz de Urussanga Ltda (EMIS); "Dcelt Energia" (NSC Total).
   ELFSM: "Santa Maria",
-  EFLUL: "Força e Luz Urussanga",
+  EFLUL: "Força e Luz de Urussanga",
   DCELT: "Dcelt Energia",
   // Só a grafia: a sigla da ANEEL junta as palavras ou leva a UF; a conta mostra assim.
   MUXENERGIA: "Mux Energia",

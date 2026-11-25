@@ -43,6 +43,26 @@ describe("detalharConta (HIS-201)", () => {
     expect(s).toBe(d.totalCentavos);
   });
 
+  it("Tarifa Social com consumo mínimo (casos C7 do dominio-energia): até 80 kWh não paga nada; acima, o mínimo volta", () => {
+    const social = (ligacao: Res["ligacao"]): Res => ({ beneficio: "tarifa-social", ligacao });
+    const casos: [Res["ligacao"], number, number, boolean][] = [
+      ["trifasica", 70, 0, false],
+      ["trifasica", 90, 20, true],
+      ["bifasica", 85, 5, false],
+      ["monofasica", 20, 0, false],
+    ];
+    for (const [ligacao, kwh, cobrados, peloMinimo] of casos) {
+      const e = estimarConta(kwh, social(ligacao), daAneel);
+      expect([ligacao, kwh, e.kwhCobrados, e.cobradoPeloMinimo]).toEqual([ligacao, kwh, cobrados, peloMinimo]);
+      const { d, soma: s } = soma(kwh, social(ligacao), daAneel);
+      expect(s).toBe(d.totalCentavos);
+    }
+    // Trifásica com 90 kWh: 10 kWh até o mínimo em linha própria, e os 80 kWh isentos no desconto.
+    const { d } = soma(90, social("trifasica"), daAneel);
+    expect(d.linhas.find((l) => l.tipo === "minimo")?.kwh).toBe(10);
+    expect(d.totalCentavos).toBe(Math.round(20 * daAneel.valor * 100));
+  });
+
   it("arredondamento: as linhas sempre somam o total da tela, centavo a centavo", () => {
     for (const kwh of [33.333, 77.777, 101.005, 0.5]) {
       const { d, soma: s } = soma(kwh, mono, { ...daAneel, valor: 0.91237, adicionalBandeira: 0.04463 });

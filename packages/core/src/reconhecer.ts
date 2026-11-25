@@ -113,10 +113,13 @@ export const GUIAS_VISUAIS: Record<string, PerguntaVisual[]> = {
     {
       id: "tamanho",
       pergunta: "De que tamanho ela é?",
+      // Comparada com uma porta de dentro de casa (60 a 80 cm, medidas comerciais da NBR 15930), que todo mundo tem para
+      // olhar. Largura da tela 16:9 = polegadas × 2,54 × 0,87: 32" ≈ 71 cm, 43" ≈ 95 cm, 55" ≈ 122 cm, 65" ≈ 144 cm
+      // (dominio-energia, 25/11/2026: o "braço" variava demais de pessoa para pessoa).
       opcoes: [
-        { id: "pequena", rotulo: "Pequena", descricao: "Cabe em cima de uma cômoda", desenho: "tamanho-p", limita: { tamanho: ["ate-32"] } },
-        { id: "media", rotulo: "Média", descricao: "Mais ou menos um braço de largura", desenho: "tamanho-m", limita: { tamanho: ["40-43", "50-55"] } },
-        { id: "grande", rotulo: "Grande", descricao: "Mais larga que um braço aberto", desenho: "tamanho-g", limita: { tamanho: ["50-55", "65"] } },
+        { id: "pequena", rotulo: "Pequena", descricao: "Mais estreita que uma porta", desenho: "tamanho-p", limita: { tamanho: ["ate-32"] } },
+        { id: "media", rotulo: "Média", descricao: "Mais ou menos da largura de uma porta", desenho: "tamanho-m", limita: { tamanho: ["40-43", "50-55"] } },
+        { id: "grande", rotulo: "Grande", descricao: "Bem mais larga que uma porta", desenho: "tamanho-g", limita: { tamanho: ["50-55", "65"] } },
       ],
     },
   ],
