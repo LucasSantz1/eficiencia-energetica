@@ -100,7 +100,7 @@ export function Casca({ children }: { children: ReactNode }) {
           {semInternet && (
             <div className="mb-6">
               <Aviso anunciar={false} icone={<WifiOff className="size-5" aria-hidden />}>
-                <strong>Você está sem internet.</strong> O site continua funcionando com o que já está salvo neste celular.
+                <strong>Você está sem internet.</strong> O site continua funcionando com o que já está salvo neste aparelho.
               </Aviso>
             </div>
           )}

@@ -37,6 +37,11 @@ const TEMPO_MAXIMO_DA_REDE_MS = 4000;
 const ARQUIVO_NO_HTML = /\/_next\/static\/[A-Za-z0-9_\-./~%]+/g;
 /** Arquivos que um JS do Next carrega depois (`"static/chunks/x.js"`, ex.: as perguntas do "Não sei qual é o meu"). */
 const ARQUIVO_NO_JS = /["']static\/(?:chunks|media)\/[A-Za-z0-9_\-./~%]+["']/g;
+/**
+ * Fontes que o CSS cita (`url(../media/x.woff2)`). Só o pedaço "latin" (português), não latin-ext, cirílico etc.:
+ * os outros só baixam se a página tiver esses caracteres (QA da Sprint 3, D-S3-5: o título da / perdia a Archivo).
+ */
+const FONTE_NO_CSS = /url\(\.\.\/media\/([A-Za-z0-9_\-.~%]*-latin-(?!ext)[A-Za-z0-9_\-.~%]*\.woff2)\)/g;
 /** Teto de arquivos por página, contra um HTML estranho que cite milhares. */
 const MAXIMO_DE_ARQUIVOS = 300;
 
@@ -124,6 +129,10 @@ async function guardarArquivosDaPagina(html) {
           if (!podeGuardar(resposta)) return;
           await arquivos.put(caminho, resposta.clone());
         }
+        if (caminho.endsWith(".css")) {
+          for (const [, fonte] of (await resposta.text()).matchAll(FONTE_NO_CSS)) proximos.push(`/_next/static/media/${fonte}`);
+          return;
+        }
         if (!caminho.endsWith(".js")) return;
         for (const citado of (await resposta.text()).match(ARQUIVO_NO_JS) ?? []) proximos.push(`/_next/${citado.slice(1, -1)}`);
       }),
@@ -187,7 +196,7 @@ async function primeiroARede(evento, pedido, nomeDoCache, chave, aceitar = async
  * nada do endereço e não tem script; os cabeçalhos fecham o resto (B1 da seguranca).
  */
 function paginaSemInternet() {
-  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sem internet · Eficiência Energética</title><style>body{font-family:system-ui,sans-serif;background:#f2f2f7;color:#14213d;margin:0;padding:2rem 1rem;font-size:1.15rem;line-height:1.5}main{max-width:32rem;margin:0 auto}a{display:inline-block;margin-top:1rem;padding:.75rem 1.25rem;border-radius:.75rem;background:#0a7356;color:#fff;font-weight:700;text-decoration:none}</style></head><body><main><h1>Você está sem internet.</h1><p>Esta página ainda não tinha sido aberta neste celular. A sua casa continua salva.</p><a href="/casa">Abrir minha casa</a></main></body></html>`;
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sem internet · Eficiência Energética</title><style>body{font-family:system-ui,sans-serif;background:#f2f2f7;color:#14213d;margin:0;padding:2rem 1rem;font-size:1.15rem;line-height:1.5}main{max-width:32rem;margin:0 auto}a{display:inline-block;margin-top:1rem;padding:.75rem 1.25rem;border-radius:.75rem;background:#0a7356;color:#fff;font-weight:700;text-decoration:none}</style></head><body><main><h1>Você está sem internet.</h1><p>Esta página ainda não tinha sido aberta neste aparelho. A sua casa continua salva.</p><a href="/casa">Abrir minha casa</a></main></body></html>`;
   return new Response(html, {
     status: 503,
     headers: {

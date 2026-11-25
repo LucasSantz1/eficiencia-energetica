@@ -66,7 +66,7 @@ test("(b) potência -5 num aparelho: \"Tiramos 1 aparelho.\", o resto continua i
   await page.goto("/casa");
   await expect(aviso(page)).toContainText(T1A);
   await expect(aviso(page)).toContainText("Tiramos 1 aparelho. O resto da sua casa continua salvo.");
-  await expect(aviso(page).getByRole("link", { name: "Ver meus aparelhos" })).toHaveAttribute("href", "/casa/aparelhos");
+  await expect(aviso(page).getByRole("link", { name: "Ver meus aparelhos" })).toHaveAttribute("href", "/casa/comodos");
   await expect(titulo(page)).toHaveText("Sua conta estimada por mês");
   await info.attach("t1a", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
 
@@ -128,17 +128,26 @@ test("(d) version 3 válida, com chave extra e __proto__: sem aviso e o texto fi
   expect(await page.evaluate(() => "poluido" in Object.prototype), "o protótipo continua o normal").toBe(false);
 });
 
-for (const version of [1, 99]) {
-  test(`(d) version ${version} válida: sem aviso, o persist regrava na versão 3 com o mesmo conteúdo`, async ({ page, context }) => {
-    const casa = casaV2();
-    await semearCasa(context, { ...casa, version });
-    await page.goto("/casa");
-    await expect(titulo(page)).toHaveText("Sua conta estimada por mês");
-    await semAviso(page);
-    await expect.poll(async () => (await casaSalva(page))?.version).toBe(3);
-    expect(await casaSalva(page)).toEqual({ ...casa, version: 3 });
-  });
-}
+test("(d) version 1 válida: sem aviso, o persist regrava na versão 3 com o mesmo conteúdo", async ({ page, context }) => {
+  const casa = casaV2();
+  await semearCasa(context, { ...casa, version: 1 });
+  await page.goto("/casa");
+  await expect(titulo(page)).toHaveText("Sua conta estimada por mês");
+  await semAviso(page);
+  await expect.poll(async () => (await casaSalva(page))?.version).toBe(3);
+  expect(await casaSalva(page)).toEqual({ ...casa, version: 3 });
+});
+
+// Antes, a versão 99 era regravada como 3. Com o modo sem internet (HIS-301), uma página antiga guardada faria isso
+// com a casa de uma versão nova e apagaria os campos dela (A1 da seguranca): agora abre, avisa e não regrava.
+test("(d) version 99 válida: abre, avisa que esta cópia do site é antiga e nunca regrava", async ({ page, context }) => {
+  const casa = casaV2();
+  await semearCasa(context, { ...casa, version: 99 });
+  await page.goto("/casa");
+  await expect(titulo(page)).toHaveText("Sua conta estimada por mês");
+  await expect(page.getByText("Esta é uma cópia antiga do site, guardada para usar sem internet.")).toBeVisible();
+  expect(await casaSalva(page)).toEqual({ ...casa, version: 99 });
+});
 
 test("(e) 10 000 aparelhos: abre em menos de 5 s, ficam 500 e o aviso conta o resto", async ({ page, context }) => {
   const casa = casaV2();
