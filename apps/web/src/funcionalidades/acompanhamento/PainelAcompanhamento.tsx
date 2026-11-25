@@ -19,6 +19,7 @@ import { Folha } from "@/ui/Folha";
 import { Icone } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Acompanhamento } from "./Acompanhamento";
+import { ContaDetalhada } from "./ContaDetalhada";
 import { LevarResumo } from "./LevarResumo";
 import { MetaDeGasto } from "./MetaDeGasto";
 import { legendaDoBlocoDaMeta } from "./textosDaMeta";
@@ -118,9 +119,11 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           {/* O "como calculamos" fica fechado: quem quer saber abre, quem não quer não rola por ele. Sem JS. */}
           <details className="group mt-4 border-t border-separador pt-3 text-[0.98rem] text-tinta-suave">
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 font-bold text-energia [&::-webkit-details-marker]:hidden">
-              Como calculamos <ChevronRight className="size-5 transition-transform group-open:rotate-90" aria-hidden />
+              Conta detalhada <ChevronRight className="size-5 transition-transform group-open:rotate-90" aria-hidden />
             </summary>
             <div className="mt-1 space-y-2">
+              {/* HIS-201: a estimativa em linhas, como numa fatura; embaixo, de onde vem o preço. */}
+              <ContaDetalhada conta={conta} bandeira={bandeira?.bandeira} />
               {preco.origem === "conta" ? (
                 <p>Calculado com o preço do kWh da sua conta de luz ({formatarReais(preco.valor)}), que já inclui impostos.</p>
               ) : (

@@ -1,41 +1,41 @@
 {
-  "medidoNoCommit": "0072c58",
-  "decisao": "Modo 'não sei qual é o meu aparelho' (24/11): perguntas, desenhos e regras em @ee/core/reconhecer carregam sob demanda (React.lazy, ~4,2 kB gzip só ao tocar). No caminho crítico: +1,1 kB no /comecar (botão e marca guiaVisual no catálogo). O total com prefetch de / e /comecar sobe ~6 kB porque o Turbopack reparte os pedaços compartilhados; aceito, revisar na rodada final.",
+  "medidoNoCommit": "1f0c53c",
+  "decisao": "HIS-201 (conta detalhada, 25/11): linhas da fatura no cartão da conta (detalharConta no core + ContaDetalhada), +1,2 kB gzip na /casa. Aceito no modo rápido; rever na rodada final.",
   "rotas": {
     "/": {
-      "jsDoHtml": 173166,
-      "totalComPrefetch": 203873
+      "jsDoHtml": 173687,
+      "totalComPrefetch": 204414
     },
     "/comecar": {
-      "jsDoHtml": 190689,
-      "totalComPrefetch": 203873
+      "jsDoHtml": 191207,
+      "totalComPrefetch": 204414
     },
     "/casa": {
-      "jsDoHtml": 201249,
-      "totalComPrefetch": 276327
+      "jsDoHtml": 202487,
+      "totalComPrefetch": 277637
     },
     "/casa/comodos": {
-      "jsDoHtml": 190886,
-      "totalComPrefetch": 276327
+      "jsDoHtml": 191510,
+      "totalComPrefetch": 277637
     },
     "/casa/dicas": {
-      "jsDoHtml": 179659,
-      "totalComPrefetch": 276327
+      "jsDoHtml": 180248,
+      "totalComPrefetch": 277637
     },
     "/casa/ajustes": {
-      "jsDoHtml": 181526,
-      "totalComPrefetch": 276327
+      "jsDoHtml": 182118,
+      "totalComPrefetch": 277637
     },
     "/sobre": {
-      "jsDoHtml": 140244,
-      "totalComPrefetch": 177229
+      "jsDoHtml": 140246,
+      "totalComPrefetch": 177750
     },
     "/tarifa-social": {
-      "jsDoHtml": 166448,
-      "totalComPrefetch": 186404
+      "jsDoHtml": 166454,
+      "totalComPrefetch": 186929
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 249136
+      "totalComPrefetch": 250426
     }
   }
 }
