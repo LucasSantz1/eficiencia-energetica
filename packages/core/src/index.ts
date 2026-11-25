@@ -7,6 +7,7 @@ export * from "./bandeiras";
 export * from "./ids";
 export * from "./distribuidoras";
 export * from "./trocas";
+export * from "./correcoes-de-municipio";
 export * from "./comodos";
 export * from "./acompanhamento";
 export * from "./limites";

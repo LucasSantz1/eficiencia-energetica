@@ -1,5 +1,6 @@
-import type { ArquivoMunicipios, ArquivoTarifas, BandeiraMes, Distribuidora, Estado, Municipio } from "@ee/core";
+import { CODIGOS_TROCADOS, type ArquivoMunicipios, type ArquivoTarifas, type BandeiraMes, type Distribuidora, type Estado, type Municipio } from "@ee/core";
 import type { VinculoMunicipio } from "./aneel/municipios";
+import { CIDADES_PARA_UF_PRINCIPAL, LIGACOES_DE_OUTRA_UF, PARTE_PARA_UF_PRINCIPAL } from "./aneel/outra-uf";
 import type { AgenteDaTarifa, SelecaoDeTarifas, TarifaVencida, TarifaVigente } from "./aneel/tarifas";
 import { MESES_DE_TOLERANCIA_DA_TARIFA_VENCIDA } from "./aneel/tarifas";
 import { conferirSucessoesNaAneel, indexarSucessoes, seguirCadeia, type DadosDaAneelParaSucessoes, type Sucessao } from "./sucessoes";
@@ -234,6 +235,12 @@ export function montarArquivos(entrada: EntradaDaMontagem): Montagem {
     return { ibge: m.ibge, nome: m.nome, uf: m.uf, distribuidoras: [...ids] };
   });
 
+  // HIS-206: código de município trocado no IndQual (Nova Santa Rita PI × CERTAJA). A ligação vai para a cidade certa,
+  // de mesmo nome, e as UFs de cada distribuidora são contadas só depois disso.
+  moverCodigosTrocados(municipios);
+  ufsPorSigla.clear();
+  for (const m of municipios) for (const id of m.distribuidoras) ufsPorSigla.set(id, (ufsPorSigla.get(id) ?? new Set<string>()).add(m.uf));
+
   // Quando a cidade tem mais de uma distribuidora, a que atende mais cidades (a concessionária principal)
   // aparece primeiro; cooperativas locais vêm depois.
   const abrangencia = new Map<string, number>();
@@ -380,10 +387,12 @@ export interface ContextoDaCoerencia extends DadosDaAneelParaSucessoes {
  * - V4: a sucessora final de cada linha do `sucessoes.json` está publicada (e, pelo V1, dentro dos 6 meses);
  * - V7: a sucessora tem um só valor B1 na vigência;
  * - V8: `substituidas` com ids válidos, valores publicados, chaves não publicadas, sem cadeia, até 500 entradas;
- * - V9 e V10: a linha de sucessão bate com a ANEEL (empresa antiga sem tarifa vigente; siglas do CNPJ).
+ * - V9 e V10: a linha de sucessão bate com a ANEEL (empresa antiga sem tarifa vigente; siglas do CNPJ);
+ * - V11: nenhuma cidade ligada a uma distribuidora de outro estado sem estar conferida (HIS-206).
  */
 export function conferirCoerencia(m: Montagem, contexto: ContextoDaCoerencia): string[] {
   const erros: string[] = [];
+  erros.push(...conferirOutraUf(m.municipiosPorUF.flatMap((a) => a.municipios)));
   const publicadas = m.tarifas.distribuidoras;
   const ids = new Set(publicadas.map((d) => d.id));
 
@@ -510,4 +519,41 @@ function mesesAntes(competencia: string, meses: number): string {
 
 function arredondar(n: number): number {
   return Number(n.toFixed(6));
+}
+
+/** HIS-206: move a ligação do código trocado para a cidade certa. Se a ANEEL já corrigiu, não há nada a mover. */
+export function moverCodigosTrocados(municipios: { ibge: number; distribuidoras: string[] }[]): void {
+  const porIbge = new Map(municipios.map((m) => [m.ibge, m]));
+  for (const c of CODIGOS_TROCADOS) {
+    const publicado = porIbge.get(c.publicado);
+    if (!publicado?.distribuidoras.includes(c.distribuidora)) continue;
+    publicado.distribuidoras = publicado.distribuidoras.filter((id) => id !== c.distribuidora);
+    const correto = porIbge.get(c.correto);
+    if (correto && !correto.distribuidoras.includes(c.distribuidora)) correto.distribuidoras.push(c.distribuidora);
+  }
+}
+
+/**
+ * V11 (HIS-206): uma cidade ligada a uma distribuidora fora das UFs principais dela (veja `principal`) precisa estar
+ * conferida em `aneel/outra-uf.ts`.
+ */
+export function conferirOutraUf(municipios: readonly { ibge: number; nome: string; uf: string; distribuidoras: readonly string[] }[]): string[] {
+  const porUf = new Map<string, Map<string, number>>();
+  for (const m of municipios) for (const id of m.distribuidoras) porUf.set(id, (porUf.get(id) ?? new Map<string, number>()).set(m.uf, (porUf.get(id)?.get(m.uf) ?? 0) + 1));
+  const principais = new Map<string, Set<string>>();
+  for (const [id, contagem] of porUf) {
+    const maior = Math.max(...contagem.values());
+    const total = [...contagem.values()].reduce((a, b) => a + b, 0);
+    // UF principal: muitas cidades, ou uma parte grande das cidades da distribuidora (cooperativa pequena que atende
+    // 2 cidades em cada lado da divisa), ou a UF com mais cidades.
+    const principal = (n: number) => n >= CIDADES_PARA_UF_PRINCIPAL || n / total >= PARTE_PARA_UF_PRINCIPAL || n === maior;
+    principais.set(id, new Set([...contagem].filter(([, n]) => principal(n)).map(([uf]) => uf)));
+  }
+  const aceitas = new Set(LIGACOES_DE_OUTRA_UF.map((l) => `${l.distribuidora}\u0000${l.ibge}`));
+  const erros: string[] = [];
+  for (const m of municipios)
+    for (const id of m.distribuidoras)
+      if (!principais.get(id)?.has(m.uf) && !aceitas.has(`${id}\u0000${m.ibge}`))
+        erros.push(`V11: ${m.nome} (${m.uf}, IBGE ${m.ibge}) aparece ligada à ${id}, que atende outro estado. Confira no IndQual da ANEEL e registre em packages/dados/src/aneel/outra-uf.ts (fronteira) ou no CODIGOS_TROCADOS do core (código trocado).`);
+  return erros;
 }

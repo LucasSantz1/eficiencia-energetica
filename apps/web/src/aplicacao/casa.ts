@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { descreverTroca, trocaDeDistribuidora, type Aparelho, type AvisoDaCasaSalva, type Comodo, type TrocaDescrita } from "@ee/core";
+import { descreverTroca, trocaDeDistribuidora, trocaPorCodigoTrocado, type Aparelho, type AvisoDaCasaSalva, type Comodo, type TrocaDescrita } from "@ee/core";
 import { useCasa, useCasaCarregada } from "@/infraestrutura/armazenamento/casa";
 import { useTarifas } from "@/infraestrutura/dados-publicos/navegador";
 
@@ -55,17 +55,22 @@ export function useAvisoDaCasaSalva(): { aviso?: AvisoDaCasaSalva; dispensar: ()
  */
 export function useDistribuidoraAtualizada(): TrocaDescrita | undefined {
   const idSalvo = useCasa((s) => s.residencia?.distribuidoraId);
+  const ibge = useCasa((s) => s.residencia?.municipioIbge);
+  const cidade = useCasa((s) => s.residencia?.municipioNome);
   const atualizarResidencia = useCasa((s) => s.atualizarResidencia);
   const arquivo = useTarifas().dados;
   const [trocaDaVisita, setTrocaDaVisita] = useState<{ para: string; descrita: TrocaDescrita | undefined }>();
 
   // A troca é calculada no render (`trocaDeDistribuidora` é pura). Sem esperar o `useCasaCarregada`: o persist lê o
   // localStorage na hora, e antes disso `idSalvo` é `undefined`.
-  const troca = arquivo && idSalvo !== undefined ? trocaDeDistribuidora(arquivo, idSalvo) : undefined;
+  const renomeada = arquivo && idSalvo !== undefined ? trocaDeDistribuidora(arquivo, idSalvo) : undefined;
+  // HIS-206: a cidade estava ligada à distribuidora de outro estado (código trocado no IndQual da ANEEL).
+  const daCidade = arquivo && idSalvo !== undefined && ibge !== undefined && !renomeada ? trocaPorCodigoTrocado({ municipioIbge: ibge, distribuidoraId: idSalvo }) : undefined;
+  const troca = renomeada ?? daCidade;
   // O aviso da visita é guardado ajustando o estado no render, com guarda (padrão do React para "informação do render
   // anterior"), e não num efeito (D17-a da HIS-002b). Depois da regravação `troca` some, mas o aviso fica.
   if (arquivo && troca && trocaDaVisita?.para !== troca.para) {
-    setTrocaDaVisita({ para: troca.para, descrita: descreverTroca(arquivo, troca) });
+    setTrocaDaVisita({ para: troca.para, descrita: descreverTroca(arquivo, troca, daCidade ? cidade : undefined) });
   }
 
   const paraId = troca?.para;

@@ -13,16 +13,20 @@ import { IR_ADIANTE } from "@/ui/tiposDeTransicao";
  * Entra dentro da região `role="status"` da `Casca`, por isso não põe o próprio `role`. Fica montado ao trocar de aba;
  * `mostrar` falso esconde sem desmontar, para "Entendi" continuar valendo se a conta de luz for tirada depois.
  */
-export function AvisoTrocaDistribuidora({ troca: { nomeAntigo, nomeNovo }, mostrar }: { troca: TrocaDescrita; mostrar: boolean }) {
+export function AvisoTrocaDistribuidora({ troca: { nomeAntigo, nomeNovo, cidadeCorrigida }, mostrar }: { troca: TrocaDescrita; mostrar: boolean }) {
   const [fechado, setFechado] = useState(false);
   if (!mostrar || fechado) return null;
   // Textos da ux-acessibilidade (F1). Sem o nome antigo conhecido, o corpo não cita a empresa antiga.
-  const corpo = `${nomeAntigo ? `A ${nomeAntigo}` : "A empresa de luz da sua cidade"} hoje é a ${nomeNovo}. A gente ainda usava ${nomeAntigo ? "o" : "um"} preço antigo. Agora a conta estimada usa o preço de hoje da ${nomeNovo}, mais perto da conta que chega na sua casa.`;
+  // HIS-206: na correção da cidade a empresa antiga existe, só não atende ali; o texto diz isso, sem falar em "preço antigo".
+  const titulo = cidadeCorrigida ? "Corrigimos a empresa de luz da sua cidade" : "O preço da luz foi atualizado";
+  const corpo = cidadeCorrigida
+    ? `${cidadeCorrigida} é atendida pela ${nomeNovo}${nomeAntigo ? `, e não pela ${nomeAntigo}` : ""}. Os dados públicos misturavam duas cidades com o mesmo nome. Agora a conta estimada usa o preço da ${nomeNovo}.`
+    : `${nomeAntigo ? `A ${nomeAntigo}` : "A empresa de luz da sua cidade"} hoje é a ${nomeNovo}. A gente ainda usava ${nomeAntigo ? "o" : "um"} preço antigo. Agora a conta estimada usa o preço de hoje da ${nomeNovo}, mais perto da conta que chega na sua casa.`;
   return (
     <div className="surgir mb-6">
       <Aviso tom="faisca" anunciar={false} icone={<Info className="size-5" aria-hidden />}>
         <p>
-          <strong>O preço da luz foi atualizado</strong>
+          <strong>{titulo}</strong>
         </p>
         <p className="mt-1">{corpo}</p>
         <Link href="/casa/ajustes#conta" transitionTypes={IR_ADIANTE} className="flex min-h-11 w-fit items-center font-bold underline underline-offset-4">
