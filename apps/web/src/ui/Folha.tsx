@@ -20,8 +20,8 @@ export function Folha({ aberta, aoFechar, titulo, children, rodape }: { aberta: 
       className="folha flex-col overflow-hidden bg-papel p-0 text-tinta open:flex"
     >
       <div className="flex items-center justify-between gap-4 border-b border-linha px-5 py-4">
-        <h2 className="text-xl font-extrabold">{titulo}</h2>
-        <button type="button" onClick={aoFechar} className="min-h-11 rounded-full px-3 font-bold text-energia hover:bg-energia-claro">
+        <h2 className="min-w-0 text-xl font-extrabold">{titulo}</h2>
+        <button type="button" onClick={aoFechar} className="min-h-11 shrink-0 whitespace-nowrap rounded-full px-3 font-bold text-energia [overflow-wrap:normal] hover:bg-energia-claro">
           Fechar
         </button>
       </div>

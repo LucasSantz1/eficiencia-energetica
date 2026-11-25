@@ -10,7 +10,7 @@ export const CONSUMO_MINIMO_KWH: Record<Exclude<Ligacao, "nao-sei">, number> = {
   trifasica: 100,
 };
 
-/** Tarifa Social (Lei 15.235/2025): consumo isento por mês, em kWh. */
+/** Tarifa Social (Lei 12.212/2010, art. 1º, na redação da Lei 15.235/2025): consumo isento por mês, em kWh. */
 export const TARIFA_SOCIAL_ISENCAO_KWH = 80;
 /** Desconto Social (Lei 15.235/2025): faixa com desconto por mês, em kWh. */
 export const DESCONTO_SOCIAL_LIMITE_KWH = 120;
@@ -101,7 +101,8 @@ export interface EstimativaConta {
  * Regras aplicadas:
  * - Consumo mínimo (custo de disponibilidade): 30, 50 ou 100 kWh conforme a ligação.
  *   Quando a ligação é desconhecida, assume monofásica (30 kWh), a mais comum em residências.
- * - Tarifa Social: os primeiros 80 kWh são isentos; o excedente é cobrado normalmente.
+ * - Tarifa Social: até 80 kWh, nada é cobrado (nem o mínimo). Acima disso, cobra-se o maior entre o consumo e o mínimo,
+ *   menos os 80 kWh isentos (só a trifásica, com mínimo de 100 kWh, cai nesse caso entre 81 e 99 kWh).
  * - Desconto Social: o percentual depende da distribuidora e não é publicado de forma simples,
  *   então não é descontado aqui — a interface avisa a pessoa para conferir na conta.
  */
@@ -115,7 +116,12 @@ export function estimarConta(consumoKwh: number, residencia: Pick<Residencia, "b
   let cobradoPeloMinimo = false;
 
   if (residencia.beneficio === "tarifa-social") {
-    kwhCobrados = Math.max(0, consumo - TARIFA_SOCIAL_ISENCAO_KWH);
+    // Até 80 kWh não se paga nada, nem o mínimo. Acima disso o mínimo volta a valer sobre o consumo, e os 80 kWh isentos
+    // saem depois: trifásica com 90 kWh paga 100 − 80 = 20 kWh (O Setor Elétrico, 2025, "Tarifa Social e custo de
+    // disponibilidade"; Cenário Energia, 10/06/2025; Lei 12.212/2010, art. 1º, na redação da Lei 15.235/2025).
+    const passouDaIsencao = consumo > TARIFA_SOCIAL_ISENCAO_KWH;
+    cobradoPeloMinimo = passouDaIsencao && consumo < minimo;
+    kwhCobrados = passouDaIsencao ? Math.max(consumo, minimo) - TARIFA_SOCIAL_ISENCAO_KWH : 0;
     economiaBeneficio = Math.min(consumo, TARIFA_SOCIAL_ISENCAO_KWH) * preco.valor;
   } else {
     cobradoPeloMinimo = consumo < minimo;

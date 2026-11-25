@@ -5,6 +5,7 @@
  * outra empresa.
  *
  * - "fronteira": cidade na divisa com a área principal da distribuidora; a ANEEL publica a ligação e ela faz sentido.
+ * - "area-propria": área da distribuidora em outro estado, conferida (ex.: a antiga CFLO de Guarapuava, PR, na ESS).
  * - "a-conferir": sem evidência de erro nem de acerto; fica publicada até o dominio-energia confirmar com a ANEEL.
  *
  * Fonte: IndQual Município e atributos dos conjuntos (dadosabertos.aneel.gov.br), publicados até 10/11/2026.
@@ -12,14 +13,19 @@
 export interface LigacaoDeOutraUf {
   distribuidora: string;
   ibge: number;
-  situacao: "fronteira" | "a-conferir";
+  situacao: "fronteira" | "area-propria" | "a-conferir";
   nota: string;
 }
 
 /** Uma UF com pelo menos este número de cidades da distribuidora é área principal dela (não precisa estar na lista). */
 export const CIDADES_PARA_UF_PRINCIPAL = 5;
-/** ...ou quando tem pelo menos esta parte das cidades dela (CERES: 2 no RJ e 1 em MG). O erro do IndQual é 1 cidade em 13 ou mais. */
+/**
+ * ...ou quando tem pelo menos esta parte das cidades dela e 2 cidades ou mais. Uma cidade sozinha em outro estado precisa
+ * estar nesta lista, mesmo numa cooperativa pequena: é o formato do erro do IndQual (1 cidade trocada).
+ */
 export const PARTE_PARA_UF_PRINCIPAL = 0.2;
+/** Exceção: distribuidora com até este número de cidades (CERES: 2 no RJ e 1 em MG), onde 1 cidade já é a divisa. */
+export const CIDADES_DA_DISTRIBUIDORA_MINUSCULA = 3;
 
 export const LIGACOES_DE_OUTRA_UF: readonly LigacaoDeOutraUf[] = [
   { distribuidora: "sulgipe", ibge: 2917904, situacao: "fronteira", nota: "Jandaíra (BA), divisa com SE" },
@@ -29,7 +35,6 @@ export const LIGACOES_DE_OUTRA_UF: readonly LigacaoDeOutraUf[] = [
   { distribuidora: "emr", ibge: 3301207, situacao: "fronteira", nota: "Carmo (RJ), divisa com MG" },
   { distribuidora: "emr", ibge: 3303401, situacao: "fronteira", nota: "Nova Friburgo (RJ)" },
   { distribuidora: "emr", ibge: 3305703, situacao: "fronteira", nota: "Sumidouro (RJ)" },
-  { distribuidora: "light-sesa", ibge: 3549805, situacao: "a-conferir", nota: "São José do Rio Preto (SP): longe da área; talvez São José do Vale do Rio Preto (RJ)" },
   { distribuidora: "cpfl-santa-cruz", ibge: 3104106, situacao: "fronteira", nota: "Arceburgo (MG), divisa com SP" },
   { distribuidora: "cpfl-santa-cruz", ibge: 3132909, situacao: "fronteira", nota: "Itamogi (MG), divisa com SP" },
   { distribuidora: "cpfl-santa-cruz", ibge: 3143203, situacao: "fronteira", nota: "Monte Santo de Minas (MG), divisa com SP" },
@@ -39,7 +44,7 @@ export const LIGACOES_DE_OUTRA_UF: readonly LigacaoDeOutraUf[] = [
   { distribuidora: "enel-rj", ibge: 3107208, situacao: "fronteira", nota: "Bocaina de Minas (MG), divisa com RJ" },
   { distribuidora: "enel-rj", ibge: 3151107, situacao: "fronteira", nota: "Pirapetinga (MG), divisa com RJ" },
   { distribuidora: "ceres", ibge: 3107208, situacao: "fronteira", nota: "Bocaina de Minas (MG), divisa com RJ" },
-  { distribuidora: "ess", ibge: 4109401, situacao: "a-conferir", nota: "Guarapuava (PR): fora da área da ESS no PR" },
+  { distribuidora: "ess", ibge: 4109401, situacao: "area-propria", nota: "Guarapuava (PR): área da antiga CFLO (Companhia Força e Luz do Oeste), hoje na ESS" },
   { distribuidora: "neoenergia-pe", ibge: 2506707, situacao: "fronteira", nota: "Imaculada (PB), divisa com PE" },
   { distribuidora: "neoenergia-pe", ibge: 2511202, situacao: "fronteira", nota: "Pedras de Fogo (PB), divisa com PE" },
   { distribuidora: "neoenergia-pe", ibge: 2515500, situacao: "fronteira", nota: "Serra Branca (PB)" },
