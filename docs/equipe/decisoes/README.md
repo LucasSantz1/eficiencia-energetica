@@ -8,6 +8,7 @@
 | [ADR-004](ADR-004-leitura-segura-de-dados.md) | Leitura segura dos dados de fora: leitores escritos à mão no `@ee/core` (sem zod), `storage` próprio + `merge` que valida, mesmo leitor no navegador, servidor e rotina; leitor completo e que nunca lança (R4c, R4d) | aceito |
 | [ADR-005](ADR-005-distribuidora-que-deixa-de-existir.md) | Distribuidora que deixa de existir: tarifa vencida há mais de 6 meses não sai, sucessão só por CNPJ ou ato oficial, `substituidas` no `tarifas.json`, rotina para na dúvida | aceito |
 | [ADR-006](ADR-006-service-worker-escrito-a-mao.md) | Modo sem internet com service worker escrito à mão (`public/sw.js`), sem Serwist; nada da pessoa no cache; "Apagar tudo" apaga as cópias de `/dados` | proposto |
+| [ADR-007](ADR-007-conta-e-convidado.md) | Conta opcional com e-mail e senha: o navegador só fala com o nosso `/api`, sessão num cookie `__Host-` cifrado (AES-GCM, HttpOnly), RLS testada, link de convidado só de leitura com o hash do código no banco | proposto |
 
 Para uma decisão nova: copie o formato (Status, Data, Responsável, Contexto, Decisão, Alternativas, Consequências),
 numere em sequência e acrescente aqui.

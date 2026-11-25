@@ -41,7 +41,7 @@ const RESTRICOES_COMUNS = [
  * Restrições de import de uma camada. `permitidos` é uma lista de quem pode ser importado com @/ (o resto de @/ é erro):
  * assim, uma pasta nova ou antiga (@/components, @/lib) já nasce proibida.
  */
-function restricoesDaCamada({ camada, regra, permitidos, podeCore, podeZustand, podeNode, podeServerOnly }) {
+function restricoesDaCamada({ camada, regra, permitidos, podeCore, podeZustand, podeNode, podeServerOnly, podeSupabase }) {
   const padroes = [
     ...RESTRICOES_COMUNS,
     {
@@ -51,6 +51,8 @@ function restricoesDaCamada({ camada, regra, permitidos, podeCore, podeZustand, 
   ];
   if (!podeCore) padroes.push({ regex: "^@ee/core(/tarifa-social|/meta|/reconhecer)?$", message: `${camada} não importa @ee/core (ADR-001, ${regra}).` });
   if (!podeZustand) padroes.push({ regex: "^zustand(/|$)", message: "zustand só em infraestrutura (ADR-001)." });
+  // ADR-007: só o servidor fala com o Supabase; o navegador nunca vê a URL, a chave nem os tokens.
+  if (!podeSupabase) padroes.push({ regex: "^@supabase/", message: "Supabase só em infraestrutura/**/*.servidor.ts (ADR-007)." });
   if (!podeNode) padroes.push({ regex: `^(node:|(${nomesDoNode})(/|$))`, message: "Módulo do Node só em infraestrutura/**/*.servidor.ts (ADR-001)." });
   if (!podeServerOnly) padroes.push({ regex: "^server-only$", message: 'import "server-only" só em arquivos *.servidor.ts (ADR-001).' });
   return { "no-restricted-imports": ["error", { patterns: padroes }] };
@@ -61,8 +63,8 @@ function camada(pasta, opcoes) {
   const comuns = `${SITE}/${pasta}/**/*.${EXTENSOES}`;
   const servidor = `${SITE}/${pasta}/**/*.servidor.${EXTENSOES}`;
   return [
-    { name: `camadas/${pasta}`, files: [comuns], ignores: [SERVIDOR], rules: restricoesDaCamada({ ...opcoes, podeNode: false, podeServerOnly: false }) },
-    { name: `camadas/${pasta}/servidor`, files: [servidor], rules: restricoesDaCamada({ ...opcoes, podeNode: opcoes.podeNodeNoServidor === true, podeServerOnly: true }) },
+    { name: `camadas/${pasta}`, files: [comuns], ignores: [SERVIDOR], rules: restricoesDaCamada({ ...opcoes, podeNode: false, podeServerOnly: false, podeSupabase: false }) },
+    { name: `camadas/${pasta}/servidor`, files: [servidor], rules: restricoesDaCamada({ ...opcoes, podeNode: opcoes.podeNodeNoServidor === true, podeServerOnly: true, podeSupabase: opcoes.podeNodeNoServidor === true }) },
   ];
 }
 

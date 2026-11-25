@@ -5,13 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
 import { useAvisoDaCasaSalva, useCasa, useCasaCarregada, useDistribuidoraAtualizada, useHaDadosGuardados } from "@/aplicacao/casa";
+import { dispensarAvisoDeOutroAparelho, escolherCasa, useSincronia } from "@/aplicacao/conta";
 import { useIdadeDosPrecos } from "@/aplicacao/idade-dos-precos";
 import { useSemInternet } from "@/aplicacao/offline";
 import { useResumo } from "@/aplicacao/resumo";
 import { useLeitura } from "@/aplicacao/useLeitura";
 import { Aviso } from "@/ui/Aviso";
 import { AvisoDaCasaSalva } from "@/ui/AvisoDaCasaSalva";
-import { BotaoLink } from "@/ui/Botao";
+import { Botao, BotaoLink } from "@/ui/Botao";
 import { Interruptor } from "@/ui/Interruptor";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
@@ -39,6 +40,8 @@ export function Casca({ children }: { children: ReactNode }) {
   const troca = useDistribuidoraAtualizada();
   const semInternet = useSemInternet();
   const versaoAntigaDoSite = useCasa((s) => s.versaoAntigaDoSite === true);
+  // Com conta (E4), a casa também vai para o servidor; sem conta, isto não faz nada.
+  const sincronia = useSincronia(carregada);
   const idade = useIdadeDosPrecos(arquivo?.geradoEm);
   const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
   // Ir para uma aba à direita desliza para a esquerda, e vice-versa.
@@ -92,6 +95,31 @@ export function Casca({ children }: { children: ReactNode }) {
             <Aviso tom="alerta">
               <strong>Esta é uma cópia antiga do site, guardada para usar sem internet.</strong> Abra o site com internet para
               atualizar. Até lá, o que você mudar aqui não fica salvo, para não estragar a sua casa.
+            </Aviso>
+          </div>
+        )}
+        {sincronia.tipo === "escolher" && (
+          <div className="mb-6">
+            <Aviso tom="faisca">
+              <strong>A casa deste aparelho é diferente da que está na sua conta.</strong> Qual delas fica? A outra é trocada.
+              <span className="mt-3 flex flex-wrap gap-2">
+                <Botao variante="secundario" onClick={() => escolherCasa("deste-aparelho")}>
+                  Usar a deste aparelho
+                </Botao>
+                <Botao variante="secundario" onClick={() => escolherCasa("da-conta")}>
+                  Usar a da conta
+                </Botao>
+              </span>
+            </Aviso>
+          </div>
+        )}
+        {sincronia.tipo === "atualizada-de-outro-aparelho" && (
+          <div className="mb-6">
+            <Aviso>
+              Trouxemos a casa que foi salva em outro aparelho.{" "}
+              <button type="button" onClick={dispensarAvisoDeOutroAparelho} className="min-h-11 font-bold underline underline-offset-2">
+                Entendi
+              </button>
             </Aviso>
           </div>
         )}

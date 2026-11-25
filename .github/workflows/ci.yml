@@ -44,6 +44,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      # RLS e funções do Supabase num Postgres descartável (o runner já traz o PostgreSQL; E4, ADR-007).
+      - run: pnpm test:banco
 
   e2e:
     name: Navegador (e2e, axe e peso)
