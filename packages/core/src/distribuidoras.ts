@@ -61,11 +61,26 @@ export const NOMES_COMERCIAIS: Readonly<Record<string, string>> = {
   EEB: "Bragantina",
   CFLO: "Força e Luz do Oeste",
   CERR: "Companhia Energética de Roraima",
+  // HIS-205 (25/11/2026): permissionárias cuja conta usa um nome diferente da sigla. Fontes: balanço da Empresa Luz e
+  // Força Santa Maria S/A (A Tribuna, 11/04/2025) e notícias da ANEEL sobre o reajuste "da Santa Maria" (Cenário
+  // Energia, 17/09/2025); Empresa Força e Luz de Urussanga Ltda (EMIS); "Dcelt Energia" (NSC Total).
+  ELFSM: "Santa Maria",
+  EFLUL: "Força e Luz Urussanga",
+  DCELT: "Dcelt Energia",
+  // Só a grafia: a sigla da ANEEL junta as palavras ou leva a UF; a conta mostra assim.
+  MUXENERGIA: "Mux Energia",
+  "PACTO ENERGIA PR": "Pacto Energia",
 };
+
+/**
+ * Sufixos que a ANEEL põe na sigla de quem separou a distribuição ("CERAL-DIS", "CRELUZ-D", "CERSAD DISTRIBUI").
+ * Não estão na conta de luz: a família reconhece a sigla sem eles.
+ */
+const SUFIXO_DA_ANEEL = /[-\s](DIS|D|DISTRIBUI)$/i;
 
 /** Nome que aparece na conta de luz (ou a sigla da ANEEL, se não soubermos o nome comercial). */
 export function nomeDaDistribuidora(sigla: string): string {
-  return NOMES_COMERCIAIS[sigla] ?? sigla.replace(/-/g, " ").replace(/\s+/g, " ").trim();
+  return NOMES_COMERCIAIS[sigla] ?? sigla.replace(SUFIXO_DA_ANEEL, "").replace(/-/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /** true quando conhecemos o nome comercial (senão vale mostrar também a sigla). */

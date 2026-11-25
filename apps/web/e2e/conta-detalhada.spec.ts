@@ -1,8 +1,8 @@
 /*
  * HIS-201: a conta estimada em linhas, como numa fatura. As linhas somam o valor grande do cartão.
  */
-import { lerFixture, semearCasa } from "./apoio/casa";
 import { analisarAcessibilidade, descreverViolacoes, violacoesQueReprovam } from "./apoio/axe";
+import { lerFixture, semearCasa } from "./apoio/casa";
 import { expect, test } from "./apoio/teste";
 
 test.use({ reducedMotion: "reduce" });
