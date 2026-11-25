@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { distribuidorasDaCidade, ehUf, ESTADOS, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type ContaReferencia, type Ligacao, type Municipio } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
-import { apagarConta, useConta } from "@/aplicacao/conta";
+import { useConta } from "@/aplicacao/conta-estado";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
 import { apagarPreferenciaDeLeitura } from "@/aplicacao/leitura";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
@@ -254,7 +254,7 @@ function SeusDados() {
               onClick={async () => {
                 // LGPD: com conta, "todos os meus dados" inclui o que está no servidor. Se o servidor não responder, nada
                 // é apagado no aparelho, para a pessoa poder tentar de novo sem achar que apagou tudo.
-                if (comConta && (await apagarConta()).status !== 200) return setErroDaConta(true);
+                if (comConta && (await (await import("./apagarComConta")).apagarConta()).status !== 200) return setErroDaConta(true);
                 apagarTudo();
                 // A escolha de leitura mora numa chave própria: "todos os meus dados" inclui ela (LGPD, HIS-102).
                 apagarPreferenciaDeLeitura();

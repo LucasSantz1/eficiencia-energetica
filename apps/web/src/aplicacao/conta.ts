@@ -5,18 +5,14 @@ import { lerCasaSalva, type DadosCasa } from "@ee/core";
 import { useCasa, VERSAO_DA_CASA } from "@/infraestrutura/armazenamento/casa";
 import { dadosSalvaveis } from "@/infraestrutura/armazenamento/hidratacao";
 import { pedirApi } from "@/infraestrutura/conta/api";
+import { atualizarConta, useConta } from "./conta-estado";
+
+export { atualizarConta, useConta, type EstadoDaConta } from "./conta-estado";
 
 /**
  * Conta opcional e sincronização da casa (E4, ADR-007). A casa continua sendo a do aparelho (localStorage): com conta,
  * ela também vai para o servidor, e volta em outro aparelho. Sem conta, nada sai do aparelho.
  */
-
-export type EstadoDaConta =
-  | { tipo: "carregando" }
-  | { tipo: "desligada" }
-  | { tipo: "sem-conta" }
-  | { tipo: "conectada"; email: string }
-  | { tipo: "sem-internet" };
 
 export type Sincronia =
   | { tipo: "parada" }
@@ -50,43 +46,6 @@ export function mensagemDoErro(resposta: { status: number; corpo: Record<string,
     default:
       return resposta.status === 0 ? "Sem internet. Confira a conexão e tente de novo." : "Não deu certo agora. Tente de novo daqui a pouco.";
   }
-}
-
-/* ---------- Estado da conta (um só para a página toda) ---------- */
-
-let estadoAtual: EstadoDaConta = { tipo: "carregando" };
-let pedido: Promise<void> | undefined;
-const ouvintesDaConta = new Set<() => void>();
-const avisarConta = () => ouvintesDaConta.forEach((avisar) => avisar());
-
-function mudarConta(novo: EstadoDaConta) {
-  estadoAtual = novo;
-  avisarConta();
-}
-
-/** Pergunta ao servidor quem está na conta. Uma vez por página, a não ser que `deNovo`. */
-export function atualizarConta(deNovo = false): Promise<void> {
-  if (pedido && !deNovo) return pedido;
-  pedido = pedirApi("/api/conta").then(({ status, corpo }) => {
-    if (status === 0) return mudarConta({ tipo: "sem-internet" });
-    const email = corpo["email"];
-    if (corpo["conta"] === "conectada" && typeof email === "string") return mudarConta({ tipo: "conectada", email });
-    mudarConta({ tipo: corpo["conta"] === "sem-conta" ? "sem-conta" : "desligada" });
-  });
-  return pedido;
-}
-
-const assinarConta = (avisar: () => void) => {
-  ouvintesDaConta.add(avisar);
-  return () => ouvintesDaConta.delete(avisar);
-};
-const naHidratacao: EstadoDaConta = { tipo: "carregando" };
-
-export function useConta(): EstadoDaConta {
-  useEffect(() => {
-    void atualizarConta();
-  }, []);
-  return useSyncExternalStore(assinarConta, () => estadoAtual, () => naHidratacao);
 }
 
 /* ---------- Ações da conta ---------- */

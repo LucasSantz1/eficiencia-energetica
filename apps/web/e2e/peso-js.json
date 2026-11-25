@@ -1,41 +1,41 @@
 {
-  "medidoNoCommit": "cc6d2dd",
-  "decisao": "Sprint 3 offline (HIS-301/302/303, 25/11, modo turbo): +0,6 a +0,75 kB em toda rota pelo registro do service worker e o aviso de instalação; /casa* +1,3 a +1,8 kB pelos avisos de sem internet e da idade dos preços e pela seção 'Usar sem internet'. Aceito na rodada do bloco.",
+  "medidoNoCommit": "259c76a",
+  "decisao": "E4 conta e convidado (ADR-007, 25/11, modo turbo): /casa* +1,2 a +1,9 kB no HTML (estado da conta e os pontos de carga sob demanda; a sincronização, o painel da conta e as ações só baixam com a conta ligada); total com prefetch +7 a +9,6 kB pelas rotas novas (/entrar, /conta/*, /convidado) e pelos pedaços sob demanda. Aceito na rodada do bloco.",
   "rotas": {
     "/": {
-      "jsDoHtml": 174432,
-      "totalComPrefetch": 206867
+      "jsDoHtml": 174762,
+      "totalComPrefetch": 214117
     },
     "/comecar": {
-      "jsDoHtml": 193652,
-      "totalComPrefetch": 206867
+      "jsDoHtml": 193198,
+      "totalComPrefetch": 214117
     },
     "/casa": {
-      "jsDoHtml": 203301,
-      "totalComPrefetch": 281457
+      "jsDoHtml": 204566,
+      "totalComPrefetch": 289348
     },
     "/casa/comodos": {
-      "jsDoHtml": 192935,
-      "totalComPrefetch": 281457
+      "jsDoHtml": 194203,
+      "totalComPrefetch": 289348
     },
     "/casa/dicas": {
-      "jsDoHtml": 181566,
-      "totalComPrefetch": 281457
+      "jsDoHtml": 182857,
+      "totalComPrefetch": 289348
     },
     "/casa/ajustes": {
-      "jsDoHtml": 184834,
-      "totalComPrefetch": 281457
+      "jsDoHtml": 186749,
+      "totalComPrefetch": 289348
     },
     "/sobre": {
-      "jsDoHtml": 140871,
-      "totalComPrefetch": 178506
+      "jsDoHtml": 140892,
+      "totalComPrefetch": 178840
     },
     "/tarifa-social": {
-      "jsDoHtml": 167082,
-      "totalComPrefetch": 187688
+      "jsDoHtml": 167086,
+      "totalComPrefetch": 188005
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 252538
+      "totalComPrefetch": 262111
     }
   }
 }
