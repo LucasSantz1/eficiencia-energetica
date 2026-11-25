@@ -1,10 +1,11 @@
 "use client";
 
-import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2 } from "lucide-react";
+import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ViewTransition, type ReactNode } from "react";
 import { useAvisoDaCasaSalva, useCasa, useCasaCarregada, useDistribuidoraAtualizada, useHaDadosGuardados } from "@/aplicacao/casa";
+import { useIdadeDosPrecos, useSemInternet } from "@/aplicacao/offline";
 import { useResumo } from "@/aplicacao/resumo";
 import { useLeitura } from "@/aplicacao/useLeitura";
 import { Aviso } from "@/ui/Aviso";
@@ -35,6 +36,8 @@ export function Casca({ children }: { children: ReactNode }) {
   const abrirMinhaCasa = useHaDadosGuardados() && caminho === "/casa/ajustes";
   const { arquivo, preco } = useResumo();
   const troca = useDistribuidoraAtualizada();
+  const semInternet = useSemInternet();
+  const idade = useIdadeDosPrecos(arquivo?.geradoEm);
   const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
   // Ir para uma aba à direita desliza para a esquerda, e vice-versa.
   const direcao = (i: number) => (i >= indiceAtual ? IR_ADIANTE : VOLTAR);
@@ -84,6 +87,25 @@ export function Casca({ children }: { children: ReactNode }) {
         )}
         {/* Região sempre presente e vazia: o leitor de tela anuncia o aviso quando ele entra (HIS-003). */}
         <div role="status">
+          {semInternet && (
+            <div className="mb-6">
+              <Aviso anunciar={false} icone={<WifiOff className="size-5" aria-hidden />}>
+                <strong>Você está sem internet.</strong> O site continua funcionando com o que já está salvo neste celular.
+              </Aviso>
+            </div>
+          )}
+          {/* Com a conta de luz, o preço vem dela: a data da ANEEL não muda nada (HIS-303). */}
+          {idade && residencia && preco.origem === "aneel" && caminho === "/casa" && (
+            <div className="mb-6">
+              <Aviso anunciar={false} tom="faisca">
+                Os preços da luz são de {idade.data}, há {idade.dias} dias. Se a sua conta de luz é mais nova, use o preço dela em{" "}
+                <Link href="/casa/ajustes#conta" className="font-bold underline underline-offset-2">
+                  Minha casa
+                </Link>
+                .
+              </Aviso>
+            </div>
+          )}
           {/* Com a conta de luz, o preço vem da conta e não muda com a troca: não há o que avisar (F1). */}
           {troca && <AvisoTrocaDistribuidora troca={troca} mostrar={preco.origem === "aneel"} />}
         </div>
