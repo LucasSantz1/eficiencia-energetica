@@ -57,6 +57,8 @@ export interface ItemCatalogo {
   ondeEncontrar: string;
   /** Itens antigos, mantidos para quem já cadastrou, mas que não aparecem mais na lista. */
   oculto?: boolean;
+  /** Tem o modo "não sei qual é o meu" (perguntas em `reconhecer.ts`). Fica aqui para a tela saber sem baixar as perguntas. */
+  guiaVisual?: boolean;
 }
 
 const IDADE: Variante = {
@@ -161,6 +163,7 @@ export const CATALOGO: ItemCatalogo[] = [
   // Banho
   {
     id: "chuveiro",
+    guiaVisual: true,
     nome: "Chuveiro elétrico",
     categoria: "banho",
     icone: "shower-head",
@@ -193,6 +196,7 @@ export const CATALOGO: ItemCatalogo[] = [
   // Cozinha
   {
     id: "geladeira",
+    guiaVisual: true,
     nome: "Geladeira",
     categoria: "cozinha",
     icone: "refrigerator",
@@ -242,7 +246,7 @@ export const CATALOGO: ItemCatalogo[] = [
     ondeEncontrar: "Na etiqueta amarela do INMETRO, no campo \"Consumo de energia (kWh/mês)\".",
   },
   { id: "purificador", nome: "Purificador ou bebedouro gelado", categoria: "cozinha", icone: "glass-water", comodoSugerido: "cozinha", modo: "etiqueta", potenciaW: 90, faixaW: [60, 120], minutosPorDia: 1440, diasPorSemana: 7, kwhMes: 15, ondeEncontrar: "Na etiqueta atrás do aparelho. Os que só filtram, sem gelar, quase não gastam." },
-  { id: "micro-ondas", nome: "Micro-ondas", categoria: "cozinha", icone: "microwave", comodoSugerido: "cozinha", modo: "tempo", potenciaW: 1300, faixaW: [1000, 1800], minutosPorDia: 10, diasPorSemana: 7, variantes: [{ id: "tamanho", pergunta: "Qual o tamanho?", padrao: "30", opcoes: MICRO_ONDAS.opcoes }], calcular: (e) => MICRO_ONDAS.calcular(e.tamanho ?? "30"), ondeEncontrar: "Na etiqueta atrás do aparelho ou dentro da porta (\"potência de entrada\")." },
+  { id: "micro-ondas", guiaVisual: true, nome: "Micro-ondas", categoria: "cozinha", icone: "microwave", comodoSugerido: "cozinha", modo: "tempo", potenciaW: 1300, faixaW: [1000, 1800], minutosPorDia: 10, diasPorSemana: 7, variantes: [{ id: "tamanho", pergunta: "Qual o tamanho?", padrao: "30", opcoes: MICRO_ONDAS.opcoes }], calcular: (e) => MICRO_ONDAS.calcular(e.tamanho ?? "30"), ondeEncontrar: "Na etiqueta atrás do aparelho ou dentro da porta (\"potência de entrada\")." },
   { id: "air-fryer", nome: "Air fryer", categoria: "cozinha", icone: "cooking-pot", comodoSugerido: "cozinha", modo: "tempo", potenciaW: 1500, faixaW: [1000, 2000], minutosPorDia: 20, diasPorSemana: 5, variantes: [{ id: "tamanho", pergunta: "Qual o tamanho do cesto?", padrao: "media", opcoes: AIR_FRYER.opcoes }], calcular: (e) => AIR_FRYER.calcular(e.tamanho ?? "media"), ondeEncontrar: "Na etiqueta embaixo do aparelho." },
   { id: "forno-eletrico", nome: "Forno elétrico", categoria: "cozinha", icone: "cooking-pot", comodoSugerido: "cozinha", modo: "tempo", potenciaW: 1500, faixaW: [1000, 2500], minutosPorDia: 30, diasPorSemana: 2, ondeEncontrar: "Na etiqueta atrás ou embaixo do forno." },
   { id: "cooktop-inducao", nome: "Cooktop de indução", categoria: "cozinha", icone: "flame", comodoSugerido: "cozinha", modo: "tempo", potenciaW: 2000, faixaW: [1200, 3500], minutosPorDia: 40, diasPorSemana: 7, ondeEncontrar: "Na etiqueta embaixo do cooktop. A potência é por boca; considere as bocas usadas juntas." },
@@ -260,6 +264,7 @@ export const CATALOGO: ItemCatalogo[] = [
   // Calor e frio
   {
     id: "ventilador",
+    guiaVisual: true,
     nome: "Ventilador",
     categoria: "clima",
     icone: "fan",
@@ -275,6 +280,7 @@ export const CATALOGO: ItemCatalogo[] = [
   },
   {
     id: "ar-condicionado",
+    guiaVisual: true,
     nome: "Ar-condicionado",
     categoria: "clima",
     icone: "air-vent",
@@ -323,6 +329,7 @@ export const CATALOGO: ItemCatalogo[] = [
   // Lavanderia
   {
     id: "maquina-lavar",
+    guiaVisual: true,
     nome: "Máquina de lavar",
     categoria: "lavanderia",
     icone: "washing-machine",
@@ -346,6 +353,7 @@ export const CATALOGO: ItemCatalogo[] = [
   // Eletrônicos
   {
     id: "tv",
+    guiaVisual: true,
     nome: "Televisão",
     categoria: "eletronicos",
     icone: "tv",

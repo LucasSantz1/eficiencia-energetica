@@ -76,7 +76,7 @@ export function LinhaAparelho({
 
       {ativo && ajustando && (
         <div className="surgir mt-3 space-y-4 border-t border-linha pt-3 sm:pl-14" style={{ animationDuration: "300ms" }}>
-          {catalogo && <SeletorVariantes catalogo={catalogo} escolhas={item.variantes} aoMudar={aoMudar} />}
+          {catalogo && <SeletorVariantes catalogo={catalogo} escolhas={item.variantes} aoMudar={aoMudar} base={item} preco={preco} />}
           {catalogo?.modo === "etiqueta" ? (
             <p className="text-[0.95rem] text-tinta-suave">Fica ligado o tempo todo e o motor liga e desliga sozinho. Consumo estimado: {Math.round(item.kwhMesInformado ?? 0)} kWh por mês.</p>
           ) : item.banho ? (

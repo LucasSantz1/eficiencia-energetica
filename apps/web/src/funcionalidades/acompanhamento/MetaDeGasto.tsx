@@ -20,7 +20,7 @@ import {
   linhaDoDentro,
   linhasDoPiso,
   META_SALVA,
-  MENSAGENS_DA_META,
+  mensagensDaMeta,
   reais,
   ROTULO_DA_META,
   SEM_CIP_NA_ECONOMIA,
@@ -51,7 +51,7 @@ export function MetaDeGasto({ dados, naFolha = false, className = "" }: { dados:
   const [editando, setEditando] = useState(false);
   const [tirando, setTirando] = useState(false);
   const [salvou, setSalvou] = useState(false);
-  const campo = useCampoNumerico({ faixa: LIMITES.metaMensal, casas: 2, obrigatorio: true, mensagens: MENSAGENS_DA_META, inicial: metaReais, chave: metaReais, dinheiro: true });
+  const campo = useCampoNumerico({ faixa: LIMITES.metaMensal, casas: 2, obrigatorio: true, mensagens: mensagensDaMeta(), inicial: metaReais, chave: metaReais, dinheiro: true });
   const mostrarCampo = editando || metaReais === undefined;
 
   const salvar = () => {

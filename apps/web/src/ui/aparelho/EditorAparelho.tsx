@@ -131,6 +131,8 @@ export function EditorAparelho({
           <SeletorVariantes
             catalogo={item}
             escolhas={r.variantes}
+            base={r}
+            preco={preco}
             aoMudar={(mudancas) => {
               mudar(mudancas);
               // A resposta do catálogo troca o número do campo, como antes (o texto do campo mora no useCampoNumerico).

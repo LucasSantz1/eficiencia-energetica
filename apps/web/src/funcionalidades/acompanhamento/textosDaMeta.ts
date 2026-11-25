@@ -14,14 +14,20 @@ export const SO_NESTE_APARELHO = "Sua meta fica só neste aparelho. Não enviamo
 export const E_ESTIMATIVA = "É uma estimativa. A conta de verdade pode ser um pouco diferente.";
 export const SEM_CIP_NA_ECONOMIA = "A economia pode ser um pouco menor, porque a iluminação pública não muda com o quanto você gasta.";
 
-const { min, max } = LIMITES.metaMensal;
-const fora = `Escreva um valor entre ${formatarReais(min)} e ${formatarReais(max)}.`;
-export const MENSAGENS_DA_META: MensagensDoCampo = {
-  vazio: fora,
-  malEscrito: fora,
-  fora,
-  confere: (valor) => `${formatarReais(valor)} é muito para uma conta de luz. Veja se a vírgula está no lugar certo.`,
-};
+/**
+ * Mensagens do campo da meta. É função, não constante: formatar no carregamento do módulo faria um erro de formatação
+ * (o T3 do erros.spec) ficar preso no módulo, e o "Tentar de novo" nunca mais traria a tela de volta.
+ */
+export function mensagensDaMeta(): MensagensDoCampo {
+  const { min, max } = LIMITES.metaMensal;
+  const fora = `Escreva um valor entre ${formatarReais(min)} e ${formatarReais(max)}.`;
+  return {
+    vazio: fora,
+    malEscrito: fora,
+    fora,
+    confere: (valor) => `${formatarReais(valor)} é muito para uma conta de luz. Veja se a vírgula está no lugar certo.`,
+  };
+}
 
 /** Título do estado: é ele que o leitor de tela anuncia depois de "Salvar meta". */
 export function tituloDaMeta(s: SituacaoDaMeta): string {

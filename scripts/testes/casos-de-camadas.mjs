@@ -41,7 +41,7 @@ const APLICACAO = `${SITE}/aplicacao/Exemplo.ts`;
 const DOMINIO = "packages/core/src/exemplo.ts";
 
 const SO_UI = "ui só importa";
-const IMPORT_DINAMICO = "import() dinâmico ainda não é permitido";
+const IMPORT_DINAMICO = "import() dinâmico só para um arquivo da mesma pasta";
 const NODE = "Módulo do Node só em infraestrutura/**/*.servidor.ts";
 const SEM_PONTOS = "Sem '..' no caminho";
 const DOMINIO_SO = "O domínio (@ee/core) só importa arquivos dele mesmo";
@@ -100,6 +100,9 @@ const SEGURANCA = [
   eslint("seguranca-05", "seguranca-05", T, "export const m = () => import('@/ui/' + \"x\");\n", "no-restricted-syntax", IMPORT_DINAMICO),
   eslint("seguranca-06", "seguranca-06", T, "const x = 'a';\nexport const m = () => import  (x);\n", "no-restricted-syntax", IMPORT_DINAMICO),
   eslint("seguranca-07", "seguranca-07", T, "const x = 'a';\nexport const m = () => import(/* c */ x);\n", "no-restricted-syntax", IMPORT_DINAMICO),
+  // Ampliação de 24/11: só "./Nome" (mesma pasta) passa; subir de pasta ou montar o caminho com template continua barrado.
+  eslint("import-mesma-pasta-01", "visual 24/11", T, 'export const m = () => import("../ui/Botao");\n', "no-restricted-syntax", IMPORT_DINAMICO),
+  eslint("import-mesma-pasta-02", "visual 24/11", T, "export const m = () => import(`./Botao`);\n", "no-restricted-syntax", IMPORT_DINAMICO),
   eslint("seguranca-08", "seguranca-08", T, 'export const m = () => import /* c */ ("@/infraestrutura/armazenamento/casa");\n', "no-restricted-syntax", IMPORT_DINAMICO),
   eslint("seguranca-09", "seguranca-09", T, 'export * from "@/aplicacao/casa";\n', "no-restricted-imports", "ui só importa @/ui, @/config e @ee/core"),
   eslint("seguranca-10", "seguranca-10", T, 'import {useCasa} from"@/aplicacao/casa";\nexport const a = useCasa;\n', "no-restricted-imports", SO_UI),
@@ -276,7 +279,7 @@ export const OBRIGATORIOS = [
   "I7-01", "I7-02", "I7-03", "I7-04", "I7-05", "I7-06", "I7-07", "I7-08", "I7-09", "I7-10", "I7-11", "I7-12", "I7-13", "I7-14", "I7-15",
   "R13-01", "R13-02", "R13-03",
   "S1-a", "S1-a-import-sem-espaco", "S1-b", "S1-c", "S1-c-cjs", "S1-c-dominio-cts", "S1-e", "S1-e-sufixo", "S1-f", "S1-f-colchetes", "S1-g", "S1-g-funcao",
-  "seguranca-01", "seguranca-02", "seguranca-03", "seguranca-04", "seguranca-05", "seguranca-06", "seguranca-07", "seguranca-08", "seguranca-09", "seguranca-10",
+  "seguranca-01", "seguranca-02", "seguranca-03", "seguranca-04", "seguranca-05", "seguranca-06", "seguranca-07", "seguranca-08", "import-mesma-pasta-01", "import-mesma-pasta-02", "seguranca-09", "seguranca-10",
   "seguranca-11", "seguranca-12", "seguranca-13", "seguranca-14", "seguranca-15", "seguranca-16", "seguranca-17", "seguranca-18", "seguranca-19", "seguranca-20",
   "seguranca-21", "controle-seguranca-01", "seguranca-27", "seguranca-28", "seguranca-28b", "seguranca-29", "seguranca-29b", "seguranca-30", "seguranca-30b", "seguranca-30c",
   "C5-any", "C5-ts-ignore", "C5-dangerously", "C5-innerHTML", "C5-eval", "C5-new-function", "C5-script-url", "C5-target-blank", "T1-ordem", "D-sem-uso", "Ab12-parse",

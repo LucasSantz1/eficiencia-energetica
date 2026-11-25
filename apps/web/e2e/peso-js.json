@@ -1,41 +1,41 @@
 {
-  "medidoNoCommit": "0cad3d1",
-  "decisao": "Painel em blocos (visual-limpo, 2026-11-24): a /casa ganha a grade de resumo, a faixa de cômodos, as dicas ao lado do ranking e os números do Mês a mês (~+1,4 kB gzip no 11a, ícones e o BlocoDeResumo). Pedido do responsável; as outras rotas não mudam.",
+  "medidoNoCommit": "0072c58",
+  "decisao": "Modo 'não sei qual é o meu aparelho' (24/11): perguntas, desenhos e regras em @ee/core/reconhecer carregam sob demanda (React.lazy, ~4,2 kB gzip só ao tocar). No caminho crítico: +1,1 kB no /comecar (botão e marca guiaVisual no catálogo). O total com prefetch de / e /comecar sobe ~6 kB porque o Turbopack reparte os pedaços compartilhados; aceito, revisar na rodada final.",
   "rotas": {
     "/": {
-      "jsDoHtml": 173505,
-      "totalComPrefetch": 197533
+      "jsDoHtml": 173166,
+      "totalComPrefetch": 203873
     },
     "/comecar": {
-      "jsDoHtml": 189582,
-      "totalComPrefetch": 197533
+      "jsDoHtml": 190689,
+      "totalComPrefetch": 203873
     },
     "/casa": {
-      "jsDoHtml": 201206,
-      "totalComPrefetch": 274913
+      "jsDoHtml": 201249,
+      "totalComPrefetch": 276327
     },
     "/casa/comodos": {
-      "jsDoHtml": 190709,
-      "totalComPrefetch": 274913
+      "jsDoHtml": 190886,
+      "totalComPrefetch": 276327
     },
     "/casa/dicas": {
-      "jsDoHtml": 179697,
-      "totalComPrefetch": 274913
+      "jsDoHtml": 179659,
+      "totalComPrefetch": 276327
     },
     "/casa/ajustes": {
-      "jsDoHtml": 181793,
-      "totalComPrefetch": 274913
+      "jsDoHtml": 181526,
+      "totalComPrefetch": 276327
     },
     "/sobre": {
       "jsDoHtml": 140244,
-      "totalComPrefetch": 177568
+      "totalComPrefetch": 177229
     },
     "/tarifa-social": {
-      "jsDoHtml": 166573,
-      "totalComPrefetch": 185550
+      "jsDoHtml": 166448,
+      "totalComPrefetch": 186404
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 254186
+      "totalComPrefetch": 249136
     }
   }
 }
