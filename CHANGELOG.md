@@ -1,5 +1,181 @@
 # Registro de mudanças
 
+## 2026-11-25 · Correções da rodada de verificação do bloco
+
+**Para quem usa**
+- **Tarifa Social com o mínimo da ligação:** até 80 kWh no mês, a conta não cobra energia. Acima disso, o mínimo da
+  ligação volta a valer: numa casa trifásica com 90 kWh, o site agora cobra 20 kWh (antes, 10).
+- São José do Rio Preto (SP) não aparece mais ligada à Light; a cidade é da CPFL Paulista. A casa salva com a Light lá
+  passa para a CPFL, com o aviso "Corrigimos a empresa de luz da sua cidade".
+- "O que é kWh?" agora diz "Um banho de 10 minutos no chuveiro elétrico gasta quase 1 kWh".
+- No "Não sei qual é o meu", o tamanho da TV é comparado com a largura de uma porta.
+- Sem internet, o "Não sei qual é o meu" mostra "Não deu para abrir as perguntas", com "Tentar de novo" e "Voltar", em
+  vez de derrubar a tela de cômodos.
+- Na folha da meta, os valores das dicas somam o total; da segunda em diante aparece "economiza mais". O aviso de
+  estimativa longe da conta diz "pode faltar algum aparelho" ou "confira o tempo de uso", conforme o caso.
+- Conta de 0 kWh no Mês a mês não mostra mais "R$ 0,00 por kWh" e fica fora da comparação com a estimativa.
+- O foco do teclado e do leitor de tela não cai mais no começo da página ao abrir e fechar o "Não sei" e ao salvar a
+  primeira conta. "Fechar" das folhas não quebra no meio a 200% de zoom. "Novembro de 2026", não "Novembro De 2026".
+
+**Técnico**
+- `estimarConta` (`calculos.ts`): na Tarifa Social, `kwhCobrados = consumo > 80 ? max(consumo, mínimo) − 80 : 0`, e
+  `cobradoPeloMinimo` vale entre 81 e 99 kWh na trifásica. `detalharConta` usa `consumoMinimoKwh − consumo` na linha do
+  mínimo. Casos C7 do dominio-energia no teste.
+- `CODIGOS_TROCADOS`: `correto` opcional (só remove); entrada da Light × 3549805; comentário separa as trocas confirmadas
+  (comunicado EFC 02/2022, Governo do RS) das prováveis. `outra-uf.ts`: situação nova `area-propria` (ESS × Guarapuava,
+  antiga CFLO).
+- V11: a regra dos 20% pede 2 cidades ou mais, exceto em distribuidora de até 3 cidades
+  (`CIDADES_DA_DISTRIBUIDORA_MINUSCULA`). Testes 4+1, 2+2 e 2+1.
+- `TempoUso`: sem `React.lazy`; a promessa do `import("./GuiaVisual")` fica guardada (mesmo se falhar, senão o React
+  baixava sem parar) e é esquecida só no "Tentar de novo". Barreira `ui/aparelho/FalhaAoAbrirGuia`. e2e cortando os `.js`.
+- `meta.ts`: ganho de cada passo = diferença dos valores já arredondados. `historicoContas` e `mediaDasContas` devolvem
+  `precoKwh: undefined` sem kWh.
+- Conferido: core 317, web 42, dados 114, camadas 156; e2e completo 308 ok, 8 pulados.
+
+## 2026-11-25 · Nomes de distribuidoras como na conta de luz (HIS-205)
+
+**Para quem usa**
+- Cinco empresas de luz aparecem com o nome da conta: Santa Maria, Força e Luz de Urussanga, Dcelt Energia, Mux Energia
+  e Pacto Energia. Os sufixos da ANEEL somem (CERAL-DIS vira CERAL). As outras cooperativas seguem pela sigla, que é o
+  que vem em destaque na conta delas.
+
+**Técnico**
+- `NOMES_COMERCIAIS` em `distribuidoras.ts`, com fonte por nome; `SUFIXO_DA_ANEEL` no nome reserva. Nenhum nome sem fonte.
+
+## 2026-11-25 · Cadastro mais leve, conta de exemplo e o que é kWh
+
+**Para quem usa**
+- O cadastro fica numa coluna só, no meio da tela. Cada pergunta tem um ícone grande e uma frase curta. "Por que
+  perguntamos…?" abre embaixo do título.
+- No passo da conta de luz, um desenho de conta de exemplo mostra onde ficam o consumo (**1**) e o total (**2**). O
+  mesmo desenho aparece em Minha casa, em "Onde acho esses números?".
+- "O que é kWh?" explica a medida com palavras do dia a dia, no cadastro e no painel.
+
+**Técnico**
+- `ui/conta/ExemploDeConta` (conta genérica marcada "Exemplo", sem imitar distribuidora; `role="img"`) e `ui/ExplicaKwh`
+  (`<details>`, sem JS). O painel lateral do cadastro saiu; `layout-computador.spec.ts` reescrito para o /comecar.
+
+## 2026-11-25 · Conta detalhada, linha por linha (HIS-201)
+
+**Para quem usa**
+- "Conta detalhada" no cartão da conta mostra a estimativa como numa fatura: energia, bandeira do mês, o que falta até o
+  mínimo da ligação, o desconto da Tarifa Social e a iluminação pública. As linhas somam o valor grande.
+
+**Técnico**
+- `detalharConta` em `packages/core/src/conta-detalhada.ts`, em centavos, a partir do `estimarConta`; o centavo do
+  arredondamento vai para a energia. e2e `conta-detalhada.spec.ts`. Peso: +1,2 kB gzip na /casa (registrado).
+
+## 2026-11-25 · Cidades ligadas a distribuidora de outro estado (HIS-206)
+
+**Para quem usa**
+- Dez cidades apareciam ligadas a uma cooperativa de outro estado com cidade de mesmo nome (Nova Santa Rita, PI, com a
+  CERTAJA do RS: a conta saía cerca de 18% menor). A casa salva assim passa, uma vez, para quem atende a cidade, com o
+  aviso "Corrigimos a empresa de luz da sua cidade". Os arquivos publicados mudam na próxima atualização dos dados.
+
+**Técnico**
+- `CODIGOS_TROCADOS` e `trocaPorCodigoTrocado` no core (rotina e site usam a mesma tabela). Rotina: `moverCodigosTrocados`
+  e barreira **V11** (não passa com `--forcar`), com as ligações conferidas em `packages/dados/src/aneel/outra-uf.ts`.
+  e2e `cidade-corrigida.spec.ts`.
+
+## 2026-11-25 · Zoom de 200% sem rolar para o lado (HIS-107 e HIS-116)
+
+**Para quem usa**
+- Com zoom de 200% num celular comum (195 px de largura), a página inicial, o cadastro, o painel e as Dicas não rolam
+  mais para o lado. Linhas de aparelho quebram em vez de esconder o contador.
+
+**Técnico**
+- Grades com `minmax(0,1fr)`, `flex-wrap` e `max-w-full`; abaixo de 22rem, `overflow-wrap: anywhere` e o "…" vira quebra
+  de linha. Esqueleto da `Casca` com `gap` (HIS-116). e2e `zoom.spec.ts` a 320 e 195 px em 8 rotas.
+
+## 2026-11-25 · "Não sei qual é o meu aparelho"
+
+**Para quem usa**
+- Quem não conhece termos como potência, BTU ou inverter monta a casa pelo que vê: perguntas com desenhos ("Onde ele
+  fica?", "Tem a palavra INVERTER escrita?") e sempre com "Não sei". Se não der para saber o modelo, o site mostra uma
+  faixa ("Fica entre R$ X e R$ Y por mês"), usa o valor mais comum e diz onde olhar no aparelho. Vale para ar-condicionado,
+  geladeira, TV, ventilador, máquina de lavar, micro-ondas e chuveiro (este só com a faixa).
+
+**Técnico**
+- Regras locais em `@ee/core/reconhecer` (`GUIAS_VISUAIS`, `reconhecer`, `faixaDeConsumo`), sem IA e sem rede; flag
+  `guiaVisual` no catálogo. Desenhos em SVG de traço (`ui/aparelho/Desenhos`). As perguntas baixam só ao tocar
+  (~4,2 kB gzip). O lint passa a aceitar `import("./Nome")` da mesma pasta, e nada além disso.
+
+## 2026-11-24 · Visual limpo: painel em blocos
+
+**Para quem usa**
+- Visual mais limpo, no estilo dos apps de celular, mantendo o verde e a etiqueta do INMETRO. O painel mostra a conta
+  grande e quatro blocos (meta, preço da luz, quem gasta mais, melhor dica); a página no celular ficou cerca de 1/4 mais
+  curta. O Mês a mês usa a largura toda, com média por mês, preço médio do kWh e última conta. Dicas em cartões curtos,
+  com "Como fazer" fechado.
+
+**Técnico**
+- Tokens `--color-fundo: #f2f2f7` e `--color-separador`; `ui/BlocoDeResumo`; grade do painel por áreas;
+  `mediaDasContas` no core. A ordem do código continua a do celular. Peso: +1,4 kB gzip na /casa (registrado).
+
+## 2026-11-24 · Meta de gasto: "quero pagar até R$ X" (HIS-104)
+
+**Para quem usa**
+- "Sua meta" no painel: escreva quanto quer pagar e veja se já está dentro, quanto falta e quais dicas ajudam. Se a meta
+  for menor que o mínimo da ligação, o site avisa. Sem conta de luz, ele diz "ajudam", nunca "chegam lá".
+- Iluminação pública: campo opcional em Minha casa. A taxa entra na conta estimada e sai do preço do kWh.
+
+**Técnico**
+- `avaliarMeta` em `@ee/core/meta` (escolha gulosa, sem contar a mesma economia duas vezes; casos C1–C14). Casa salva na
+  versão 3 (`metaMensal`), com migração das versões 1 e 2. e2e `meta.spec.ts`. Peso: +7,7 kB gzip na /casa (registrado).
+
+## 2026-11-24 · Compartilhar e imprimir o resumo (HIS-105)
+
+**Para quem usa**
+- No Acompanhamento, **Compartilhar resumo** abre o compartilhar do celular com um texto curto (estimativa, quem mais
+  gasta, próxima dica), sem cidade nem nome. Sem esse recurso, vira **Copiar resumo**. **Imprimir** gera uma folha em
+  preto e branco.
+
+**Técnico**
+- Texto por função pura com teste; impressão só com CSS (`@media print`). Nada passa por servidor. A #31 devolveu a
+  chave do `@media print` perdida num conflito, que travava o deploy na Vercel.
+
+## 2026-11-24 · Letra maior e mais contraste (HIS-102)
+
+**Para quem usa**
+- "Letra maior" (texto a 125%) e "Mais contraste" em Minha casa; "Letra maior" também no topo do cadastro. A escolha
+  fica neste celular, e "Apagar todos os meus dados" apaga junto.
+
+**Técnico**
+- Chave própria no `localStorage`, lida e validada na fronteira; script de uma linha no `<head>` aplica antes da primeira
+  pintura (ignora texto com mais de 200 caracteres). Nomes longos quebram a linha em vez de cortar.
+
+## 2026-11-24 · CSP barra atributos de evento (HIS-117)
+
+**Técnico**
+- `script-src-attr 'none'` na CSP: fecha o caminho mais comum de XSS (`<img onerror=…>`). O `'unsafe-inline'` do
+  `script-src` fica, com comentário (o Next põe scripts inline que mudam por página; nonce fica para quando houver login,
+  com ADR). e2e `csp.spec.ts` em 8 rotas.
+
+## 2026-11-17 · Guia da Tarifa Social (HIS-103)
+
+**Para quem usa**
+- Página nova `/tarifa-social`: 6 perguntas, uma por vez, dizem se a família **pode ter direito** à Tarifa Social ou ao
+  Desconto Social, com documentos, onde pedir (CRAS e distribuidora) e o que fazer se o desconto não vier. Nada é
+  guardado nem enviado.
+- (HIS-103a, 13/11) Os textos da Tarifa Social deixaram de prometer mais do que o site faz: o Desconto Social não é
+  calculado, os 80 kWh são de energia (impostos e iluminação podem continuar) e o desconto só é automático com o
+  CadÚnico em dia e a conta no nome de alguém da família.
+
+**Técnico**
+- Regra pura em `@ee/core/tarifa-social`, com teste para os 13 casos do domínio; salário mínimo com fonte e vigência
+  (fora dela, o resultado vira "confira no CRAS"). Página estática, só `useState`.
+
+## 2026-11-17 · Campos com limite e "Confere?" (HIS-003b)
+
+**Para quem usa**
+- Os campos de número (conta, leitura, potência, minutos, quantidade) têm limite, e um valor estranho pergunta
+  "Confere?" antes de salvar. Acabou o falso "Conta salva" em Minha casa.
+
+**Técnico**
+- Limites e textos no `@ee/core` (`limites.ts`), com fonte e teste; a tela confere antes de chamar o store.
+- Junto: Next.js 16.4.6 (a 16.4.3 tinha falha de segurança e travava o build, #20), TypeScript 6.0.3 e lockfile
+  consertado (#23), e a animação perdida ao terminar o cadastro (DEF-002b-1, #22: `router.prefetch("/casa")` na revisão).
+
 ## 2026-11-13 · Layout para computador (HIS-112)
 
 **Para quem usa**
