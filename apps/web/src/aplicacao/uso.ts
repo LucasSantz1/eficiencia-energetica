@@ -7,9 +7,9 @@ import { pedirApi } from "@/infraestrutura/conta/api";
 /**
  * Contagem anônima de uso, do lado do navegador (ADR-009). Manda só o nome do evento: nada da casa, nenhum id, nenhum
  * cookie novo. Quem pediu ao navegador para não ser rastreado (Global Privacy Control ou "Do Not Track") não manda
- * nada. "visita" e "painel-aberto" contam uma vez por carga da página (na memória, sem guardar nada). Falhou (sem internet): esquece, não tenta de novo.
+ * nada. "visita", "painel-aberto" e "ouviu" contam uma vez por carga da página (na memória, sem guardar nada). Falhou (sem internet): esquece, não tenta de novo.
  */
-const UMA_VEZ_POR_ABA: ReadonlySet<EventoDeUso> = new Set(["visita", "painel-aberto"]);
+const UMA_VEZ_POR_ABA: ReadonlySet<EventoDeUso> = new Set(["visita", "painel-aberto", "ouviu"]);
 
 function pediuParaNaoRastrear(): boolean {
   if (typeof navigator === "undefined") return true;
