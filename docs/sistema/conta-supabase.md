@@ -82,9 +82,14 @@ modelos. Depois, em **Rate Limits**, o limite de e-mails por hora pode subir (o 
 
 ## 5. Variáveis na Vercel
 
-1. No Supabase, abra **Project Settings → API** e copie:
-   - **Project URL**;
-   - a chave **anon / public**. **Nunca** copie a `service_role`: o site não precisa dela.
+1. No Supabase, na página do projeto, clique em **Connect** (no alto da tela) e copie:
+   - a **Project URL** (`https://<algo>.supabase.co`);
+   - a chave **publishable** (começa com `sb_publishable_`). Projetos antigos mostram, em vez dela, a chave **anon**
+     (começa com `eyJ`); as duas servem.
+
+   Todas as chaves também ficam em **Project Settings → API Keys**. **Nunca** copie a chave **secret**
+   (`sb_secret_…`) nem a `service_role`: elas passam por cima das regras de acesso, e o site não precisa delas. Se
+   alguma for colada por engano, a conta fica desligada (o site confere).
 2. Gere o segredo da sessão, num terminal com Node:
 
    ```bash
@@ -98,7 +103,7 @@ modelos. Depois, em **Rate Limits**, o limite de e-mails por hora pode subir (o 
    | Nome | Valor |
    | --- | --- |
    | `SUPABASE_URL` | o Project URL |
-   | `SUPABASE_ANON_KEY` | a chave anon |
+   | `SUPABASE_ANON_KEY` | a chave publishable (ou a anon, em projeto antigo) |
    | `SESSAO_SEGREDO` | o segredo gerado no item 2 |
    | `ENDERECO_DO_SITE` | o mesmo Site URL do passo 3, sem barra no fim (os links dos e-mails usam este endereço) |
 
