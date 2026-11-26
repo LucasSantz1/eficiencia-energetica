@@ -95,4 +95,37 @@ do $$ begin
   if not exists (select 1 from auth.users where id = '00000000-0000-4000-8000-00000000000b') then raise exception 'apagou a conta errada'; end if;
 end $$;
 
+-- 7. Casa cifrada (ADR-008): a casa nova vai em dados_cifrados; nunca os dois formatos, nem nenhum; o convite devolve a cifra.
+select pg_temp.como('authenticated', '00000000-0000-4000-8000-00000000000b');
+insert into public.casas (dono, dados_cifrados, versao_do_formato) values ('00000000-0000-4000-8000-00000000000b', 'v1.cifra-da-bia', 3);
+insert into public.convites (dono, hash_do_codigo) values ('00000000-0000-4000-8000-00000000000b', sha256('codigo-da-bia'));
+select pg_temp.deve_falhar($$update public.casas set dados = '{}'$$, 'dois formatos na mesma casa');
+select pg_temp.deve_falhar($$update public.casas set dados_cifrados = null$$, 'casa sem formato nenhum');
+select pg_temp.deve_falhar($$update public.casas set dados_cifrados = 'texto-aberto'$$, 'cifra sem o prefixo v1.');
+reset role;
+select pg_temp.como('anon', null);
+do $$ begin
+  if (select dados_cifrados from public.casa_do_convite(sha256('codigo-da-bia'))) <> 'v1.cifra-da-bia' then raise exception 'o convite devia devolver a cifra'; end if;
+  if (select dados from public.casa_do_convite(sha256('codigo-da-bia'))) is not null then raise exception 'casa cifrada com texto aberto'; end if;
+end $$;
+
+-- 8. Tentativas (ADR-008): ninguém lê nem escreve a tabela; a função conta, barra no limite e não aceita limite de fora.
+select pg_temp.deve_falhar('select * from public.tentativas', 'anon lendo tentativas');
+select pg_temp.deve_falhar($$insert into public.tentativas (acao, chave, janela) values ('entrar-ip', sha256('x'), now())$$, 'anon gravando tentativa');
+select pg_temp.deve_falhar($$select public.contar_tentativa('inventada', sha256('x'))$$, 'ação fora da lista');
+select pg_temp.deve_falhar($$select public.contar_tentativa('entrar-email', '\x00'::bytea)$$, 'chave curta');
+do $$ begin
+  for i in 1..10 loop
+    if not public.contar_tentativa('entrar-email', sha256('ip-da-ana')) then raise exception 'barrou antes do limite (%)', i; end if;
+  end loop;
+  if public.contar_tentativa('entrar-email', sha256('ip-da-ana')) then raise exception 'a 11ª tentativa devia ser barrada'; end if;
+  if not public.contar_tentativa('entrar-email', sha256('outra-pessoa')) then raise exception 'barrou a pessoa errada'; end if;
+  if not public.contar_tentativa('entrar-ip', sha256('ip-da-ana')) then raise exception 'cada ação conta à parte'; end if;
+end $$;
+reset role;
+select pg_temp.como('authenticated', '00000000-0000-4000-8000-00000000000b');
+select pg_temp.deve_falhar('select * from public.tentativas', 'logado lendo tentativas');
+select pg_temp.deve_falhar($$select public.contar_tentativa('entrar-ip', sha256('x'))$$, 'logado chamando a contagem');
+reset role;
+
 \echo 'RLS: tudo certo'

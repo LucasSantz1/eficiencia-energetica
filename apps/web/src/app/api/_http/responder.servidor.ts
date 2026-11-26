@@ -31,6 +31,16 @@ function enderecoDoSite(pedido: NextRequest): string {
   return `${protocolo}://${host}`;
 }
 
+/**
+ * O IP de quem pediu (ADR-008). Na Vercel, `x-real-ip` e o primeiro item de `x-forwarded-for` são postos pela própria
+ * Vercel (ela sobrescreve o que o navegador mandar). Só serve para contar tentativas; nunca é guardado nem logado.
+ */
+function ipDe(pedido: NextRequest): string | undefined {
+  const ip = pedido.headers.get("x-real-ip") ?? pedido.headers.get("x-forwarded-for")?.split(",")[0];
+  const limpo = ip?.trim();
+  return limpo && limpo.length <= 64 ? limpo : undefined;
+}
+
 export async function responder(pedido: NextRequest, acao: Acao): Promise<NextResponse> {
   const muda = pedido.method !== "GET";
   const site = enderecoDoSite(pedido);
@@ -51,7 +61,7 @@ export async function responder(pedido: NextRequest, acao: Acao): Promise<NextRe
   try {
     // Os links dos e-mails usam o endereço fixo, quando há (B1 da seguranca): nunca o Host que veio no pedido.
     const enderecoFixo = process.env.ENDERECO_DO_SITE?.trim().replace(/\/$/, "");
-    return json(await acao(contextoReal(enderecoFixo || site), pedido.cookies.get(NOME_DO_COOKIE)?.value, corpo));
+    return json(await acao(contextoReal(enderecoFixo || site, ipDe(pedido)), pedido.cookies.get(NOME_DO_COOKIE)?.value, corpo));
   } catch {
     // Nada vai para o log nem para a tela: o erro do Supabase pode trazer o e-mail.
     return json({ status: 502, corpo: { erro: "indisponivel" } });

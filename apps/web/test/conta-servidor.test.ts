@@ -9,7 +9,7 @@ const conta = await import("@/aplicacao/conta.servidor");
 const { cifrarSessao, decifrarSessao } = await import("@/infraestrutura/conta/sessao.servidor");
 
 const SEGREDO = new Uint8Array(32).fill(7);
-const CONFIG = { urlDoSupabase: "https://exemplo.supabase.co", chaveAnonima: "anon", segredoDaSessao: SEGREDO };
+const CONFIG = { urlDoSupabase: "https://exemplo.supabase.co", chaveAnonima: "anon", segredoDaSessao: SEGREDO, segredoDaCasa: new Uint8Array(32).fill(3) };
 const AGORA_MS = Date.parse("2026-11-25T12:00:00Z");
 const TOKENS: TokensDaSessao = { acesso: "jwt-de-acesso-com-ana@exemplo.org", renovacao: "renovacao-1", expiraEm: AGORA_MS / 1000 + 3600 };
 const USUARIO = { id: "00000000-0000-4000-8000-00000000000a", email: "ana@exemplo.org" };
@@ -37,12 +37,13 @@ function gatewayDeMentira(trocas: Partial<Gateway> = {}): Gateway & { chamadas: 
     apagarConvite: anotar("apagarConvite", { ok: true, valor: null }),
     casaDoConvite: anotar("casaDoConvite", { ok: true, valor: undefined }),
     apagarConta: anotar("apagarConta", { ok: true, valor: null }),
+    contarTentativa: anotar("contarTentativa", { ok: true, valor: true }),
   };
   return Object.assign({ ...base, ...trocas }, { chamadas });
 }
 
 function contexto(gateway: Gateway, ligada = true): Contexto {
-  return { config: ligada ? CONFIG : undefined, gateway, enderecoDoSite: "https://site.exemplo", agora: () => AGORA_MS };
+  return { config: ligada ? CONFIG : undefined, gateway, enderecoDoSite: "https://site.exemplo", ip: "203.0.113.7", agora: () => AGORA_MS };
 }
 
 const cookieValido = (tokens: TokensDaSessao = TOKENS) => cifrarSessao(tokens, SEGREDO);
@@ -189,5 +190,94 @@ describe("conta (casos de uso do servidor)", () => {
     expect(casa).toMatchObject({ leituras: [], plano: [] });
     expect(JSON.stringify(casa)).not.toMatch(/pessoas|metaMensal|2026-06|2026-07/);
     expect(JSON.stringify(casa)).toContain("2026-10");
+  });
+});
+
+describe("limite de tentativas (ADR-008)", () => {
+  /** Banco de mentira que barra a partir da tentativa número `limite + 1` de cada ação e chave. */
+  function comLimite(limite: number) {
+    const contagem = new Map<string, number>();
+    return gatewayDeMentira({
+      contarTentativa: async (_config, acao, chave) => {
+        const nome = `${acao}:${chave.toString("hex")}`;
+        const total = (contagem.get(nome) ?? 0) + 1;
+        contagem.set(nome, total);
+        return { ok: true, valor: total <= limite };
+      },
+    });
+  }
+
+  it("entrar conta por IP e por e-mail; passou do limite, 429 antes de chamar o Supabase", async () => {
+    const gateway = comLimite(2);
+    const ctx = contexto(gateway);
+    const pedido = { email: "ana@exemplo.org", senha: "errada123" };
+    expect((await conta.entrar(ctx, pedido)).status).toBe(200);
+    expect((await conta.entrar(ctx, pedido)).status).toBe(200);
+    const barrado = await conta.entrar(ctx, pedido);
+    expect(barrado).toMatchObject({ status: 429, corpo: { erro: "muitas-tentativas" } });
+    expect(gateway.chamadas["entrar"]).toHaveLength(2);
+  });
+
+  it("o banco recebe um HMAC de 32 bytes, nunca o IP nem o e-mail", async () => {
+    const gateway = gatewayDeMentira();
+    await conta.entrar(contexto(gateway), { email: "ana@exemplo.org", senha: "12345678" });
+    const chamadas = gateway.chamadas["contarTentativa"] ?? [];
+    expect(chamadas.map((argumentos) => argumentos[1])).toEqual(["entrar-ip", "entrar-email"]);
+    const chaves = chamadas.map((argumentos) => argumentos[2]).filter((chave): chave is Buffer => Buffer.isBuffer(chave));
+    expect(chaves).toHaveLength(2);
+    for (const chave of chaves) {
+      expect(chave).toHaveLength(32);
+      expect(chave.toString("latin1")).not.toMatch(/ana|203\.0/);
+    }
+    expect(chaves[0]?.equals(chaves[1] ?? Buffer.alloc(0))).toBe(false);
+  });
+
+  it("o mesmo e-mail com maiúscula ou espaço conta junto", async () => {
+    const gateway = comLimite(1);
+    expect((await conta.entrar(contexto(gateway), { email: "ana@exemplo.org", senha: "12345678" })).status).toBe(200);
+    expect((await conta.entrar({ ...contexto(gateway), ip: "198.51.100.1" }, { email: " ANA@exemplo.org ", senha: "12345678" })).status).toBe(429);
+  });
+
+  it("'esqueci' para o mesmo e-mail demais: responde igual a sucesso e não manda mais e-mail", async () => {
+    const gateway = comLimite(1);
+    const ctx = (ip: string) => ({ ...contexto(gateway), ip });
+    expect(await conta.pedirNovaSenha(ctx("198.51.100.1"), { email: "ana@exemplo.org" })).toEqual({ status: 200, corpo: { ok: true } });
+    expect(await conta.pedirNovaSenha(ctx("198.51.100.2"), { email: "ana@exemplo.org" })).toEqual({ status: 200, corpo: { ok: true } });
+    expect(gateway.chamadas["pedirNovaSenha"]).toHaveLength(1);
+  });
+
+  it("criar conta, links do e-mail e convidado também são limitados", async () => {
+    const gateway = comLimite(0);
+    const ctx = contexto(gateway);
+    expect((await conta.cadastrar(ctx, { email: "ana@exemplo.org", senha: "12345678", concordo: true })).status).toBe(429);
+    expect((await conta.confirmarEmail(ctx, { tokenHash: "abcdefgh12" })).status).toBe(429);
+    expect((await conta.trocarSenhaPeloLink(ctx, { tokenHash: "abcdefgh12", senha: "12345678" })).status).toBe(429);
+    expect((await conta.casaDoConvidado(ctx, { codigo: "x" })).status).toBe(429);
+    expect(gateway.chamadas["cadastrar"] ?? []).toHaveLength(0);
+    expect(gateway.chamadas["confirmarLink"] ?? []).toHaveLength(0);
+    expect(gateway.chamadas["casaDoConvite"] ?? []).toHaveLength(0);
+  });
+
+  it("banco sem resposta na contagem: não deixa passar (falha fechada)", async () => {
+    const gateway = gatewayDeMentira({ contarTentativa: async () => ({ ok: false, erro: "indisponivel" }) });
+    expect((await conta.entrar(contexto(gateway), { email: "ana@exemplo.org", senha: "12345678" })).status).toBe(503);
+    expect(gateway.chamadas["entrar"] ?? []).toHaveLength(0);
+  });
+});
+
+describe("rotas da pessoa exigem sessão (pedido do dono, 26/11)", () => {
+  it("sem cookie, ou com cookie mexido, ler/gravar casa, convites e apagar conta dão 401 e não tocam no banco", async () => {
+    const gateway = gatewayDeMentira();
+    const ctx = contexto(gateway);
+    const mexido = `${cookieValido().slice(0, -3)}AAA`;
+    for (const cookie of [undefined, mexido, "qualquer-coisa"]) {
+      expect((await conta.lerCasa(ctx, cookie)).status).toBe(401);
+      expect((await conta.gravarCasa(ctx, cookie, { casa: {}, versaoDoFormato: 3, atualizadaEm: null })).status).toBe(401);
+      expect((await conta.listarConvites(ctx, cookie)).status).toBe(401);
+      expect((await conta.criarConvite(ctx, cookie, {})).status).toBe(401);
+      expect((await conta.apagarConvite(ctx, cookie, { id: "11111111-1111-4111-8111-111111111111" })).status).toBe(401);
+      expect((await conta.apagarConta(ctx, cookie)).status).toBe(401);
+    }
+    expect(Object.keys(gateway.chamadas).filter((nome) => nome !== "quemEsta")).toEqual([]);
   });
 });
