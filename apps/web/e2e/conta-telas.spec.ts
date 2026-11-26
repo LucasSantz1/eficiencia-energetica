@@ -144,11 +144,14 @@ test("/entrar?modo=criar abre em 'Criar uma conta' e passa no axe", async ({ pag
   await page.route("**/api/conta", (rota) => rota.fulfill({ json: { conta: "sem-conta" } }));
   await page.goto("/entrar?modo=criar");
   await expect(page.getByRole("heading", { level: 1, name: "Criar uma conta" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Criar conta", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  const escolha = page.getByRole("group", { name: "Entrar ou criar conta" });
+  await expect(escolha.getByRole("button", { name: "Criar conta" })).toHaveAttribute("aria-pressed", "true");
+  await escolha.getByRole("button", { name: "Entrar" }).click();
+  await expect(escolha.getByRole("button", { name: "Entrar" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("heading", { level: 1, name: "Entrar na sua conta" })).toBeVisible();
   const resultado = await analisarAcessibilidade(page);
   expect(descreverViolacoes(violacoesQueReprovam(resultado.violations))).toEqual([]);
+});
 
 test("link do e-mail: lê o código de #codigo= e também do formato antigo #token_hash=, e o tira do endereço", async ({ context }) => {
   const enviados: unknown[] = [];
