@@ -13,7 +13,7 @@ import { esquecerCodigoDoEndereco, useCodigoDoEndereco } from "./useCodigoDoEnde
  * antivírus de alguns e-mails abre os links antes da pessoa e gastaria o código, que vale uma vez só.
  */
 export function TelaConfirmar() {
-  const codigo = useCodigoDoEndereco("token_hash");
+  const codigo = useCodigoDoEndereco("codigo", "token_hash");
   const conta = useConta();
   const [situacao, setSituacao] = useState<{ tipo: "esperando" } | { tipo: "enviando" } | { tipo: "pronto" } | { tipo: "erro"; mensagem: string }>({ tipo: "esperando" });
 
