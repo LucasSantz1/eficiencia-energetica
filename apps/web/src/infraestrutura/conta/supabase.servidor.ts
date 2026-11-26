@@ -58,8 +58,19 @@ function erroDe(erro: { status?: number; code?: string; message?: string } | nul
  * Cadastro com e-mail e senha. O Supabase manda o e-mail de confirmação (modelo com o link para /conta/confirmar).
  * Sempre a mesma resposta, exista ou não a conta: ninguém descobre pelo site quais e-mails têm conta.
  */
-export async function cadastrar(config: ConfiguracaoDaConta, email: string, senha: string, enderecoDoSite: string): Promise<Resultado<null>> {
-  const { error } = await cliente(config).auth.signUp({ email, password: senha, options: { emailRedirectTo: `${enderecoDoSite}/conta/confirmar` } });
+export async function cadastrar(
+  config: ConfiguracaoDaConta,
+  email: string,
+  senha: string,
+  enderecoDoSite: string,
+  concordo: { versao: string; em: string },
+): Promise<Resultado<null>> {
+  // O registro do "concordo" (B10 da seguranca, LGPD): qual versão dos termos e quando, guardado no próprio usuário.
+  const { error } = await cliente(config).auth.signUp({
+    email,
+    password: senha,
+    options: { emailRedirectTo: `${enderecoDoSite}/conta/confirmar`, data: { termos_versao: concordo.versao, termos_aceitos_em: concordo.em } },
+  });
   return respostaQueNaoRevela(error);
 }
 
@@ -110,11 +121,16 @@ export async function renovar(config: ConfiguracaoDaConta, renovacao: string): P
   return { ok: true, valor: tokens };
 }
 
-/** Sair: o Supabase invalida a sessão dele (o refresh token não vale mais), além de o site apagar o cookie. */
-export async function sair(config: ConfiguracaoDaConta, tokens: TokensDaSessao): Promise<void> {
+/**
+ * Sair: o Supabase invalida a sessão dele (o refresh token não vale mais), além de o site apagar o cookie. "global":
+ * todas as sessões da pessoa, em todo aparelho (B4 da seguranca); "local": só esta.
+ */
+export async function sair(config: ConfiguracaoDaConta, tokens: TokensDaSessao, escopo: "local" | "global" = "local"): Promise<Resultado<null>> {
   const sessao = cliente(config);
   const { error } = await sessao.auth.setSession({ access_token: tokens.acesso, refresh_token: tokens.renovacao });
-  if (!error) await sessao.auth.signOut({ scope: "local" });
+  if (error) return { ok: false, erro: erroDeSessao(error) };
+  const saiu = await sessao.auth.signOut({ scope: escopo });
+  return saiu.error ? { ok: false, erro: "indisponivel" } : { ok: true, valor: null };
 }
 
 export async function pedirNovaSenha(config: ConfiguracaoDaConta, email: string, enderecoDoSite: string): Promise<Resultado<null>> {

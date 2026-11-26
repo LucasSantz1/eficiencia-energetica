@@ -30,7 +30,7 @@ describe("Supabase: respostas que não revelam quais e-mails têm conta (M1 da s
   it("'espere 60 s para outro e-mail' (só acontece com e-mail que TEM conta) responde igual a sucesso", async () => {
     respostas.erro = { status: 429, code: "over_email_send_rate_limit" };
     expect(await gateway.pedirNovaSenha(CONFIG, "ana@exemplo.org", "https://site")).toEqual({ ok: true, valor: null });
-    expect(await gateway.cadastrar(CONFIG, "ana@exemplo.org", "12345678", "https://site")).toEqual({ ok: true, valor: null });
+    expect(await gateway.cadastrar(CONFIG, "ana@exemplo.org", "12345678", "https://site", { versao: "v", em: "agora" })).toEqual({ ok: true, valor: null });
   });
 
   it("o limite de pedidos de todos vira 'muitas tentativas'; Supabase fora do ar vira erro, nunca 'enviamos'", async () => {
@@ -42,9 +42,9 @@ describe("Supabase: respostas que não revelam quais e-mails têm conta (M1 da s
 
   it("senha fraca no cadastro vira mensagem; e-mail que já tem conta responde igual a sucesso", async () => {
     respostas.erro = { status: 422, code: "weak_password" };
-    expect(await gateway.cadastrar(CONFIG, "ana@exemplo.org", "12345678", "https://site")).toEqual({ ok: false, erro: "senha-fraca" });
+    expect(await gateway.cadastrar(CONFIG, "ana@exemplo.org", "12345678", "https://site", { versao: "v", em: "agora" })).toEqual({ ok: false, erro: "senha-fraca" });
     respostas.erro = { status: 422, code: "user_already_exists" };
-    expect(await gateway.cadastrar(CONFIG, "ana@exemplo.org", "12345678", "https://site")).toEqual({ ok: true, valor: null });
+    expect(await gateway.cadastrar(CONFIG, "ana@exemplo.org", "12345678", "https://site", { versao: "v", em: "agora" })).toEqual({ ok: true, valor: null });
   });
 });
 

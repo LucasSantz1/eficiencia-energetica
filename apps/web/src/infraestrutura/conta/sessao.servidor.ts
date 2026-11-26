@@ -8,7 +8,10 @@ import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from "node:cr
  * outro site não consegue mandar um POST com ele.
  */
 export const NOME_DO_COOKIE = "__Host-sessao";
-/** O refresh token do Supabase não expira sozinho; a sessão aqui dura 30 dias sem uso. */
+/**
+ * O refresh token do Supabase não expira sozinho. Aqui a sessão dura no máximo 30 dias desde que a pessoa entrou, com
+ * ou sem uso (B4 da seguranca): depois disso, entra de novo com a senha. O cookie também some 30 dias sem uso.
+ */
 export const DURACAO_DA_SESSAO_S = 30 * 24 * 60 * 60;
 
 export interface TokensDaSessao {
@@ -16,9 +19,12 @@ export interface TokensDaSessao {
   renovacao: string;
   /** Quando o token de acesso expira, em segundos desde 1970. */
   expiraEm: number;
+  /** Quando a pessoa entrou com a senha (ou pelo link do e-mail), em segundos desde 1970. Renovar não muda. */
+  inicio?: number;
 }
 
-const VERSAO = 1;
+/** 2: com `i` (início da sessão, B4). O cookie 1, de antes, ainda abre: conta o início a partir de agora. */
+const VERSAO = 2;
 const TAMANHO_DO_IV = 12;
 const TAMANHO_DA_ETIQUETA = 16;
 /** Teto do texto do cookie: o navegador aceita 4 096 bytes; um cookie maior que isso é lixo. */
@@ -31,7 +37,7 @@ function chaveDe(segredo: Uint8Array): Buffer {
 export function cifrarSessao(tokens: TokensDaSessao, segredo: Uint8Array): string {
   const iv = randomBytes(TAMANHO_DO_IV);
   const cifra = createCipheriv("aes-256-gcm", chaveDe(segredo), iv);
-  const texto = JSON.stringify({ v: VERSAO, a: tokens.acesso, r: tokens.renovacao, e: tokens.expiraEm });
+  const texto = JSON.stringify({ v: VERSAO, a: tokens.acesso, r: tokens.renovacao, e: tokens.expiraEm, i: tokens.inicio });
   const corpo = Buffer.concat([cifra.update(texto, "utf8"), cifra.final()]);
   return Buffer.concat([iv, cifra.getAuthTag(), corpo]).toString("base64url");
 }
@@ -48,9 +54,9 @@ export function decifrarSessao(cookie: string | undefined, segredo: Uint8Array):
     const dados: unknown = JSON.parse(texto);
     if (typeof dados !== "object" || dados === null || Array.isArray(dados)) return undefined;
     // Só propriedade própria (nada de __proto__), como os leitores do ADR-004.
-    const [v, a, r, e] = ["v", "a", "r", "e"].map((chave) => (Object.hasOwn(dados, chave) ? Reflect.get(dados, chave) : undefined));
-    if (v !== VERSAO || typeof a !== "string" || typeof r !== "string" || typeof e !== "number") return undefined;
-    return { acesso: a, renovacao: r, expiraEm: e };
+    const [v, a, r, e, i] = ["v", "a", "r", "e", "i"].map((chave) => (Object.hasOwn(dados, chave) ? Reflect.get(dados, chave) : undefined));
+    if ((v !== 1 && v !== VERSAO) || typeof a !== "string" || typeof r !== "string" || typeof e !== "number") return undefined;
+    return { acesso: a, renovacao: r, expiraEm: e, ...(typeof i === "number" ? { inicio: i } : {}) };
   } catch {
     return undefined;
   }

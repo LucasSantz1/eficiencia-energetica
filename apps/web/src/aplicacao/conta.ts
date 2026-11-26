@@ -86,9 +86,11 @@ export async function trocarSenhaPeloLink(tokenHash: string, senha: string) {
 }
 
 /** Sair: a casa continua neste aparelho; só deixa de ir para a conta. */
-export async function sair() {
-  pararSincronia();
-  const resposta = await pedirApi("/api/conta/sair", "POST", {});
+/** `todos`: sai de todos os aparelhos (B4). A resposta diz se deu: sem internet, ninguém sai (B5). */
+export async function sair(todos = false) {
+  const resposta = await pedirApi("/api/conta/sair", "POST", todos ? { todos: true } : {});
+  // Só para a sincronia se saiu mesmo: sem internet, a pessoa continua na conta e a casa continua indo.
+  if (resposta.status === 200) pararSincronia();
   await atualizarConta(true);
   return resposta;
 }
