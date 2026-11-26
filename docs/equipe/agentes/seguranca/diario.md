@@ -1,3 +1,8 @@
+## 2026-11-26 · conta-tela-entrar (1d8c578) · aprovado com ressalvas (baixo)
+- O que fiz: revisão do diff contra `main` (modo turbo, só leitura de código, sem build). `contaLigadaNoSite()` devolve só booleano; `BotaoEntrar` não recebe prop. `?modo=` só é comparado com "criar". O convite não chama /api; A1 continua (só `Sincronia` grava). Sem innerHTML e sem link externo novo.
+- Ressalvas baixas: B1, a `/` agora faz GET /api/conta a cada visita quando a conta está ligada (sem dado da casa). B2, o booleano fica congelado até a revalidação de 24 h, o que é só funcional.
+- Arquivos: este diário.
+
 ## 2026-11-17 · HIS-117 · CSP sem 'unsafe-inline': hash/SRI quebra o site; proposta script-src-attr 'none'
 - O que fiz: provei numa cópia (porta 3817) que `experimental.sri` + `script-src 'self'` deixa as páginas sem hidratar (scripts inline `__next_f`), que hash por página não aguenta a revalidação diária da `/` e que hash junto com `'unsafe-inline'` também quebra. Validei `script-src-attr 'none'` (0 violações em 8 rotas, 390/1440 px; `onerror` injetado não roda) e um `csp.spec.ts` com negativo provado. Barreira na cópia: lint, typecheck, test (152 + 25 + 104), build, e2e 270 passaram (6 pulados de antes).
 - Decisões e porquê: manter `'unsafe-inline'` até o nonce no E4; não pôr o hash da HIS-102 no cabeçalho. Não editei código (papel): patch em `scratchpad/his117/his117-csp.patch` para o frontend.
