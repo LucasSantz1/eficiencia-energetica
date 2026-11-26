@@ -163,7 +163,17 @@ export function TelaEntrar({ lado, ladoCriar = lado }: { lado?: ReactNode; ladoC
             <div className="space-y-2">
               <label className="flex min-h-11 items-start gap-3">
                 <input type="checkbox" checked={concordo} onChange={(e) => setConcordo(e.target.checked)} className="mt-0.5 size-6 shrink-0 accent-[var(--color-energia)]" />
-                <span>Concordo em guardar o meu e-mail e a minha casa na conta.</span>
+                <span>
+                  Li e concordo com os{" "}
+                  <Link href="/termos" target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
+                    Termos de uso
+                  </Link>{" "}
+                  e a{" "}
+                  <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
+                    Política de privacidade
+                  </Link>
+                  , e em guardar o meu e-mail e a minha casa na conta.
+                </span>
               </label>
               {/* O detalhe continua aqui, no momento de concordar (LGPD: finalidade clara), mas fechado para não pesar na tela. */}
               <details className="ml-9 text-tinta-suave">
@@ -172,8 +182,8 @@ export function TelaEntrar({ lado, ladoCriar = lado }: { lado?: ReactNode; ladoC
                   Cidade e empresa de luz, benefício (Tarifa Social), quantas pessoas moram, cômodos, aparelhos, contas de luz, leituras do relógio, meta e
                   dicas marcadas. Serve para abrir a casa em outro celular e para os links da família. Nada de nome, CPF ou endereço. Você apaga tudo quando
                   quiser em Minha casa.{" "}
-                  <Link href="/sobre#privacidade" target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
-                    Ler sobre a privacidade
+                  <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
+                    Ler a Política de privacidade
                   </Link>
                 </p>
               </details>

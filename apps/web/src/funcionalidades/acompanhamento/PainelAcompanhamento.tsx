@@ -2,11 +2,13 @@
 
 import { ChevronRight, Info, Lightbulb, Tag, Target, TrendingUp, Zap } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { COMODOS_PADRAO, consumoDaCasaForaDoComum, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
 import { useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { useMeta } from "@/aplicacao/meta";
+import { useOpiniao } from "@/aplicacao/opiniao";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
+import { contarUso } from "@/aplicacao/uso";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
 import { descreverUso } from "@/ui/aparelho/textosDeUso";
 import { AvisoConsumoAlto } from "@/ui/AvisoConsumoAlto";
@@ -18,6 +20,7 @@ import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/
 import { ExplicaKwh } from "@/ui/ExplicaKwh";
 import { Folha } from "@/ui/Folha";
 import { Icone } from "@/ui/Icone";
+import { IstoAjudou } from "@/ui/IstoAjudou";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Acompanhamento } from "./Acompanhamento";
 import { ContaDetalhada } from "./ContaDetalhada";
@@ -56,6 +59,8 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
   const [metaAberta, setMetaAberta] = useState(false);
   const meta = useMeta(dados);
   const edicao = useEdicaoDeAparelho();
+  const opiniao = useOpiniao("painel");
+  useEffect(() => contarUso("painel-aberto"), []);
   const { conta } = resumo;
   const maior = resumo.aparelhos[0]?.kwhMes ?? 0;
   const melhor = dicas.find((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id));
@@ -348,6 +353,11 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
         <p className="mt-4 text-[0.95rem] text-tinta-suave lg:max-w-[68ch]">
           Os valores são estimativas feitas com os tempos de uso que você informou. A conta real pode variar com impostos, taxa de iluminação pública e dias de leitura.
         </p>
+        {opiniao.mostrar && (
+          <div className="mt-6 lg:max-w-[40rem]" data-sem-impressao>
+            <IstoAjudou pergunta="Esta página te ajudou a entender a sua conta de luz?" aoEnviar={opiniao.enviar} aoDispensar={opiniao.dispensar} />
+          </div>
+        )}
       </div>
 
       <EditorAparelho aparelho={editando} aberto={Boolean(editando)} aoFechar={() => setEditando(undefined)} preco={preco} comodos={edicao.comodos} aoSalvar={edicao.salvar} aoRemover={edicao.remover} />

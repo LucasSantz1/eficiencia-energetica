@@ -291,6 +291,16 @@ export function PaginaInicial({ numeros, contaLigada = false }: { numeros: Numer
                 </Link>
               </li>
               <li>
+                <Link href="/privacidade" className="hover:text-white">
+                  Política de privacidade
+                </Link>
+              </li>
+              <li>
+                <Link href="/termos" className="hover:text-white">
+                  Termos de uso
+                </Link>
+              </li>
+              <li>
                 <a href="https://dadosabertos.aneel.gov.br" rel="noopener noreferrer" className="hover:text-white">
                   Dados abertos da ANEEL
                 </a>

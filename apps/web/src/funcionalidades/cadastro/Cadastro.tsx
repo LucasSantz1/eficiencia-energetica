@@ -9,6 +9,7 @@ import { pedirConviteDaConta } from "@/aplicacao/convite-da-conta";
 import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora } from "@/aplicacao/resumo";
 import { useLeitura } from "@/aplicacao/useLeitura";
+import { contarUso } from "@/aplicacao/uso";
 import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
 import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
 import { SeletorCatalogo } from "@/ui/aparelho/SeletorCatalogo";
@@ -171,6 +172,7 @@ export function Cadastro() {
     });
     // Na tela da casa, o convite para criar conta aparece uma vez (só se o site tem conta e a pessoa está sem).
     pedirConviteDaConta();
+    contarUso("cadastro-concluido");
     router.push("/casa", { transitionTypes: ENTRAR_NO_PAINEL });
   };
 

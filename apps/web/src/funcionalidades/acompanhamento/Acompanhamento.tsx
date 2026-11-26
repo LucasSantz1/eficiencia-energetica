@@ -17,8 +17,10 @@ import {
   type ContaMensal,
   type ContaReferencia,
   type LeituraRelogio,
+  faixaDaEstimativa,
 } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
+import { contarUso } from "@/aplicacao/uso";
 import { Aviso } from "@/ui/Aviso";
 import { Barras } from "@/ui/Barras";
 import { Botao } from "@/ui/Botao";
@@ -179,6 +181,12 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
                   const conta = camposDaConta.conferir();
                   if (!conta) return;
                   salvar({ id: editando.id, competencia: editando.competencia, ...conta });
+                  // Conta nova (não edição): conta o uso e o quanto a estimativa acertou, só a faixa (ADR-009).
+                  if (!editando.id) {
+                    contarUso("conta-anotada");
+                    const faixa = faixaDaEstimativa(conta.kwh, estimativaKwhMes);
+                    if (faixa) contarUso(faixa);
+                  }
                   if (historico.length === 0) focarOutraConta.current = true;
                   setEditando(undefined);
                 }}

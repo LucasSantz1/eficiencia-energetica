@@ -96,7 +96,7 @@ async function autenticar(ctx: Contexto & { config: ConfiguracaoDaConta }, cooki
   return { ok: true, tokens, cookie: novoCookie, ...quem.valor };
 }
 
-function ligada(ctx: Contexto): ctx is Contexto & { config: ConfiguracaoDaConta } {
+export function ligada(ctx: Contexto): ctx is Contexto & { config: ConfiguracaoDaConta } {
   return ctx.config !== undefined;
 }
 
@@ -108,7 +108,7 @@ type Limite = { acao: supabase.AcaoLimitada; tipo: "ip" | "email"; valor: string
  * "muitas-tentativas" (429). Banco sem resposta: "indisponivel" (falha fechada). Sem IP (fora da Vercel), conta tudo
  * junto numa chave só.
  */
-async function dentroDoLimite(ctx: Contexto & { config: ConfiguracaoDaConta }, limites: Limite[]): Promise<"ok" | supabase.ErroDaConta> {
+export async function dentroDoLimite(ctx: Contexto & { config: ConfiguracaoDaConta }, limites: Limite[]): Promise<"ok" | supabase.ErroDaConta> {
   for (const { acao, tipo, valor } of limites) {
     const contado = await ctx.gateway.contarTentativa(ctx.config, acao, chaveDaTentativa(ctx.config.segredoDaSessao, tipo, valor ?? "desconhecido"));
     if (!contado.ok) return contado.erro;
@@ -132,7 +132,7 @@ export async function cadastrar(ctx: Contexto, corpo: Record<string, unknown>): 
   const senha = conferirSenha(corpo["senha"]);
   if (!senha.ok) return ENTRADA_INVALIDA(senha.mensagem);
   // LGPD: a casa só vai para o servidor com o "concordo" marcado na hora de criar a conta.
-  if (corpo["concordo"] !== true) return ENTRADA_INVALIDA("Marque que concorda em guardar a sua casa na conta.");
+  if (corpo["concordo"] !== true) return ENTRADA_INVALIDA("Marque que concorda com os termos e em guardar a sua casa na conta.");
   const limite = await dentroDoLimite(ctx, [{ acao: "cadastrar-ip", tipo: "ip", valor: ctx.ip }]);
   if (limite !== "ok") return falha(limite);
   const feito = await ctx.gateway.cadastrar(ctx.config, email.valor, senha.valor, ctx.enderecoDoSite, { versao: VERSAO_DOS_TERMOS, em: new Date(ctx.agora()).toISOString() });
@@ -165,6 +165,8 @@ export async function confirmarEmail(ctx: Contexto, corpo: Record<string, unknow
   if (limite !== "ok") return falha(limite);
   const tokens = await ctx.gateway.confirmarLink(ctx.config, hash, "email");
   if (!tokens.ok) return falha(tokens.erro);
+  // Contagem anônima (ADR-009): falhar aqui não atrapalha a pessoa.
+  await ctx.gateway.contarUso(ctx.config, "conta-confirmada").catch(() => undefined);
   return { status: 200, corpo: { ok: true }, cookie: comSessao(ctx.config, sessaoNova(ctx, tokens.valor)) };
 }
 
@@ -279,6 +281,7 @@ export async function criarConvite(ctx: Contexto, cookie: string | undefined, co
   const codigo = novoCodigoDeConvite();
   const criado = await ctx.gateway.criarConvite(ctx.config, quem.tokens.acesso, quem.id, hashDoCodigo(codigo), nome.valor);
   if (!criado.ok) return falha(criado.erro, quem.cookie);
+  await ctx.gateway.contarUso(ctx.config, "convite-criado").catch(() => undefined);
   return { status: 200, corpo: { convite: criado.valor, codigo }, cookie: quem.cookie };
 }
 

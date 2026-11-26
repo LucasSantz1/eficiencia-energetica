@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { SCRIPT_DA_PRIMEIRA_PINTURA } from "@/aplicacao/leitura";
+import { ContarVisita } from "@/funcionalidades/metricas/ContarVisita";
 import { LigarOffline } from "@/funcionalidades/offline/LigarOffline";
 import "./globals.css";
 
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-dvh">
         {children}
         <LigarOffline />
+        <ContarVisita />
       </body>
     </html>
   );

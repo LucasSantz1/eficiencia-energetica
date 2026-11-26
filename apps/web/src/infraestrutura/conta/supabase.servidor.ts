@@ -21,7 +21,7 @@ export interface CasaNoServidor {
 }
 
 /** As ações que o banco limita (supabase/migrations/20261126160000_limites_e_casa_cifrada.sql). */
-export type AcaoLimitada = "entrar-ip" | "entrar-email" | "cadastrar-ip" | "esqueci-ip" | "esqueci-email" | "link-ip" | "convidado-ip";
+export type AcaoLimitada = "entrar-ip" | "entrar-email" | "cadastrar-ip" | "esqueci-ip" | "esqueci-email" | "link-ip" | "convidado-ip" | "uso-ip" | "opiniao-ip";
 
 export interface ConviteNoServidor {
   id: string;
@@ -247,5 +247,17 @@ export async function contarTentativa(config: ConfiguracaoDaConta, acao: AcaoLim
 /** Apaga a conta (e, em cascata no banco, a casa e os convites). */
 export async function apagarConta(config: ConfiguracaoDaConta, acesso: string): Promise<Resultado<null>> {
   const { error } = await cliente(config, acesso).rpc("apagar_minha_conta");
+  return error ? { ok: false, erro: "indisponivel" } : { ok: true, valor: null };
+}
+
+/** Uma contagem a mais no dia, para o evento (ADR-009). Sem identificar ninguém: o banco só soma. */
+export async function contarUso(config: ConfiguracaoDaConta, evento: string): Promise<Resultado<null>> {
+  const { error } = await cliente(config).rpc("contar_uso", { nome_do_evento: evento });
+  return error ? { ok: false, erro: "indisponivel" } : { ok: true, valor: null };
+}
+
+/** "Isto te ajudou?" (ADR-009): momento, nota e texto opcional já conferidos (conferirOpiniao, do core). */
+export async function registrarOpiniao(config: ConfiguracaoDaConta, momento: string, nota: number, texto: string | undefined): Promise<Resultado<null>> {
+  const { error } = await cliente(config).rpc("registrar_opiniao", { nome_do_momento: momento, nota_dada: nota, texto_livre: texto ?? null });
   return error ? { ok: false, erro: "indisponivel" } : { ok: true, valor: null };
 }

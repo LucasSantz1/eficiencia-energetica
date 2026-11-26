@@ -130,4 +130,46 @@ select pg_temp.deve_falhar('select * from public.tentativas', 'logado lendo tent
 select pg_temp.deve_falhar($$select public.contar_tentativa('entrar-ip', sha256('x'))$$, 'logado chamando a contagem');
 reset role;
 
+-- 9. Lançamento (ADR-009): contas não confirmadas há mais de 7 dias somem; as confirmadas e as novas ficam.
+insert into auth.users (id, email, email_confirmed_at, created_at) values
+  ('00000000-0000-4000-8000-0000000000c1', 'velha-sem-confirmar@exemplo.org', null, now() - interval '8 days'),
+  ('00000000-0000-4000-8000-0000000000c2', 'nova-sem-confirmar@exemplo.org', null, now() - interval '1 day'),
+  ('00000000-0000-4000-8000-0000000000c3', 'velha-confirmada@exemplo.org', now() - interval '20 days', now() - interval '20 days');
+do $$ begin
+  if public.limpar_contas_nao_confirmadas() <> 1 then raise exception 'devia apagar só a conta velha sem confirmar'; end if;
+  if exists (select 1 from auth.users where id = '00000000-0000-4000-8000-0000000000c1') then raise exception 'a conta velha sem confirmar ficou'; end if;
+  if (select count(*) from auth.users where id in ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000c3')) <> 2 then raise exception 'apagou conta que não devia'; end if;
+end $$;
+select pg_temp.como('anon', null);
+select pg_temp.deve_falhar('select public.limpar_contas_nao_confirmadas()', 'anon chamando a limpeza');
+
+-- 10. Uso e opinião: anon só conta e opina pela função, de listas fixas; ninguém lê as tabelas pela API.
+do $$ begin
+  perform public.contar_uso('visita');
+  perform public.contar_uso('visita');
+  perform public.registrar_opiniao('painel', 5::smallint, '  Me ajudou a ver o chuveiro  ');
+  perform public.registrar_opiniao('dica', 2::smallint, '   ');
+end $$;
+select pg_temp.deve_falhar($$select public.contar_uso('inventado')$$, 'evento fora da lista');
+select pg_temp.deve_falhar($$select public.registrar_opiniao('outro', 3::smallint, null)$$, 'momento fora da lista');
+select pg_temp.deve_falhar($$select public.registrar_opiniao('painel', 6::smallint, null)$$, 'nota 6');
+select pg_temp.deve_falhar($$select public.registrar_opiniao('painel', 4::smallint, repeat('a', 281))$$, 'texto longo');
+select pg_temp.deve_falhar('select * from public.uso_por_dia', 'anon lendo o uso');
+select pg_temp.deve_falhar('select * from public.opinioes', 'anon lendo opiniões');
+select pg_temp.deve_falhar($$insert into public.opinioes (dia, momento, nota) values (current_date, 'painel', 5)$$, 'anon gravando opinião direto');
+do $$ begin
+  if not public.contar_tentativa('uso-ip', sha256('ip')) or not public.contar_tentativa('opiniao-ip', sha256('ip')) then raise exception 'ações novas do limite'; end if;
+end $$;
+reset role;
+select pg_temp.como('authenticated', '00000000-0000-4000-8000-00000000000b');
+select pg_temp.deve_falhar($$select public.contar_uso('visita')$$, 'logado contando uso direto');
+select pg_temp.deve_falhar('select * from public.opinioes', 'logado lendo opiniões');
+reset role;
+do $$ begin
+  if (select quantas from public.uso_por_dia where evento = 'visita') <> 2 then raise exception 'a contagem devia somar'; end if;
+  if (select count(*) from public.uso_por_dia) <> 1 then raise exception 'uma linha por dia e evento'; end if;
+  if (select texto from public.opinioes where nota = 5) <> 'Me ajudou a ver o chuveiro' then raise exception 'o texto devia sair sem espaços nas pontas'; end if;
+  if (select texto from public.opinioes where nota = 2) is not null then raise exception 'texto só de espaços vira vazio'; end if;
+end $$;
+
 \echo 'RLS: tudo certo'

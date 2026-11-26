@@ -6,6 +6,7 @@ import type { TokensDaSessao } from "@/infraestrutura/conta/sessao.servidor";
 vi.mock("server-only", () => ({}));
 
 const conta = await import("@/aplicacao/conta.servidor");
+const metricas = await import("@/aplicacao/metricas.servidor");
 const { cifrarSessao, decifrarSessao } = await import("@/infraestrutura/conta/sessao.servidor");
 const { chaveDaTentativa, redeDoIp } = await import("@/infraestrutura/conta/tentativas.servidor");
 const { cifrarCasa, decifrarCasa } = await import("@/infraestrutura/conta/cofre.servidor");
@@ -40,6 +41,8 @@ function gatewayDeMentira(trocas: Partial<Gateway> = {}): Gateway & { chamadas: 
     casaDoConvite: anotar("casaDoConvite", { ok: true, valor: undefined }),
     apagarConta: anotar("apagarConta", { ok: true, valor: null }),
     contarTentativa: anotar("contarTentativa", { ok: true, valor: true }),
+    contarUso: anotar("contarUso", { ok: true, valor: null }),
+    registrarOpiniao: anotar("registrarOpiniao", { ok: true, valor: null }),
   };
   return Object.assign({ ...base, ...trocas }, { chamadas });
 }
@@ -355,5 +358,38 @@ describe("sessão: limite total, sair de todos e registro do 'concordo' (B4, B10
     await conta.cadastrar(contexto(gateway), { email: "ana@exemplo.org", senha: "12345678", concordo: true });
     const { VERSAO_DOS_TERMOS } = await import("@/config/termos");
     expect(gateway.chamadas["cadastrar"]?.[0]?.[4]).toEqual({ versao: VERSAO_DOS_TERMOS, em: new Date(AGORA_MS).toISOString() });
+  });
+});
+
+describe("métricas anônimas (ADR-009)", () => {
+  it("conta só evento da lista e responde 204 sem corpo; nada da casa nem de quem é", async () => {
+    const gateway = gatewayDeMentira();
+    expect(await metricas.contarUso(contexto(gateway), { evento: "visita" })).toEqual({ status: 204, corpo: {} });
+    expect(gateway.chamadas["contarUso"]?.[0]?.slice(1)).toEqual(["visita"]);
+    expect((await metricas.contarUso(contexto(gateway), { evento: "inventado" })).status).toBe(400);
+    expect(gateway.chamadas["contarUso"]).toHaveLength(1);
+  });
+
+  it("passou do limite (robô): ignora calado; conta desligada: não conta nada", async () => {
+    const barrado = gatewayDeMentira({ contarTentativa: async () => ({ ok: true, valor: false }) });
+    expect((await metricas.contarUso(contexto(barrado), { evento: "visita" })).status).toBe(204);
+    expect(barrado.chamadas["contarUso"] ?? []).toHaveLength(0);
+    const desligada = gatewayDeMentira();
+    expect((await metricas.contarUso(contexto(desligada, false), { evento: "visita" })).status).toBe(204);
+    expect(desligada.chamadas).toEqual({});
+  });
+
+  it("opinião: confere nota, momento e texto (sem telefone ou e-mail) antes do banco", async () => {
+    const gateway = gatewayDeMentira();
+    expect((await metricas.registrarOpiniao(contexto(gateway), { momento: "painel", nota: 5, texto: "  Ajudou  " })).status).toBe(200);
+    expect(gateway.chamadas["registrarOpiniao"]?.[0]?.slice(1)).toEqual(["painel", 5, "Ajudou"]);
+    expect((await metricas.registrarOpiniao(contexto(gateway), { momento: "painel", nota: 9 })).status).toBe(400);
+    expect((await metricas.registrarOpiniao(contexto(gateway), { momento: "painel", nota: 4, texto: "zap 18 99123 4567" })).status).toBe(400);
+    expect(gateway.chamadas["registrarOpiniao"]).toHaveLength(1);
+  });
+
+  it("confirmar o e-mail e criar link contam, mas a falha da contagem não atrapalha", async () => {
+    const gateway = gatewayDeMentira({ contarUso: async () => { throw new Error("fora do ar"); } });
+    expect((await conta.confirmarEmail(contexto(gateway), { tokenHash: "abcdefgh12" })).status).toBe(200);
   });
 });

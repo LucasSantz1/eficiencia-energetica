@@ -6,6 +6,7 @@ import { formatarReais, LIMITES } from "@ee/core";
 import type { SituacaoDaMeta } from "@ee/core/meta";
 import { useMeta } from "@/aplicacao/meta";
 import type { useResumo } from "@/aplicacao/resumo";
+import { contarUso } from "@/aplicacao/uso";
 import { Aviso } from "@/ui/Aviso";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
@@ -58,6 +59,7 @@ export function MetaDeGasto({ dados, naFolha = false, className = "" }: { dados:
     const resultado = campo.conferir();
     if (focarPrimeiroErro([{ id: ID_DO_CAMPO, resultado }]) || campo.valorValido === undefined) return;
     definirMeta(campo.valorValido);
+    contarUso("meta-definida");
     setEditando(false);
     setSalvou(true);
     focar(ID_DO_MUDAR);
