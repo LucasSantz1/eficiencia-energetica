@@ -194,6 +194,21 @@ Regras em `docs/equipe/espacos-reservados.md` e ADR-002. Estão **desligados** e
 Antes de ligar: troca do plano da hospedagem (o plano gratuito da Vercel é só para uso não comercial), política de privacidade
 atualizada, consentimento para qualquer rastreamento e revisão de `seguranca` e `ux-acessibilidade`.
 
+### E12 · Métricas de uso e satisfação (futuro, pedido do dono em 26/11)
+
+Painel para o dono acompanhar o uso do site e a satisfação de quem usa, e mostrar os números ao apresentar o projeto
+(ONGs, governo). Também serve para comparar o uso entre períodos, conferir se os números batem e decidir as próximas
+melhorias, como as empresas medem os produtos delas. A regra que vale para tudo: **números juntos e anônimos**, sem
+e-mail, id nem nada que leve a uma pessoa. Precisa de uma finalidade nova escrita no Sobre; o que vem da conta só
+entra com um "concordo" novo. Antes de começar: ADR, RIPD (relatório de impacto LGPD) e revisão da `seguranca`.
+
+| ID | História | Papéis | Tam. |
+| --- | --- | --- | --- |
+| HIS-1201 | Contar o uso sem identificar ninguém: visitas e telas (ex.: Vercel Web Analytics, sem cookie) e contadores por dia no servidor (quantas casas cadastradas, quais dicas marcadas), sem dado pessoal | backend, seguranca, documentacao | M |
+| HIS-1202 | Pedir a opinião de quem usa: "Isto te ajudou?" e uma nota de 1 a 5 em momentos certos (depois de ver a conta, depois de uma dica), com texto livre opcional e curto, nunca obrigatório | ux, frontend, backend | M |
+| HIS-1203 | Painel de análise para o dono (protegido): uso por semana e por mês, comparação entre períodos, satisfação média, feedbacks recentes e se a estimativa bate com as contas anotadas (só números juntos) | backend, frontend, seguranca | G |
+| HIS-1204 | Relatório para apresentar: exportar o painel em PDF ou slides, com fonte e data de cada número | documentacao, frontend | P |
+
 ## 5. Roteiro de sprints (sprints de 1 semana)
 
 | Sprint | Foco | Histórias |
