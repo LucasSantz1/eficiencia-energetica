@@ -26,5 +26,6 @@ export async function registrarOpiniao(ctx: Contexto, corpo: Record<string, unkn
   const limite = await dentroDoLimite(ctx, [{ acao: "opiniao-ip", tipo: "ip", valor: ctx.ip }]);
   if (limite !== "ok") return { status: limite === "muitas-tentativas" ? 429 : 503, corpo: { erro: limite } };
   const gravou = await ctx.gateway.registrarOpiniao(ctx.config, opiniao.momento, opiniao.nota, opiniao.texto);
-  return gravou.ok ? { status: 200, corpo: { ok: true } } : { status: 503, corpo: { erro: "indisponivel" } };
+  if (gravou.ok) return { status: 200, corpo: { ok: true } };
+  return gravou.erro === "muitas-tentativas" ? { status: 429, corpo: { erro: "muitas-tentativas" } } : { status: 503, corpo: { erro: "indisponivel" } };
 }

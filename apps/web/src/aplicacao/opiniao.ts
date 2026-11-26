@@ -3,6 +3,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { MomentoDeOpiniao } from "@ee/core";
 import { useConta } from "./conta-estado";
+import { useCadastrouNestaVisita } from "./convite-da-conta";
 import { enviarOpiniao } from "./uso";
 
 /**
@@ -40,6 +41,8 @@ export function useOpiniao(momento: MomentoDeOpiniao) {
     () => true,
   );
   const tipo = useConta().tipo;
+  // O painel logo depois do cadastro ainda não foi usado: a pergunta dele espera a próxima visita.
+  const cedoDemais = useCadastrouNestaVisita() && momento === "painel";
   const enviar = useCallback(
     async (nota: number, texto: string) => {
       const resultado = await enviarOpiniao(momento, nota, texto);
@@ -49,7 +52,7 @@ export function useOpiniao(momento: MomentoDeOpiniao) {
     [momento],
   );
   const dispensar = useCallback(() => marcar(momento, "dispensada"), [momento]);
-  return { mostrar: !jaFoi && tipo !== "desligada" && tipo !== "carregando", enviar, dispensar };
+  return { mostrar: !jaFoi && !cedoDemais && tipo !== "desligada" && tipo !== "carregando", enviar, dispensar };
 }
 
 /** "Apagar todos os meus dados" também leva as marcas das perguntas (LGPD: tudo deste aparelho). */

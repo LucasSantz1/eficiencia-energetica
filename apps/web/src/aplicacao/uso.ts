@@ -7,7 +7,7 @@ import { pedirApi } from "@/infraestrutura/conta/api";
 /**
  * Contagem anônima de uso, do lado do navegador (ADR-009). Manda só o nome do evento: nada da casa, nenhum id, nenhum
  * cookie novo. Quem pediu ao navegador para não ser rastreado (Global Privacy Control ou "Do Not Track") não manda
- * nada. "visita" e "painel-aberto" contam uma vez por aba. Falhou (sem internet): esquece, não tenta de novo.
+ * nada. "visita" e "painel-aberto" contam uma vez por carga da página (na memória, sem guardar nada). Falhou (sem internet): esquece, não tenta de novo.
  */
 const UMA_VEZ_POR_ABA: ReadonlySet<EventoDeUso> = new Set(["visita", "painel-aberto"]);
 
@@ -53,15 +53,13 @@ export function useContarMeuUso(): [boolean, (contar: boolean) => void] {
   return [!desligada, mudar];
 }
 
+/** Na memória da página, não no aparelho: nada fica guardado só para contar (a Tarifa Social promete "nada guardado"). */
+const contadosNestaPagina = new Set<EventoDeUso>();
+
 function jaContouNestaAba(evento: EventoDeUso): boolean {
   if (!UMA_VEZ_POR_ABA.has(evento)) return false;
-  try {
-    const chave = `eficiencia-energetica:contou:${evento}`;
-    if (sessionStorage.getItem(chave)) return true;
-    sessionStorage.setItem(chave, "1");
-  } catch {
-    // Sem sessionStorage (aba privada estrita): conta, no máximo, uma vez por carga de página.
-  }
+  if (contadosNestaPagina.has(evento)) return true;
+  contadosNestaPagina.add(evento);
   return false;
 }
 

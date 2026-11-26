@@ -258,6 +258,8 @@ export async function contarUso(config: ConfiguracaoDaConta, evento: string): Pr
 
 /** "Isto te ajudou?" (ADR-009): momento, nota e texto opcional já conferidos (conferirOpiniao, do core). */
 export async function registrarOpiniao(config: ConfiguracaoDaConta, momento: string, nota: number, texto: string | undefined): Promise<Resultado<null>> {
-  const { error } = await cliente(config).rpc("registrar_opiniao", { nome_do_momento: momento, nota_dada: nota, texto_livre: texto ?? null });
-  return error ? { ok: false, erro: "indisponivel" } : { ok: true, valor: null };
+  const { data, error } = await cliente(config).rpc("registrar_opiniao", { nome_do_momento: momento, nota_dada: nota, texto_livre: texto ?? null });
+  if (error) return { ok: false, erro: "indisponivel" };
+  // `false`: o teto de opiniões do dia chegou e nada foi guardado; a pessoa não pode ver "Obrigado" (seguranca, 27/11).
+  return data === false ? { ok: false, erro: "muitas-tentativas" } : { ok: true, valor: null };
 }

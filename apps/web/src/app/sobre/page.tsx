@@ -72,11 +72,11 @@ export default function Sobre() {
           </p>
           <p>
             Tudo em detalhe na{" "}
-            <Link href="/privacidade" className="font-bold text-energia underline underline-offset-4">
+            <Link href="/privacidade" prefetch={false} className="font-bold text-energia underline underline-offset-4">
               Política de privacidade
             </Link>{" "}
             e nos{" "}
-            <Link href="/termos" className="font-bold text-energia underline underline-offset-4">
+            <Link href="/termos" prefetch={false} className="font-bold text-energia underline underline-offset-4">
               Termos de uso
             </Link>
             .

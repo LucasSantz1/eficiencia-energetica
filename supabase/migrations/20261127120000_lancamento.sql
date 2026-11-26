@@ -180,17 +180,35 @@ language sql volatile security definer set search_path = '' as $$
 $$;
 revoke all on function public.limpar_contas_nao_confirmadas() from public, anon, authenticated;
 
+-- Cada passo no seu bloco: um que falhe (permissão no auth, por exemplo) não impede os outros. A falha aparece como
+-- aviso no cron.job_run_details.
 create function public.limpeza_diaria() returns void
 language plpgsql volatile security definer set search_path = '' as $$
 begin
-  perform public.limpar_contas_nao_confirmadas();
-  -- O refresh token do Supabase não vence sozinho: a sessão abandonada some depois de 31 dias, como no site (B4).
-  if to_regclass('auth.sessions') is not null then
-    execute $sql$delete from auth.sessions where created_at < now() - interval '31 days'$sql$;
-  end if;
-  delete from public.tentativas where janela < now() - interval '1 day';
-  update public.opinioes set texto = null
-  where texto is not null and dia < (now() at time zone 'America/Sao_Paulo')::date - interval '12 months';
+  begin
+    perform public.limpar_contas_nao_confirmadas();
+  exception when others then
+    raise warning 'limpeza: contas não confirmadas falhou (%)', sqlerrm;
+  end;
+  begin
+    -- O refresh token do Supabase não vence sozinho: a sessão abandonada some depois de 31 dias, como no site (B4).
+    if to_regclass('auth.sessions') is not null then
+      execute $sql$delete from auth.sessions where created_at < now() - interval '31 days'$sql$;
+    end if;
+  exception when others then
+    raise warning 'limpeza: sessões falhou (%)', sqlerrm;
+  end;
+  begin
+    delete from public.tentativas where janela < now() - interval '1 day';
+  exception when others then
+    raise warning 'limpeza: tentativas falhou (%)', sqlerrm;
+  end;
+  begin
+    update public.opinioes set texto = null
+    where texto is not null and dia < (now() at time zone 'America/Sao_Paulo')::date - interval '12 months';
+  exception when others then
+    raise warning 'limpeza: texto das opiniões falhou (%)', sqlerrm;
+  end;
 end;
 $$;
 revoke all on function public.limpeza_diaria() from public, anon, authenticated;

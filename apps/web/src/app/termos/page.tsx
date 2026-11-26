@@ -56,7 +56,7 @@ export default function Termos() {
         <p>
           O site pode mudar, ganhar ou perder partes. Se estes termos mudarem, a data no alto muda junto, e quem criar conta depois concorda com a versão
           nova. O que fazemos com os seus dados está na{" "}
-          <Link href="/privacidade" className="font-bold text-energia underline underline-offset-4">
+          <Link href="/privacidade" prefetch={false} className="font-bold text-energia underline underline-offset-4">
             Política de privacidade
           </Link>
           .

@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { formatarKwh, formatarReais, type Dica } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { useOpiniao } from "@/aplicacao/opiniao";
@@ -9,9 +9,12 @@ import { useResumo } from "@/aplicacao/resumo";
 import { contarUso } from "@/aplicacao/uso";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { Icone } from "@/ui/Icone";
-import { IstoAjudou } from "@/ui/IstoAjudou";
+import { IgnorarFalha } from "@/ui/IgnorarFalha";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
+
+// O cartão da opinião só baixa quando aparece (ADR-009).
+const OpiniaoDasDicas = lazy(() => import("./OpiniaoDasDicas").then((m) => ({ default: m.OpiniaoDasDicas })));
 
 type Filtro = "todas" | "habito" | "troca";
 
@@ -108,7 +111,11 @@ export function TelaDicas() {
         {/* Só depois de a pessoa usar o plano: aí ela sabe dizer se as dicas ajudaram (ADR-009). */}
         {opiniao.mostrar && plano.length > 0 && (
           <div className="mt-8">
-            <IstoAjudou pergunta="As dicas te ajudaram a pensar em como gastar menos?" aoEnviar={opiniao.enviar} aoDispensar={opiniao.dispensar} />
+            <IgnorarFalha>
+              <Suspense fallback={null}>
+                <OpiniaoDasDicas aoEnviar={opiniao.enviar} aoDispensar={opiniao.dispensar} />
+              </Suspense>
+            </IgnorarFalha>
           </div>
         )}
 

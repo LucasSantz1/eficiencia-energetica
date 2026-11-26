@@ -8,6 +8,9 @@ import { useSyncExternalStore } from "react";
  * quem recarrega a página não vê de novo: a conta é opcional e o convite não insiste.
  */
 let pendente = false;
+// Também só na memória: a casa foi cadastrada nesta visita. O "Isto te ajudou?" do painel espera uma próxima visita,
+// quando a pessoa já usou a tela (e não aparece junto do convite, com dois "Agora não" na mesma tela).
+let cadastrouNestaVisita = false;
 const ouvintes = new Set<() => void>();
 
 function mudar(valor: boolean) {
@@ -16,6 +19,7 @@ function mudar(valor: boolean) {
 }
 
 export function pedirConviteDaConta() {
+  cadastrouNestaVisita = true;
   mudar(true);
 }
 
@@ -30,6 +34,17 @@ export function useConviteDaConta(): boolean {
       return () => ouvintes.delete(avisar);
     },
     () => pendente,
+    () => false,
+  );
+}
+
+export function useCadastrouNestaVisita(): boolean {
+  return useSyncExternalStore(
+    (avisar) => {
+      ouvintes.add(avisar);
+      return () => ouvintes.delete(avisar);
+    },
+    () => cadastrouNestaVisita,
     () => false,
   );
 }

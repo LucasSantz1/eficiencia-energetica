@@ -110,10 +110,11 @@
   `dono` (`casa_do_convite` passa a devolver `dono` só ao servidor), e M2, o texto do ADR ("protege só contra leitura do
   banco"). Baixas: lockout por e-mail pelo site, tabela `tentativas` enchida com a chave anon, rollback mostra casa vazia,
   IPv6 /64 quando a Vercel aceitar IPv6 (hoje não aceita).
-- **lancamento-essencial (`9a82fa4`, 2026-11-26): vetado.** A1 (alta): a contagem de uso e a opinião deixam
-  HMAC(IP)+horário em `tentativas`, e a política diz que não. Reabrir depois que sair o `uso-ip` do `/api/uso`,
-  `opinioes.id` virar uuid e o texto ficar honesto. Médias A2–A5 e baixas: ver o diário. Falta o ADR-009 e o RIPD (E12);
-  o ADR tem de registrar a decisão de contar sem "sim" (opt-out por GPC/DNT) contra a HIS-405.
+- **lancamento-essencial:** vetado em `9a82fa4` (A1, código do IP nas métricas) e **aprovado com ressalvas (baixo)**
+  em `795db07`. Depois do deploy: conferir `cron.job` e `cron.job_run_details` (`limpeza-diaria` com sucesso) e que o
+  gatilho `registrar_consentimento` existe. Antes de divulgar, o dono preenche `CONTATO_EMAIL` e `RESPONSAVEL_PELO_SITE`
+  (A3). Baixas abertas: o teto de opiniões responde 200 sem guardar; a política não diz que "Apagar todos" mantém a
+  escolha de não contar. O RIPD do E12 fica para o painel (HIS-1203).
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

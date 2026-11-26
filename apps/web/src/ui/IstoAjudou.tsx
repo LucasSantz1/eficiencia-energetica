@@ -113,8 +113,9 @@ export function IstoAjudou({
             {estado === "enviando" ? "Enviando…" : "Enviar"}
           </Botao>
         )}
+        {/* Não é "Agora não": o aviso da conta, na mesma tela, já usa esse nome, e o leitor de tela não saberia qual é qual. */}
         <Botao variante="fantasma" onClick={aoDispensar}>
-          Agora não
+          Não responder
         </Botao>
       </div>
     </section>

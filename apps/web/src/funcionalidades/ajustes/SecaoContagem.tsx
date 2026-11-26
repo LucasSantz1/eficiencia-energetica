@@ -17,7 +17,7 @@ export function SecaoContagem() {
         aoMudar={mudar}
       />
       <p className="mt-3 text-[0.95rem] text-tinta-suave">
-        <Link href="/privacidade#contagem" className="font-bold text-energia underline underline-offset-4">
+        <Link href="/privacidade#contagem" prefetch={false} className="font-bold text-energia underline underline-offset-4">
           O que é contado
         </Link>
       </p>

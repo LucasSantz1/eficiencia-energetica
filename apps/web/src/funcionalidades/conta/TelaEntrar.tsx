@@ -165,11 +165,11 @@ export function TelaEntrar({ lado, ladoCriar = lado }: { lado?: ReactNode; ladoC
                 <input type="checkbox" checked={concordo} onChange={(e) => setConcordo(e.target.checked)} className="mt-0.5 size-6 shrink-0 accent-[var(--color-energia)]" />
                 <span>
                   Li e concordo com os{" "}
-                  <Link href="/termos" target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
+                  <Link href="/termos" prefetch={false} target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
                     Termos de uso
                   </Link>{" "}
                   e a{" "}
-                  <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
+                  <Link href="/privacidade" prefetch={false} target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
                     Política de privacidade
                   </Link>
                   , e em guardar o meu e-mail e a minha casa na conta.
@@ -182,7 +182,7 @@ export function TelaEntrar({ lado, ladoCriar = lado }: { lado?: ReactNode; ladoC
                   Cidade e empresa de luz, benefício (Tarifa Social), quantas pessoas moram, cômodos, aparelhos, contas de luz, leituras do relógio, meta e
                   dicas marcadas. Serve para abrir a casa em outro celular e para os links da família. Nada de nome, CPF ou endereço. Você apaga tudo quando
                   quiser em Minha casa.{" "}
-                  <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
+                  <Link href="/privacidade" prefetch={false} target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
                     Ler a Política de privacidade
                   </Link>
                 </p>

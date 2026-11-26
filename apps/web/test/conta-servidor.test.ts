@@ -388,6 +388,11 @@ describe("métricas anônimas (ADR-009)", () => {
     expect(gateway.chamadas["registrarOpiniao"]).toHaveLength(1);
   });
 
+  it("teto de opiniões do dia: responde 429, não 'Obrigado'", async () => {
+    const lotado = gatewayDeMentira({ registrarOpiniao: async () => ({ ok: false, erro: "muitas-tentativas" }) });
+    expect((await metricas.registrarOpiniao(contexto(lotado), { momento: "painel", nota: 5 })).status).toBe(429);
+  });
+
   it("confirmar o e-mail e criar link contam, mas a falha da contagem não atrapalha", async () => {
     const gateway = gatewayDeMentira({ contarUso: async () => { throw new Error("fora do ar"); } });
     expect((await conta.confirmarEmail(contexto(gateway), { tokenHash: "abcdefgh12" })).status).toBe(200);

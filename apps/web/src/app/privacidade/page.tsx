@@ -25,7 +25,7 @@ export default function Privacidade() {
           Não pedimos nome, CPF, endereço nem telefone. O que você cadastra fica guardado só no navegador deste aparelho: a cidade e a empresa de luz, o
           benefício (Tarifa Social), o tipo de ligação, quantas pessoas moram, os cômodos, os aparelhos, as contas de luz, as leituras do relógio, a meta,
           as dicas marcadas e as escolhas de leitura (letra maior, mais contraste). Também ficam ali umas marcas pequenas: se
-          você já respondeu o &quot;Isto te ajudou?&quot;, se desligou a contagem de uso e o que já foi contado nesta aba. Nada disso
+          você já respondeu o &quot;Isto te ajudou?&quot;, e se desligou a contagem de uso. Nada disso
           vai para nenhum servidor.
         </p>
         <p>Para mostrar os preços, o site baixa arquivos públicos da ANEEL e do IBGE, iguais para todo mundo. Baixar esses arquivos não envia nada seu.</p>
@@ -110,8 +110,8 @@ export default function Privacidade() {
             contato abaixo.
           </li>
           <li>
-            Apagar: em Minha casa, &quot;Apagar todos os meus dados&quot; apaga o que está no aparelho e, se você tem conta, a conta, a casa guardada nela e
-            os links da família.
+            Apagar: em Minha casa, &quot;Apagar todos os meus dados&quot; apaga o que está no aparelho (menos a escolha de não contar o uso, para a
+            contagem não voltar sozinha) e, se você tem conta, a conta, a casa guardada nela e os links da família.
           </li>
         </ul>
       </section>
@@ -131,7 +131,7 @@ export default function Privacidade() {
         </p>
         <p>
           Se este texto mudar, a data no alto muda junto. Veja também os{" "}
-          <Link href="/termos" className="font-bold text-energia underline underline-offset-4">
+          <Link href="/termos" prefetch={false} className="font-bold text-energia underline underline-offset-4">
             Termos de uso
           </Link>
           .

@@ -17,7 +17,7 @@ const ancora = `comodo-${alvo.id}`;
 
 const esperarComodoAbertoNaTela = (pagina: Page) => esperarComodoAberto(pagina, alvo.nome);
 
-/** Distância do topo da seção ao topo da janela, em px. */
+/** Distância do topo da seção (no computador, do painel do cômodo) ao topo da janela, em px. */
 const topoDaSecao = (pagina: Page) =>
   pagina.getByRole("region", { name: alvo.nome, exact: true }).evaluate((s) => Math.round(s.getBoundingClientRect().top));
 
@@ -44,19 +44,20 @@ test("?visao=geral abre no \"Painel geral\"", async ({ page }) => {
   await expect(page.getByRole("radio", { name: "Por cômodo" })).not.toBeChecked();
 });
 
-// Alinhado ao topo = no máximo 200 px abaixo do topo da janela (o cabeçalho tem ~112 px; a rolagem nativa da
-// âncora deixa a seção a 112 px nas duas larguras).
-const TOPO_ALINHADO_PX = 200;
+// Celular: alinhado ao topo = no máximo 200 px abaixo do topo da janela (o cabeçalho tem ~112 px; a rolagem nativa
+// da âncora deixa a seção a 112 px). Computador (1024 px ou mais, HIS-112): o cômodo abre no painel ao lado da lista,
+// já na primeira tela sem rolar (fica a ~340 px, embaixo do título e das abas); basta ele começar na metade de cima.
+const topoAlinhado = (pagina: Page) => ((pagina.viewportSize()?.width ?? 0) >= 1024 ? 450 : 200);
 
 test("HIS-108 · P3 — pelo link e direto pelo endereço, o cômodo fica alinhado ao topo", async ({ page }) => {
   // Medido na HIS-002a (A3): pelo link E direto numa página nova, a seção parava a 371 px (celular) / 491 px
   // (computador) do topo, porque a tela ainda crescia depois da rolagem. Agora a tela realinha até montar.
   await page.goto(`/casa/comodos#${ancora}`);
   await esperarComodoAbertoNaTela(page);
-  await expect.poll(() => topoDaSecao(page), { message: "direto pelo endereço" }).toBeLessThanOrEqual(TOPO_ALINHADO_PX);
+  await expect.poll(() => topoDaSecao(page), { message: "direto pelo endereço" }).toBeLessThanOrEqual(topoAlinhado(page));
 
   await page.goto("/casa");
   await page.locator(`a[href="/casa/comodos#${ancora}"]`).click();
   await esperarComodoAbertoNaTela(page);
-  await expect.poll(() => topoDaSecao(page), { message: "pelo link do acompanhamento" }).toBeLessThanOrEqual(TOPO_ALINHADO_PX);
+  await expect.poll(() => topoDaSecao(page), { message: "pelo link do acompanhamento" }).toBeLessThanOrEqual(topoAlinhado(page));
 });

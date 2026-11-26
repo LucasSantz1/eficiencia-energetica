@@ -2,7 +2,7 @@
 
 import { ChevronRight, Info, Lightbulb, Tag, Target, TrendingUp, Zap } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { COMODOS_PADRAO, consumoDaCasaForaDoComum, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
 import { useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { useMeta } from "@/aplicacao/meta";
@@ -20,13 +20,16 @@ import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/
 import { ExplicaKwh } from "@/ui/ExplicaKwh";
 import { Folha } from "@/ui/Folha";
 import { Icone } from "@/ui/Icone";
-import { IstoAjudou } from "@/ui/IstoAjudou";
+import { IgnorarFalha } from "@/ui/IgnorarFalha";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Acompanhamento } from "./Acompanhamento";
 import { ContaDetalhada } from "./ContaDetalhada";
 import { LevarResumo } from "./LevarResumo";
 import { MetaDeGasto } from "./MetaDeGasto";
 import { legendaDoBlocoDaMeta } from "./textosDaMeta";
+
+// O cartão da opinião só baixa quando aparece (ADR-009).
+const OpiniaoDoPainel = lazy(() => import("./OpiniaoDoPainel").then((m) => ({ default: m.OpiniaoDoPainel })));
 
 const COR_FAIXA = { a: "bg-faixa-a", b: "bg-faixa-b", c: "bg-faixa-c", d: "bg-faixa-d", e: "bg-faixa-e" } as const;
 
@@ -355,7 +358,11 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
         </p>
         {opiniao.mostrar && (
           <div className="mt-6 lg:max-w-[40rem]" data-sem-impressao>
-            <IstoAjudou pergunta="Esta página te ajudou a entender a sua conta de luz?" aoEnviar={opiniao.enviar} aoDispensar={opiniao.dispensar} />
+            <IgnorarFalha>
+              <Suspense fallback={null}>
+                <OpiniaoDoPainel aoEnviar={opiniao.enviar} aoDispensar={opiniao.dispensar} />
+              </Suspense>
+            </IgnorarFalha>
           </div>
         )}
       </div>
