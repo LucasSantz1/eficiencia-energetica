@@ -20,7 +20,9 @@ import { ExemploDeConta } from "@/ui/conta/ExemploDeConta";
 import { useCamposDaConta, type CamposDaContaEstado } from "@/ui/conta/useCamposDaConta";
 import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
+import { NavegacaoDosAjustes } from "./NavegacaoDosAjustes";
 import { SecaoConta } from "./SecaoConta";
+import { GrupoDeAjustes, SecaoDeAjuste } from "./SecaoDeAjuste";
 import { SecaoInstalar } from "./SecaoInstalar";
 import { SecaoLeitura } from "./SecaoLeitura";
 
@@ -48,6 +50,19 @@ export function TelaAjustes() {
   const [chaveDaConta, setChaveDaConta] = useState(0);
   const camposDaConta = useCamposDaConta({ uso: "ajustes", beneficio: residencia?.beneficio, ids: { kwh: "aj-kwh", valor: "aj-valor", iluminacao: "aj-cip" }, inicial: chaveDaConta === 0 ? residencia?.contaReferencia : undefined, chave: chaveDaConta });
   const [contaSalva, setContaSalva] = useState(false);
+  const conta = useConta();
+  // "Conta e família" só existe quando o site tem conta (sem as variáveis, a seção some, e o atalho também).
+  const contaVisivel = conta.tipo !== "desligada" && conta.tipo !== "carregando";
+  const itensDoIndice = useMemo(
+    () => [
+      { id: "ajustes-casa", nome: "A casa" },
+      { id: "ajustes-conta-de-luz", nome: "Conta de luz" },
+      ...(contaVisivel ? [{ id: "ajustes-conta", nome: "Conta e família" }] : []),
+      { id: "ajustes-aparelho", nome: "Neste aparelho" },
+      { id: "ajustes-dados", nome: "Privacidade" },
+    ],
+    [contaVisivel],
+  );
 
   const municipios = useMunicipios(residencia?.uf);
   const municipioAtual = municipios.dados?.municipios.find((m) => m.ibge === residencia?.municipioIbge);
@@ -58,12 +73,12 @@ export function TelaAjustes() {
     // T1b: a cidade saiu e os aparelhos ficaram. Só "Onde você mora"; a escolha cria a residência de novo, sem apagar
     // os aparelhos (o /comecar apagaria, D5). Benefício e ligação voltam para "não sei" até a pessoa escolher.
     return (
-      <div className="space-y-12">
+      <div className="space-y-6">
           <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
           {temCasaSemCidade && (
-            <Secao titulo="Onde você mora">
+            <SecaoDeAjuste titulo="Onde você mora" id="onde-mora" descricao="A cidade e a empresa de luz decidem o preço do kWh.">
               <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
-            </Secao>
+            </SecaoDeAjuste>
           )}
           <SecaoLeitura />
           <SeusDados />
@@ -89,130 +104,143 @@ export function TelaAjustes() {
       setContaSalva(mesmaConta(useCasa.getState().residencia?.contaReferencia, conta));
     };
 
-    // No computador (HIS-112, L6): a casa e a conta à esquerda, "Seus dados" à direita. Mesma ordem do código do celular.
+    // Redesenho de 26/11 (pedido do dono): no computador, o índice fixo à esquerda e os cartões numa coluna só, com o
+    // título à esquerda e os controles à direita. A ordem do código é a do celular (HIS-112, critério 8).
     return (
-      <div className="space-y-12 lg:grid lg:grid-cols-2 lg:gap-x-6 lg:gap-y-8 lg:space-y-0">
-        <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight lg:col-span-2">Minha casa</h1>
+      <div>
+        <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
+        <div className="mt-5 lg:mt-8 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10">
+          <NavegacaoDosAjustes itens={itensDoIndice} />
+          <div className="mt-8 space-y-10 lg:mt-0">
+            <GrupoDeAjustes id="ajustes-casa" nome="A casa">
+              <SecaoDeAjuste titulo="Onde você mora" id="onde-mora" descricao="A cidade e a empresa de luz decidem o preço do kWh.">
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-controle)] bg-fundo px-4 py-4">
+                  <div className="min-w-0">
+                    <p className="text-lg font-extrabold">
+                      {residencia.municipioNome} – {residencia.uf}
+                    </p>
+                    <p className="text-tinta-suave">
+                      Distribuidora: {nomeDistribuidora(distribuidora)}
+                      {distribuidora && `, tarifa de ${formatarReais(distribuidora.tarifaKwh)} por kWh sem impostos`}
+                    </p>
+                  </div>
+                  <Botao variante="secundario" onClick={() => setMudandoCidade(true)}>
+                    Mudar cidade
+                  </Botao>
+                </div>
+                {opcoesDistribuidora.length > 1 && (
+                  <div className="mt-5 space-y-2">
+                    <p className="font-bold">Mais de uma empresa atende a sua cidade. Qual manda a sua conta?</p>
+                    {opcoesDistribuidora.map((d) => (
+                      <Opcao key={d.id} selecionada={residencia.distribuidoraId === d.id} onClick={() => atualizar({ distribuidoraId: d.id })} descricao={`${formatarReais(d.tarifaKwh)} por kWh, sem impostos`}>
+                        {nomeDistribuidora(d)}
+                      </Opcao>
+                    ))}
+                  </div>
+                )}
+              </SecaoDeAjuste>
 
-        <div className="space-y-12">
-        <Secao titulo="Onde você mora">
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-controle)] bg-papel px-4 py-4">
-            <div>
-              <p className="text-lg font-extrabold">
-                {residencia.municipioNome} – {residencia.uf}
-              </p>
-              <p className="text-tinta-suave">
-                Distribuidora: {nomeDistribuidora(distribuidora)}
-                {distribuidora && `, tarifa de ${formatarReais(distribuidora.tarifaKwh)} por kWh sem impostos`}
-              </p>
-            </div>
-            <Botao variante="secundario" onClick={() => setMudandoCidade(true)}>
-              Mudar cidade
-            </Botao>
-          </div>
-          {opcoesDistribuidora.length > 1 && (
-            <div className="mt-5 space-y-2">
-              <p className="font-bold">Mais de uma empresa atende a sua cidade. Qual manda a sua conta?</p>
-              {opcoesDistribuidora.map((d) => (
-                <Opcao key={d.id} selecionada={residencia.distribuidoraId === d.id} onClick={() => atualizar({ distribuidoraId: d.id })} descricao={`${formatarReais(d.tarifaKwh)} por kWh, sem impostos`}>
-                  {nomeDistribuidora(d)}
-                </Opcao>
-              ))}
-            </div>
-          )}
-        </Secao>
+              <SecaoDeAjuste titulo="Benefício na conta de luz" id="beneficio" descricao="A Tarifa Social e o Desconto Social baixam o preço da energia.">
+                <div className="space-y-2">
+                  {BENEFICIOS.map((b) => (
+                    <Opcao key={b.id} selecionada={residencia.beneficio === b.id} onClick={() => atualizar({ beneficio: b.id })} descricao={b.descricao}>
+                      {b.titulo}
+                    </Opcao>
+                  ))}
+                </div>
+                <p className="mt-3 text-[0.95rem] text-tinta-suave">Para ter direito, a família precisa estar no CadÚnico. A inscrição é feita no CRAS da sua cidade. O desconto vem sozinho quando o CadÚnico está em dia e a conta está no nome de alguém da família. Quem precisa de aparelho para a saúde pede na distribuidora, com atestado médico.</p>
+                {/* Sem prefetch: a Minha casa não baixa o guia a cada visita (tech-lead, HIS-103b). */}
+                <p className="mt-2">
+                  <Link href="/tarifa-social" prefetch={false} transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center font-bold text-energia underline underline-offset-4">
+                    Ver se pode ter direito
+                  </Link>
+                </p>
+              </SecaoDeAjuste>
 
-        <Secao titulo="Benefício na conta de luz">
-          <div className="space-y-2">
-            {BENEFICIOS.map((b) => (
-              <Opcao key={b.id} selecionada={residencia.beneficio === b.id} onClick={() => atualizar({ beneficio: b.id })} descricao={b.descricao}>
-                {b.titulo}
-              </Opcao>
-            ))}
-          </div>
-          <p className="mt-3 text-[0.95rem] text-tinta-suave">Para ter direito, a família precisa estar no CadÚnico. A inscrição é feita no CRAS da sua cidade. O desconto vem sozinho quando o CadÚnico está em dia e a conta está no nome de alguém da família. Quem precisa de aparelho para a saúde pede na distribuidora, com atestado médico.</p>
-          {/* Sem prefetch: a Minha casa não baixa o guia a cada visita (tech-lead, HIS-103b). */}
-          <p className="mt-2">
-            <Link href="/tarifa-social" prefetch={false} transitionTypes={["nav-forward"]} className="inline-flex min-h-11 items-center font-bold text-energia underline underline-offset-4">
-              Ver se pode ter direito
-            </Link>
-          </p>
-        </Secao>
+              <SecaoDeAjuste titulo="Tipo de ligação" id="ligacao" descricao="Decide a conta mínima do mês, mesmo gastando pouco.">
+                <div className="space-y-2">
+                  {LIGACOES.map((l) => (
+                    <Opcao key={l.id} selecionada={residencia.ligacao === l.id} onClick={() => atualizar({ ligacao: l.id })} descricao={l.descricao}>
+                      {l.titulo}
+                    </Opcao>
+                  ))}
+                </div>
+              </SecaoDeAjuste>
+            </GrupoDeAjustes>
 
-        <Secao titulo="Tipo de ligação" id="ligacao">
-          <div className="space-y-2">
-            {LIGACOES.map((l) => (
-              <Opcao key={l.id} selecionada={residencia.ligacao === l.id} onClick={() => atualizar({ ligacao: l.id })} descricao={l.descricao}>
-                {l.titulo}
-              </Opcao>
-            ))}
-          </div>
-        </Secao>
+            <GrupoDeAjustes id="ajustes-conta-de-luz" nome="Conta de luz">
+              <SecaoDeAjuste titulo="Sua conta de luz" id="conta" descricao="Com dois números da conta, o valor fica mais certinho.">
+                <details className="group mb-5">
+                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 font-bold text-energia [&::-webkit-details-marker]:hidden">
+                    Onde acho esses números? <ChevronDown className="size-5 transition-transform group-open:rotate-180" aria-hidden />
+                  </summary>
+                  <ExemploDeConta className="mt-3" />
+                </details>
+                <CamposDaConta
+                  className="grid gap-5 sm:grid-cols-2"
+                  campos={semAvisoAoMudar(camposDaConta, () => setContaSalva(false))}
+                  textos={{ consumo: "Consumo do mês (kWh)", ajudaDoConsumo: "O número 1 do exemplo.", valor: "Total a pagar", ajudaDoValor: "O número 2 do exemplo." }}
+                />
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  {/* Sempre habilitado (T5): botão desabilitado não diz o que falta. */}
+                  <Botao onClick={salvarConta}>Usar estes valores</Botao>
+                  {residencia.contaReferencia && (
+                    <Botao
+                      variante="fantasma"
+                      onClick={() => {
+                        atualizar({ contaReferencia: undefined });
+                        setChaveDaConta((chave) => chave + 1);
+                        setContaSalva(false);
+                      }}
+                    >
+                      Voltar para a tarifa da ANEEL
+                    </Botao>
+                  )}
+                </div>
+                {contaSalva && residencia.contaReferencia && (
+                  <div className="mt-4">
+                    {precoKwh(residencia, distribuidora, undefined).origem === "conta" ? (
+                      <Aviso>Pronto. O kWh na sua conta sai por {formatarReais(precoKwh(residencia, distribuidora, undefined).valor)}, e o resumo já usa esse valor.</Aviso>
+                    ) : (
+                      <Aviso tom="faisca">Com a Tarifa Social, quase todo o consumo dessa conta foi isento, então ela não mostra o preço do kWh. Continuamos usando a tarifa da ANEEL.</Aviso>
+                    )}
+                  </div>
+                )}
+              </SecaoDeAjuste>
+              <LinhaDaMeta />
+            </GrupoDeAjustes>
 
-      </div>
-
-      {/* Conta e meta na coluna da direita (24/11): as duas colunas terminam perto uma da outra, sem vão grande. */}
-      <div className="space-y-12 lg:self-start">
-        <Secao titulo="Sua conta de luz" id="conta">
-          <p className="max-w-[56ch] text-tinta-suave">Com dois números da conta, o valor fica mais certinho.</p>
-          <details className="group mb-5">
-            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 font-bold text-energia [&::-webkit-details-marker]:hidden">
-              Onde acho esses números? <ChevronDown className="size-5 transition-transform group-open:rotate-180" aria-hidden />
-            </summary>
-            <ExemploDeConta className="mt-3" />
-          </details>
-          <CamposDaConta
-            className="grid gap-5 sm:grid-cols-2"
-            campos={semAvisoAoMudar(camposDaConta, () => setContaSalva(false))}
-            textos={{ consumo: "Consumo do mês (kWh)", ajudaDoConsumo: "O número 1 do exemplo.", valor: "Total a pagar", ajudaDoValor: "O número 2 do exemplo." }}
-          />
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            {/* Sempre habilitado (T5): botão desabilitado não diz o que falta. */}
-            <Botao onClick={salvarConta}>Usar estes valores</Botao>
-            {residencia.contaReferencia && (
-              <Botao
-                variante="fantasma"
-                onClick={() => {
-                  atualizar({ contaReferencia: undefined });
-                  setChaveDaConta((chave) => chave + 1);
-                  setContaSalva(false);
-                }}
-              >
-                Voltar para a tarifa da ANEEL
-              </Botao>
+            {contaVisivel && (
+              <GrupoDeAjustes id="ajustes-conta" nome="Conta e família">
+                <SecaoConta />
+              </GrupoDeAjustes>
             )}
-          </div>
-          {contaSalva && residencia.contaReferencia && (
-            <div className="mt-4">
-              {precoKwh(residencia, distribuidora, undefined).origem === "conta" ? (
-                <Aviso>Pronto. O kWh na sua conta sai por {formatarReais(precoKwh(residencia, distribuidora, undefined).valor)}, e o resumo já usa esse valor.</Aviso>
-              ) : (
-                <Aviso tom="faisca">Com a Tarifa Social, quase todo o consumo dessa conta foi isento, então ela não mostra o preço do kWh. Continuamos usando a tarifa da ANEEL.</Aviso>
-              )}
-            </div>
-          )}
-        </Secao>
-        <LinhaDaMeta />
-        <SecaoLeitura />
-        <SecaoConta />
-        <SecaoInstalar />
-        <SeusDados />
-      </div>
 
-      <TrocarCidade
-        aberta={mudandoCidade}
-        aoFechar={() => setMudandoCidade(false)}
-        ufAtual={residencia.uf}
-        estados={arquivo?.estados ?? []}
-        arquivo={arquivo}
-        aoEscolher={(m, distribuidoraId) => {
-          atualizar({ uf: m.uf, municipioIbge: m.ibge, municipioNome: m.nome, distribuidoraId });
-          setMudandoCidade(false);
-        }}
-      />
-    </div>
-  );
-}
+            <GrupoDeAjustes id="ajustes-aparelho" nome="Neste aparelho">
+              <SecaoLeitura />
+              <SecaoInstalar />
+            </GrupoDeAjustes>
+
+            <GrupoDeAjustes id="ajustes-dados" nome="Privacidade">
+              <SeusDados />
+            </GrupoDeAjustes>
+          </div>
+        </div>
+
+        <TrocarCidade
+          aberta={mudandoCidade}
+          aoFechar={() => setMudandoCidade(false)}
+          ufAtual={residencia.uf}
+          estados={arquivo?.estados ?? []}
+          arquivo={arquivo}
+          aoEscolher={(m, distribuidoraId) => {
+            atualizar({ uf: m.uf, municipioIbge: m.ibge, municipioNome: m.nome, distribuidoraId });
+            setMudandoCidade(false);
+          }}
+        />
+      </div>
+    );
+  }
 
 function mesmaConta(salva: ContaReferencia | undefined, enviada: ContaReferencia): boolean {
   return salva?.kwh === enviada.kwh && salva.valor === enviada.valor && salva.iluminacaoPublica === enviada.iluminacaoPublica;
@@ -235,13 +263,17 @@ function SeusDados() {
   const comConta = useConta().tipo === "conectada";
   const [erroDaConta, setErroDaConta] = useState<"sessao" | "falha">();
   return (
-    <Secao titulo="Seus dados">
-      <p className="max-w-[56ch] text-tinta-suave">
-        {comConta
+    <SecaoDeAjuste
+      titulo="Seus dados"
+      id="seus-dados"
+      tom="perigo"
+      descricao={
+        comConta
           ? "O que você cadastrou fica neste navegador e na sua conta (para abrir em outro aparelho e para os links da família)."
-          : "O que você cadastrou fica guardado neste navegador. Se você criou uma conta, entre nela antes de apagar, para apagar também o que está lá."}
-      </p>
-      <div className="mt-4">
+          : "O que você cadastrou fica guardado neste navegador. Se você criou uma conta, entre nela antes de apagar, para apagar também o que está lá."
+      }
+    >
+      <div>
         {!confirmarApagar ? (
           <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
             Apagar todos os meus dados
@@ -282,11 +314,11 @@ function SeusDados() {
         </div>
       </div>
       <p className="mt-6">
-        <Link href="/sobre" className="font-bold text-energia underline underline-offset-4">
+        <Link href="/sobre" className="inline-flex min-h-11 items-center font-bold text-energia underline underline-offset-4">
           De onde vêm as tarifas e como o cálculo é feito
         </Link>
       </p>
-    </Secao>
+    </SecaoDeAjuste>
   );
 }
 
@@ -294,23 +326,12 @@ function SeusDados() {
 function LinhaDaMeta() {
   const meta = useCasa((s) => s.metaMensal);
   return (
-    <Secao titulo="Meta de luz">
+    <SecaoDeAjuste titulo="Meta de luz" id="meta-de-luz" descricao="Um valor por mês para a conta não passar. Você acompanha no painel.">
       <p className="text-lg">{meta === undefined ? "Você ainda não tem uma meta." : <>Meta de luz: <strong className="numeros">{formatarReais(meta)}</strong> por mês</>}</p>
       <Link href="/casa#meta" className="mt-3 inline-flex min-h-11 items-center font-bold text-energia underline underline-offset-2">
         {meta === undefined ? "Definir meta" : "Mudar meta"}
       </Link>
-    </Secao>
-  );
-}
-
-function Secao({ titulo, id, children }: { titulo: string; id?: string; children: React.ReactNode }) {
-  return (
-    <section id={id} aria-labelledby={`${id ?? titulo}-titulo`} className="scroll-mt-24">
-      <h2 id={`${id ?? titulo}-titulo`} className="mb-3 text-[1.375rem] font-bold tracking-tight">
-        {titulo}
-      </h2>
-      {children}
-    </section>
+    </SecaoDeAjuste>
   );
 }
 

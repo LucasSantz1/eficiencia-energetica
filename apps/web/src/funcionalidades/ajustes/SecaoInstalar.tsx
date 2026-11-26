@@ -3,6 +3,7 @@
 import { Download } from "lucide-react";
 import { useInstalacao } from "@/aplicacao/offline";
 import { Botao } from "@/ui/Botao";
+import { SecaoDeAjuste } from "./SecaoDeAjuste";
 
 /**
  * "Usar sem internet" (HIS-302): o que o modo sem internet faz e como pôr o site na tela inicial. O botão só aparece
@@ -11,18 +12,16 @@ import { Botao } from "@/ui/Botao";
 export function SecaoInstalar() {
   const { podeInstalar, instalado, instalar } = useInstalacao();
   return (
-    <section id="instalar" aria-labelledby="instalar-titulo" className="scroll-mt-24">
-      <h2 id="instalar-titulo" className="mb-3 text-[1.375rem] font-bold tracking-tight">
-        Usar sem internet
-      </h2>
-      <p className="max-w-[56ch] text-tinta-suave">
-        Depois de abrir o site uma vez com internet, ele funciona sem internet neste aparelho. A sua casa fica guardada aqui.
-      </p>
+    <SecaoDeAjuste
+      titulo="Usar sem internet"
+      id="instalar"
+      descricao="Depois de abrir o site uma vez com internet, ele funciona sem internet neste aparelho. A sua casa fica guardada aqui."
+    >
       {instalado ? (
-        <p className="mt-3 font-bold">Você já está usando o site como aplicativo.</p>
+        <p className="font-bold">Você já está usando o site como aplicativo.</p>
       ) : (
         <>
-          <p className="mt-3 max-w-[56ch]">Para abrir como um aplicativo, com um ícone na tela inicial:</p>
+          <p className="max-w-[56ch]">Para abrir como um aplicativo, com um ícone na tela inicial:</p>
           {podeInstalar && (
             <Botao className="mt-3" onClick={() => void instalar()}>
               <Download className="size-5" aria-hidden /> Instalar no celular
@@ -40,6 +39,6 @@ export function SecaoInstalar() {
           </ul>
         </>
       )}
-    </section>
+    </SecaoDeAjuste>
   );
 }
