@@ -7,6 +7,7 @@ import { Aviso } from "@/ui/Aviso";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
 import { Entrada } from "@/ui/Entrada";
+import { SecaoDeAjuste } from "./SecaoDeAjuste";
 
 const DATA = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo" });
 
@@ -27,16 +28,11 @@ export function PainelDaConta() {
   const sincronia = useSincroniaAtual();
   if (conta.tipo === "desligada" || conta.tipo === "carregando") return null;
   return (
-    <section id="conta-online" aria-labelledby="conta-online-titulo" className="scroll-mt-24">
-      <h2 id="conta-online-titulo" className="mb-3 text-[1.375rem] font-bold tracking-tight">
-        Sua conta
-      </h2>
+    <SecaoDeAjuste titulo="Sua conta" id="conta-online" descricao="Opcional. Para abrir a casa em outro celular e mandar um link para a família acompanhar.">
       {conta.tipo === "sem-internet" && <p className="text-tinta-suave">Sem internet agora. A sua casa continua neste aparelho.</p>}
       {conta.tipo === "sem-conta" && (
         <>
-          <p className="max-w-[56ch] text-tinta-suave">
-            Opcional. Com conta, a sua casa abre em outro aparelho, e você pode mandar um link para a família acompanhar a conta de luz, só para ver.
-          </p>
+          <p className="max-w-[56ch]">Você ainda não entrou numa conta. A casa fica só neste aparelho.</p>
           <BotaoLink href="/entrar" className="mt-4">
             <UserRound className="size-5" aria-hidden /> Entrar ou criar conta
           </BotaoLink>
@@ -55,7 +51,7 @@ export function PainelDaConta() {
           <p className="mt-2 max-w-[56ch] text-[0.95rem] text-tinta-suave">Saindo, a casa continua neste aparelho; só para de ir para a conta.</p>
         </>
       )}
-    </section>
+    </SecaoDeAjuste>
   );
 }
 
@@ -104,7 +100,7 @@ function LinksDeConvidado() {
   };
 
   return (
-    <div className="mt-6 rounded-[var(--radius-cartao)] bg-papel p-5">
+    <div className="mt-6 rounded-[var(--radius-cartao)] bg-fundo p-5">
       <h3 className="flex items-center gap-2 text-lg font-extrabold">
         <Link2 className="size-5 text-energia" aria-hidden /> Links para a família acompanhar
       </h3>

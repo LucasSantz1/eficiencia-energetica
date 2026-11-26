@@ -151,11 +151,17 @@ test.describe("com a casa salva", () => {
     }
   });
 
-  test("/casa/ajustes: 2 colunas, Seus dados na coluna da direita", async ({ page }) => {
+  test("/casa/ajustes: índice à esquerda e os cartões alinhados numa coluna só (redesenho de 26/11)", async ({ page }) => {
     await abrir(page, "/casa/ajustes", 1440);
-    const ondeMora = await caixa(page.getByRole("heading", { name: "Onde você mora" }));
-    const seusDados = await caixa(page.getByRole("heading", { name: "Seus dados" }));
-    expect(seusDados.x).toBeGreaterThan(ondeMora.x + 200);
+    const indice = await caixa(page.getByRole("navigation", { name: "Partes de Minha casa" }));
+    const titulos = await Promise.all(["Onde você mora", "Sua conta de luz", "Leitura", "Seus dados"].map((nome) => caixa(page.getByRole("heading", { name: nome, exact: true }))));
+    expect(new Set(titulos.map((t) => Math.round(t.x))).size, "os títulos dos cartões começam no mesmo x").toBe(1);
+    expect(titulos[0]?.x ?? 0).toBeGreaterThan(indice.x + indice.width);
+    // O índice fica preso ao rolar.
+    await page.getByRole("heading", { name: "Seus dados", exact: true }).scrollIntoViewIfNeeded();
+    const depois = await caixa(page.getByRole("navigation", { name: "Partes de Minha casa" }));
+    expect(depois.y).toBeGreaterThanOrEqual(0);
+    expect(depois.y).toBeLessThan(200);
   });
 
   test("ordem de foco a 1440 px igual à do celular nas telas com uma coluna só no celular (critério 8)", async ({ page }) => {
