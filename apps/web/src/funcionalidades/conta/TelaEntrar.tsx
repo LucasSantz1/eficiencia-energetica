@@ -103,7 +103,7 @@ export function TelaEntrar() {
         {TITULOS[modo]}
       </h1>
       <p className="mt-2 text-lg text-tinta-suave">
-        {modo === "esqueci" ? "Mandamos um link para você criar uma senha nova." : "Com conta, a sua casa abre em outro aparelho e você pode mandar um link para a família acompanhar."}
+        {modo === "esqueci" ? "Mandamos um link para você criar uma senha nova." : "Com conta, a sua casa abre em outro celular e você pode mandar um link para a família acompanhar."}
       </p>
 
       {pronto ? (

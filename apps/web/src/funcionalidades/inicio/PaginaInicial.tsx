@@ -69,7 +69,7 @@ export function PaginaInicial({ numeros, contaLigada = false }: { numeros: Numer
               Perguntas
             </a>
           </nav>
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
             {contaLigada && <BotaoEntrar />}
             <BotaoComecar compacto estilo="contorno" />
           </div>

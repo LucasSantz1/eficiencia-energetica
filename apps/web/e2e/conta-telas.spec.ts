@@ -123,6 +123,8 @@ test("depois do cadastro, sem conta: o convite aparece uma vez, 'Agora não' fec
   await expect(convite.getByRole("link", { name: "Criar conta grátis" })).toHaveAttribute("href", "/entrar?modo=criar");
   await convite.getByRole("button", { name: "Agora não" }).click();
   await expect(convite).toBeHidden();
+  // O foco não cai no começo da página: vai para o título da casa (QA, D3).
+  await expect(page.locator("main h1")).toBeFocused();
   // A casa continua só no aparelho: o único pedido ao /api foi perguntar se há conta.
   expect(pedidos.every((pedido) => pedido === "GET /api/conta")).toBe(true);
   await page.reload();
