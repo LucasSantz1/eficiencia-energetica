@@ -64,7 +64,7 @@ export default function Sobre() {
           <p>Os valores de potência e tempo de uso dos aparelhos são referências comuns (PROCEL e etiquetas do INMETRO). Você pode ajustar cada um com os dados do seu aparelho.</p>
         </section>
 
-        <section className="space-y-3">
+        <section id="privacidade" className="scroll-mt-4 space-y-3">
           <h2 className="text-2xl font-extrabold">Privacidade</h2>
           <p>Não pedimos nome, CPF nem endereço. Sem conta, o que você cadastra fica guardado apenas no seu navegador e nada sai do seu aparelho.</p>
           <p>

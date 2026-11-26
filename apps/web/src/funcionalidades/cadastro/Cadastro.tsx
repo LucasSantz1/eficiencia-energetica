@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { addTransitionType, startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { agregarAparelhos, COMODOS_PADRAO, consumoMensalDaCasaKwh, distribuidorasDaCidade, ehUf, ESTADOS, LIMITES, LIMITES_DE_TEXTO, type Beneficio, type ContaReferencia, type Distribuidora, type Municipio, type TipoComodo } from "@ee/core";
 import { useAvisoDaCasaSalva, useCasa, useCasaCarregada } from "@/aplicacao/casa";
+import { pedirConviteDaConta } from "@/aplicacao/convite-da-conta";
 import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora } from "@/aplicacao/resumo";
 import { useLeitura } from "@/aplicacao/useLeitura";
@@ -168,6 +169,8 @@ export function Cadastro() {
       },
       ...casaFinal,
     });
+    // Na tela da casa, o convite para criar conta aparece uma vez (só se o site tem conta e a pessoa está sem).
+    pedirConviteDaConta();
     router.push("/casa", { transitionTypes: ENTRAR_NO_PAINEL });
   };
 

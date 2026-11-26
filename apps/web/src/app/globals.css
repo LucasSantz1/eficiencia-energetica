@@ -224,6 +224,12 @@ dialog[open].folha {
   animation: 620ms var(--ease-chegada) 120ms both chegar-painel;
 }
 /* O topo e a barra de navegação ficam parados: só o conteúdo se move. */
+/* Entrar ↔ criar conta (/entrar): o cartão e o desenho trocam de lado deslizando. */
+::view-transition-group(.trocar-lado) {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+
 ::view-transition-group(topo),
 ::view-transition-group(navegacao) {
   animation: none;

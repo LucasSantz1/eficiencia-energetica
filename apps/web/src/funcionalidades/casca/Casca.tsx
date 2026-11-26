@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { lazy, Suspense, ViewTransition, type ReactNode } from "react";
 import { useAvisoDaCasaSalva, useCasa, useCasaCarregada, useDistribuidoraAtualizada, useHaDadosGuardados } from "@/aplicacao/casa";
 import { useConta } from "@/aplicacao/conta-estado";
+import { useConviteDaConta } from "@/aplicacao/convite-da-conta";
 import { useIdadeDosPrecos } from "@/aplicacao/idade-dos-precos";
 import { useSemInternet } from "@/aplicacao/offline";
 import { useResumo } from "@/aplicacao/resumo";
@@ -20,6 +21,8 @@ import { TransicaoTela } from "@/ui/Movimento";
 import { IR_ADIANTE, VOLTAR } from "@/ui/tiposDeTransicao";
 import { AvisoTrocaDistribuidora } from "./AvisoTrocaDistribuidora";
 
+// O convite para criar conta só baixa quando o cadastro acabou de pedir (uma vez): quem abre a casa não paga o peso.
+const ConviteDaConta = lazy(() => import("./ConviteDaConta").then((m) => ({ default: m.ConviteDaConta })));
 const Sincronia = lazy(() => import("./Sincronia").then((m) => ({ default: m.Sincronia })));
 
 const ITENS: { href: string; rotulo: string; curto?: string; Icone: typeof Lightbulb }[] = [
@@ -45,6 +48,7 @@ export function Casca({ children }: { children: ReactNode }) {
   const versaoAntigaDoSite = useCasa((s) => s.versaoAntigaDoSite === true);
   // Com conta (E4), a casa também vai para o servidor. Sem conta, a sincronização nem baixa.
   const comConta = useConta().tipo === "conectada";
+  const convitePendente = useConviteDaConta();
   const idade = useIdadeDosPrecos(arquivo?.geradoEm);
   const indiceAtual = ITENS.findIndex((i) => i.href === caminho);
   // Ir para uma aba à direita desliza para a esquerda, e vice-versa.
@@ -105,6 +109,13 @@ export function Casca({ children }: { children: ReactNode }) {
           <IgnorarFalha>
             <Suspense fallback={null}>
               <Sincronia carregada={carregada} />
+            </Suspense>
+          </IgnorarFalha>
+        )}
+        {carregada && convitePendente && (
+          <IgnorarFalha>
+            <Suspense fallback={null}>
+              <ConviteDaConta />
             </Suspense>
           </IgnorarFalha>
         )}

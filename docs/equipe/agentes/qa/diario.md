@@ -10,6 +10,19 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-26 · conta-tela-entrar · verificação de 1d8c578 (/entrar em 2 colunas, Entrar no topo, convite) — devolvido para frontend
+- O que fiz: `conta-telas.spec.ts` só (porta 3301): 16 ✓ (o "nenhum convite" precisa rodar sem as variáveis da conta).
+  Exploratório na porta 3300 (build existente, sem `pnpm build`): /entrar e ?modo=criar em 360/390/1280 e zoom 200%,
+  axe (0), ordem do foco, árvore acessível, movimento reduzido; convite com Esc/Fechar/Criar/voltar, 360/390/1280, só
+  `GET /api/conta`. Início: o build não tem a conta ligada, então injetei o link com as mesmas classes do `BotaoEntrar`.
+- Defeitos: D1 médio, zoom 200% em 390 o "Começar" quebra no meio da palavra ("Come/çar"). D2 baixo, em 360 px (e em
+  390 com "Ver a minha casa") o par Entrar+Começar desce para uma 2ª linha. D3 baixo, ao fechar o convite o foco vai
+  para o `body`.
+- Atenção: rodar o spec sem `--output` limpou `apps/web/test-results` enquanto outra suíte rodava. Da próxima vez,
+  `--output` no scratchpad.
+- Arquivos: `…/scratchpad/qa-entrar/{explorar,variantes,zoom}.cjs` e `caps/`.
+- Próximos passos: reverificar D1/D2 num build com a conta ligada.
+
 ## 2026-11-13 · HIS-112 · q1–q5: layout para computador — aprovado, sem defeito, 1 achado
 - O que fiz: q1 `abrirComodo`/`esperarComodoAberto` e 3 e2e de 1280 px; q2/q4 `layout-computador.spec.ts` (container,
   áreas da `/casa`, cômodos sem rolar e com `aria-current`, Tab, `#comodo-`, ids únicos, dicas 2/3 colunas, ajustes,

@@ -31,6 +31,11 @@ export interface Contexto {
   agora: () => number;
 }
 
+/** Se este site tem a conta ligada (as variáveis do Supabase na Vercel). Só diz sim ou não: nada do valor sai daqui. */
+export function contaLigadaNoSite(): boolean {
+  return configuracaoDaConta() !== undefined;
+}
+
 export function contextoReal(enderecoDoSite: string): Contexto {
   return { config: configuracaoDaConta(), gateway: supabase, enderecoDoSite, agora: () => Date.now() };
 }
