@@ -29,7 +29,7 @@ export default function Pagina() {
             </Link>
           </header>
           <div className="mt-6 flex flex-1 flex-col lg:mt-8">
-            <TelaEntrar lado={<IlustracaoDaConta />} />
+            <TelaEntrar lado={<IlustracaoDaConta />} ladoCriar={<IlustracaoDaConta modo="criar" />} />
           </div>
         </div>
       </div>

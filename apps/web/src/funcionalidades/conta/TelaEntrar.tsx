@@ -35,7 +35,7 @@ function nadaParaOuvir() {
  * Entrar, criar conta e esqueci a senha (E4, HIS-402). A conta é opcional: serve para abrir a casa em outro aparelho e
  * para mandar o link de convidado. Os campos usam `autocomplete` certo, para o gerenciador de senhas do celular ajudar.
  */
-export function TelaEntrar({ lado }: { lado?: ReactNode }) {
+export function TelaEntrar({ lado, ladoCriar = lado }: { lado?: ReactNode; ladoCriar?: ReactNode }) {
   const conta = useConta();
   const router = useRouter();
   const modoDoEndereco = useModoDoEndereco();
@@ -105,6 +105,22 @@ export function TelaEntrar({ lado }: { lado?: ReactNode }) {
 
     conteudo = (
     <div className="w-full">
+      {modo !== "esqueci" && (
+        // Entrar | Criar conta, como nos outros aplicativos: a escolha fica à vista no alto do cartão.
+        <div role="group" aria-label="Entrar ou criar conta" className="mb-6 grid grid-cols-2 gap-1 rounded-full bg-fundo p-1">
+          {(["entrar", "criar"] as const).map((opcao) => (
+            <button
+              key={opcao}
+              type="button"
+              aria-pressed={modo === opcao}
+              onClick={() => modo !== opcao && trocar(opcao)}
+              className={`min-h-11 rounded-full px-3 font-bold transition-colors ${modo === opcao ? "bg-energia text-white shadow-sm" : "text-tinta-suave hover:text-tinta"}`}
+            >
+              {opcao === "entrar" ? "Entrar" : "Criar conta"}
+            </button>
+          ))}
+        </div>
+      )}
       <h1 tabIndex={-1} className="text-[2rem] leading-tight font-extrabold tracking-tight">
         {TITULOS[modo]}
       </h1>
@@ -171,14 +187,9 @@ export function TelaEntrar({ lado }: { lado?: ReactNode }) {
       )}
 
       <nav aria-label="Outras opções" className="mt-6 flex flex-col items-start gap-1 border-t border-separador pt-4">
-        {modo !== "entrar" && (
+        {modo === "esqueci" && (
           <button type="button" onClick={() => trocar("entrar")} className="min-h-11 font-bold text-energia underline underline-offset-2">
-            Já tenho conta: entrar
-          </button>
-        )}
-        {modo !== "criar" && (
-          <button type="button" onClick={() => trocar("criar")} className="min-h-11 font-bold text-energia underline underline-offset-2">
-            Criar uma conta
+            Voltar para entrar
           </button>
         )}
         {modo === "entrar" && (
@@ -207,7 +218,7 @@ export function TelaEntrar({ lado }: { lado?: ReactNode }) {
         </main>
       </ViewTransition>
       <ViewTransition name="lado-da-conta" update={TROCA_DE_LADO}>
-        <div className={criar ? "lg:order-1" : ""}>{lado}</div>
+        <div className={criar ? "lg:order-1" : ""}>{criar ? ladoCriar : lado}</div>
       </ViewTransition>
     </div>
   );

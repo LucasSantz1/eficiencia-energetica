@@ -7,11 +7,14 @@ const VANTAGENS = [
   "Grátis e opcional: sem conta, tudo continua funcionando.",
 ];
 
+/** Título do lado do desenho: muda com o modo, como nas telas de referência do dono (26/11). */
+const TITULOS = { entrar: "A sua casa em qualquer celular.", criar: "Crie a sua conta, de graça." };
+
 /**
- * O lado direito da tela de entrar, só em tela larga: dois celulares com a mesma casa, ligados por um raio. Desenho
+ * O lado do desenho na tela de entrar (à direita; em "Criar conta", à esquerda), só em tela larga: dois celulares com a mesma casa, ligados por um raio. Desenho
  * em SVG no próprio HTML (nenhum arquivo a mais para baixar no 3G) e sem dado da pessoa.
  */
-export function IlustracaoDaConta() {
+export function IlustracaoDaConta({ modo = "entrar" }: { modo?: keyof typeof TITULOS }) {
   return (
     <section aria-labelledby="titulo-vantagens" className="hidden lg:block">
       <svg viewBox="0 0 560 380" className="surgir block w-full max-w-xl" aria-hidden>
@@ -31,7 +34,7 @@ export function IlustracaoDaConta() {
         <path d="M285 142 L268 165 H280 L276 179 L294 155 H282 Z" fill="#0d1a31" />
       </svg>
       <h2 id="titulo-vantagens" className="titulo-largo mt-8 text-[2.6rem]">
-        A sua casa em qualquer celular.
+        {TITULOS[modo]}
       </h2>
       <ul className="mt-6 space-y-3 text-lg text-white/85">
         {VANTAGENS.map((vantagem) => (

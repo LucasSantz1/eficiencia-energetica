@@ -144,7 +144,8 @@ test("/entrar?modo=criar abre em 'Criar uma conta' e passa no axe", async ({ pag
   await page.route("**/api/conta", (rota) => rota.fulfill({ json: { conta: "sem-conta" } }));
   await page.goto("/entrar?modo=criar");
   await expect(page.getByRole("heading", { level: 1, name: "Criar uma conta" })).toBeVisible();
-  await page.getByRole("button", { name: "Já tenho conta: entrar" }).click();
+  await expect(page.getByRole("button", { name: "Criar conta", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Entrar na sua conta" })).toBeVisible();
   const resultado = await analisarAcessibilidade(page);
   expect(descreverViolacoes(violacoesQueReprovam(resultado.violations))).toEqual([]);
