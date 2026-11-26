@@ -46,7 +46,7 @@ Princípios que pesam:
    - "senha errada" e "e-mail sem conta" dão a mesma resposta;
    - criar conta e "esqueci a senha" respondem igual, exista ou não a conta.
 5. **Links dos e-mails com o código depois do `#`:**
-   - `/conta/confirmar#token_hash=…` e `/conta/nova-senha#token_hash=…`, nos modelos de e-mail do Supabase;
+   - `/conta/confirmar#codigo=…` e `/conta/nova-senha#codigo=…` (até 26/11 era `#token_hash=…&type=…`; as telas aceitam os dois), nos modelos de e-mail do Supabase;
    - o código não vai ao servidor no pedido da página;
    - a página manda o código num POST e depois o tira do endereço;
    - a confirmação espera um toque, porque antivírus de e-mail abrem links sozinhos e gastariam o código.
