@@ -110,3 +110,26 @@ test("'Agora não': a casa do aparelho não vai para a conta", async ({ page, co
   await page.waitForTimeout(2500);
   expect(gravadas).toHaveLength(0);
 });
+
+test("link do e-mail: lê o código de #codigo= e também do formato antigo #token_hash=, e o tira do endereço", async ({ context }) => {
+  const enviados: unknown[] = [];
+  await context.route("**/api/conta", (rota) => rota.fulfill({ json: { conta: "sem-conta" } }));
+  await context.route("**/api/conta/confirmar", (rota) => {
+    enviados.push(rota.request().postDataJSON());
+    return rota.fulfill({ json: { ok: true } });
+  });
+  const links = [
+    { endereco: "/conta/confirmar#codigo=novo123", codigo: "novo123" },
+    { endereco: "/conta/confirmar#token_hash=antigo456&type=email", codigo: "antigo456" },
+  ];
+  // Uma aba para cada link: na mesma aba, trocar só o que vem depois do # não abre a página de novo.
+  for (const { endereco, codigo } of links) {
+    const page = await context.newPage();
+    await page.goto(endereco);
+    await page.getByRole("button", { name: "Confirmar meu e-mail" }).click();
+    await expect(page.getByRole("heading", { name: "Conta confirmada" })).toBeVisible();
+    expect(enviados.at(-1)).toEqual({ tokenHash: codigo });
+    expect(new URL(page.url()).hash).toBe("");
+    await page.close();
+  }
+});

@@ -12,7 +12,7 @@ import { esquecerCodigoDoEndereco, useCodigoDoEndereco } from "./useCodigoDoEnde
 
 /** O link de "esqueci a senha" (E4): a senha nova e pronto, já dentro da conta. */
 export function TelaNovaSenha() {
-  const codigo = useCodigoDoEndereco("token_hash");
+  const codigo = useCodigoDoEndereco("codigo", "token_hash");
   const conta = useConta();
   const [senha, setSenha] = useState("");
   const [enviando, setEnviando] = useState(false);

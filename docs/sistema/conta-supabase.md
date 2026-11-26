@@ -34,7 +34,9 @@ Em **Authentication**:
    - **Secure email change:** ligado;
    - **Minimum password length:** `8`.
 2. **URL Configuration:**
-   - **Site URL:** o endereço do site, por exemplo `https://eficiencia-energetica.vercel.app`, sem barra no fim;
+   - **Site URL:** o endereço do site **de produção**, o mesmo do `ENDERECO_DO_SITE` (hoje
+     `https://eficiencia-energetica-gamma.vercel.app`), sem barra no fim. Os links dos e-mails usam este endereço: com
+     outro, o link abre um site que não é o nosso;
    - **Redirect URLs:** o mesmo endereço seguido de `/**`.
 3. **Emails → Templates**. Desde 3/6/2026, projeto novo no plano Free só edita os modelos **depois de ligar um SMTP
    próprio** (passo 4); faça o passo 4 primeiro e volte aqui. Troque só o link de dois modelos. O link vai depois do `#`: o navegador nunca o manda para
@@ -44,7 +46,7 @@ Em **Authentication**:
      ```html
      <h2>Confirme a sua conta</h2>
      <p>Toque no botão para confirmar o e-mail da sua conta no Eficiência Energética.</p>
-     <p><a href="{{ .SiteURL }}/conta/confirmar#token_hash={{ .TokenHash }}&type=email">Confirmar meu e-mail</a></p>
+     <p><a href="{{ .SiteURL }}/conta/confirmar#codigo={{ .TokenHash }}">Confirmar meu e-mail</a></p>
      <p>Se não foi você que criou a conta, é só ignorar este e-mail.</p>
      ```
 
@@ -53,7 +55,7 @@ Em **Authentication**:
      ```html
      <h2>Senha nova</h2>
      <p>Toque no botão para criar uma senha nova no Eficiência Energética.</p>
-     <p><a href="{{ .SiteURL }}/conta/nova-senha#token_hash={{ .TokenHash }}&type=recovery">Criar senha nova</a></p>
+     <p><a href="{{ .SiteURL }}/conta/nova-senha#codigo={{ .TokenHash }}">Criar senha nova</a></p>
      <p>Se não foi você que pediu, é só ignorar este e-mail: a senha continua a mesma.</p>
      ```
 
