@@ -28,11 +28,8 @@ export default function Pagina() {
               <span className="hidden sm:inline">Voltar para o início</span>
             </Link>
           </header>
-          <div className="mt-6 grid flex-1 grid-cols-[minmax(0,1fr)] items-center gap-12 lg:mt-8 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:gap-16">
-            <main className="rounded-[var(--radius-cartao)] bg-papel p-5 text-tinta shadow-[0_24px_60px_-20px_rgb(0_0_0/0.55)] sm:p-8">
-              <TelaEntrar />
-            </main>
-            <IlustracaoDaConta />
+          <div className="mt-6 flex flex-1 flex-col lg:mt-8">
+            <TelaEntrar lado={<IlustracaoDaConta />} />
           </div>
         </div>
       </div>

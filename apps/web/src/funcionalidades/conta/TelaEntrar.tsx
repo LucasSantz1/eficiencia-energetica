@@ -3,7 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useSyncExternalStore, type FormEvent } from "react";
+import { addTransitionType, startTransition, useState, useSyncExternalStore, ViewTransition, type FormEvent, type ReactNode } from "react";
 import { cadastrar, entrar, mensagemDoErro, pedirNovaSenha, useConta } from "@/aplicacao/conta";
 import { Aviso } from "@/ui/Aviso";
 import { Botao } from "@/ui/Botao";
@@ -12,6 +12,9 @@ import { Entrada } from "@/ui/Entrada";
 import { focarTitulo } from "@/ui/foco";
 
 type Modo = "entrar" | "criar" | "esqueci";
+
+/** Só a troca entre entrar e criar anima a troca de lado; o resto (digitar, erro) não. */
+const TROCA_DE_LADO = { "trocar-lado": "trocar-lado", default: "none" };
 
 const TITULOS: Record<Modo, string> = { entrar: "Entrar na sua conta", criar: "Criar uma conta", esqueci: "Esqueci a senha" };
 
@@ -32,7 +35,7 @@ function nadaParaOuvir() {
  * Entrar, criar conta e esqueci a senha (E4, HIS-402). A conta é opcional: serve para abrir a casa em outro aparelho e
  * para mandar o link de convidado. Os campos usam `autocomplete` certo, para o gerenciador de senhas do celular ajudar.
  */
-export function TelaEntrar() {
+export function TelaEntrar({ lado }: { lado?: ReactNode }) {
   const conta = useConta();
   const router = useRouter();
   const modoDoEndereco = useModoDoEndereco();
@@ -47,9 +50,12 @@ export function TelaEntrar() {
   const [pronto, setPronto] = useState<string>();
 
   const trocar = (novo: Modo) => {
-    setModo(novo);
-    setErro(undefined);
-    setPronto(undefined);
+    startTransition(() => {
+      addTransitionType("trocar-lado");
+      setModo(novo);
+      setErro(undefined);
+      setPronto(undefined);
+    });
     requestAnimationFrame(focarTitulo);
   };
 
@@ -76,8 +82,9 @@ export function TelaEntrar() {
     setPronto(`Se ${email.trim()} tiver conta, chega um link para criar uma senha nova.`);
   };
 
+  let conteudo: ReactNode;
   if (conta.tipo === "desligada") {
-    return (
+    conteudo = (
       <Aviso tom="faisca">
         A conta ainda não está ligada neste site. Você pode usar tudo sem conta: a sua casa fica guardada neste aparelho.{" "}
         <Link href="/casa" className="font-bold underline underline-offset-2">
@@ -85,9 +92,8 @@ export function TelaEntrar() {
         </Link>
       </Aviso>
     );
-  }
-  if (conta.tipo === "conectada") {
-    return (
+  } else if (conta.tipo === "conectada") {
+    conteudo = (
       <Aviso>
         Você já está na conta {conta.email}.{" "}
         <Link href="/casa" className="font-bold underline underline-offset-2">
@@ -95,9 +101,9 @@ export function TelaEntrar() {
         </Link>
       </Aviso>
     );
-  }
+  } else {
 
-  return (
+    conteudo = (
     <div className="w-full">
       <h1 tabIndex={-1} className="text-[2rem] leading-tight font-extrabold tracking-tight">
         {TITULOS[modo]}
@@ -184,6 +190,25 @@ export function TelaEntrar() {
           Continuar sem conta
         </Link>
       </nav>
+    </div>
+  );
+  }
+
+  // Criar conta: o cartão vai para a direita e o desenho para a esquerda, deslizando (pedido do dono, 26/11). No
+  // celular é uma coluna só e nada troca de lugar; com movimento reduzido, a troca é direta (globals.css).
+  const criar = modo === "criar";
+  return (
+    <div
+      className={`grid flex-1 grid-cols-[minmax(0,1fr)] items-center gap-12 lg:gap-16 ${criar ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]" : "lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]"}`}
+    >
+      <ViewTransition name="cartao-da-conta" update={TROCA_DE_LADO}>
+        <main className={`rounded-[var(--radius-cartao)] bg-papel p-5 text-tinta shadow-[0_24px_60px_-20px_rgb(0_0_0/0.55)] sm:p-8 ${criar ? "lg:order-2" : ""}`}>
+          {conteudo}
+        </main>
+      </ViewTransition>
+      <ViewTransition name="lado-da-conta" update={TROCA_DE_LADO}>
+        <div className={criar ? "lg:order-1" : ""}>{lado}</div>
+      </ViewTransition>
     </div>
   );
 }
