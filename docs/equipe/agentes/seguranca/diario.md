@@ -1,3 +1,9 @@
+## 2026-11-26 · ADR-008 (3ccc664) · limites e casa cifrada: aprovado com ressalvas (2 médias, 4 baixas)
+- O que fiz: revisei o diff contra `main`, a migração, o cofre, as tentativas e o IP. Rodei `pnpm test:banco` ("RLS: tudo certo") e `vitest test/conta-*` (36 passaram). Conferi na doc da Vercel que ela sobrescreve `x-forwarded-for`/`x-real-ip` e que hoje não aceita IPv6 de entrada.
+- Achados: M1, a AAD sem o `dono`. Quem pode escrever no banco copia a cifra da Bia para a própria linha e o servidor a abre (o convidado com a chave anon também). M2, o ADR diz "painel aberto não lê nada", e quem tem o painel troca a senha em `auth.users`; a cifra só protege contra leitura (backup). Baixas: bloqueio de conta e de "esqueci" alheio pelo site; tabela enchida com a chave anon; rollback mostra casa vazia; IP fora da Vercel e IPv6 /64.
+- Decisão: aprovado com ressalvas. M1 deve entrar antes de existir casa cifrada em produção (formato `v1`).
+- Arquivos: este diário, `contexto.md`.
+
 ## 2026-11-26 · conta-tela-entrar (1d8c578) · aprovado com ressalvas (baixo)
 - O que fiz: revisão do diff contra `main` (modo turbo, só leitura de código, sem build). `contaLigadaNoSite()` devolve só booleano; `BotaoEntrar` não recebe prop. `?modo=` só é comparado com "criar". O convite não chama /api; A1 continua (só `Sincronia` grava). Sem innerHTML e sem link externo novo.
 - Ressalvas baixas: B1, a `/` agora faz GET /api/conta a cada visita quando a conta está ligada (sem dado da casa). B2, o booleano fica congelado até a revalidação de 24 h, o que é só funcional.

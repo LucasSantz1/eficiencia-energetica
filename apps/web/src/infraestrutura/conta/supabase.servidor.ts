@@ -1,7 +1,9 @@
 import "server-only"; // primeiro import: fala com o Supabase com a senha e os tokens da pessoa (ADR-007)
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
+import { cifrarCasa, decifrarCasa } from "./cofre.servidor";
 import type { ConfiguracaoDaConta } from "./configuracao.servidor";
 import type { TokensDaSessao } from "./sessao.servidor";
+import type { ChaveDaTentativa } from "./tentativas.servidor";
 
 /**
  * Tudo o que o site pede ao Supabase (E4, ADR-007). Só o servidor chama: o navegador nunca vê a URL, a chave nem os
@@ -17,6 +19,9 @@ export interface CasaNoServidor {
   versaoDoFormato: number;
   atualizadaEm: string;
 }
+
+/** As ações que o banco limita (supabase/migrations/20261126160000_limites_e_casa_cifrada.sql). */
+export type AcaoLimitada = "entrar-ip" | "entrar-email" | "cadastrar-ip" | "esqueci-ip" | "esqueci-email" | "link-ip" | "convidado-ip";
 
 export interface ConviteNoServidor {
   id: string;
@@ -133,11 +138,27 @@ export async function quemEsta(config: ConfiguracaoDaConta, acesso: string): Pro
   return { ok: true, valor: { id: data.user.id, email: data.user.email } };
 }
 
-export async function lerCasa(config: ConfiguracaoDaConta, acesso: string): Promise<Resultado<CasaNoServidor | undefined>> {
-  const { data, error } = await cliente(config, acesso).from("casas").select("dados, versao_do_formato, atualizada_em").maybeSingle();
+/**
+ * A casa como está no banco (ADR-008): cifrada em `dados_cifrados`, ou, nas casas gravadas antes da cifra, aberta em
+ * `dados` (a próxima gravação já cifra). Cifra que não abre (mexida, ou de outra chave) vira "indisponivel": nunca
+ * uma casa vazia, que o aparelho poderia gravar por cima da de verdade.
+ */
+function casaDaLinha(config: ConfiguracaoDaConta, linha: Record<string, unknown>, dono: string): Resultado<CasaNoServidor> {
+  const cifrada = linha["dados_cifrados"];
+  let dados: unknown = linha["dados"];
+  if (typeof cifrada === "string") {
+    dados = decifrarCasa(cifrada, config.segredoDaCasa, dono);
+    if (dados === undefined) return { ok: false, erro: "indisponivel" };
+  }
+  return { ok: true, valor: { dados, versaoDoFormato: Number(linha["versao_do_formato"]), atualizadaEm: String(linha["atualizada_em"]) } };
+}
+
+/** `dono`: o id de quem está na sessão (conferido no Supabase); abre a cifra, que é amarrada a ele. */
+export async function lerCasa(config: ConfiguracaoDaConta, acesso: string, dono: string): Promise<Resultado<CasaNoServidor | undefined>> {
+  const { data, error } = await cliente(config, acesso).from("casas").select("dados, dados_cifrados, versao_do_formato, atualizada_em").maybeSingle();
   if (error) return { ok: false, erro: "indisponivel" };
   if (!data) return { ok: true, valor: undefined };
-  return { ok: true, valor: { dados: data.dados, versaoDoFormato: Number(data.versao_do_formato), atualizadaEm: String(data.atualizada_em) } };
+  return casaDaLinha(config, data, dono);
 }
 
 /**
@@ -152,7 +173,8 @@ export async function gravarCasa(
   atualizadaEmConhecida: string | undefined,
 ): Promise<Resultado<string>> {
   const agora = new Date().toISOString();
-  const linha = { dados: casa.dados, versao_do_formato: casa.versaoDoFormato, atualizada_em: agora };
+  // Sempre cifrada; `dados: null` tira a cópia aberta das casas de antes da cifra (ADR-008).
+  const linha = { dados: null, dados_cifrados: cifrarCasa(casa.dados, config.segredoDaCasa, dono), versao_do_formato: casa.versaoDoFormato, atualizada_em: agora };
   const banco = cliente(config, acesso).from("casas");
   if (atualizadaEmConhecida === undefined) {
     const { error } = await banco.insert({ dono, ...linha });
@@ -192,7 +214,18 @@ export async function casaDoConvite(config: ConfiguracaoDaConta, hashDoCodigo: B
   if (error) return { ok: false, erro: "indisponivel" };
   const [linha] = Array.isArray(data) ? data : [];
   if (!linha) return { ok: true, valor: undefined };
-  return { ok: true, valor: { dados: linha.dados, versaoDoFormato: Number(linha.versao_do_formato), atualizadaEm: String(linha.atualizada_em) } };
+  // O dono vem da própria função do banco e só abre a cifra: não sai daqui (o convidado não o recebe).
+  return casaDaLinha(config, linha, String(linha.dono));
+}
+
+/**
+ * Conta mais uma tentativa (ADR-008) e diz se ainda está dentro do limite. Os limites ficam no banco, fixos por ação.
+ * Sem resposta do banco, "indisponivel": quem chamou não deixa passar (falha fechada).
+ */
+export async function contarTentativa(config: ConfiguracaoDaConta, acao: AcaoLimitada, chave: ChaveDaTentativa): Promise<Resultado<boolean>> {
+  const { data, error } = await cliente(config).rpc("contar_tentativa", { nome_da_acao: acao, chave_da_pessoa: `\\x${chave.toString("hex")}` });
+  if (error || typeof data !== "boolean") return { ok: false, erro: "indisponivel" };
+  return { ok: true, valor: data };
 }
 
 /** Apaga a conta (e, em cascata no banco, a casa e os convites). */

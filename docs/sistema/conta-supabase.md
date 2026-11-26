@@ -20,9 +20,12 @@ No plano Free, o projeto **pausa depois de uma semana sem nenhum acesso**. É s�
 1. No menu da esquerda, abra **SQL Editor** → **New query**.
 2. Copie todo o conteúdo de [`supabase/migrations/20261125120000_conta_e_convites.sql`](../../supabase/migrations/20261125120000_conta_e_convites.sql),
    cole e clique em **Run**. Deve aparecer *Success. No rows returned*.
-3. Confira em **Table Editor** que existem `casas` e `convites`, as duas com o cadeado de **RLS enabled**.
+3. Faça o mesmo com [`supabase/migrations/20261126160000_limites_e_casa_cifrada.sql`](../../supabase/migrations/20261126160000_limites_e_casa_cifrada.sql)
+   (limite de tentativas e casa cifrada, ADR-008). Os arquivos vão sempre **na ordem do nome**.
+4. Confira em **Table Editor** que existem `casas`, `convites` e `tentativas`, todas com o cadeado de **RLS enabled**.
 
-Mudanças futuras no banco vêm como arquivos novos nessa pasta, sempre com o mesmo passo.
+Mudanças futuras no banco vêm como arquivos novos nessa pasta, sempre com o mesmo passo. Rode a migração **antes** de
+juntar a PR que precisa dela: elas são escritas para funcionar com o código de antes.
 
 ## 3. Login por e-mail e senha
 
@@ -92,13 +95,16 @@ modelos. Depois, em **Rate Limits**, o limite de e-mails por hora pode subir (o 
    Todas as chaves também ficam em **Project Settings → API Keys**. **Nunca** copie a chave **secret**
    (`sb_secret_…`) nem a `service_role`: elas passam por cima das regras de acesso, e o site não precisa delas. Se
    alguma for colada por engano, a conta fica desligada (o site confere).
-2. Gere o segredo da sessão, num terminal com Node:
+2. Gere **dois** segredos diferentes, rodando duas vezes num terminal com Node:
 
    ```bash
    node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
    ```
 
-3. Na Vercel, abra **Project → Settings → Environment Variables** e crie as quatro variáveis **só para *Production***.
+   O primeiro é o da sessão e o segundo é o da casa. **Guarde o da casa num gerenciador de senhas:** sem ele, as casas
+   guardadas na conta não abrem mais (as dos aparelhos continuam).
+
+3. Na Vercel, abra **Project → Settings → Environment Variables** e crie as cinco variáveis **só para *Production***.
    Não marque *Preview*: as versões de teste de cada PR usariam o banco e o segredo de verdade. Se quiser testar a conta
    numa versão de teste, crie outro projeto no Supabase só para isso.
 
@@ -106,7 +112,8 @@ modelos. Depois, em **Rate Limits**, o limite de e-mails por hora pode subir (o 
    | --- | --- |
    | `SUPABASE_URL` | o Project URL |
    | `SUPABASE_ANON_KEY` | a chave publishable (ou a anon, em projeto antigo) |
-   | `SESSAO_SEGREDO` | o segredo gerado no item 2 |
+   | `SESSAO_SEGREDO` | o primeiro segredo do item 2 |
+   | `CASA_SEGREDO` | o segundo segredo do item 2 (diferente do primeiro). Sem ele, a conta fica desligada |
    | `ENDERECO_DO_SITE` | o mesmo Site URL do passo 3, sem barra no fim (os links dos e-mails usam este endereço) |
 
    Os nomes **não** começam com `NEXT_PUBLIC_`, de propósito: só o servidor os lê.
@@ -125,3 +132,6 @@ modelos. Depois, em **Rate Limits**, o limite de e-mails por hora pode subir (o 
 
 Se trocar o `SESSAO_SEGREDO`, todo mundo sai da conta (os cookies antigos deixam de abrir). Faça isso se suspeitar que
 o segredo vazou.
+
+**Nunca troque o `CASA_SEGREDO`** sem um plano de regravar as casas: com outra chave, as casas guardadas na conta não
+abrem (ADR-008).

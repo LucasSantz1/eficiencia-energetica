@@ -4,6 +4,7 @@ import { hashDoCodigo, novoCodigoDeConvite } from "@/infraestrutura/conta/codigo
 import { configuracaoDaConta, type ConfiguracaoDaConta } from "@/infraestrutura/conta/configuracao.servidor";
 import { cifrarSessao, decifrarSessao, type TokensDaSessao } from "@/infraestrutura/conta/sessao.servidor";
 import * as supabase from "@/infraestrutura/conta/supabase.servidor";
+import { chaveDaTentativa } from "@/infraestrutura/conta/tentativas.servidor";
 
 export { ATRIBUTOS_DO_COOKIE, NOME_DO_COOKIE } from "@/infraestrutura/conta/sessao.servidor";
 
@@ -28,6 +29,8 @@ export interface Contexto {
   gateway: Gateway;
   /** "https://site.vercel.app": para os links dos e-mails. */
   enderecoDoSite: string;
+  /** O IP de quem pediu, posto pela Vercel. Só vira HMAC para contar tentativas (ADR-008); nunca é guardado. */
+  ip: string | undefined;
   agora: () => number;
 }
 
@@ -36,8 +39,8 @@ export function contaLigadaNoSite(): boolean {
   return configuracaoDaConta() !== undefined;
 }
 
-export function contextoReal(enderecoDoSite: string): Contexto {
-  return { config: configuracaoDaConta(), gateway: supabase, enderecoDoSite, agora: () => Date.now() };
+export function contextoReal(enderecoDoSite: string, ip: string | undefined): Contexto {
+  return { config: configuracaoDaConta(), gateway: supabase, enderecoDoSite, ip, agora: () => Date.now() };
 }
 
 const DESLIGADA: RespostaDaConta = { status: 503, corpo: { erro: "desligada" } };
@@ -83,6 +86,23 @@ function ligada(ctx: Contexto): ctx is Contexto & { config: ConfiguracaoDaConta 
   return ctx.config !== undefined;
 }
 
+type Limite = { acao: supabase.AcaoLimitada; tipo: "ip" | "email"; valor: string | undefined };
+
+/**
+ * Limite de tentativas (ADR-008), pedido do dono em 26/11: conta por IP e, onde há, por e-mail. O Supabase também
+ * limita, mas por IP do servidor da Vercel, que é o mesmo para todo mundo; este é o da pessoa. Passou do limite:
+ * "muitas-tentativas" (429). Banco sem resposta: "indisponivel" (falha fechada). Sem IP (fora da Vercel), conta tudo
+ * junto numa chave só.
+ */
+async function dentroDoLimite(ctx: Contexto & { config: ConfiguracaoDaConta }, limites: Limite[]): Promise<"ok" | supabase.ErroDaConta> {
+  for (const { acao, tipo, valor } of limites) {
+    const contado = await ctx.gateway.contarTentativa(ctx.config, acao, chaveDaTentativa(ctx.config.segredoDaSessao, tipo, valor ?? "desconhecido"));
+    if (!contado.ok) return contado.erro;
+    if (!contado.valor) return "muitas-tentativas";
+  }
+  return "ok";
+}
+
 export async function estado(ctx: Contexto, cookie: string | undefined): Promise<RespostaDaConta> {
   if (!ligada(ctx)) return { status: 200, corpo: { conta: "desligada" } };
   if (!cookie) return { status: 200, corpo: { conta: "sem-conta" } };
@@ -99,6 +119,8 @@ export async function cadastrar(ctx: Contexto, corpo: Record<string, unknown>): 
   if (!senha.ok) return ENTRADA_INVALIDA(senha.mensagem);
   // LGPD: a casa só vai para o servidor com o "concordo" marcado na hora de criar a conta.
   if (corpo["concordo"] !== true) return ENTRADA_INVALIDA("Marque que concorda em guardar a sua casa na conta.");
+  const limite = await dentroDoLimite(ctx, [{ acao: "cadastrar-ip", tipo: "ip", valor: ctx.ip }]);
+  if (limite !== "ok") return falha(limite);
   const feito = await ctx.gateway.cadastrar(ctx.config, email.valor, senha.valor, ctx.enderecoDoSite);
   return feito.ok ? { status: 200, corpo: { ok: true } } : falha(feito.erro);
 }
@@ -108,6 +130,12 @@ export async function entrar(ctx: Contexto, corpo: Record<string, unknown>): Pro
   const email = conferirEmail(corpo["email"]);
   // Senha errada ou e-mail sem conta: a mesma resposta (ninguém descobre quais e-mails têm conta).
   if (!email.ok || typeof corpo["senha"] !== "string" || corpo["senha"] === "" || corpo["senha"].length > 200) return falha("credenciais");
+  // Conta toda tentativa, certa ou errada, exista o e-mail ou não: a resposta do limite não revela conta nenhuma.
+  const limite = await dentroDoLimite(ctx, [
+    { acao: "entrar-ip", tipo: "ip", valor: ctx.ip },
+    { acao: "entrar-email", tipo: "email", valor: email.valor },
+  ]);
+  if (limite !== "ok") return falha(limite);
   const tokens = await ctx.gateway.entrar(ctx.config, email.valor, corpo["senha"]);
   if (!tokens.ok) return falha(tokens.erro);
   return { status: 200, corpo: { ok: true }, cookie: comSessao(ctx.config, tokens.valor) };
@@ -119,6 +147,8 @@ export async function confirmarEmail(ctx: Contexto, corpo: Record<string, unknow
   if (!ligada(ctx)) return DESLIGADA;
   const hash = corpo["tokenHash"];
   if (typeof hash !== "string" || !HASH_DO_TOKEN.test(hash)) return falha("link-vencido");
+  const limite = await dentroDoLimite(ctx, [{ acao: "link-ip", tipo: "ip", valor: ctx.ip }]);
+  if (limite !== "ok") return falha(limite);
   const tokens = await ctx.gateway.confirmarLink(ctx.config, hash, "email");
   if (!tokens.ok) return falha(tokens.erro);
   return { status: 200, corpo: { ok: true }, cookie: comSessao(ctx.config, tokens.valor) };
@@ -128,6 +158,12 @@ export async function pedirNovaSenha(ctx: Contexto, corpo: Record<string, unknow
   if (!ligada(ctx)) return DESLIGADA;
   const email = conferirEmail(corpo["email"]);
   if (!email.ok) return ENTRADA_INVALIDA(email.mensagem);
+  const porIp = await dentroDoLimite(ctx, [{ acao: "esqueci-ip", tipo: "ip", valor: ctx.ip }]);
+  if (porIp !== "ok") return falha(porIp);
+  // Muitos pedidos para o mesmo e-mail: não manda mais nenhum, mas responde igual (não revela se há conta).
+  const porEmail = await dentroDoLimite(ctx, [{ acao: "esqueci-email", tipo: "email", valor: email.valor }]);
+  if (porEmail === "muitas-tentativas") return { status: 200, corpo: { ok: true } };
+  if (porEmail !== "ok") return falha(porEmail);
   const feito = await ctx.gateway.pedirNovaSenha(ctx.config, email.valor, ctx.enderecoDoSite);
   // Sempre "enviamos, se houver conta": não revela quais e-mails têm conta.
   return feito.ok ? { status: 200, corpo: { ok: true } } : falha(feito.erro);
@@ -140,6 +176,8 @@ export async function trocarSenhaPeloLink(ctx: Contexto, corpo: Record<string, u
   if (typeof hash !== "string" || !HASH_DO_TOKEN.test(hash)) return falha("link-vencido");
   const senha = conferirSenha(corpo["senha"]);
   if (!senha.ok) return ENTRADA_INVALIDA(senha.mensagem);
+  const limite = await dentroDoLimite(ctx, [{ acao: "link-ip", tipo: "ip", valor: ctx.ip }]);
+  if (limite !== "ok") return falha(limite);
   const tokens = await ctx.gateway.confirmarLink(ctx.config, hash, "recovery");
   if (!tokens.ok) return falha(tokens.erro);
   const trocou = await ctx.gateway.trocarSenha(ctx.config, tokens.valor, senha.valor);
@@ -174,7 +212,7 @@ export async function lerCasa(ctx: Contexto, cookie: string | undefined): Promis
   if (!ligada(ctx)) return DESLIGADA;
   const sessao = await autenticar(ctx, cookie);
   if (!sessao.ok) return sessao.resposta;
-  const casa = await ctx.gateway.lerCasa(ctx.config, sessao.tokens.acesso);
+  const casa = await ctx.gateway.lerCasa(ctx.config, sessao.tokens.acesso, sessao.id);
   if (!casa.ok) return falha(casa.erro, sessao.cookie);
   const corpo = casa.valor ? { casa: casaLida(casa.valor.dados), versaoDoFormato: casa.valor.versaoDoFormato, atualizadaEm: casa.valor.atualizadaEm } : { casa: null };
   return { status: 200, corpo, cookie: sessao.cookie };
@@ -236,6 +274,9 @@ export async function apagarConvite(ctx: Contexto, cookie: string | undefined, c
 export async function casaDoConvidado(ctx: Contexto, corpo: Record<string, unknown>): Promise<RespostaDaConta> {
   if (!ligada(ctx)) return DESLIGADA;
   const codigo = corpo["codigo"];
+  // Conta também o código fora do formato: quem varre códigos é barrado do mesmo jeito.
+  const limite = await dentroDoLimite(ctx, [{ acao: "convidado-ip", tipo: "ip", valor: ctx.ip }]);
+  if (limite !== "ok") return falha(limite);
   if (typeof codigo !== "string" || !FORMATO_DO_CODIGO_DO_CONVITE.test(codigo)) return { status: 404, corpo: { erro: "convite" } };
   const casa = await ctx.gateway.casaDoConvite(ctx.config, hashDoCodigo(codigo));
   if (!casa.ok) return falha(casa.erro);

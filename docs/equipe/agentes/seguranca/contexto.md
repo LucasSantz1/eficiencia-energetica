@@ -106,6 +106,10 @@
 - **HIS-112:** nota de 2026-11-12: frase do painel e textos Empresa e Conta pedem ajuste (ver história).
 - **HIS-117:** tech-lead decide (manter + `script-src-attr 'none'` ou nonce já, com ADR); frontend aplica o patch
   (`scratchpad/his117/his117-csp.patch`); HIS-102 não põe hash no cabeçalho.
+- **ADR-008 (`3ccc664`, 2026-11-26):** aprovado com ressalvas. Conferir antes de casa cifrada em produção: M1, AAD com o
+  `dono` (`casa_do_convite` passa a devolver `dono` só ao servidor), e M2, o texto do ADR ("protege só contra leitura do
+  banco"). Baixas: lockout por e-mail pelo site, tabela `tentativas` enchida com a chave anon, rollback mostra casa vazia,
+  IPv6 /64 quando a Vercel aceitar IPv6 (hoje não aceita).
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável
