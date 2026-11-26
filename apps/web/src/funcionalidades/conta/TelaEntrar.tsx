@@ -120,34 +120,42 @@ export function TelaEntrar() {
           </Campo>
           {modo !== "esqueci" && (
             <Campo id="conta-senha" rotulo="Senha" ajuda={modo === "criar" ? "Pelo menos 8 letras ou números." : undefined}>
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <Entrada
-                    id="conta-senha"
-                    type={verSenha ? "text" : "password"}
-                    autoComplete={modo === "criar" ? "new-password" : "current-password"}
-                    maxLength={72}
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    required
-                  />
-                </div>
-                <button type="button" onClick={() => setVerSenha((v) => !v)} aria-pressed={verSenha} className="grid size-12 shrink-0 place-items-center rounded-[var(--radius-controle)] text-tinta-suave hover:bg-fundo">
-                  {verSenha ? <EyeOff className="size-5" aria-hidden /> : <Eye className="size-5" aria-hidden />}
-                  <span className="sr-only">{verSenha ? "Esconder a senha" : "Mostrar a senha"}</span>
-                </button>
-              </div>
+              <Entrada
+                id="conta-senha"
+                type={verSenha ? "text" : "password"}
+                autoComplete={modo === "criar" ? "new-password" : "current-password"}
+                maxLength={72}
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+                acessorio={
+                  <button type="button" onClick={() => setVerSenha((v) => !v)} aria-pressed={verSenha} className="grid size-11 place-items-center rounded-[calc(var(--radius-controle)-4px)] text-tinta-suave hover:bg-fundo hover:text-tinta">
+                    {verSenha ? <EyeOff className="size-5" aria-hidden /> : <Eye className="size-5" aria-hidden />}
+                    <span className="sr-only">{verSenha ? "Esconder a senha" : "Mostrar a senha"}</span>
+                  </button>
+                }
+              />
             </Campo>
           )}
           {modo === "criar" && (
-            <label className="flex min-h-11 items-start gap-3 rounded-[var(--radius-controle)] bg-fundo p-4">
-              <input type="checkbox" checked={concordo} onChange={(e) => setConcordo(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-energia)]" />
-              <span>
-                Concordo em guardar na conta o meu e-mail e a minha casa: cidade e empresa de luz, benefício (Tarifa Social), quantas pessoas moram, cômodos,
-                aparelhos, contas de luz, leituras do relógio, meta e dicas marcadas. Serve para abrir em outro aparelho e para os links da família. Nada de
-                nome, CPF ou endereço. Posso apagar tudo quando quiser em Minha casa.
-              </span>
-            </label>
+            <div className="space-y-2">
+              <label className="flex min-h-11 items-start gap-3">
+                <input type="checkbox" checked={concordo} onChange={(e) => setConcordo(e.target.checked)} className="mt-0.5 size-6 shrink-0 accent-[var(--color-energia)]" />
+                <span>Concordo em guardar o meu e-mail e a minha casa na conta.</span>
+              </label>
+              {/* O detalhe continua aqui, no momento de concordar (LGPD: finalidade clara), mas fechado para não pesar na tela. */}
+              <details className="ml-9 text-tinta-suave">
+                <summary className="min-h-11 cursor-pointer content-center font-bold text-energia underline underline-offset-2">O que fica guardado?</summary>
+                <p className="mt-1">
+                  Cidade e empresa de luz, benefício (Tarifa Social), quantas pessoas moram, cômodos, aparelhos, contas de luz, leituras do relógio, meta e
+                  dicas marcadas. Serve para abrir a casa em outro celular e para os links da família. Nada de nome, CPF ou endereço. Você apaga tudo quando
+                  quiser em Minha casa.{" "}
+                  <Link href="/sobre#privacidade" target="_blank" rel="noopener noreferrer" className="font-bold text-energia underline underline-offset-2">
+                    Ler sobre a privacidade
+                  </Link>
+                </p>
+              </details>
+            </div>
           )}
           <div role="status">{erro && <Aviso tom="alerta" anunciar={false}>{erro}</Aviso>}</div>
           <Botao type="submit" largo disabled={enviando}>

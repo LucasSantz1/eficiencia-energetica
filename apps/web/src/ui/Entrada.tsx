@@ -1,15 +1,16 @@
 "use client";
 
-import { forwardRef, useContext, type ComponentProps } from "react";
+import { forwardRef, useContext, type ComponentProps, type ReactNode } from "react";
 import { CampoContexto } from "@/ui/Campo";
 
 /**
  * Caixa de texto. Dentro de um `Campo`, recebe dele `aria-invalid`, `aria-describedby` e a cor da borda (erro: vermelho;
  * "Confere?": amarelo). O `aria-describedby` que vier por prop entra depois (ex.: o alerta do preço, que fica no
  * campo do valor, também descreve o campo do consumo). Fora de um `Campo`, fica igual a antes.
+ * `acessorio` vai dentro da caixa, no fim (ex.: o botão de mostrar a senha), como nos outros aplicativos.
  */
-export const Entrada = forwardRef<HTMLInputElement, ComponentProps<"input"> & { sufixo?: string; prefixo?: string }>(function Entrada(
-  { sufixo, prefixo, className = "", "aria-describedby": descricaoExtra, ...props },
+export const Entrada = forwardRef<HTMLInputElement, ComponentProps<"input"> & { sufixo?: string; prefixo?: string; acessorio?: ReactNode }>(function Entrada(
+  { sufixo, prefixo, acessorio, className = "", "aria-describedby": descricaoExtra, ...props },
   ref,
 ) {
   const campo = useContext(CampoContexto);
@@ -26,6 +27,7 @@ export const Entrada = forwardRef<HTMLInputElement, ComponentProps<"input"> & { 
         {...props}
       />
       {sufixo && <span className="pr-4 font-bold text-tinta-suave">{sufixo}</span>}
+      {acessorio && <span className="flex shrink-0 pr-1">{acessorio}</span>}
     </div>
   );
 });
