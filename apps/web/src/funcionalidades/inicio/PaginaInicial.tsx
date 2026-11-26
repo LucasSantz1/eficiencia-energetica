@@ -9,6 +9,7 @@ import { Marca } from "@/ui/Marca";
 import { Contagem, Revelar, TransicaoTela } from "@/ui/Movimento";
 import { AvisoDaCasaNoInicio } from "./AvisoDaCasaNoInicio";
 import { BotaoComecar } from "./BotaoComecar";
+import { BotaoEntrar } from "./BotaoEntrar";
 import { CasaIlustrada } from "./CasaIlustrada";
 import { Simulador } from "./Simulador";
 
@@ -47,7 +48,7 @@ const PERGUNTAS = [
  * Página inicial (componente de servidor, sem "use client": sai pronta em HTML, leve no celular).
  * Os números reais chegam por prop, lidos no servidor pela rota (app/page.tsx).
  */
-export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefined }) {
+export function PaginaInicial({ numeros, contaLigada = false }: { numeros: NumerosDoInicio | undefined; contaLigada?: boolean }) {
   const infoBandeira = numeros?.bandeira ? BANDEIRAS[numeros.bandeira.bandeira] : undefined;
 
   return (
@@ -68,7 +69,10 @@ export function PaginaInicial({ numeros }: { numeros: NumerosDoInicio | undefine
               Perguntas
             </a>
           </nav>
-          <BotaoComecar compacto estilo="contorno" />
+          <div className="flex items-center gap-1 sm:gap-2">
+            {contaLigada && <BotaoEntrar />}
+            <BotaoComecar compacto estilo="contorno" />
+          </div>
         </header>
         <AvisoDaCasaNoInicio />
 

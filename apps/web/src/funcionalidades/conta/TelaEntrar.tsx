@@ -1,9 +1,9 @@
 "use client";
 
-import { Eye, EyeOff, LockKeyhole } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { cadastrar, entrar, mensagemDoErro, pedirNovaSenha, useConta } from "@/aplicacao/conta";
 import { Aviso } from "@/ui/Aviso";
 import { Botao } from "@/ui/Botao";
@@ -15,6 +15,19 @@ type Modo = "entrar" | "criar" | "esqueci";
 
 const TITULOS: Record<Modo, string> = { entrar: "Entrar na sua conta", criar: "Criar uma conta", esqueci: "Esqueci a senha" };
 
+/** `/entrar?modo=criar` (o convite depois do cadastro) já abre em "Criar uma conta". A página é estática: lê no navegador. */
+function useModoDoEndereco(): Modo {
+  return useSyncExternalStore(
+    nadaParaOuvir,
+    () => (new URLSearchParams(window.location.search).get("modo") === "criar" ? "criar" : "entrar"),
+    () => "entrar",
+  );
+}
+
+function nadaParaOuvir() {
+  return () => undefined;
+}
+
 /**
  * Entrar, criar conta e esqueci a senha (E4, HIS-402). A conta é opcional: serve para abrir a casa em outro aparelho e
  * para mandar o link de convidado. Os campos usam `autocomplete` certo, para o gerenciador de senhas do celular ajudar.
@@ -22,7 +35,9 @@ const TITULOS: Record<Modo, string> = { entrar: "Entrar na sua conta", criar: "C
 export function TelaEntrar() {
   const conta = useConta();
   const router = useRouter();
-  const [modo, setModo] = useState<Modo>("entrar");
+  const modoDoEndereco = useModoDoEndereco();
+  const [modoEscolhido, setModo] = useState<Modo>();
+  const modo = modoEscolhido ?? modoDoEndereco;
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [verSenha, setVerSenha] = useState(false);
@@ -83,14 +98,11 @@ export function TelaEntrar() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[30rem]">
-      <span aria-hidden className="mx-auto grid size-14 place-items-center rounded-2xl bg-energia-claro text-energia">
-        <LockKeyhole className="size-7" />
-      </span>
-      <h1 tabIndex={-1} className="mt-4 text-center text-[2rem] leading-tight font-extrabold tracking-tight">
+    <div className="w-full">
+      <h1 tabIndex={-1} className="text-[2rem] leading-tight font-extrabold tracking-tight">
         {TITULOS[modo]}
       </h1>
-      <p className="mt-2 text-center text-lg text-tinta-suave">
+      <p className="mt-2 text-lg text-tinta-suave">
         {modo === "esqueci" ? "Mandamos um link para você criar uma senha nova." : "Com conta, a sua casa abre em outro aparelho e você pode mandar um link para a família acompanhar."}
       </p>
 
@@ -128,7 +140,7 @@ export function TelaEntrar() {
             </Campo>
           )}
           {modo === "criar" && (
-            <label className="flex min-h-11 items-start gap-3 rounded-[var(--radius-controle)] bg-papel p-4">
+            <label className="flex min-h-11 items-start gap-3 rounded-[var(--radius-controle)] bg-fundo p-4">
               <input type="checkbox" checked={concordo} onChange={(e) => setConcordo(e.target.checked)} className="mt-1 size-5 shrink-0 accent-[var(--color-energia)]" />
               <span>
                 Concordo em guardar na conta o meu e-mail e a minha casa: cidade e empresa de luz, benefício (Tarifa Social), quantas pessoas moram, cômodos,
@@ -144,7 +156,7 @@ export function TelaEntrar() {
         </form>
       )}
 
-      <nav aria-label="Outras opções" className="mt-6 flex flex-col items-center gap-1 text-center">
+      <nav aria-label="Outras opções" className="mt-6 flex flex-col items-start gap-1 border-t border-separador pt-4">
         {modo !== "entrar" && (
           <button type="button" onClick={() => trocar("entrar")} className="min-h-11 font-bold text-energia underline underline-offset-2">
             Já tenho conta: entrar

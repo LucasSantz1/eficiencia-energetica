@@ -5,6 +5,7 @@
  */
 import type { Page } from "@playwright/test";
 import { analisarAcessibilidade, descreverViolacoes, violacoesQueReprovam } from "./apoio/axe";
+import { irAteAConta } from "./apoio/cadastro";
 import { casaSalva, lerFixture, semearCasa } from "./apoio/casa";
 import { expect, test } from "./apoio/teste";
 
@@ -109,4 +110,40 @@ test("'Agora não': a casa do aparelho não vai para a conta", async ({ page, co
   await page.getByRole("button", { name: "Agora não" }).click();
   await page.waitForTimeout(2500);
   expect(gravadas).toHaveLength(0);
+});
+
+test("depois do cadastro, sem conta: o convite aparece uma vez, 'Agora não' fecha, e nada foi enviado", async ({ page }) => {
+  const pedidos: string[] = [];
+  page.on("request", (pedido) => pedido.url().includes("/api/") && pedidos.push(`${pedido.method()} ${new URL(pedido.url()).pathname}`));
+  await page.route("**/api/conta", (rota) => rota.fulfill({ json: { conta: "sem-conta" } }));
+  await irAteAConta(page, /^Não sei/);
+  await page.getByRole("button", { name: "Pular, não tenho a conta agora" }).click();
+  const convite = page.getByRole("dialog", { name: "Ver a sua casa em outro celular" });
+  await expect(convite).toBeVisible();
+  await expect(convite.getByRole("link", { name: "Criar conta grátis" })).toHaveAttribute("href", "/entrar?modo=criar");
+  await convite.getByRole("button", { name: "Agora não" }).click();
+  await expect(convite).toBeHidden();
+  // A casa continua só no aparelho: o único pedido ao /api foi perguntar se há conta.
+  expect(pedidos.every((pedido) => pedido === "GET /api/conta")).toBe(true);
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(convite).toBeHidden();
+});
+
+test("depois do cadastro, com a conta desligada no site: nenhum convite", async ({ page }) => {
+  await irAteAConta(page, /^Não sei/);
+  await page.getByRole("button", { name: "Pular, não tenho a conta agora" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await page.waitForTimeout(800);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("/entrar?modo=criar abre em 'Criar uma conta' e passa no axe", async ({ page }) => {
+  await page.route("**/api/conta", (rota) => rota.fulfill({ json: { conta: "sem-conta" } }));
+  await page.goto("/entrar?modo=criar");
+  await expect(page.getByRole("heading", { level: 1, name: "Criar uma conta" })).toBeVisible();
+  await page.getByRole("button", { name: "Já tenho conta: entrar" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Entrar na sua conta" })).toBeVisible();
+  const resultado = await analisarAcessibilidade(page);
+  expect(descreverViolacoes(violacoesQueReprovam(resultado.violations))).toEqual([]);
 });

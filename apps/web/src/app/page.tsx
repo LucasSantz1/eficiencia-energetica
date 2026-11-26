@@ -1,3 +1,4 @@
+import { contaLigadaNoSite } from "@/aplicacao/conta.servidor";
 import { carregarNumerosDoInicio } from "@/aplicacao/numeros-do-inicio.servidor";
 import { PaginaInicial } from "@/funcionalidades/inicio/PaginaInicial";
 
@@ -6,5 +7,5 @@ import { PaginaInicial } from "@/funcionalidades/inicio/PaginaInicial";
 export const revalidate = 86400;
 
 export default async function Pagina() {
-  return <PaginaInicial numeros={await carregarNumerosDoInicio()} />;
+  return <PaginaInicial numeros={await carregarNumerosDoInicio()} contaLigada={contaLigadaNoSite()} />;
 }
