@@ -1,41 +1,41 @@
 {
-  "medidoNoCommit": "259c76a",
-  "decisao": "E4 conta e convidado (ADR-007, 25/11, modo turbo): /casa* +1,2 a +1,9 kB no HTML (estado da conta e os pontos de carga sob demanda; a sincronização, o painel da conta e as ações só baixam com a conta ligada); total com prefetch +7 a +9,6 kB pelas rotas novas (/entrar, /conta/*, /convidado) e pelos pedaços sob demanda. Aceito na rodada do bloco.",
+  "medidoNoCommit": "54296d9",
+  "decisao": "Redesenho de Minha casa (26/11, pedido do dono, modo turbo): /casa/ajustes +1,2 kB no HTML acumulado desde 259c76a, pelo índice das partes (âncoras e IntersectionObserver para marcar a parte na tela) e pelo cartão comum dos ajustes; as outras rotas variaram só com as PRs #49 a #51 (tela de entrar, convite pós-cadastro e limites). Aceito: o índice resolve a tela comprida no celular e no computador.",
   "rotas": {
     "/": {
-      "jsDoHtml": 174762,
-      "totalComPrefetch": 214117
+      "jsDoHtml": 175617,
+      "totalComPrefetch": 206892
     },
     "/comecar": {
-      "jsDoHtml": 193198,
-      "totalComPrefetch": 214117
+      "jsDoHtml": 193784,
+      "totalComPrefetch": 206892
     },
     "/casa": {
-      "jsDoHtml": 204566,
-      "totalComPrefetch": 289348
+      "jsDoHtml": 205570,
+      "totalComPrefetch": 284397
     },
     "/casa/comodos": {
-      "jsDoHtml": 194203,
-      "totalComPrefetch": 289348
+      "jsDoHtml": 194960,
+      "totalComPrefetch": 284397
     },
     "/casa/dicas": {
-      "jsDoHtml": 182857,
-      "totalComPrefetch": 289348
+      "jsDoHtml": 183145,
+      "totalComPrefetch": 284397
     },
     "/casa/ajustes": {
-      "jsDoHtml": 186749,
-      "totalComPrefetch": 289348
+      "jsDoHtml": 187905,
+      "totalComPrefetch": 284397
     },
     "/sobre": {
       "jsDoHtml": 140892,
-      "totalComPrefetch": 178840
+      "totalComPrefetch": 179695
     },
     "/tarifa-social": {
-      "jsDoHtml": 167086,
-      "totalComPrefetch": 188005
+      "jsDoHtml": 167129,
+      "totalComPrefetch": 188885
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 262111
+      "totalComPrefetch": 256641
     }
   }
 }
