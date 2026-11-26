@@ -34,6 +34,8 @@ function enderecoDoSite(pedido: NextRequest): string {
 /**
  * O IP de quem pediu (ADR-008). Na Vercel, `x-real-ip` e o primeiro item de `x-forwarded-for` são postos pela própria
  * Vercel (ela sobrescreve o que o navegador mandar). Só serve para contar tentativas; nunca é guardado nem logado.
+ * ATENÇÃO: só vale na Vercel. Em outro host, ou atrás de outro proxy, o navegador escolhe esse cabeçalho e o limite
+ * por IP deixa de valer (o por e-mail continua). Mudar de host pede rever isto (B4 da seguranca).
  */
 function ipDe(pedido: NextRequest): string | undefined {
   const ip = pedido.headers.get("x-real-ip") ?? pedido.headers.get("x-forwarded-for")?.split(",")[0];

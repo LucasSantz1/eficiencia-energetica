@@ -33,23 +33,24 @@ Faltavam:
 
      | Ação | Por | Limite |
      | --- | --- | --- |
-     | entrar | IP | 30 / 15 min |
+     | entrar | IP | 60 / 15 min |
      | entrar | e-mail | 10 / 15 min |
-     | criar conta | IP | 10 / h |
-     | esqueci a senha | IP | 10 / h |
+     | criar conta | IP | 20 / h |
+     | esqueci a senha | IP | 20 / h |
      | esqueci a senha | e-mail | 3 / h |
-     | links do e-mail | IP | 30 / 15 min |
+     | links do e-mail | IP | 60 / 15 min |
      | link de convidado | IP | 120 / 15 min |
 
    - **A chave é um HMAC-SHA256 do IP ou do e-mail**, com uma chave tirada do `SESSAO_SEGREDO` por HKDF. O banco nunca guarda IP nem e-mail. Quem chama a função direto não consegue gastar as tentativas de outra pessoa, porque não tem o segredo.
-   - **O IP vem de `x-real-ip` ou `x-forwarded-for`.** A Vercel põe e sobrescreve esses cabeçalhos.
+   - **Os limites por IP são folgados de propósito.** No 4G, a operadora junta muitas famílias num IP só (CGNAT). Quem segura a adivinhação de senha é o limite por e-mail.
+   - **O IP vem de `x-real-ip` ou `x-forwarded-for`.** A Vercel põe e sobrescreve esses cabeçalhos. **Só vale na Vercel:** em outro host, o navegador escolheria o cabeçalho. IPv6 conta pela rede /64 (B4 da seguranca).
    - **Respostas:**
      - passou do limite: 429 "muitas-tentativas", sem chamar o Supabase;
      - banco sem resposta: 503, falha fechada;
      - "esqueci" para o mesmo e-mail demais: responde igual a sucesso e não manda mais e-mail, para não revelar se a conta existe.
    - **Limpeza:** de vez em quando, em 2% das chamadas, a função apaga janelas com mais de um dia.
 2. **A casa vai cifrada para o banco.**
-   - **Cifra:** AES-256-GCM no servidor, com IV aleatório e AAD de contexto. A chave vem de uma variável nova, **`CASA_SEGREDO`** (32 bytes), separada da sessão: trocar o `SESSAO_SEGREDO` tira todo mundo da conta, mas não pode deixar as casas ilegíveis.
+   - **Cifra:** AES-256-GCM no servidor, com IV aleatório e AAD com o contexto **e o dono**. A cifra de uma casa copiada para a linha de outra pessoa não abre (M1 da seguranca). `casa_do_convite` devolve o dono só para o servidor abrir a cifra; o convidado não o recebe. A chave vem de uma variável nova, **`CASA_SEGREDO`** (32 bytes), separada da sessão: trocar o `SESSAO_SEGREDO` tira todo mundo da conta, mas não pode deixar as casas ilegíveis.
    - **Formato no banco:** `dados_cifrados` = `v1.` + base64url(iv | etiqueta | cifra).
    - **Sem `CASA_SEGREDO`, a conta fica desligada:** nunca grava casa sem cifra. A chave tem de ter 32 bytes e ser diferente da da sessão.
    - **Casas de antes:** continuam em `dados` e o servidor regrava cifrado na próxima mudança. O banco exige um formato só por linha (`casas_um_formato`).
@@ -66,6 +67,10 @@ Faltavam:
 - **pgsodium ou Vault do Supabase para cifrar no banco:** a chave ficaria no mesmo lugar dos dados. Cifrar no servidor separa os dois.
 
 ## Consequências
+
+- **O que a cifra protege:** quem só **lê** o banco sem a chave (um backup vazado, uma consulta de leitura) não lê a casa. **O que ela não protege:** quem pode **escrever** no banco (o painel do Supabase, por exemplo) troca a senha da pessoa no `auth.users` e entra pelo site (M2 da seguranca). Contra isso valem a senha forte e a verificação em duas etapas na conta do Supabase do dono.
+- **Não voltar o deploy para antes desta mudança** depois que houver casa cifrada: o código antigo lê `dados` vazio e mostraria uma casa vazia para a pessoa escolher (B3 da seguranca). A cifra no banco não se perde.
+- **Bloquear outra pessoa:** 10 senhas erradas para o e-mail de alguém em 15 min impedem essa pessoa de entrar até a janela virar, e 3 pedidos de "esqueci" por hora seguram os e-mails dela (B1). É o preço comum do limite por e-mail, e a conta é opcional: a casa continua no aparelho.
 
 - **Perder o `CASA_SEGREDO` perde as casas guardadas na conta.** As casas que estão nos aparelhos continuam. O guia manda guardar uma cópia num gerenciador de senhas.
 - **O banco não consegue somar nada de dentro das casas.** O painel de uso (E12) não lê casas: ele vai usar eventos anônimos e agregados, numa tabela própria, como já estava planejado. A cifra não atrapalha o painel.

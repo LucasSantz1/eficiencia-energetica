@@ -6,8 +6,9 @@
 --    IP nem o e-mail), a ação e a janela de tempo. Os limites ficam AQUI, fixos: quem chamar a função direto não
 --    escolhe limite nem janela.
 -- 2. Ninguém lê nem escreve a tabela de tentativas: só a função mexe nela.
--- 3. A casa passa a ser gravada cifrada pelo servidor (AES-256-GCM, chave CASA_SEGREDO na Vercel) em dados_cifrados.
---    Quem ler o banco (um backup vazado, um painel aberto) não lê a casa. A coluna antiga `dados` só fica para as casas
+-- 3. A casa passa a ser gravada cifrada pelo servidor (AES-256-GCM, chave CASA_SEGREDO na Vercel) em dados_cifrados,
+--    amarrada ao dono (a cifra de uma casa não abre na linha de outra). Quem só LÊ o banco (um backup vazado, uma
+--    consulta de leitura) não lê a casa. Não protege de quem pode ESCREVER no banco (ADR-008). A coluna antiga `dados` só fica para as casas
 --    gravadas antes desta migração; o servidor regrava cifrado na próxima mudança. Cada linha tem UM dos dois.
 -- Compatível com o código de antes: a migração pode rodar antes do deploy.
 
@@ -38,12 +39,13 @@ begin
   -- ação, tentativas por janela, tamanho da janela em segundos
   select l.limite, l.segundos into limite, segundos
   from (values
-    ('entrar-ip', 30, 900),        -- 30 tentativas de entrar a cada 15 min por IP (uma casa com vários celulares)
+    -- Por IP, folgado: no 4G, a operadora junta muitas famílias num IP só (CGNAT). Quem segura senha é o por e-mail.
+    ('entrar-ip', 60, 900),        -- 60 tentativas de entrar a cada 15 min por IP
     ('entrar-email', 10, 900),     -- 10 por e-mail a cada 15 min: adivinhar senha fica inviável
-    ('cadastrar-ip', 10, 3600),    -- 10 contas novas por hora por IP
-    ('esqueci-ip', 10, 3600),
+    ('cadastrar-ip', 20, 3600),    -- 20 contas novas por hora por IP
+    ('esqueci-ip', 20, 3600),
     ('esqueci-email', 3, 3600),    -- 3 e-mails de senha nova por hora para o mesmo endereço
-    ('link-ip', 30, 900),          -- confirmar e-mail e senha nova pelo link
+    ('link-ip', 60, 900),          -- confirmar e-mail e senha nova pelo link
     ('convidado-ip', 120, 900)     -- abrir link de convidado (o código não dá para adivinhar; isto barra varredura)
   ) as l (acao, limite, segundos)
   where l.acao = nome_da_acao;
@@ -73,12 +75,13 @@ alter table public.casas alter column dados drop not null;
 alter table public.casas add constraint casas_um_formato check ((dados is null) <> (dados_cifrados is null));
 
 -- O convidado recebe a casa como está no banco; o servidor decifra e corta o que o convidado não vê (ADR-007, M5).
+-- O `dono` só serve ao servidor para abrir a cifra (amarrada ao dono); nunca vai para a tela do convidado.
 -- Mesmo nome e mesmo argumento: o código de antes continua lendo `dados` das casas antigas até o deploy.
 drop function public.casa_do_convite(bytea);
 create function public.casa_do_convite(hash bytea)
-returns table (dados jsonb, dados_cifrados text, versao_do_formato integer, atualizada_em timestamptz)
+returns table (dados jsonb, dados_cifrados text, versao_do_formato integer, atualizada_em timestamptz, dono uuid)
 language sql stable security definer set search_path = '' as $$
-  select c.dados, c.dados_cifrados, c.versao_do_formato, c.atualizada_em
+  select c.dados, c.dados_cifrados, c.versao_do_formato, c.atualizada_em, c.dono
   from public.convites v
   join public.casas c on c.dono = v.dono
   where v.hash_do_codigo = hash and octet_length(hash) = 32;

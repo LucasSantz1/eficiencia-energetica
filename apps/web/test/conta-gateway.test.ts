@@ -59,13 +59,13 @@ describe("Supabase: a casa vai cifrada e volta aberta (ADR-008)", () => {
     expect(typeof cifra === "string" && cifra.startsWith("v1.")).toBe(true);
     expect(JSON.stringify(gravada)).not.toMatch(/Cozinha|Prudente/);
     respostas.linha = { dados: null, dados_cifrados: cifra, versao_do_formato: 3, atualizada_em: "2026-11-26T12:00:00Z" };
-    expect(await gateway.lerCasa(CONFIG, "jwt")).toEqual({ ok: true, valor: { dados: CASA, versaoDoFormato: 3, atualizadaEm: "2026-11-26T12:00:00Z" } });
+    expect(await gateway.lerCasa(CONFIG, "jwt", "dono-1")).toEqual({ ok: true, valor: { dados: CASA, versaoDoFormato: 3, atualizadaEm: "2026-11-26T12:00:00Z" } });
   });
 
   it("casa de antes da cifra ainda abre; cifra que não abre vira erro, nunca casa vazia", async () => {
     respostas.linha = { dados: CASA, dados_cifrados: null, versao_do_formato: 3, atualizada_em: "2026-11-26T12:00:00Z" };
-    expect(await gateway.lerCasa(CONFIG, "jwt")).toMatchObject({ ok: true, valor: { dados: CASA } });
+    expect(await gateway.lerCasa(CONFIG, "jwt", "dono-1")).toMatchObject({ ok: true, valor: { dados: CASA } });
     respostas.linha = { dados: null, dados_cifrados: "v1.nao-abre", versao_do_formato: 3, atualizada_em: "2026-11-26T12:00:00Z" };
-    expect(await gateway.lerCasa(CONFIG, "jwt")).toEqual({ ok: false, erro: "indisponivel" });
+    expect(await gateway.lerCasa(CONFIG, "jwt", "dono-1")).toEqual({ ok: false, erro: "indisponivel" });
   });
 });

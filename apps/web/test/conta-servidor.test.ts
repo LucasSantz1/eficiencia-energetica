@@ -7,6 +7,8 @@ vi.mock("server-only", () => ({}));
 
 const conta = await import("@/aplicacao/conta.servidor");
 const { cifrarSessao, decifrarSessao } = await import("@/infraestrutura/conta/sessao.servidor");
+const { chaveDaTentativa, redeDoIp } = await import("@/infraestrutura/conta/tentativas.servidor");
+const { cifrarCasa, decifrarCasa } = await import("@/infraestrutura/conta/cofre.servidor");
 
 const SEGREDO = new Uint8Array(32).fill(7);
 const CONFIG = { urlDoSupabase: "https://exemplo.supabase.co", chaveAnonima: "anon", segredoDaSessao: SEGREDO, segredoDaCasa: new Uint8Array(32).fill(3) };
@@ -279,5 +281,31 @@ describe("rotas da pessoa exigem sessão (pedido do dono, 26/11)", () => {
       expect((await conta.apagarConta(ctx, cookie)).status).toBe(401);
     }
     expect(Object.keys(gateway.chamadas).filter((nome) => nome !== "quemEsta")).toEqual([]);
+  });
+});
+
+describe("IP para contar tentativas (B4 da seguranca)", () => {
+  it("IPv6 conta pela rede /64; IPv4 inteiro; IPv4 dentro de IPv6 vira IPv4", () => {
+    expect(redeDoIp("2804:7f0:90b2:8595:d9bc:6c67:2844:42b8")).toBe("2804:7f0:90b2:8595::/64");
+    expect(redeDoIp("2804:07f0:90b2:8595::1")).toBe("2804:7f0:90b2:8595::/64");
+    expect(redeDoIp("2804::1")).toBe("2804:0:0:0::/64");
+    expect(redeDoIp("::ffff:203.0.113.7")).toBe("203.0.113.7");
+    expect(redeDoIp(" 203.0.113.7 ")).toBe("203.0.113.7");
+  });
+
+  it("dois endereços da mesma rede /64 gastam as mesmas tentativas; redes diferentes, não", () => {
+    const a = chaveDaTentativa(SEGREDO, "ip", "2804:7f0:90b2:8595::1");
+    const b = chaveDaTentativa(SEGREDO, "ip", "2804:7f0:90b2:8595:ffff:ffff:ffff:ffff");
+    const c = chaveDaTentativa(SEGREDO, "ip", "2804:7f0:90b2:8596::1");
+    expect(a.equals(b)).toBe(true);
+    expect(a.equals(c)).toBe(false);
+  });
+});
+
+describe("cifra amarrada ao dono (M1 da seguranca)", () => {  it("a casa da Bia copiada para a linha da Ana não abre", () => {
+    const chave = new Uint8Array(32).fill(3);
+    const daBia = cifrarCasa({ comodos: [] }, chave, "bia");
+    expect(decifrarCasa(daBia, chave, "bia")).toEqual({ comodos: [] });
+    expect(decifrarCasa(daBia, chave, "ana")).toBeUndefined();
   });
 });

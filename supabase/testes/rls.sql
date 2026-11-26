@@ -107,6 +107,8 @@ select pg_temp.como('anon', null);
 do $$ begin
   if (select dados_cifrados from public.casa_do_convite(sha256('codigo-da-bia'))) <> 'v1.cifra-da-bia' then raise exception 'o convite devia devolver a cifra'; end if;
   if (select dados from public.casa_do_convite(sha256('codigo-da-bia'))) is not null then raise exception 'casa cifrada com texto aberto'; end if;
+  -- O dono volta só para o servidor abrir a cifra, que é amarrada a ele (M1).
+  if (select dono from public.casa_do_convite(sha256('codigo-da-bia'))) <> '00000000-0000-4000-8000-00000000000b' then raise exception 'o convite devia devolver o dono para abrir a cifra'; end if;
 end $$;
 
 -- 8. Tentativas (ADR-008): ninguém lê nem escreve a tabela; a função conta, barra no limite e não aceita limite de fora.

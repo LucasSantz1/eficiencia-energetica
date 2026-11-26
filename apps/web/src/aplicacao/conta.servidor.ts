@@ -212,7 +212,7 @@ export async function lerCasa(ctx: Contexto, cookie: string | undefined): Promis
   if (!ligada(ctx)) return DESLIGADA;
   const sessao = await autenticar(ctx, cookie);
   if (!sessao.ok) return sessao.resposta;
-  const casa = await ctx.gateway.lerCasa(ctx.config, sessao.tokens.acesso);
+  const casa = await ctx.gateway.lerCasa(ctx.config, sessao.tokens.acesso, sessao.id);
   if (!casa.ok) return falha(casa.erro, sessao.cookie);
   const corpo = casa.valor ? { casa: casaLida(casa.valor.dados), versaoDoFormato: casa.valor.versaoDoFormato, atualizadaEm: casa.valor.atualizadaEm } : { casa: null };
   return { status: 200, corpo, cookie: sessao.cookie };

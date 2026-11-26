@@ -143,21 +143,22 @@ export async function quemEsta(config: ConfiguracaoDaConta, acesso: string): Pro
  * `dados` (a próxima gravação já cifra). Cifra que não abre (mexida, ou de outra chave) vira "indisponivel": nunca
  * uma casa vazia, que o aparelho poderia gravar por cima da de verdade.
  */
-function casaDaLinha(config: ConfiguracaoDaConta, linha: Record<string, unknown>): Resultado<CasaNoServidor> {
+function casaDaLinha(config: ConfiguracaoDaConta, linha: Record<string, unknown>, dono: string): Resultado<CasaNoServidor> {
   const cifrada = linha["dados_cifrados"];
   let dados: unknown = linha["dados"];
   if (typeof cifrada === "string") {
-    dados = decifrarCasa(cifrada, config.segredoDaCasa);
+    dados = decifrarCasa(cifrada, config.segredoDaCasa, dono);
     if (dados === undefined) return { ok: false, erro: "indisponivel" };
   }
   return { ok: true, valor: { dados, versaoDoFormato: Number(linha["versao_do_formato"]), atualizadaEm: String(linha["atualizada_em"]) } };
 }
 
-export async function lerCasa(config: ConfiguracaoDaConta, acesso: string): Promise<Resultado<CasaNoServidor | undefined>> {
+/** `dono`: o id de quem está na sessão (conferido no Supabase); abre a cifra, que é amarrada a ele. */
+export async function lerCasa(config: ConfiguracaoDaConta, acesso: string, dono: string): Promise<Resultado<CasaNoServidor | undefined>> {
   const { data, error } = await cliente(config, acesso).from("casas").select("dados, dados_cifrados, versao_do_formato, atualizada_em").maybeSingle();
   if (error) return { ok: false, erro: "indisponivel" };
   if (!data) return { ok: true, valor: undefined };
-  return casaDaLinha(config, data);
+  return casaDaLinha(config, data, dono);
 }
 
 /**
@@ -173,7 +174,7 @@ export async function gravarCasa(
 ): Promise<Resultado<string>> {
   const agora = new Date().toISOString();
   // Sempre cifrada; `dados: null` tira a cópia aberta das casas de antes da cifra (ADR-008).
-  const linha = { dados: null, dados_cifrados: cifrarCasa(casa.dados, config.segredoDaCasa), versao_do_formato: casa.versaoDoFormato, atualizada_em: agora };
+  const linha = { dados: null, dados_cifrados: cifrarCasa(casa.dados, config.segredoDaCasa, dono), versao_do_formato: casa.versaoDoFormato, atualizada_em: agora };
   const banco = cliente(config, acesso).from("casas");
   if (atualizadaEmConhecida === undefined) {
     const { error } = await banco.insert({ dono, ...linha });
@@ -213,7 +214,8 @@ export async function casaDoConvite(config: ConfiguracaoDaConta, hashDoCodigo: B
   if (error) return { ok: false, erro: "indisponivel" };
   const [linha] = Array.isArray(data) ? data : [];
   if (!linha) return { ok: true, valor: undefined };
-  return casaDaLinha(config, linha);
+  // O dono vem da própria função do banco e só abre a cifra: não sai daqui (o convidado não o recebe).
+  return casaDaLinha(config, linha, String(linha.dono));
 }
 
 /**
