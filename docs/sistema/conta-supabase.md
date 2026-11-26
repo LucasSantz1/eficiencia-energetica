@@ -36,7 +36,8 @@ Em **Authentication**:
 2. **URL Configuration:**
    - **Site URL:** o endereço do site, por exemplo `https://eficiencia-energetica.vercel.app`, sem barra no fim;
    - **Redirect URLs:** o mesmo endereço seguido de `/**`.
-3. **Emails → Templates**. Troque só o link de dois modelos. O link vai depois do `#`: o navegador nunca o manda para
+3. **Emails → Templates**. Desde 3/6/2026, projeto novo no plano Free só edita os modelos **depois de ligar um SMTP
+   próprio** (passo 4); faça o passo 4 primeiro e volte aqui. Troque só o link de dois modelos. O link vai depois do `#`: o navegador nunca o manda para
    nenhum servidor, então ele não fica em log.
    - **Confirm signup**, assunto `Confirme a sua conta`:
 
@@ -59,14 +60,25 @@ Em **Authentication**:
 4. **Rate Limits:** deixe como está. As funções do site rodam em São Paulo (`gru1`), perto do banco. Atenção: o Supabase conta as tentativas por IP, e todas as tentativas chegam do
    servidor da Vercel. Com muita gente entrando ao mesmo tempo, o limite vale para todos juntos (ADR-007).
 
-## 4. E-mail de verdade (antes de divulgar)
+## 4. SMTP próprio (obrigatório para trocar o link dos e-mails)
 
-O e-mail grátis do Supabase manda **poucos e-mails por hora** e só serve para testar. Para uso de verdade:
+Sem SMTP próprio, o projeto novo não deixa editar os modelos do passo 3, e o e-mail grátis do Supabase manda só 2
+e-mails por hora. Escolha um dos caminhos:
 
-1. Crie uma conta num serviço de e-mail com plano grátis, como o [Resend](https://resend.com) (3.000 e-mails por mês),
-   e confirme um domínio seu.
-2. No Supabase, em **Project Settings → Authentication → SMTP Settings**, ligue *Enable Custom SMTP* e preencha com os
-   dados do serviço: servidor, porta, usuário e senha.
+- **Com um domínio seu** (ex.: `eficienciaenergetica.com.br`): crie conta no [Resend](https://resend.com) (3.000
+  e-mails por mês grátis) ou no [Brevo](https://www.brevo.com), confirme o domínio (registros SPF e DKIM no DNS) e crie
+  um remetente como `nao-responda@seudominio`. É o melhor caminho: os e-mails caem menos no spam.
+- **Sem domínio, para começar:** use um Gmail criado só para o projeto, com uma **senha de app**:
+  1. crie o Gmail (ex.: `eficiencia.energetica.app@gmail.com`) e ligue a verificação em duas etapas;
+  2. em [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords), crie uma senha de app;
+  3. use os dados abaixo com `smtp.gmail.com`, porta `465`, usuário = o Gmail e senha = a senha de app.
+
+  O Gmail manda até cerca de 500 e-mails por dia. Não use o seu Gmail pessoal: ele apareceria como remetente para
+  todo mundo.
+
+No Supabase, em **Authentication → Emails → SMTP Settings**, ligue *Enable custom SMTP* e preencha: *Sender email*,
+*Sender name* (`Eficiência Energética`), *Host*, *Port*, *Username* e *Password*. Salve, volte ao passo 3 e troque os
+modelos. Depois, em **Rate Limits**, o limite de e-mails por hora pode subir (o padrão com SMTP próprio é 30).
 
 ## 5. Variáveis na Vercel
 
