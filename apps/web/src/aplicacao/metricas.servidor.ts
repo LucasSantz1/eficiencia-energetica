@@ -4,8 +4,9 @@ import { dentroDoLimite, ligada, type Contexto, type RespostaDaConta } from "./c
 
 /**
  * Métricas de uso e "Isto te ajudou?" (E12, ADR-009). Sem cookie, sem conta e sem nada da casa: o navegador manda só
- * o nome do evento (ou a nota), o servidor confere a lista e soma no banco. O IP só vira HMAC para o limite de
- * tentativas (ADR-008) e nunca é guardado. Sem a conta ligada no site, nada é contado.
+ * o nome do evento (ou a nota), o servidor confere a lista e soma no banco. A contagem de uso não usa o IP para nada.
+ * A opinião passa pelo limite de tentativas (ADR-008): um código do IP fica de 1 a 2 dias. Sem a conta ligada no
+ * site, nada é contado.
  */
 const SEM_CONTEUDO: RespostaDaConta = { status: 204, corpo: {} };
 
@@ -13,8 +14,7 @@ export async function contarUso(ctx: Contexto, corpo: Record<string, unknown>): 
   if (!ligada(ctx)) return SEM_CONTEUDO;
   const evento = corpo["evento"];
   if (!ehEventoDeUso(evento)) return { status: 400, corpo: { erro: "entrada" } };
-  // Passou do limite (robô): ignora calado. A contagem de uso nunca atrapalha a pessoa.
-  if ((await dentroDoLimite(ctx, [{ acao: "uso-ip", tipo: "ip", valor: ctx.ip }])) !== "ok") return SEM_CONTEUDO;
+  // Sem limite por IP de propósito (A1 da seguranca): até o código do IP ficaria guardado. O banco tem um teto por dia.
   await ctx.gateway.contarUso(ctx.config, evento);
   return SEM_CONTEUDO;
 }

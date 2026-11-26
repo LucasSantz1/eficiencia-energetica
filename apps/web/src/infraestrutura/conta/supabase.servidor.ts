@@ -21,7 +21,7 @@ export interface CasaNoServidor {
 }
 
 /** As ações que o banco limita (supabase/migrations/20261126160000_limites_e_casa_cifrada.sql). */
-export type AcaoLimitada = "entrar-ip" | "entrar-email" | "cadastrar-ip" | "esqueci-ip" | "esqueci-email" | "link-ip" | "convidado-ip" | "uso-ip" | "opiniao-ip";
+export type AcaoLimitada = "entrar-ip" | "entrar-email" | "cadastrar-ip" | "esqueci-ip" | "esqueci-email" | "link-ip" | "convidado-ip" | "opiniao-ip";
 
 export interface ConviteNoServidor {
   id: string;

@@ -18,6 +18,13 @@ describe("métricas (E12, ADR-009)", () => {
     expect(conferirOpiniao("painel", 4, "a".repeat(281))).toMatchObject({ ok: false });
   });
 
+  it("opinião sem fórmula de planilha, caractere invisível nem troca de direção", () => {
+    expect(conferirOpiniao("painel", 4, "=HYPERLINK(1)")).toMatchObject({ ok: true, texto: "HYPERLINK(1)" });
+    expect(conferirOpiniao("painel", 4, "- bom")).toMatchObject({ ok: true, texto: "bom" });
+    expect(conferirOpiniao("painel", 4, "oi\u202exyz\u200b")).toMatchObject({ ok: true, texto: "oixyz" });
+    expect(conferirOpiniao("painel", 4, "a\u0085b")).toMatchObject({ ok: true, texto: "a b" });
+  });
+
   it("opinião não guarda telefone nem e-mail", () => {
     expect(conferirOpiniao("painel", 4, "me liga 18 99123-4567")).toMatchObject({ ok: false });
     expect(conferirOpiniao("painel", 4, "ana@exemplo.org")).toMatchObject({ ok: false });

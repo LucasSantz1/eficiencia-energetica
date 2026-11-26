@@ -370,10 +370,10 @@ describe("métricas anônimas (ADR-009)", () => {
     expect(gateway.chamadas["contarUso"]).toHaveLength(1);
   });
 
-  it("passou do limite (robô): ignora calado; conta desligada: não conta nada", async () => {
-    const barrado = gatewayDeMentira({ contarTentativa: async () => ({ ok: true, valor: false }) });
-    expect((await metricas.contarUso(contexto(barrado), { evento: "visita" })).status).toBe(204);
-    expect(barrado.chamadas["contarUso"] ?? []).toHaveLength(0);
+  it("a contagem de uso não usa o IP para nada (A1); conta desligada: não conta nada", async () => {
+    const gateway = gatewayDeMentira();
+    await metricas.contarUso(contexto(gateway), { evento: "visita" });
+    expect(gateway.chamadas["contarTentativa"] ?? []).toHaveLength(0);
     const desligada = gatewayDeMentira();
     expect((await metricas.contarUso(contexto(desligada, false), { evento: "visita" })).status).toBe(204);
     expect(desligada.chamadas).toEqual({});

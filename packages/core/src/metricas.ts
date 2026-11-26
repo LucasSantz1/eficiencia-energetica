@@ -43,9 +43,24 @@ export type OpiniaoConferida =
 /** E-mail ou telefone (8 dígitos ou mais, com ou sem espaço, ponto ou traço): o texto é anônimo, não guarda contato. */
 const PARECE_CONTATO = /[^\s@]+@[^\s@]+\.[^\s@]+|(?:\d[\s.()-]*){8,}/;
 
-/** Troca caracteres de controle (quebra de linha, tab, etc.) por espaço. */
+/**
+ * Troca caracteres de controle (quebra de linha, tab, C1) por espaço e tira os invisíveis (largura zero) e os que trocam
+ * a direção do texto, que servem para esconder conteúdo de quem lê (A4 da seguranca). O banco confere de novo.
+ */
 function semControle(texto: string): string {
-  return [...texto].map((letra) => ((letra.codePointAt(0) ?? 0) < 32 || letra === "\u007f" ? " " : letra)).join("");
+  return [...texto]
+    .map((letra) => {
+      const codigo = letra.codePointAt(0) ?? 0;
+      if (codigo < 32 || (codigo >= 0x7f && codigo <= 0x9f)) return " ";
+      const invisivel = (codigo >= 0x200b && codigo <= 0x200f) || (codigo >= 0x202a && codigo <= 0x202e) || (codigo >= 0x2060 && codigo <= 0x2069) || codigo === 0xfeff;
+      return invisivel ? "" : letra;
+    })
+    .join("");
+}
+
+/** Tira = + - @ do começo: numa planilha, o texto viraria fórmula (A4 da seguranca). */
+function semFormulaNoComeco(texto: string): string {
+  return texto.replace(/^[\s=+@-]+/, "");
 }
 
 /** Confere a opinião antes de ir ao banco. Texto: sem espaços nas pontas, sem caractere de controle, até 280 letras. */
@@ -53,7 +68,7 @@ export function conferirOpiniao(momento: unknown, nota: unknown, texto: unknown)
   if (!ehMomentoDeOpiniao(momento)) return { ok: false, mensagem: "Momento inválido." };
   if (nota !== 1 && nota !== 2 && nota !== 3 && nota !== 4 && nota !== 5) return { ok: false, mensagem: "Escolha uma nota de 1 a 5." };
   if (texto !== undefined && texto !== null && typeof texto !== "string") return { ok: false, mensagem: "Texto inválido." };
-  const limpo = typeof texto === "string" ? semControle(texto).trim() : "";
+  const limpo = typeof texto === "string" ? semFormulaNoComeco(semControle(texto).trim()).trim() : "";
   if ([...limpo].length > TAMANHO_MAXIMO_DA_OPINIAO) return { ok: false, mensagem: `Escreva até ${TAMANHO_MAXIMO_DA_OPINIAO} letras.` };
   if (PARECE_CONTATO.test(limpo)) return { ok: false, mensagem: "Tire o telefone ou o e-mail do texto: a opinião é anônima." };
   return { ok: true, momento, nota, texto: limpo === "" ? undefined : limpo };

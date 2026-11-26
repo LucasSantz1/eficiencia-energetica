@@ -9,7 +9,7 @@ export function contatoDoSite(): { email: string | undefined; responsavel: strin
   const email = process.env.CONTATO_EMAIL?.trim();
   const responsavel = process.env.RESPONSAVEL_PELO_SITE?.trim();
   return {
-    email: email && /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email) && email.length <= 120 ? email : undefined,
+    email: email && /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/.test(email) && email.length <= 120 ? email : undefined,
     responsavel: responsavel && responsavel.length <= 120 ? responsavel : undefined,
   };
 }

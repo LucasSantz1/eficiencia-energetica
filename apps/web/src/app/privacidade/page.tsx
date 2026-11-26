@@ -24,7 +24,9 @@ export default function Privacidade() {
         <p>
           Não pedimos nome, CPF, endereço nem telefone. O que você cadastra fica guardado só no navegador deste aparelho: a cidade e a empresa de luz, o
           benefício (Tarifa Social), o tipo de ligação, quantas pessoas moram, os cômodos, os aparelhos, as contas de luz, as leituras do relógio, a meta,
-          as dicas marcadas e as escolhas de leitura (letra maior, mais contraste). Nada disso vai para nenhum servidor.
+          as dicas marcadas e as escolhas de leitura (letra maior, mais contraste). Também ficam ali umas marcas pequenas: se
+          você já respondeu o &quot;Isto te ajudou?&quot;, se desligou a contagem de uso e o que já foi contado nesta aba. Nada disso
+          vai para nenhum servidor.
         </p>
         <p>Para mostrar os preços, o site baixa arquivos públicos da ANEEL e do IBGE, iguais para todo mundo. Baixar esses arquivos não envia nada seu.</p>
       </section>
@@ -32,21 +34,28 @@ export default function Privacidade() {
       <section aria-labelledby="contagem">
         <h2 id="contagem">Contagem de uso, sem saber quem é você</h2>
         <p>
-          Para saber se o site está ajudando, ele conta, por dia, quantas vezes algumas coisas acontecem: abrir o site, terminar o cadastro, anotar uma
-          conta, pôr uma dica no plano, definir uma meta, compartilhar, imprimir, ouvir a tela e abrir a comparação. Quando você anota uma conta, conta só se
-          a estimativa ficou perto ou longe dela, nunca os números.
+          Para saber se o site está ajudando, ele conta, por dia, quantas vezes algumas coisas acontecem: abrir o site, abrir Minha casa, terminar o
+          cadastro, anotar uma conta, pôr uma dica no plano, definir uma meta, compartilhar, imprimir, ouvir a tela, abrir a comparação, confirmar o e-mail
+          de uma conta nova e criar um link para a família. Quando você anota uma conta, conta só se a estimativa ficou perto ou longe dela, nunca os
+          números.
         </p>
         <p>
-          Não guardamos quem fez, de onde, nem a que horas: só o total do dia. Não usamos cookie para isso, nem ferramentas de propaganda. Se o seu navegador
-          está com &quot;Não rastrear&quot; ou &quot;Controle Global de Privacidade&quot; ligado, o site não conta nada.
+          Não guardamos quem fez, de onde, nem a que horas: só o total do dia. A contagem não usa o seu endereço de internet para nada, nem cookie, nem
+          ferramentas de propaganda. Quer que este aparelho não conte nada? Desligue &quot;Contar o meu uso&quot; em Minha casa. Se o seu navegador está com
+          &quot;Não rastrear&quot; ou &quot;Controle Global de Privacidade&quot; ligado, o site também não conta.
         </p>
       </section>
 
       <section aria-labelledby="opiniao">
         <h2 id="opiniao">&quot;Isto te ajudou?&quot;</h2>
         <p>
-          Se você responder, guardamos a nota de 1 a 5, a parte do site (painel, dicas) e o dia, e o texto, se você escrever. É anônimo: não pedimos nem
-          guardamos nada que diga quem você é, e o site recusa texto com telefone ou e-mail.
+          Se você responder, guardamos a nota de 1 a 5, a parte do site onde a pergunta apareceu e o dia, e o texto, se você escrever. Não pedimos nem
+          guardamos nada que diga quem você é, e o site recusa texto com telefone ou e-mail. Mesmo assim, não escreva nome nem endereço: como a opinião não
+          fica ligada a você, depois de enviada não dá para apagar. O texto é apagado sozinho depois de 12 meses (a nota fica).
+        </p>
+        <p>
+          Para barrar robôs, quando alguém manda uma opinião, cria conta ou tenta entrar, o site guarda por 1 a 2 dias um código feito do endereço de
+          internet de quem mandou, junto com quantas vezes tentou. Depois, ele some.
         </p>
       </section>
 
@@ -73,8 +82,9 @@ export default function Privacidade() {
           <li>E-mails da conta (confirmar e trocar a senha): enviados por um serviço de e-mail, só para o seu endereço.</li>
         </ul>
         <p>
-          Para evitar abuso (alguém tentando adivinhar senhas, por exemplo), o site conta tentativas por endereço de internet. O endereço vira um código
-          embaralhado que não volta para ele, e a contagem some em um dia.
+          Para evitar abuso (alguém tentando adivinhar senhas, por exemplo), o site conta as tentativas de entrar, criar conta, trocar a senha, abrir link
+          da família e mandar opinião por endereço de internet (e, para entrar e trocar a senha, por e-mail). Fica guardado um código feito desse endereço,
+          não o endereço, por 1 a 2 dias.
         </p>
       </section>
 
@@ -82,8 +92,10 @@ export default function Privacidade() {
         <h2 id="quanto-tempo">Por quanto tempo</h2>
         <ul>
           <li>No aparelho: até você apagar.</li>
-          <li>Conta: até você apagar. Conta criada e não confirmada pelo e-mail some sozinha em 7 dias.</li>
-          <li>Contagem de uso e opiniões: guardadas sem identificar ninguém, para comparar o uso ao longo do tempo.</li>
+          <li>Conta: até você apagar. Conta criada e não confirmada pelo e-mail some sozinha em 7 a 8 dias. A sessão dura no máximo 30 dias.</li>
+          <li>Contagem de tentativas: 1 a 2 dias.</li>
+          <li>Contagem de uso: os totais por dia ficam, para comparar o uso ao longo do tempo.</li>
+          <li>Opiniões: a nota fica; o texto some depois de 12 meses.</li>
         </ul>
       </section>
 
@@ -92,7 +104,11 @@ export default function Privacidade() {
         <p>Pela Lei Geral de Proteção de Dados (LGPD, Lei 13.709/2018), você pode saber, ver, corrigir, levar e apagar os seus dados. No site:</p>
         <ul>
           <li>Ver e corrigir: tudo fica nas telas do site, e você muda quando quiser.</li>
-          <li>Levar: em Minha casa, &quot;Baixar meus dados&quot; baixa um arquivo com tudo o que está guardado.</li>
+          <li>
+            Levar: em Minha casa, &quot;Baixar meus dados&quot; baixa um arquivo com a casa e as escolhas de leitura deste aparelho (e o e-mail da
+            conta, se você tiver). Os nomes dos links da família aparecem em Minha casa. Para receber o registro do seu &quot;concordo&quot;, peça pelo
+            contato abaixo.
+          </li>
           <li>
             Apagar: em Minha casa, &quot;Apagar todos os meus dados&quot; apaga o que está no aparelho e, se você tem conta, a conta, a casa guardada nela e
             os links da família.

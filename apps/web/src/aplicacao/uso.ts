@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import type { EventoDeUso, MomentoDeOpiniao } from "@ee/core";
 import { pedirApi } from "@/infraestrutura/conta/api";
 
@@ -12,7 +13,44 @@ const UMA_VEZ_POR_ABA: ReadonlySet<EventoDeUso> = new Set(["visita", "painel-abe
 
 function pediuParaNaoRastrear(): boolean {
   if (typeof navigator === "undefined") return true;
-  return Reflect.get(navigator, "globalPrivacyControl") === true || navigator.doNotTrack === "1";
+  return Reflect.get(navigator, "globalPrivacyControl") === true || navigator.doNotTrack === "1" || desligouAContagem();
+}
+
+/**
+ * "Contar o meu uso", em Minha casa (pedido da seguranca: quase ninguém liga o "Não rastrear"). Desligado, este
+ * aparelho não manda nenhuma contagem. Fica de fora do "Apagar todos os meus dados" de propósito: apagar tudo não pode
+ * voltar a contar quem pediu para não contar.
+ */
+const CHAVE_SEM_CONTAGEM = "eficiencia-energetica:nao-contar-uso";
+const ouvintesDaContagem = new Set<() => void>();
+
+function desligouAContagem(): boolean {
+  try {
+    return localStorage.getItem(CHAVE_SEM_CONTAGEM) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function useContarMeuUso(): [boolean, (contar: boolean) => void] {
+  const desligada = useSyncExternalStore(
+    (avisar) => {
+      ouvintesDaContagem.add(avisar);
+      return () => ouvintesDaContagem.delete(avisar);
+    },
+    desligouAContagem,
+    () => false,
+  );
+  const mudar = (contar: boolean) => {
+    try {
+      if (contar) localStorage.removeItem(CHAVE_SEM_CONTAGEM);
+      else localStorage.setItem(CHAVE_SEM_CONTAGEM, "1");
+    } catch {
+      // Sem armazenamento: não dá para lembrar a escolha neste navegador.
+    }
+    ouvintesDaContagem.forEach((avisar) => avisar());
+  };
+  return [!desligada, mudar];
 }
 
 function jaContouNestaAba(evento: EventoDeUso): boolean {

@@ -24,6 +24,7 @@ import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
 import { NavegacaoDosAjustes } from "./NavegacaoDosAjustes";
 import { SecaoConta } from "./SecaoConta";
+import { SecaoContagem } from "./SecaoContagem";
 import { GrupoDeAjustes, SecaoDeAjuste } from "./SecaoDeAjuste";
 import { SecaoInstalar } from "./SecaoInstalar";
 import { SecaoLeitura } from "./SecaoLeitura";
@@ -221,6 +222,7 @@ export function TelaAjustes() {
             <GrupoDeAjustes id="ajustes-aparelho" nome="Neste aparelho">
               <SecaoLeitura />
               <SecaoInstalar />
+              <SecaoContagem />
             </GrupoDeAjustes>
 
             <GrupoDeAjustes id="ajustes-dados" nome="Privacidade">
@@ -281,7 +283,7 @@ function SeusDados() {
           <Botao variante="secundario" onClick={() => baixarMeusDados(conta.tipo === "conectada" ? conta.email : undefined)}>
             <Download className="size-5" aria-hidden /> Baixar meus dados
           </Botao>
-          <span className="text-[0.95rem] text-tinta-suave">Um arquivo com tudo o que está guardado.</span>
+          <span className="text-[0.95rem] text-tinta-suave">Um arquivo com a casa e as escolhas guardadas neste aparelho. Ele fica na pasta de downloads: apague depois, se o celular for de mais gente.</span>
         </div>
         {!confirmarApagar ? (
           <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
