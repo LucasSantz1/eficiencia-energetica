@@ -21,7 +21,7 @@ export interface MensagensDoCampo {
 export const TITULO_CONFERE = "Confere?";
 
 /** Números com vírgula (kWh, valor) mal escritos, como "1,2,5". */
-export const MAL_ESCRITO_COM_VIRGULA = "Escreva só o número. Para centavos, use vírgula: 135,90.";
+export const MAL_ESCRITO_COM_VIRGULA = "Digite só o número. Para centavos, use vírgula: 135,90.";
 
 /** T5, nomes vazios. */
 export const NOME_DO_COMODO_VAZIO = "Dê um nome ao cômodo, por exemplo: Quarto do casal.";

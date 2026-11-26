@@ -100,6 +100,9 @@ export function Cadastro() {
   ];
   const indice = Math.max(0, passos.indexOf(passo));
 
+  // Cada passo começa com o foco no título (o leitor de tela lê a pergunta). A busca da cidade não pega o foco sozinha:
+  // ela aparece depois que a lista de cidades carrega, e o foco pulava do título para ela no meio da digitação
+  // (HIS-108, P1).
   useEffect(() => {
     tituloRef.current?.focus();
   }, [passo]);
@@ -300,7 +303,7 @@ export function Cadastro() {
           <Titulo ref={tituloRef} icone={<Building2 />} porque={textoDoPasso(passo)} subtitulo={estados.find((e) => e.uf === uf)?.nome}>
             Qual é a sua cidade?
           </Titulo>
-          {municipios.carregando ? <Carregando /> : <BuscaCidade municipios={municipios.dados?.municipios ?? []} selecionado={municipio} aoEscolher={escolherMunicipio} />}
+          {municipios.carregando ? <Carregando /> : <BuscaCidade autoFocus={false} municipios={municipios.dados?.municipios ?? []} selecionado={municipio} aoEscolher={escolherMunicipio} />}
         </>
       )}
 

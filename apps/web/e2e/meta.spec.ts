@@ -79,7 +79,7 @@ test("valor fora da faixa mostra o erro e não salva", async ({ page }) => {
   const meta = await abrirMeta(page);
   await meta.getByLabel("Quanto você quer pagar de luz por mês?").fill("9000");
   await meta.getByRole("button", { name: "Salvar meta" }).click();
-  await expect(meta).toContainText("Escreva um valor entre R$ 1,00 e R$ 5.000,00.");
+  await expect(meta).toContainText("Digite um valor entre R$ 1,00 e R$ 5.000,00.");
   await expect(meta.getByLabel("Quanto você quer pagar de luz por mês?")).toBeFocused();
   expect((await casaSalva(page))?.state.metaMensal).toBeUndefined();
 });

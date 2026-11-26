@@ -48,10 +48,9 @@ test("?visao=geral abre no \"Painel geral\"", async ({ page }) => {
 // âncora deixa a seção a 112 px nas duas larguras).
 const TOPO_ALINHADO_PX = 200;
 
-test.fixme("HIS-108 · P3 — pelo link e direto pelo endereço, o cômodo fica alinhado ao topo", async ({ page }) => {
-  // Medido na HIS-002a (A3): pelo link E direto numa página nova, a seção para a 371 px (celular) / 491 px
-  // (computador) do topo. Só uma navegação de âncora na mesma página (o navegador rola sozinho) dá 112 px — era
-  // essa a "entrada direta" da HIS-001. Quando a HIS-108 corrigir, trocar fixme por test.
+test("HIS-108 · P3 — pelo link e direto pelo endereço, o cômodo fica alinhado ao topo", async ({ page }) => {
+  // Medido na HIS-002a (A3): pelo link E direto numa página nova, a seção parava a 371 px (celular) / 491 px
+  // (computador) do topo, porque a tela ainda crescia depois da rolagem. Agora a tela realinha até montar.
   await page.goto(`/casa/comodos#${ancora}`);
   await esperarComodoAbertoNaTela(page);
   await expect.poll(() => topoDaSecao(page), { message: "direto pelo endereço" }).toBeLessThanOrEqual(TOPO_ALINHADO_PX);
