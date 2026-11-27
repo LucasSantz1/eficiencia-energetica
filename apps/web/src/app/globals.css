@@ -39,6 +39,13 @@
   --color-faixa-d: #ec7a1a;
   --color-faixa-e: #d1262e;
 
+  /* Fundos claros dos ícones desenhados (ui/Icone.tsx), um por família. Só enfeite: o contraste do texto não depende deles. */
+  --color-icone-azul: #e3f6ff;
+  --color-icone-lilas: #f1ecff;
+  --color-icone-amarelo: #fff4cf;
+  --color-icone-laranja: #fff0e6;
+  --color-icone-verde: #dcefe6;
+
   --radius-cartao: 1.25rem;
   --radius-controle: 0.875rem;
 }

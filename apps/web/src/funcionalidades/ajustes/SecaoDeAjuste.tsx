@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { IconeComFundo } from "@/ui/Icone";
 
 /**
  * Um cartão de Minha casa (redesenho de 26/11, pedido do dono: "no computador fica confuso e desalinhado"). Todos os
@@ -8,12 +9,15 @@ import type { ReactNode } from "react";
 export function SecaoDeAjuste({
   titulo,
   id,
+  icone,
   descricao,
   tom = "normal",
   children,
 }: {
   titulo: string;
   id: string;
+  /** Desenho ao lado do título (ui/Icone.tsx). */
+  icone?: string;
   descricao?: ReactNode;
   /** "perigo": a borda avisa que ali se apaga coisa (Seus dados). */
   tom?: "normal" | "perigo";
@@ -28,9 +32,12 @@ export function SecaoDeAjuste({
       }`}
     >
       <div className="mb-4 xl:mb-0">
-        <h2 id={`${id}-titulo`} className="text-[1.375rem] leading-tight font-bold tracking-tight">
-          {titulo}
-        </h2>
+        <div className="flex items-center gap-3 xl:flex-col xl:items-start">
+          {icone && <IconeComFundo nome={icone} />}
+          <h2 id={`${id}-titulo`} className="text-[1.375rem] leading-tight font-bold tracking-tight">
+            {titulo}
+          </h2>
+        </div>
         {descricao && <p className="mt-1.5 max-w-[56ch] text-[0.95rem] text-tinta-suave">{descricao}</p>}
       </div>
       <div className="min-w-0">{children}</div>

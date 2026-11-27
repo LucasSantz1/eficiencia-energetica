@@ -29,6 +29,8 @@ const CACHES_DESTA_VERSAO = [PAGINAS, ARQUIVOS, DADOS];
 /** Páginas guardadas já na instalação, para o site abrir sem internet mesmo nas telas que a pessoa ainda não abriu. */
 const PAGINAS_DO_SITE = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/tarifa-social", "/sobre", "/privacidade", "/termos"];
 const DADOS_INICIAIS = ["/dados/tarifas.json"];
+/** Arquivos sem hash que toda tela usa: o desenho dos ícones (as telas citam por <use href>, que o HTML não lista). */
+const ARQUIVOS_INICIAIS = ["/icones-v1.svg"];
 
 /** Celular com 3G fraco: depois disso, a cópia guardada responde (e a rede, se chegar, atualiza a cópia). */
 const TEMPO_MAXIMO_DA_REDE_MS = 4000;
@@ -99,6 +101,13 @@ async function guardarOSite() {
       if (!podeGuardar(resposta)) return;
       await guardarArquivosDaPagina(await resposta.clone().text());
       await paginas.put(caminho, resposta);
+    }),
+  );
+  const arquivos = await caches.open(ARQUIVOS);
+  await Promise.allSettled(
+    ARQUIVOS_INICIAIS.map(async (caminho) => {
+      const resposta = await fetch(caminho, { cache: "reload" });
+      if (podeGuardar(resposta)) await arquivos.put(caminho, resposta);
     }),
   );
   await Promise.allSettled(

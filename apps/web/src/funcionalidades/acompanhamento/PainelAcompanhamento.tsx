@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Info, Lightbulb, Tag, Target, TrendingUp, Zap } from "lucide-react";
+import { ChevronRight, Info, Zap } from "lucide-react";
 import Link from "next/link";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { COMODOS_PADRAO, consumoDaCasaForaDoComum, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
@@ -19,7 +19,7 @@ import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
 import { ExplicaKwh } from "@/ui/ExplicaKwh";
 import { Folha } from "@/ui/Folha";
-import { Icone } from "@/ui/Icone";
+import { Icone, IconeComFundo } from "@/ui/Icone";
 import { IgnorarFalha } from "@/ui/IgnorarFalha";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Acompanhamento } from "./Acompanhamento";
@@ -169,7 +169,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
         </section>
 
         <BlocoDeResumo
-          icone={<Target />}
+          icone={<Icone nome="meta" />}
           rotulo="Sua meta"
           valor={meta.metaReais === undefined ? "Sem meta" : formatarReais(meta.metaReais)}
           legenda={legendaDoBlocoDaMeta(meta.situacao)}
@@ -177,7 +177,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           className="surgir [animation-delay:80ms]"
         />
         <BlocoDeResumo
-          icone={<Tag />}
+          icone={<Icone nome="dinheiro" />}
           rotulo="Preço da luz"
           valor={formatarReais(preco.valor)}
           legenda={preco.origem === "conta" ? "por kWh, da sua conta" : "por kWh, sem impostos"}
@@ -191,7 +191,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           )}
         </BlocoDeResumo>
         {topo && (
-          <BlocoDeResumo icone={<TrendingUp />} rotulo="Gasta mais" valor={formatarPorcentagem(topo.participacao)} legenda={nomeDoTopo} href="#ranking" className="surgir [animation-delay:200ms]">
+          <BlocoDeResumo icone={<Icone nome="grafico" />} rotulo="Gasta mais" valor={formatarPorcentagem(topo.participacao)} legenda={nomeDoTopo} href="#ranking" className="surgir [animation-delay:200ms]">
             <span className="mt-auto block pt-3" aria-hidden>
               <span className="block h-1.5 overflow-hidden rounded-full bg-fundo">
                 <span className={`cresce-x block h-full rounded-full ${COR_FAIXA[faixaDoPeso(topo.participacao)]}`} style={{ width: `${Math.max(4, topo.participacao * 100)}%` }} />
@@ -201,7 +201,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
         )}
         {melhor && (
           <BlocoDeResumo
-            icone={<Lightbulb />}
+            icone={<Icone nome="lightbulb" />}
             rotulo="Melhor dica"
             valor={formatarReais(melhor.economiaMes ?? 0)}
             legenda={`a menos por mês: ${melhor.titulo.charAt(0).toLowerCase()}${melhor.titulo.slice(1)}`}
@@ -246,9 +246,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
               <li key={c.id} className="surgir w-[10.5rem] shrink-0 snap-start lg:w-auto" style={{ animationDelay: `${150 + indice * 70}ms` }}>
                 <Link href={`/casa/comodos#comodo-${c.id}`} transitionTypes={["nav-forward"]} className="flex h-full flex-col rounded-[var(--radius-cartao)] bg-papel p-4 hover:bg-white/70">
                   <span className="flex items-center justify-between">
-                    <span className="grid size-10 place-items-center rounded-[0.7rem] bg-energia-claro text-energia">
-                      <Icone nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} className="size-6" />
-                    </span>
+                    <IconeComFundo nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} />
                     <span className="numeros text-[0.9rem] text-tinta-suave">{formatarPorcentagem(participacao)}</span>
                   </span>{" "}
                   <span className="mt-3 block truncate font-bold">{c.nome}</span>{" "}
@@ -299,7 +297,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
                     {/* Os {" "} entre blocos não aparecem na tela (itens flex/bloco), mas separam as palavras no texto
                         visível que o axe junta sem espaço; sem eles, "Banheiro" e "41%" viram uma palavra só. */}
                     <span className="flex items-center gap-2">
-                      <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-5 text-tinta-suave" />
+                      <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-6" />
                       <span className="min-w-0 flex-1 truncate font-bold">
                         {aparelho.quantidade > 1 && <span className="numeros">{quantidade}</span>}
                         {aparelho.nome}
@@ -333,9 +331,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           <ul className="mt-3 divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
             {maisDicas.map((d) => (
               <li key={d.id} className="flex items-center gap-3 px-4 py-3.5">
-                <span className="grid size-10 shrink-0 place-items-center rounded-[0.7rem] bg-energia-claro text-energia">
-                  <Icone nome={d.icone} className="size-6" />
-                </span>
+                <IconeComFundo nome={d.icone} />
                 <span className="min-w-0 flex-1 font-bold">{d.titulo}</span>
                 <span className="numeros shrink-0 text-right">
                   <span className="block font-extrabold text-energia-forte">{formatarReais(d.economiaMes ?? 0)}</span>

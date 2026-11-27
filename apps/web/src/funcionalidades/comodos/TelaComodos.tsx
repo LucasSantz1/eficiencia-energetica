@@ -15,7 +15,7 @@ import { indoParaUmBotao } from "@/ui/campos/useCampoNumerico";
 import { Entrada } from "@/ui/Entrada";
 import { focarPrimeiroErro } from "@/ui/foco";
 import { Folha } from "@/ui/Folha";
-import { Icone } from "@/ui/Icone";
+import { Icone, IconeComFundo } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
 import { useTelaLarga } from "@/ui/telaLarga";
@@ -162,9 +162,7 @@ function CartaoComodo({
   return (
     <section id={`comodo-${comodo.id}`} aria-labelledby={`titulo-${comodo.id}`} className="surgir scroll-mt-28 overflow-hidden rounded-[var(--radius-cartao)] bg-papel" style={{ animationDelay: `${indice * 60}ms` }}>
       <div className="flex items-center gap-3 p-4">
-        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-energia-claro text-energia">
-          <Icone nome={icone} className="size-6" />
-        </span>
+        <IconeComFundo nome={icone} />
         <button type="button" onClick={() => setAberto(!aberto)} aria-expanded={aberto} className="flex min-w-0 flex-1 items-center gap-3 text-left">
           <span className="min-w-0 flex-1">
             <span id={`titulo-${comodo.id}`} className="block truncate text-xl font-extrabold">
@@ -236,7 +234,7 @@ function PainelGeral() {
               <tr key={l.chave} className="surgir" style={{ animationDelay: `${i * 40}ms` }}>
                 <td className="px-4 py-3">
                   <span className="flex items-center gap-2 font-bold">
-                    <Icone nome={itemDoCatalogo(l.catalogoId)?.icone} className="size-5 shrink-0 text-energia" />
+                    <Icone nome={itemDoCatalogo(l.catalogoId)?.icone} className="size-6" />
                     {l.nome}
                   </span>
                   <span className="mt-0.5 block pl-7 text-[0.9rem] text-tinta-suave">{l.porComodo.map((p) => `${nomeComodo(p.comodoId)} (${p.quantidade})`).join(", ")}</span>
@@ -289,7 +287,7 @@ function NovoComodo({ aberto, aoFechar, aoCriar }: { aberto: boolean; aoFechar: 
               }}
               className="flex min-h-20 w-full flex-col items-start justify-between gap-2 rounded-[var(--radius-controle)] border-2 border-linha p-3 font-bold hover:border-energia"
             >
-              <Icone nome={c.icone} className="size-6 text-energia" />
+              <IconeComFundo nome={c.icone} tamanho="pequeno" />
               {c.nome}
             </button>
           </li>

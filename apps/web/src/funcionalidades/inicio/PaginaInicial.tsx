@@ -4,7 +4,7 @@ import type { NumerosDoInicio } from "@/aplicacao/numeros-do-inicio.servidor";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { classesDeBotao } from "@/ui/estilosDeBotao";
 import { BarraEtiqueta } from "@/ui/Etiqueta";
-import { Icone } from "@/ui/Icone";
+import { Icone, IconeComFundo } from "@/ui/Icone";
 import { Marca } from "@/ui/Marca";
 import { Contagem, Revelar, TransicaoTela } from "@/ui/Movimento";
 import { AvisoDaCasaNoInicio } from "./AvisoDaCasaNoInicio";
@@ -218,7 +218,7 @@ export function PaginaInicial({ numeros, contaLigada = false }: { numeros: Numer
               </Revelar>
             </dl>
             <p className="flex gap-3 text-white/85">
-              <Icone nome="hand-heart" className="mt-0.5 size-6 shrink-0" /> Para se inscrever no CadÚnico, procure o CRAS da sua cidade com os documentos da família.
+              <Icone nome="hand-heart" className="mt-0.5 size-7" /> Para se inscrever no CadÚnico, procure o CRAS da sua cidade com os documentos da família.
             </p>
             {/* Guia da Tarifa Social (HIS-103b): 6 perguntas, documentos e onde ir. */}
             <div>
@@ -240,7 +240,7 @@ export function PaginaInicial({ numeros, contaLigada = false }: { numeros: Numer
             ["lightbulb", "Dicas com valor em reais", "Cada dica mostra quanto economiza na sua casa, por mês e por ano."],
           ].map(([icone, titulo, texto], i) => (
             <Revelar key={titulo} atraso={i * 90}>
-              <Icone nome={icone} className="size-8 text-energia" />
+              <IconeComFundo nome={icone} tamanho="grande" />
               <h3 className="mt-4 text-xl font-extrabold">{titulo}</h3>
               <p className="mt-2 text-tinta-suave">{texto}</p>
             </Revelar>
