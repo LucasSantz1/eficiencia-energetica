@@ -236,9 +236,10 @@ test.describe("Minha casa sem cidade (D-3a-1 e D-3a-2)", () => {
     expect(await textoGuardado(page, CHAVE_CASA_ILEGIVEL)).toBeNull();
   });
 
-  test("nada guardado: a Minha casa continua mandando cadastrar", async ({ page }) => {
+  test("nada guardado: a Minha casa abre com o convite para cadastrar e sem 'Seus dados' (dono, 27/11)", async ({ page }) => {
     await page.goto("/casa/ajustes");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Vamos cadastrar a sua casa");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Minha casa");
+    await expect(page.getByRole("link", { name: "Começar" })).toHaveAttribute("href", "/comecar");
     await expect(page.getByRole("button", { name: /^(Seus dados|Apagar todos os meus dados)$/ })).toHaveCount(0);
   });
 });
