@@ -92,7 +92,7 @@ function LinhaDeAjuste({ titulo, id, icone, descricao, valor, tom = "normal", ch
         </span>
         <ChevronRight className="size-5 shrink-0 text-tinta-suave" aria-hidden />
       </button>
-      <Folha aberta={aberta} aoFechar={fechar} titulo={titulo}>
+      <Folha aberta={aberta} aoFechar={fechar} titulo={titulo} alta>
         {descricao && <p className="mb-5 text-tinta-suave">{descricao}</p>}
         {children}
       </Folha>
