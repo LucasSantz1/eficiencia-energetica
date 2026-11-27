@@ -31,6 +31,8 @@ export function EditorAparelho({
   comodos,
   aoSalvar,
   aoRemover,
+  titulo,
+  textoDoBotao,
 }: {
   aparelho: Rascunho | undefined;
   aberto: boolean;
@@ -40,6 +42,9 @@ export function EditorAparelho({
   /** Com id, atualiza o aparelho; sem id, cria um novo. */
   aoSalvar: (dados: Omit<Aparelho, "id">, id?: string) => void;
   aoRemover: (id: string) => void;
+  /** Outra tela usando o mesmo formulário (ex.: "Antes de comprar", que só simula e não guarda o aparelho). */
+  titulo?: string;
+  textoDoBotao?: string;
 }) {
   const [r, setR] = useState<Rascunho | undefined>(aparelho);
   const [semEtiqueta, setSemEtiqueta] = useState(false);
@@ -97,7 +102,7 @@ export function EditorAparelho({
     <Folha
       aberta={aberto}
       aoFechar={aoFechar}
-      titulo={r.id ? "Ajustar aparelho" : "Novo aparelho"}
+      titulo={titulo ?? (r.id ? "Ajustar aparelho" : "Novo aparelho")}
       rodape={
         <div className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-3" aria-live="polite">
@@ -108,7 +113,7 @@ export function EditorAparelho({
             </span>
           </div>
           <Botao largo onClick={salvar}>
-            {r.id ? "Salvar mudanças" : "Adicionar aparelho"}
+            {textoDoBotao ?? (r.id ? "Salvar mudanças" : "Adicionar aparelho")}
           </Botao>
         </div>
       }

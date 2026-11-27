@@ -20,3 +20,4 @@ export * from "./idade-dos-dados";
 export * from "./conta";
 export * from "./metricas";
 export * from "./falar";
+export * from "./antes-de-comprar";

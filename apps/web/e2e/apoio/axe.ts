@@ -29,6 +29,7 @@ export const TELAS_AXE = [
   { pagina: "/casa/comodos", estado: "com casa" },
   { pagina: "/casa/dicas", estado: "com casa" },
   { pagina: "/casa/ajustes", estado: "com casa" },
+  { pagina: "/casa/antes-de-comprar", estado: "com casa" },
   { pagina: "/comecar", estado: "passo cidade" },
   { pagina: "/comecar", estado: "passo benefício" },
   { pagina: "/comecar", estado: "passo pessoas" },
