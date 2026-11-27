@@ -1,6 +1,7 @@
 "use client";
 
-import { Gauge, Pencil, Plus, Receipt } from "lucide-react";
+import { ChevronRight, Gauge, Pencil, Plus, Receipt } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   alertaDaLeitura,
@@ -18,6 +19,7 @@ import {
   type ContaReferencia,
   type LeituraRelogio,
   faixaDaEstimativa,
+  contaPareceAlta,
 } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { contarUso } from "@/aplicacao/uso";
@@ -162,6 +164,7 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
             <Plus className="size-5" aria-hidden /> Anotar outra conta
           </Botao>
           <ComparacaoConta ultima={historico.at(-1)!} anterior={historico.at(-2)} estimativaKwhMes={estimativaKwhMes} />
+          <ConvitePorQueAlta ultima={historico.at(-1)!} anterior={historico.at(-2)} estimativaKwhMes={estimativaKwhMes} />
           </div>
         </div>
       )}
@@ -435,5 +438,29 @@ function Relogio({ estimativaKwhDia }: { estimativaKwhDia: number }) {
         )}
       </Folha>
     </>
+  );
+}
+
+/**
+ * Entrada do "Por que a conta veio alta?" (27/11). Quando a última conta passou 15% da anterior ou 25% da estimativa, um
+ * cartão chama a atenção; senão, só um link discreto, para quem achou a conta alta por outro motivo.
+ */
+function ConvitePorQueAlta({ ultima, anterior, estimativaKwhMes }: { ultima: ContaMensal; anterior: ContaMensal | undefined; estimativaKwhMes: number }) {
+  const href = `/casa/conta-alta?conta=${encodeURIComponent(ultima.id)}`;
+  if (contaPareceAlta(ultima, anterior, estimativaKwhMes > 0 ? estimativaKwhMes : undefined)) {
+    return (
+      <Link href={href} className="mt-5 flex items-center gap-3 rounded-[var(--radius-cartao)] border-2 border-faisca/60 bg-faisca/10 p-4 transition-colors hover:bg-faisca/20">
+        <span className="flex-1">
+          <span className="block font-bold first-letter:uppercase">A conta de {formatarCompetencia(ultima.competencia)} veio mais alta</span>
+          <span className="block text-tinta-suave">Descubra o que pesou: bandeira, dias, consumo…</span>
+        </span>
+        <ChevronRight className="size-5 shrink-0" aria-hidden />
+      </Link>
+    );
+  }
+  return (
+    <Link href={href} className="mt-4 inline-flex min-h-11 items-center gap-1 font-bold text-energia underline underline-offset-4">
+      Achou a conta alta? Veja por quê
+    </Link>
   );
 }

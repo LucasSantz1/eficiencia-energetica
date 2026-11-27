@@ -34,7 +34,7 @@ const RESTRICOES_COMUNS = [
   { regex: "^/", message: "Sem caminho absoluto no import: use @/ (HIS-002, S1-e)." },
   { regex: "[?#]", message: "Sem sufixo ? ou # no import (HIS-002, S1-e)." },
   // Entradas próprias do core, para regra que só uma rota usa (ADR-001 revisto na HIS-103b): a lista fica aqui.
-  { regex: "^@ee/(?!core(/tarifa-social|/meta|/reconhecer)?$)", message: "Do monorepo, só o pacote @ee/core inteiro, @ee/core/tarifa-social, @ee/core/meta ou @ee/core/reconhecer, sem caminho interno (ADR-001)." },
+  { regex: "^@ee/(?!core(/tarifa-social|/meta|/reconhecer|/conta-alta)?$)", message: "Do monorepo, só o pacote @ee/core inteiro, @ee/core/tarifa-social, @ee/core/meta, @ee/core/reconhecer ou @ee/core/conta-alta, sem caminho interno (ADR-001)." },
 ];
 
 /**
@@ -49,7 +49,7 @@ function restricoesDaCamada({ camada, regra, permitidos, podeCore, podeZustand, 
       message: `${camada} só importa ${permitidos.map((pasta) => `@/${pasta}`).join(", ")}${podeCore ? " e @ee/core" : ""} (ADR-001, ${regra}).`,
     },
   ];
-  if (!podeCore) padroes.push({ regex: "^@ee/core(/tarifa-social|/meta|/reconhecer)?$", message: `${camada} não importa @ee/core (ADR-001, ${regra}).` });
+  if (!podeCore) padroes.push({ regex: "^@ee/core(/tarifa-social|/meta|/reconhecer|/conta-alta)?$", message: `${camada} não importa @ee/core (ADR-001, ${regra}).` });
   if (!podeZustand) padroes.push({ regex: "^zustand(/|$)", message: "zustand só em infraestrutura (ADR-001)." });
   // ADR-007: só o servidor fala com o Supabase; o navegador nunca vê a URL, a chave nem os tokens.
   if (!podeSupabase) padroes.push({ regex: "^@supabase/", message: "Supabase só em infraestrutura/**/*.servidor.ts (ADR-007)." });
