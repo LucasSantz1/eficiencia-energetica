@@ -79,7 +79,7 @@ export function TelaAjustes() {
       <div className="space-y-6">
           <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
           {temCasaSemCidade && (
-            <SecaoDeAjuste titulo="Onde você mora" id="onde-mora" descricao="A cidade e a empresa de luz decidem o preço do kWh.">
+            <SecaoDeAjuste titulo="Onde você mora" id="onde-mora" icone="pino-do-mapa" descricao="A cidade e a empresa de luz decidem o preço do kWh.">
               <Botao onClick={() => setMudandoCidade(true)}>Escolher minha cidade</Botao>
             </SecaoDeAjuste>
           )}
@@ -116,7 +116,7 @@ export function TelaAjustes() {
           <NavegacaoDosAjustes itens={itensDoIndice} />
           <div className="mt-8 space-y-10 lg:mt-0">
             <GrupoDeAjustes id="ajustes-casa" nome="A casa">
-              <SecaoDeAjuste titulo="Onde você mora" id="onde-mora" descricao="A cidade e a empresa de luz decidem o preço do kWh.">
+              <SecaoDeAjuste titulo="Onde você mora" id="onde-mora" icone="pino-do-mapa" descricao="A cidade e a empresa de luz decidem o preço do kWh.">
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-controle)] bg-fundo px-4 py-4">
                   <div className="min-w-0">
                     <p className="text-lg font-extrabold">
@@ -143,7 +143,7 @@ export function TelaAjustes() {
                 )}
               </SecaoDeAjuste>
 
-              <SecaoDeAjuste titulo="Benefício na conta de luz" id="beneficio" descricao="A Tarifa Social e o Desconto Social baixam o preço da energia.">
+              <SecaoDeAjuste titulo="Benefício na conta de luz" id="beneficio" icone="hand-heart" descricao="A Tarifa Social e o Desconto Social baixam o preço da energia.">
                 <div className="space-y-2">
                   {BENEFICIOS.map((b) => (
                     <Opcao key={b.id} selecionada={residencia.beneficio === b.id} onClick={() => atualizar({ beneficio: b.id })} descricao={b.descricao}>
@@ -160,7 +160,7 @@ export function TelaAjustes() {
                 </p>
               </SecaoDeAjuste>
 
-              <SecaoDeAjuste titulo="Tipo de ligação" id="ligacao" descricao="Decide a conta mínima do mês, mesmo gastando pouco.">
+              <SecaoDeAjuste titulo="Tipo de ligação" id="ligacao" icone="plug-zap" descricao="Decide a conta mínima do mês, mesmo gastando pouco.">
                 <div className="space-y-2">
                   {LIGACOES.map((l) => (
                     <Opcao key={l.id} selecionada={residencia.ligacao === l.id} onClick={() => atualizar({ ligacao: l.id })} descricao={l.descricao}>
@@ -172,7 +172,7 @@ export function TelaAjustes() {
             </GrupoDeAjustes>
 
             <GrupoDeAjustes id="ajustes-conta-de-luz" nome="Conta de luz">
-              <SecaoDeAjuste titulo="Sua conta de luz" id="conta" descricao="Com dois números da conta, o valor fica mais certinho.">
+              <SecaoDeAjuste titulo="Sua conta de luz" id="conta" icone="conta-de-luz" descricao="Com dois números da conta, o valor fica mais certinho.">
                 <details className="group mb-5">
                   <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 font-bold text-energia [&::-webkit-details-marker]:hidden">
                     Onde acho esses números? <ChevronDown className="size-5 transition-transform group-open:rotate-180" aria-hidden />
@@ -271,6 +271,7 @@ function SeusDados() {
     <SecaoDeAjuste
       titulo="Seus dados"
       id="seus-dados"
+      icone="cadeado"
       tom="perigo"
       descricao={
         comConta
@@ -338,7 +339,7 @@ function SeusDados() {
 function LinhaDaMeta() {
   const meta = useCasa((s) => s.metaMensal);
   return (
-    <SecaoDeAjuste titulo="Meta de luz" id="meta-de-luz" descricao="Um valor por mês para a conta não passar. Você acompanha no painel.">
+    <SecaoDeAjuste titulo="Meta de luz" id="meta-de-luz" icone="meta" descricao="Um valor por mês para a conta não passar. Você acompanha no painel.">
       <p className="text-lg">{meta === undefined ? "Você ainda não tem uma meta." : <>Meta de luz: <strong className="numeros">{formatarReais(meta)}</strong> por mês</>}</p>
       <Link href="/casa#meta" className="mt-3 inline-flex min-h-11 items-center font-bold text-energia underline underline-offset-2">
         {meta === undefined ? "Definir meta" : "Mudar meta"}

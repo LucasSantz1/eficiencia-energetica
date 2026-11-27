@@ -15,6 +15,7 @@ export function SecaoInstalar() {
     <SecaoDeAjuste
       titulo="Usar sem internet"
       id="instalar"
+      icone="sem-internet"
       descricao="Depois de abrir o site uma vez com internet, ele funciona sem internet neste aparelho. A sua casa fica guardada aqui."
     >
       {instalado ? (

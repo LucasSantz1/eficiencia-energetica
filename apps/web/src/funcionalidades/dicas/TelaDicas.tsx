@@ -8,7 +8,7 @@ import { useOpiniao } from "@/aplicacao/opiniao";
 import { useResumo } from "@/aplicacao/resumo";
 import { contarUso } from "@/aplicacao/uso";
 import { EspacoReservado } from "@/ui/EspacoReservado";
-import { Icone } from "@/ui/Icone";
+import { IconeComFundo } from "@/ui/Icone";
 import { IgnorarFalha } from "@/ui/IgnorarFalha";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
@@ -136,7 +136,7 @@ export function TelaDicas() {
               <li key={d.id}>
                 <details className="group px-4 sm:px-5">
                   <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 py-3 [&::-webkit-details-marker]:hidden">
-                    <Icone nome={d.icone} className={`size-6 shrink-0 ${d.tipo === "aviso" ? "text-faixa-d" : "text-energia"}`} />
+                    <IconeComFundo nome={d.icone} tamanho="pequeno" />
                     <h3 className="flex-1 leading-snug font-bold">{d.titulo}</h3>
                     <ChevronDown className="size-5 shrink-0 text-tinta-suave transition-transform group-open:rotate-180" aria-hidden />
                   </summary>
@@ -160,9 +160,7 @@ function CartaoDica({ dica, marcada, aoAlternar, onde, indice }: { dica: Dica; m
     >
       {/* Cartão curto (pedido do responsável, 24/11: "muito texto"): o quê, onde e quanto. A explicação fica no "Como fazer". */}
       <div className="flex items-start gap-3">
-        <span className={`grid size-11 shrink-0 place-items-center rounded-[0.8rem] ${troca ? "bg-faisca-claro text-tinta" : "bg-energia-claro text-energia"}`}>
-          <Icone nome={dica.icone} className="size-6" />
-        </span>
+        <IconeComFundo nome={dica.icone} />
         <div className="min-w-0 flex-1">
           <h2 className="text-[1.0625rem] leading-snug font-bold">{dica.titulo}</h2>
           {onde && <p className="mt-0.5 text-[0.92rem] text-tinta-suave">{onde}</p>}

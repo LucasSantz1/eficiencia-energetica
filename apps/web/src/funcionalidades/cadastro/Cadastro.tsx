@@ -25,7 +25,7 @@ import { ExemploDeConta } from "@/ui/conta/ExemploDeConta";
 import { useCamposDaConta } from "@/ui/conta/useCamposDaConta";
 import { Contador } from "@/ui/Contador";
 import { ExplicaKwh } from "@/ui/ExplicaKwh";
-import { Icone } from "@/ui/Icone";
+import { IconeComFundo } from "@/ui/Icone";
 import { Interruptor } from "@/ui/Interruptor";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
@@ -379,7 +379,7 @@ export function Cadastro() {
           <ul className="mt-6 divide-y divide-linha rounded-[var(--radius-cartao)] bg-papel px-4">
             {COMODOS_PADRAO.map((c) => (
               <li key={c.tipo} className="flex items-center gap-3 py-3">
-                <Icone nome={c.icone} className={`size-6 shrink-0 ${(quantidades[c.tipo] ?? 0) > 0 ? "text-energia" : "text-tinta-suave"}`} />
+                <IconeComFundo nome={c.icone} tamanho="pequeno" apagado={(quantidades[c.tipo] ?? 0) === 0} />
                 <span className="flex-1 font-bold">{c.tipo === "quarto" ? "Quartos" : c.tipo === "banheiro" ? "Banheiros" : c.nome}</span>
                 <Contador valor={quantidades[c.tipo] ?? 0} aoMudar={(v) => setQuantidades((q) => ({ ...q, [c.tipo]: v }))} min={0} max={10} rotulo={c.nome} />
               </li>
@@ -468,7 +468,7 @@ export function Cadastro() {
                 return (
                   <li key={c.id} className="rounded-[var(--radius-cartao)] bg-papel p-4">
                     <div className="flex items-center gap-3">
-                      <Icone nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} className="size-6 text-energia" />
+                      <IconeComFundo nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} tamanho="pequeno" />
                       <h2 className="flex-1 text-xl font-extrabold">{c.nome}</h2>
                       <button type="button" onClick={() => irPara(`comodo:${i}`)} className="min-h-11 rounded-full px-3 font-bold text-energia hover:bg-energia-claro">
                         Editar

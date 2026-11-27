@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CATALOGO_VISIVEL, CATEGORIAS } from "@ee/core";
 import { Folha } from "@/ui/Folha";
-import { Icone } from "@/ui/Icone";
+import { IconeComFundo } from "@/ui/Icone";
 
 const semAcento = (t: string) =>
   t
@@ -51,7 +51,7 @@ export function SeletorCatalogo({ aberto, aoFechar, aoEscolher }: { aberto: bool
                     }}
                     className="flex h-full min-h-24 w-full flex-col items-start justify-between gap-2 rounded-[var(--radius-controle)] border-2 border-linha bg-papel p-3 text-left font-bold leading-snug hover:border-energia"
                   >
-                    <Icone nome={i.icone} className="size-7 text-energia" />
+                    <IconeComFundo nome={i.icone} />
                     {i.nome}
                   </button>
                 </li>

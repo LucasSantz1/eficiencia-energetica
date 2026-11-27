@@ -25,7 +25,7 @@ export function BlocoDeResumo({ icone, rotulo, valor, legenda, children, classNa
   const conteudo = (
     <>
       <span className="flex items-center gap-1.5 text-[0.95rem] font-bold text-energia">
-        <span aria-hidden className="[&>svg]:size-[1.125rem]">
+        <span aria-hidden className="[&>svg]:size-6">
           {icone}
         </span>
         {rotulo}

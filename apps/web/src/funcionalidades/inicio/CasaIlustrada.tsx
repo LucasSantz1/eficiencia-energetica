@@ -60,7 +60,7 @@ export function CasaIlustrada() {
                 </span>
                 <span className="flex items-end gap-2 text-tinta/80">
                   {c.icones.map((n) => (
-                    <Icone key={n} nome={n} className="size-7 sm:size-9" strokeWidth={1.6} />
+                    <Icone key={n} nome={n} className="size-7 sm:size-9" />
                   ))}
                 </span>
               </button>
