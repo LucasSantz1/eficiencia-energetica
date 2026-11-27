@@ -370,7 +370,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
       <div className="lg:[grid-area:nota]">
         <LevarResumo resumo={resumo} proximaDica={melhor} />
         <p className="mt-4 text-[0.95rem] text-tinta-suave lg:max-w-[68ch]">
-          Os valores são estimativas feitas com os tempos de uso que você informou. A conta real pode variar com impostos, taxa de iluminação pública e dias de leitura.
+          Valores estimados com os tempos de uso que você informou. A conta real muda com impostos, iluminação pública e dias de leitura.
         </p>
         {opiniao.mostrar && (
           <div className="mt-6 lg:max-w-[40rem]" data-sem-impressao>

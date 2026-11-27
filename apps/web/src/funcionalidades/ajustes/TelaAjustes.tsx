@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { distribuidorasDaCidade, ehUf, ESTADOS, formatarKwh, formatarReais, precoKwh, type ArquivoParaBusca, type Beneficio, type ContaReferencia, type Ligacao, type Municipio } from "@ee/core";
-import { useCasa } from "@/aplicacao/casa";
+import { useCasa, useHaDadosGuardados } from "@/aplicacao/casa";
 import { useConta } from "@/aplicacao/conta-estado";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
 import { baixarMeusDados } from "@/aplicacao/exportar";
@@ -14,7 +14,7 @@ import { apagarMarcasDeOpiniao } from "@/aplicacao/opiniao";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
 import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
-import { Botao } from "@/ui/Botao";
+import { Botao, BotaoLink } from "@/ui/Botao";
 import { BuscaCidade } from "@/ui/BuscaCidade";
 import { Campo } from "@/ui/Campo";
 import { CamposDaConta } from "@/ui/conta/CamposDaConta";
@@ -48,6 +48,8 @@ export function TelaAjustes() {
   const atualizar = useCasa((s) => s.atualizarResidencia);
   const definirResidencia = useCasa((s) => s.definirResidencia);
   const temCasaSemCidade = useCasa((s) => s.comodos.length > 0 || s.aparelhos.length > 0);
+  // Sem nada guardado (primeira visita), "Apagar todos os meus dados" não teria o que apagar.
+  const haDados = useHaDadosGuardados();
   const [mudandoCidade, setMudandoCidade] = useState(false);
   // A chave muda só quando a pessoa volta para a tarifa da ANEEL: aí os campos ficam em branco de novo.
   const [chaveDaConta, setChaveDaConta] = useState(0);
@@ -78,6 +80,12 @@ export function TelaAjustes() {
     return (
       <div className="space-y-6">
           <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight">Minha casa</h1>
+          {!temCasaSemCidade && (
+            <div className="flex flex-col items-start gap-4 rounded-[var(--radius-cartao)] bg-papel p-5 sm:flex-row sm:items-center">
+              <p className="flex-1">Você ainda não cadastrou a sua casa. Leva uns dois minutos.</p>
+              <BotaoLink href="/comecar">Começar</BotaoLink>
+            </div>
+          )}
           {temCasaSemCidade && (
             <GrupoDeAjustes id="ajustes-casa" nome="A casa">
               <SecaoDeAjuste titulo="Onde você mora" id="onde-mora" icone="pino-do-mapa" valor="Escolha a sua cidade" descricao="A cidade e a empresa de luz decidem o preço do kWh.">
@@ -88,9 +96,12 @@ export function TelaAjustes() {
           <GrupoDeAjustes id="ajustes-aparelho" nome="Neste aparelho">
             <SecaoLeitura />
           </GrupoDeAjustes>
-          <GrupoDeAjustes id="ajustes-dados" nome="Privacidade">
-            <SeusDados />
-          </GrupoDeAjustes>
+          {haDados && (
+            <GrupoDeAjustes id="ajustes-dados" nome="Privacidade">
+              <SeusDados />
+            </GrupoDeAjustes>
+          )}
+          <GrupoSobre />
           <TrocarCidade
             aberta={mudandoCidade}
             aoFechar={() => setMudandoCidade(false)}

@@ -4,18 +4,16 @@ import { ChartNoAxesColumn, DoorOpen, Lightbulb, Settings2, WifiOff } from "luci
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { lazy, Suspense, ViewTransition, type ReactNode } from "react";
-import { useAvisoDaCasaSalva, useCasa, useCasaCarregada, useDistribuidoraAtualizada, useHaDadosGuardados } from "@/aplicacao/casa";
+import { useAvisoDaCasaSalva, useCasa, useCasaCarregada, useDistribuidoraAtualizada } from "@/aplicacao/casa";
 import { useConta } from "@/aplicacao/conta-estado";
 import { useConviteDaConta } from "@/aplicacao/convite-da-conta";
 import { useIdadeDosPrecos } from "@/aplicacao/idade-dos-precos";
 import { useSemInternet } from "@/aplicacao/offline";
 import { useResumo } from "@/aplicacao/resumo";
-import { useLeitura } from "@/aplicacao/useLeitura";
 import { Aviso } from "@/ui/Aviso";
 import { AvisoDaCasaSalva } from "@/ui/AvisoDaCasaSalva";
 import { BotaoLink } from "@/ui/Botao";
 import { IgnorarFalha } from "@/ui/IgnorarFalha";
-import { Interruptor } from "@/ui/Interruptor";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
 import { IR_ADIANTE, VOLTAR } from "@/ui/tiposDeTransicao";
@@ -41,7 +39,9 @@ export function Casca({ children }: { children: ReactNode }) {
   const temCasaSemCidade = useCasa((s) => !s.residencia && (s.comodos.length > 0 || s.aparelhos.length > 0));
   const { aviso, dispensar } = useAvisoDaCasaSalva();
   // Sem cidade, a Minha casa abre sempre que houver qualquer dado guardado: é lá que fica "Apagar todos os meus dados".
-  const abrirMinhaCasa = useHaDadosGuardados() && caminho === "/casa/ajustes";
+  // Minha casa abre sempre, mesmo sem casa: é lá que ficam a letra maior e o contraste (dono, 27/11: o botão no topo
+  // das outras telas era estranho, por ser opcional).
+  const abrirMinhaCasa = caminho === "/casa/ajustes";
   const { arquivo, preco } = useResumo();
   const troca = useDistribuidoraAtualizada();
   const semInternet = useSemInternet();
@@ -136,9 +136,9 @@ export function Casca({ children }: { children: ReactNode }) {
         {idade && residencia && preco.origem === "aneel" && caminho === "/casa" && (
           <div className="mb-6">
             <Aviso anunciar={false} tom="faisca">
-              Os preços da luz são de {idade.data}, há {idade.dias} dias. Se a sua conta de luz é mais nova, use o preço dela em{" "}
+              Os preços da luz são de {idade.data}, há {idade.dias} dias. Tem uma conta mais nova?{" "}
               <Link href="/casa/ajustes#conta" className="font-bold underline underline-offset-2">
-                Minha casa
+                Use o preço dela
               </Link>
               .
             </Aviso>
@@ -157,7 +157,6 @@ export function Casca({ children }: { children: ReactNode }) {
           // Enquanto o aviso T1b está na tela, ele já tem o mesmo texto e o botão: nada se repete embaixo.
           aviso?.tipo === "sem-residencia" ? null : (
           <div className="py-10">
-            <LetraMaiorSemCasa />
             <h1 className="text-[2rem] leading-tight font-extrabold">Não conseguimos abrir sua cidade e sua empresa de luz.</h1>
             <p className="mt-3 max-w-[48ch] text-lg text-tinta-suave">Seus aparelhos continuam salvos. Escolha a cidade de novo para ver os valores.</p>
             <BotaoLink href="/casa/ajustes" className="mt-8">
@@ -167,7 +166,6 @@ export function Casca({ children }: { children: ReactNode }) {
           )
         ) : !residencia && !temCasaSemCidade && !abrirMinhaCasa ? (
           <div className="py-10">
-            <LetraMaiorSemCasa />
             <h1 className="text-[2rem] leading-tight font-extrabold">Vamos cadastrar a sua casa</h1>
             <p className="mt-3 max-w-[48ch] text-lg text-tinta-suave">Leva uns dois minutos. Precisamos saber a sua cidade e quais aparelhos você tem.</p>
             <BotaoLink href="/comecar" className="mt-8">
@@ -213,15 +211,3 @@ export function Casca({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Sem casa não se chega a Minha casa, onde fica a seção "Leitura": a letra maior aparece no topo destas telas
- * (HIS-102). Com casa, ela fica só em Minha casa, para não repetir o controle em todas as abas.
- */
-function LetraMaiorSemCasa() {
-  const [leitura, mudar] = useLeitura();
-  return (
-    <div className="-mt-6 mb-4 flex justify-end">
-      <Interruptor rotulo="Letra maior" ligado={leitura.letraMaior} aoMudar={(letraMaior) => mudar({ letraMaior })} />
-    </div>
-  );
-}

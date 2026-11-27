@@ -8,7 +8,6 @@ import { useAvisoDaCasaSalva, useCasa, useCasaCarregada } from "@/aplicacao/casa
 import { pedirConviteDaConta } from "@/aplicacao/convite-da-conta";
 import { useMunicipios, useTarifas } from "@/aplicacao/dados-publicos";
 import { nomeDistribuidora } from "@/aplicacao/resumo";
-import { useLeitura } from "@/aplicacao/useLeitura";
 import { contarUso } from "@/aplicacao/uso";
 import { BlocoIluminacao } from "@/ui/aparelho/BlocoIluminacao";
 import { LinhaAparelho } from "@/ui/aparelho/LinhaAparelho";
@@ -26,7 +25,6 @@ import { useCamposDaConta } from "@/ui/conta/useCamposDaConta";
 import { Contador } from "@/ui/Contador";
 import { ExplicaKwh } from "@/ui/ExplicaKwh";
 import { IconeComFundo } from "@/ui/Icone";
-import { Interruptor } from "@/ui/Interruptor";
 import { Marca } from "@/ui/Marca";
 import { TransicaoTela } from "@/ui/Movimento";
 import { Opcao } from "@/ui/Opcao";
@@ -590,7 +588,6 @@ function Moldura({ children, progresso }: { children: React.ReactNode; progresso
     <div className="mx-auto min-h-dvh max-w-2xl px-4 pt-4 pb-10 sm:px-6 lg:max-w-[75rem] lg:px-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <Marca />
-        <LetraMaior />
       </header>
       {/* Fluxo no centro da tela, em uma coluna, no celular e no computador (pedido do responsável, 25/11). */}
       {progresso && <div className="mx-auto mt-6 max-w-[34rem]">{progresso}</div>}
@@ -616,11 +613,6 @@ function PorQuePerguntamos({ titulo, texto }: { titulo: string; texto: string })
   );
 }
 
-/** Quem ainda não cadastrou não chega a Minha casa: a letra maior fica também no topo do cadastro (HIS-102). */
-function LetraMaior() {
-  const [leitura, mudar] = useLeitura();
-  return <Interruptor rotulo="Letra maior" ligado={leitura.letraMaior} aoMudar={(letraMaior) => mudar({ letraMaior })} />;
-}
 
 function Titulo({
   children,
