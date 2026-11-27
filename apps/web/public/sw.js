@@ -27,7 +27,7 @@ const DADOS = `dados-${VERSAO}`;
 const CACHES_DESTA_VERSAO = [PAGINAS, ARQUIVOS, DADOS];
 
 /** Páginas guardadas já na instalação, para o site abrir sem internet mesmo nas telas que a pessoa ainda não abriu. */
-const PAGINAS_DO_SITE = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/tarifa-social", "/sobre", "/privacidade", "/termos"];
+const PAGINAS_DO_SITE = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/casa/antes-de-comprar", "/tarifa-social", "/sobre", "/privacidade", "/termos"];
 const DADOS_INICIAIS = ["/dados/tarifas.json"];
 /** Arquivos sem hash que toda tela usa: o desenho dos ícones (as telas citam por <use href>, que o HTML não lista). */
 const ARQUIVOS_INICIAIS = ["/icones-v1.svg"];

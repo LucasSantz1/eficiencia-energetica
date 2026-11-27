@@ -335,6 +335,18 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
             })}
           </ul>
           </div>
+          {/* "Antes de comprar" (27/11): perto de quem mais gasta, onde a pessoa já está pensando em aparelho. */}
+          <Link
+            href="/casa/antes-de-comprar"
+            className="mt-3 flex items-center gap-3 rounded-[var(--radius-cartao)] bg-papel p-4 transition-colors hover:bg-energia-claro sm:p-5"
+          >
+            <IconeComFundo nome="dinheiro" />
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold">Vai comprar um aparelho?</span>
+              <span className="block text-tinta-suave">Veja antes quanto a conta sobe por mês.</span>
+            </span>
+            <ChevronRight className="size-5 shrink-0" aria-hidden />
+          </Link>
         </section>
 
         <EspacoReservado posicao="painel-apos-ranking" />
