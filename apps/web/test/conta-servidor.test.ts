@@ -6,6 +6,7 @@ import type { TokensDaSessao } from "@/infraestrutura/conta/sessao.servidor";
 vi.mock("server-only", () => ({}));
 
 const conta = await import("@/aplicacao/conta.servidor");
+const metricas = await import("@/aplicacao/metricas.servidor");
 const { cifrarSessao, decifrarSessao } = await import("@/infraestrutura/conta/sessao.servidor");
 const { chaveDaTentativa, redeDoIp } = await import("@/infraestrutura/conta/tentativas.servidor");
 const { cifrarCasa, decifrarCasa } = await import("@/infraestrutura/conta/cofre.servidor");
@@ -28,7 +29,7 @@ function gatewayDeMentira(trocas: Partial<Gateway> = {}): Gateway & { chamadas: 
     entrar: anotar("entrar", { ok: true, valor: TOKENS }),
     confirmarLink: anotar("confirmarLink", { ok: true, valor: TOKENS }),
     renovar: anotar("renovar", { ok: true, valor: { ...TOKENS, renovacao: "renovacao-2", expiraEm: AGORA_MS / 1000 + 3600 } }),
-    sair: anotar("sair", undefined),
+    sair: anotar("sair", { ok: true, valor: null }),
     pedirNovaSenha: anotar("pedirNovaSenha", { ok: true, valor: null }),
     trocarSenha: anotar("trocarSenha", { ok: true, valor: null }),
     quemEsta: anotar("quemEsta", { ok: true, valor: USUARIO }),
@@ -40,6 +41,8 @@ function gatewayDeMentira(trocas: Partial<Gateway> = {}): Gateway & { chamadas: 
     casaDoConvite: anotar("casaDoConvite", { ok: true, valor: undefined }),
     apagarConta: anotar("apagarConta", { ok: true, valor: null }),
     contarTentativa: anotar("contarTentativa", { ok: true, valor: true }),
+    contarUso: anotar("contarUso", { ok: true, valor: null }),
+    registrarOpiniao: anotar("registrarOpiniao", { ok: true, valor: null }),
   };
   return Object.assign({ ...base, ...trocas }, { chamadas });
 }
@@ -85,14 +88,14 @@ describe("conta (casos de uso do servidor)", () => {
     expect((await conta.cadastrar(ctx, { email: "ana@exemplo.org", senha: "123", concordo: true })).status).toBe(400);
     expect(gateway.chamadas["cadastrar"]).toBeUndefined();
     expect((await conta.cadastrar(ctx, { email: " Ana@Exemplo.org", senha: "12345678", concordo: true })).status).toBe(200);
-    expect(gateway.chamadas["cadastrar"]?.[0]?.slice(1)).toEqual(["ana@exemplo.org", "12345678", "https://site.exemplo"]);
+    expect(gateway.chamadas["cadastrar"]?.[0]?.slice(1, 4)).toEqual(["ana@exemplo.org", "12345678", "https://site.exemplo"]);
   });
 
   it("entrar grava o cookie cifrado; senha errada e e-mail sem conta têm a mesma resposta", async () => {
     const certo = await conta.entrar(contexto(gatewayDeMentira()), { email: "ana@exemplo.org", senha: "12345678" });
     expect(certo.status).toBe(200);
     expect(certo.cookie?.tipo).toBe("gravar");
-    if (certo.cookie?.tipo === "gravar") expect(decifrarSessao(certo.cookie.valor, SEGREDO)).toEqual(TOKENS);
+    if (certo.cookie?.tipo === "gravar") expect(decifrarSessao(certo.cookie.valor, SEGREDO)).toEqual({ ...TOKENS, inicio: AGORA_MS / 1000 });
     const errado = await conta.entrar(contexto(gatewayDeMentira({ entrar: async () => ({ ok: false, erro: "credenciais" }) })), { email: "ana@exemplo.org", senha: "x".repeat(8) });
     const semEmail = await conta.entrar(contexto(gatewayDeMentira()), { email: "não é e-mail", senha: "12345678" });
     expect([errado.status, errado.corpo]).toEqual([semEmail.status, semEmail.corpo]);
@@ -307,5 +310,91 @@ describe("cifra amarrada ao dono (M1 da seguranca)", () => {  it("a casa da Bia 
     const daBia = cifrarCasa({ comodos: [] }, chave, "bia");
     expect(decifrarCasa(daBia, chave, "bia")).toEqual({ comodos: [] });
     expect(decifrarCasa(daBia, chave, "ana")).toBeUndefined();
+  });
+});
+
+describe("sessão: limite total, sair de todos e registro do 'concordo' (B4, B10)", () => {
+  const DIA_S = 24 * 60 * 60;
+
+  it("entrar marca o início da sessão; renovar mantém o início", async () => {
+    const gateway = gatewayDeMentira();
+    const entrou = await conta.entrar(contexto(gateway), { email: "ana@exemplo.org", senha: "12345678" });
+    const cookie = entrou.cookie?.tipo === "gravar" ? entrou.cookie.valor : "";
+    expect(decifrarSessao(cookie, SEGREDO)?.inicio).toBe(AGORA_MS / 1000);
+    const quase = cookieValido({ ...TOKENS, expiraEm: AGORA_MS / 1000 + 10, inicio: AGORA_MS / 1000 - 5 * DIA_S });
+    const lida = await conta.lerCasa(contexto(gateway), quase);
+    const renovado = lida.cookie?.tipo === "gravar" ? decifrarSessao(lida.cookie.valor, SEGREDO) : undefined;
+    expect(renovado?.renovacao).toBe("renovacao-2");
+    expect(renovado?.inicio).toBe(AGORA_MS / 1000 - 5 * DIA_S);
+  });
+
+  it("depois de 30 dias desde que entrou, mesmo usando todo dia: sai e pede a senha de novo", async () => {
+    const gateway = gatewayDeMentira();
+    const velho = cookieValido({ ...TOKENS, inicio: AGORA_MS / 1000 - 31 * DIA_S });
+    const resposta = await conta.lerCasa(contexto(gateway), velho);
+    expect(resposta).toMatchObject({ status: 401, cookie: { tipo: "apagar" } });
+    expect(gateway.chamadas["sair"]).toHaveLength(1);
+    expect(gateway.chamadas["lerCasa"] ?? []).toHaveLength(0);
+  });
+
+  it("cookie de antes do limite (sem início) continua valendo", async () => {
+    const gateway = gatewayDeMentira();
+    expect((await conta.lerCasa(contexto(gateway), cookieValido(TOKENS))).status).toBe(200);
+  });
+
+  it("sair de todos os aparelhos pede o escopo global; se o Supabase falhar, a pessoa continua na conta", async () => {
+    const gateway = gatewayDeMentira();
+    const ok = await conta.sair(contexto(gateway), cookieValido(), { todos: true });
+    expect(ok).toMatchObject({ status: 200, cookie: { tipo: "apagar" } });
+    expect(gateway.chamadas["sair"]?.[0]?.[2]).toBe("global");
+    const falhou = gatewayDeMentira({ sair: async () => ({ ok: false, erro: "indisponivel" }) });
+    const resposta = await conta.sair(contexto(falhou), cookieValido(), { todos: true });
+    expect(resposta.status).toBe(503);
+    expect(resposta.cookie).toBeUndefined();
+  });
+
+  it("criar conta guarda a versão dos termos e quando a pessoa concordou", async () => {
+    const gateway = gatewayDeMentira();
+    await conta.cadastrar(contexto(gateway), { email: "ana@exemplo.org", senha: "12345678", concordo: true });
+    const { VERSAO_DOS_TERMOS } = await import("@/config/termos");
+    expect(gateway.chamadas["cadastrar"]?.[0]?.[4]).toEqual({ versao: VERSAO_DOS_TERMOS, em: new Date(AGORA_MS).toISOString() });
+  });
+});
+
+describe("métricas anônimas (ADR-009)", () => {
+  it("conta só evento da lista e responde 204 sem corpo; nada da casa nem de quem é", async () => {
+    const gateway = gatewayDeMentira();
+    expect(await metricas.contarUso(contexto(gateway), { evento: "visita" })).toEqual({ status: 204, corpo: {} });
+    expect(gateway.chamadas["contarUso"]?.[0]?.slice(1)).toEqual(["visita"]);
+    expect((await metricas.contarUso(contexto(gateway), { evento: "inventado" })).status).toBe(400);
+    expect(gateway.chamadas["contarUso"]).toHaveLength(1);
+  });
+
+  it("a contagem de uso não usa o IP para nada (A1); conta desligada: não conta nada", async () => {
+    const gateway = gatewayDeMentira();
+    await metricas.contarUso(contexto(gateway), { evento: "visita" });
+    expect(gateway.chamadas["contarTentativa"] ?? []).toHaveLength(0);
+    const desligada = gatewayDeMentira();
+    expect((await metricas.contarUso(contexto(desligada, false), { evento: "visita" })).status).toBe(204);
+    expect(desligada.chamadas).toEqual({});
+  });
+
+  it("opinião: confere nota, momento e texto (sem telefone ou e-mail) antes do banco", async () => {
+    const gateway = gatewayDeMentira();
+    expect((await metricas.registrarOpiniao(contexto(gateway), { momento: "painel", nota: 5, texto: "  Ajudou  " })).status).toBe(200);
+    expect(gateway.chamadas["registrarOpiniao"]?.[0]?.slice(1)).toEqual(["painel", 5, "Ajudou"]);
+    expect((await metricas.registrarOpiniao(contexto(gateway), { momento: "painel", nota: 9 })).status).toBe(400);
+    expect((await metricas.registrarOpiniao(contexto(gateway), { momento: "painel", nota: 4, texto: "zap 18 99123 4567" })).status).toBe(400);
+    expect(gateway.chamadas["registrarOpiniao"]).toHaveLength(1);
+  });
+
+  it("teto de opiniões do dia: responde 429, não 'Obrigado'", async () => {
+    const lotado = gatewayDeMentira({ registrarOpiniao: async () => ({ ok: false, erro: "muitas-tentativas" }) });
+    expect((await metricas.registrarOpiniao(contexto(lotado), { momento: "painel", nota: 5 })).status).toBe(429);
+  });
+
+  it("confirmar o e-mail e criar link contam, mas a falha da contagem não atrapalha", async () => {
+    const gateway = gatewayDeMentira({ contarUso: async () => { throw new Error("fora do ar"); } });
+    expect((await conta.confirmarEmail(contexto(gateway), { tokenHash: "abcdefgh12" })).status).toBe(200);
   });
 });

@@ -28,7 +28,7 @@
 | Server Actions (`"use server"`): cada uma vira endpoint POST público; nenhuma existe | regra a definir antes do E4 | E4 |
 | SQL injection | não se aplica ainda (sem banco); regra já vale para o E4 | E4 |
 | XSS | React escapa texto; não há `dangerouslySetInnerHTML`, `innerHTML`, `eval` nem `new Function` | — |
-| Dados pessoais | nenhum coletado; tudo no aparelho | — |
+| Dados pessoais | conta opcional (e-mail, casa cifrada); métricas e opinião devem ser anônimas de verdade (HMAC do IP com a chave na mão = dado pessoal) | lancamento-essencial |
 | CSP com `'unsafe-inline'` no `script-src` | baixo, aceito até o E4 (nonce). Hash/SRI não serve (prova na HIS-117); `script-src-attr 'none'` proposto, à espera do tech-lead | HIS-117 |
 | Espaços para parceiros | desligados; ligar exige revisão de rastreamento e consentimento | E11 |
 
@@ -110,6 +110,11 @@
   `dono` (`casa_do_convite` passa a devolver `dono` só ao servidor), e M2, o texto do ADR ("protege só contra leitura do
   banco"). Baixas: lockout por e-mail pelo site, tabela `tentativas` enchida com a chave anon, rollback mostra casa vazia,
   IPv6 /64 quando a Vercel aceitar IPv6 (hoje não aceita).
+- **lancamento-essencial:** vetado em `9a82fa4` (A1, código do IP nas métricas) e **aprovado com ressalvas (baixo)**
+  em `795db07`. Depois do deploy: conferir `cron.job` e `cron.job_run_details` (`limpeza-diaria` com sucesso) e que o
+  gatilho `registrar_consentimento` existe. Antes de divulgar, o dono preenche `CONTATO_EMAIL` e `RESPONSAVEL_PELO_SITE`
+  (A3). Baixas abertas: o teto de opiniões responde 200 sem guardar; a política não diz que "Apagar todos" mantém a
+  escolha de não contar. O RIPD do E12 fica para o painel (HIS-1203).
 - **E4:** regra para Server Actions (`"use server"`): validação de entrada, limite, auth e revisão obrigatória.
 
 ## Orientações do responsável

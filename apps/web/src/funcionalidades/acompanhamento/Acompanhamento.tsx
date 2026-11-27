@@ -17,8 +17,10 @@ import {
   type ContaMensal,
   type ContaReferencia,
   type LeituraRelogio,
+  faixaDaEstimativa,
 } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
+import { contarUso } from "@/aplicacao/uso";
 import { Aviso } from "@/ui/Aviso";
 import { Barras } from "@/ui/Barras";
 import { Botao } from "@/ui/Botao";
@@ -171,14 +173,24 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
         rodape={
           editando && (
             <div className="flex flex-col gap-3">
+              {/* Botão de enviar do formulário de cima (atributo form): Enter num campo também salva (QA, 25/11). */}
               <Botao
                 largo
+                type="submit"
+                form="form-da-conta"
                 disabled={!editando.competencia}
-                onClick={() => {
+                onClick={(evento) => {
+                  evento.preventDefault();
                   // Só salva o que passou pelo T5/T6; o resto fica na folha, com o foco no primeiro campo que não passou.
                   const conta = camposDaConta.conferir();
                   if (!conta) return;
                   salvar({ id: editando.id, competencia: editando.competencia, ...conta });
+                  // Conta nova (não edição): conta o uso e o quanto a estimativa acertou, só a faixa (ADR-009).
+                  if (!editando.id) {
+                    contarUso("conta-anotada");
+                    const faixa = faixaDaEstimativa(conta.kwh, estimativaKwhMes);
+                    if (faixa) contarUso(faixa);
+                  }
                   if (historico.length === 0) focarOutraConta.current = true;
                   setEditando(undefined);
                 }}
@@ -202,12 +214,21 @@ function Contas({ estimativaKwhMes }: { estimativaKwhMes: number }) {
         }
       >
         {editando && (
-          <div className="space-y-5">
+          <form
+            id="form-da-conta"
+            noValidate
+            className="space-y-5"
+            onSubmit={(evento) => {
+              // Enter num campo: o mesmo que tocar em "Salvar conta".
+              evento.preventDefault();
+              document.querySelector<HTMLButtonElement>('button[form="form-da-conta"]')?.click();
+            }}
+          >
             <Campo rotulo="Mês da conta" id="conta-mes" ajuda="O mês de referência que aparece na conta.">
               <input id="conta-mes" type="month" value={editando.competencia} max={competenciaAtual()} onChange={(e) => setEditando({ ...editando, competencia: e.target.value })} className="min-h-12 w-full rounded-[var(--radius-controle)] border-2 border-linha bg-papel px-4 text-lg font-bold" />
             </Campo>
             <CamposDaConta className="space-y-5" campos={camposDaConta} textos={{ consumo: "Consumo", ajudaDoConsumo: "“Consumo (kWh)” ou “kWh faturado”.", valor: "Valor total" }} />
-          </div>
+          </form>
         )}
       </Folha>
     </>

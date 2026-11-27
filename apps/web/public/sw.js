@@ -27,7 +27,7 @@ const DADOS = `dados-${VERSAO}`;
 const CACHES_DESTA_VERSAO = [PAGINAS, ARQUIVOS, DADOS];
 
 /** Páginas guardadas já na instalação, para o site abrir sem internet mesmo nas telas que a pessoa ainda não abriu. */
-const PAGINAS_DO_SITE = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/tarifa-social", "/sobre"];
+const PAGINAS_DO_SITE = ["/", "/comecar", "/casa", "/casa/comodos", "/casa/dicas", "/casa/ajustes", "/tarifa-social", "/sobre", "/privacidade", "/termos"];
 const DADOS_INICIAIS = ["/dados/tarifas.json"];
 
 /** Celular com 3G fraco: depois disso, a cópia guardada responde (e a rede, se chegar, atualiza a cópia). */

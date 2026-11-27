@@ -2,13 +2,13 @@
 
 import { formatarReais, LIMITES, type Beneficio, type Ligacao } from "@ee/core";
 import type { Confianca, SituacaoDaMeta } from "@ee/core/meta";
-import type { MensagensDoCampo } from "@/ui/campos/mensagens";
+import { MAL_ESCRITO_COM_VIRGULA, type MensagensDoCampo } from "@/ui/campos/mensagens";
 
 /** Textos da HIS-104 (domínio, ajustados pela ux). Todo valor chega em centavos do core e sai por `formatarReais`. */
 export const reais = (centavos: number) => formatarReais(centavos / 100);
 
 export const ROTULO_DA_META = "Quanto você quer pagar de luz por mês?";
-export const AJUDA_DA_META = "Escreva o valor que cabe no seu bolso. A gente mostra quanto falta.";
+export const AJUDA_DA_META = "Digite o valor que cabe no seu bolso. A gente mostra quanto falta.";
 export const META_SALVA = "Meta salva neste aparelho.";
 export const SO_NESTE_APARELHO = "Sua meta fica neste aparelho (e na sua conta, se você tiver uma). O link da família não mostra a meta.";
 export const E_ESTIMATIVA = "É uma estimativa. A conta de verdade pode ser um pouco diferente.";
@@ -20,10 +20,11 @@ export const SEM_CIP_NA_ECONOMIA = "A economia pode ser um pouco menor, porque a
  */
 export function mensagensDaMeta(): MensagensDoCampo {
   const { min, max } = LIMITES.metaMensal;
-  const fora = `Escreva um valor entre ${formatarReais(min)} e ${formatarReais(max)}.`;
+  const fora = `Digite um valor entre ${formatarReais(min)} e ${formatarReais(max)}.`;
   return {
     vazio: fora,
-    malEscrito: fora,
+    // "150,999" não é um valor fora da faixa: é um número mal escrito (QA, 25/11). Mesma mensagem dos outros campos de R$.
+    malEscrito: MAL_ESCRITO_COM_VIRGULA,
     fora,
     confere: (valor) => `${formatarReais(valor)} é muito para uma conta de luz. Veja se a vírgula está no lugar certo.`,
   };

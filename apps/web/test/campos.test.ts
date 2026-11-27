@@ -38,7 +38,7 @@ describe("situacaoDoCampo: ok, erro e alerta (HIS-003b, T5 e T6)", () => {
 
   it("\"135.90\" é R$ 135,90 (e não R$ 13.590); \"1,2,5\" é mal escrito", () => {
     expect(situacaoDoCampo("135.90", valorNoCadastro)).toEqual({ tipo: "ok", valor: 135.9 });
-    expect(situacaoDoCampo("1,2,5", valorNoCadastro)).toEqual({ tipo: "erro", mensagem: "Escreva só o número. Para centavos, use vírgula: 135,90." });
+    expect(situacaoDoCampo("1,2,5", valorNoCadastro)).toEqual({ tipo: "erro", mensagem: "Digite só o número. Para centavos, use vírgula: 135,90." });
   });
 
   it("conta zerada: no cadastro tem texto próprio; no acompanhamento é aceita", () => {

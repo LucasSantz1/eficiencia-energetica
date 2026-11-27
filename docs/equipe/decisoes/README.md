@@ -10,6 +10,7 @@
 | [ADR-006](ADR-006-service-worker-escrito-a-mao.md) | Modo sem internet com service worker escrito à mão (`public/sw.js`), sem Serwist; nada da pessoa no cache; "Apagar tudo" apaga as cópias de `/dados` | proposto |
 | [ADR-007](ADR-007-conta-e-convidado.md) | Conta opcional com e-mail e senha: o navegador só fala com o nosso `/api`, sessão num cookie `__Host-` cifrado (AES-GCM, HttpOnly), RLS testada, link de convidado só de leitura com o hash do código no banco | proposto |
 | [ADR-008](ADR-008-limites-e-casa-cifrada.md) | Limite de tentativas por IP e por e-mail no próprio Postgres (chave HMAC, limites fixos na função) e a casa cifrada pelo servidor (AES-256-GCM, `CASA_SEGREDO`) antes de ir ao banco | proposto |
+| [ADR-009](ADR-009-metricas-anonimas-e-lancamento.md) | Métricas de uso anônimas sem "sim" (com saída: interruptor, GPC e DNT), "Isto te ajudou?" com texto conferido no core e no banco, limpeza diária (contas não confirmadas, sessões, tentativas, texto antigo) e registro do "concordo" em tabela própria | proposto |
 
 Para uma decisão nova: copie o formato (Status, Data, Responsável, Contexto, Decisão, Alternativas, Consequências),
 numere em sequência e acrescente aqui.

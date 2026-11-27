@@ -153,7 +153,7 @@ function CartaoComodo({
 
   // Só rola até o cômodo do endereço; não copia estado.
   useEffect(() => {
-    if (window.location.hash === `#comodo-${comodo.id}`) document.getElementById(`comodo-${comodo.id}`)?.scrollIntoView({ block: "start" });
+    if (window.location.hash === `#comodo-${comodo.id}`) return alinharAoTopo(`comodo-${comodo.id}`);
   }, [comodo.id]);
 
   const icone = COMODOS_PADRAO.find((c) => c.tipo === comodo.tipo)?.icone;
@@ -401,4 +401,32 @@ const hashNoServidor = () => "";
 
 function useComodoDoEndereco(id: string): boolean {
   return useSyncExternalStore(assinarEndereco, hashDoEndereco, hashNoServidor) === `#comodo-${id}`;
+}
+
+/**
+ * Alinha o cômodo do endereço ao topo e continua alinhando enquanto a tela termina de montar (HIS-108, P3): os cômodos
+ * de cima abrem, as animações de entrada terminam e a altura muda, e um `scrollIntoView` só deixava o cômodo a 371 px
+ * do topo. Para em 1,5 s, ou na hora em que a pessoa rola, toca ou usa o teclado: aí quem manda é ela.
+ */
+function alinharAoTopo(id: string): () => void {
+  let parar = false;
+  const pararSeAPessoaMexer = () => {
+    parar = true;
+  };
+  const eventos = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
+  for (const evento of eventos) window.addEventListener(evento, pararSeAPessoaMexer, { passive: true, once: true });
+  const fim = performance.now() + 1500;
+  let quadro = 0;
+  const alinhar = () => {
+    if (parar) return;
+    // "instant": com o scroll-behavior suave do site, cada quadro recomeçaria a animação.
+    document.getElementById(id)?.scrollIntoView({ block: "start", behavior: "instant" });
+    if (performance.now() < fim) quadro = requestAnimationFrame(alinhar);
+  };
+  alinhar();
+  return () => {
+    parar = true;
+    cancelAnimationFrame(quadro);
+    for (const evento of eventos) window.removeEventListener(evento, pararSeAPessoaMexer);
+  };
 }

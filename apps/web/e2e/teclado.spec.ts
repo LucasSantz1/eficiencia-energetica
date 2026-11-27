@@ -58,7 +58,7 @@ test("cadastro só com teclado: o foco vai para o título de cada passo e o cont
   await expect(estado).toHaveValue("SP");
   await acionar(page, botao("Continuar"));
 
-  // O foco começa na busca e passa para o título (P1, HIS-108, no fixme abaixo): espera chegar ao título.
+  // O foco vai para o título; a busca vem no próximo Tab (P1, HIS-108).
   await passo("Qual é a sua cidade?");
   const busca = page.locator("#busca-cidade");
   await tabAte(page, busca);
@@ -91,9 +91,9 @@ test("cadastro só com teclado: o foco vai para o título de cada passo e o cont
   await expect(page.getByText("Sua conta estimada por mês")).toBeVisible();
 });
 
-test.fixme("HIS-108 · P1 — no passo \"cidade\" o foco não passa pela busca antes de ir para o título", async ({ page }) => {
-  // Hoje o foco começa na busca (autoFocus) e pula para o título entre 300 e 600 ms: quem começa a digitar logo
-  // perde o foco no meio, e o leitor de tela anuncia duas coisas. Quando a HIS-108 corrigir, trocar fixme por test.
+test("HIS-108 · P1 — no passo \"cidade\" o foco não passa pela busca antes de ir para o título", async ({ page }) => {
+  // Antes, o foco começava na busca (autoFocus) e pulava para o título entre 300 e 600 ms: quem começava a digitar logo
+  // perdia o foco no meio, e o leitor de tela anunciava duas coisas. Agora o foco vai só para o título.
   await page.goto("/comecar");
   await page.locator("select#estado").selectOption("SP");
   // A troca de passo não recarrega a página: o ouvinte continua valendo no passo "cidade".

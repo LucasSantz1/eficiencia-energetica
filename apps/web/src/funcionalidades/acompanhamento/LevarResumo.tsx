@@ -4,6 +4,7 @@ import { Share2 } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import type { Dica, ResumoCasa } from "@ee/core";
 import { textoDoResumo } from "@/aplicacao/textoDoResumo";
+import { contarUso } from "@/aplicacao/uso";
 import { Botao } from "@/ui/Botao";
 
 type Situacao = "parado" | "copiado" | "falhou";
@@ -33,6 +34,7 @@ export function LevarResumo({ resumo, proximaDica }: { resumo: Pick<ResumoCasa, 
     if (compartilha) {
       try {
         await navigator.share({ text: novo });
+        contarUso("compartilhou");
         return;
       } catch (erro) {
         if (desistiu(erro)) return;
@@ -42,6 +44,7 @@ export function LevarResumo({ resumo, proximaDica }: { resumo: Pick<ResumoCasa, 
     try {
       await navigator.clipboard.writeText(novo);
       setSituacao("copiado");
+      contarUso("compartilhou");
     } catch {
       setSituacao("falhou");
     }
@@ -55,7 +58,13 @@ export function LevarResumo({ resumo, proximaDica }: { resumo: Pick<ResumoCasa, 
           {compartilha ? "Compartilhar resumo" : "Copiar resumo"}
         </Botao>
         {/* A folha de impressão é só CSS (@media print em globals.css): a mesma tela, em preto e branco. */}
-        <Botao variante="secundario" onClick={() => window.print()}>
+        <Botao
+          variante="secundario"
+          onClick={() => {
+            contarUso("imprimiu");
+            window.print();
+          }}
+        >
           Imprimir
         </Botao>
       </div>

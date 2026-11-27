@@ -26,6 +26,17 @@ const TEXTO_DA_SINCRONIA = {
 export function PainelDaConta() {
   const conta = useConta();
   const sincronia = useSincroniaAtual();
+  const [saindo, setSaindo] = useState<"este" | "todos">();
+  const [erroAoSair, setErroAoSair] = useState<string>();
+  const sairDaConta = async (todos: boolean) => {
+    setSaindo(todos ? "todos" : "este");
+    setErroAoSair(undefined);
+    const resposta = await sair(todos);
+    setSaindo(undefined);
+    // Sem internet, o cookie não sai (só o servidor apaga): a pessoa continua na conta e precisa saber (B5).
+    if (resposta.status === 0) setErroAoSair("Sem internet agora. Você continua na conta: tente sair de novo quando a conexão voltar.");
+    else if (resposta.status !== 200) setErroAoSair("Não deu para sair agora. Tente de novo em alguns minutos.");
+  };
   if (conta.tipo === "desligada" || conta.tipo === "carregando") return null;
   return (
     <SecaoDeAjuste titulo="Sua conta" id="conta-online" descricao="Opcional. Para abrir a casa em outro celular e mandar um link para a família acompanhar.">
@@ -45,10 +56,24 @@ export function PainelDaConta() {
           </p>
           {TEXTO_DA_SINCRONIA[sincronia.tipo] && <p className="mt-1 text-tinta-suave">{TEXTO_DA_SINCRONIA[sincronia.tipo]}</p>}
           <LinksDeConvidado />
-          <Botao variante="secundario" className="mt-6" onClick={() => void sair()}>
-            Sair da conta
-          </Botao>
-          <p className="mt-2 max-w-[56ch] text-[0.95rem] text-tinta-suave">Saindo, a casa continua neste aparelho; só para de ir para a conta.</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Botao variante="secundario" disabled={saindo !== undefined} onClick={() => void sairDaConta(false)}>
+              {saindo === "este" ? "Saindo…" : "Sair da conta"}
+            </Botao>
+            <Botao variante="fantasma" disabled={saindo !== undefined} onClick={() => void sairDaConta(true)}>
+              {saindo === "todos" ? "Saindo…" : "Sair de todos os aparelhos"}
+            </Botao>
+          </div>
+          <p className="mt-2 max-w-[56ch] text-[0.95rem] text-tinta-suave">
+            Saindo, a casa continua neste aparelho; só para de ir para a conta. Perdeu um celular? Use &quot;Sair de todos os aparelhos&quot;.
+          </p>
+          <div role="status" className="mt-3 empty:hidden">
+            {erroAoSair && (
+              <Aviso tom="alerta" anunciar={false}>
+                {erroAoSair}
+              </Aviso>
+            )}
+          </div>
         </>
       )}
     </SecaoDeAjuste>

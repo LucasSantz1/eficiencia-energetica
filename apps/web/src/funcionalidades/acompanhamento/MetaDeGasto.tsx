@@ -6,11 +6,13 @@ import { formatarReais, LIMITES } from "@ee/core";
 import type { SituacaoDaMeta } from "@ee/core/meta";
 import { useMeta } from "@/aplicacao/meta";
 import type { useResumo } from "@/aplicacao/resumo";
+import { contarUso } from "@/aplicacao/uso";
 import { Aviso } from "@/ui/Aviso";
 import { Botao, BotaoLink } from "@/ui/Botao";
 import { Campo } from "@/ui/Campo";
 import { useCampoNumerico } from "@/ui/campos/useCampoNumerico";
 import { Entrada } from "@/ui/Entrada";
+import { focarTitulo } from "@/ui/foco";
 import { focarPrimeiroErro } from "@/ui/foco";
 import {
   AJUDA_DA_META,
@@ -58,6 +60,7 @@ export function MetaDeGasto({ dados, naFolha = false, className = "" }: { dados:
     const resultado = campo.conferir();
     if (focarPrimeiroErro([{ id: ID_DO_CAMPO, resultado }]) || campo.valorValido === undefined) return;
     definirMeta(campo.valorValido);
+    contarUso("meta-definida");
     setEditando(false);
     setSalvou(true);
     focar(ID_DO_MUDAR);
@@ -73,20 +76,24 @@ export function MetaDeGasto({ dados, naFolha = false, className = "" }: { dados:
     definirMeta(undefined);
     setTirando(false);
     setSalvou(false);
-    focar(ID_DO_TITULO);
+    // Na folha, o título é o da folha (um só, para o leitor de tela não ouvir "Sua meta" duas vezes).
+    if (naFolha) requestAnimationFrame(focarTitulo);
+    else focar(ID_DO_TITULO);
   };
 
   return (
     <section
       id="meta"
-      aria-labelledby={ID_DO_TITULO}
+      aria-labelledby={naFolha ? undefined : ID_DO_TITULO}
       className={naFolha ? className : `scroll-mt-4 rounded-[var(--radius-cartao)] bg-papel p-5 sm:p-6 lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-x-10 ${className}`}
     >
       <div>
-        {/* Na folha o título visível é o da própria folha; este fica só para o leitor de tela (e para o foco ao tirar a meta). */}
-        <h2 id={ID_DO_TITULO} className={naFolha ? "sr-only" : "text-[1.375rem] font-bold tracking-tight"}>
-          Sua meta
-        </h2>
+        {/* Na folha o título é o da própria folha (QA, 25/11: "Sua meta" saía duas vezes no leitor de tela). */}
+        {!naFolha && (
+          <h2 id={ID_DO_TITULO} className="text-[1.375rem] font-bold tracking-tight">
+            Sua meta
+          </h2>
+        )}
         {mostrarCampo ? (
           <form
             noValidate

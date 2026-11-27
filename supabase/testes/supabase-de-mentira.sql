@@ -10,7 +10,7 @@ create role service_role nologin bypassrls;
 grant anon, authenticated, service_role to postgres;
 create schema auth;
 grant usage on schema auth to anon, authenticated, service_role, postgres;
-create table auth.users (id uuid primary key, email text);
+create table auth.users (id uuid primary key, email text, email_confirmed_at timestamptz default now(), created_at timestamptz not null default now(), raw_user_meta_data jsonb);
 grant all on auth.users to postgres;
 -- auth.uid() lê o "sub" do JWT, como no Supabase.
 create function auth.uid() returns uuid language sql stable as $$

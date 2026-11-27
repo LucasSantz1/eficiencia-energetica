@@ -1,20 +1,27 @@
 "use client";
 
 import { Check, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { formatarKwh, formatarReais, type Dica } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
+import { useOpiniao } from "@/aplicacao/opiniao";
 import { useResumo } from "@/aplicacao/resumo";
+import { contarUso } from "@/aplicacao/uso";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { Icone } from "@/ui/Icone";
+import { IgnorarFalha } from "@/ui/IgnorarFalha";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
+
+// O cartão da opinião só baixa quando aparece (ADR-009).
+const OpiniaoDasDicas = lazy(() => import("./OpiniaoDasDicas").then((m) => ({ default: m.OpiniaoDasDicas })));
 
 type Filtro = "todas" | "habito" | "troca";
 
 export function TelaDicas() {
   const { dicas, resumo, resumoPlano, plano, aparelhos, comodos } = useResumo();
   const alternar = useCasa((s) => s.alternarNoPlano);
+  const opiniao = useOpiniao("dica");
   const [filtro, setFiltro] = useState<Filtro>("todas");
 
   const simulaveis = dicas.filter((d) => d.simulavel);
@@ -85,7 +92,10 @@ export function TelaDicas() {
                   key={d.id}
                   dica={d}
                   marcada={plano.includes(d.id)}
-                  aoAlternar={() => alternar(d.id)}
+                  aoAlternar={() => {
+                    if (!plano.includes(d.id)) contarUso("dica-no-plano");
+                    alternar(d.id);
+                  }}
                   onde={(() => {
                     const a = aparelhos.find((x) => x.id === d.aparelhoId);
                     const c = comodos.find((x) => x.id === d.comodoId);
@@ -96,6 +106,17 @@ export function TelaDicas() {
             </ul>
             {visiveis.length === 0 && <p className="mt-5 text-tinta-suave">Nenhuma dica desse tipo para a sua casa.</p>}
           </>
+        )}
+
+        {/* Só depois de a pessoa usar o plano: aí ela sabe dizer se as dicas ajudaram (ADR-009). */}
+        {opiniao.mostrar && plano.length > 0 && (
+          <div className="mt-8">
+            <IgnorarFalha>
+              <Suspense fallback={null}>
+                <OpiniaoDasDicas aoEnviar={opiniao.enviar} aoDispensar={opiniao.dispensar} />
+              </Suspense>
+            </IgnorarFalha>
+          </div>
         )}
 
         <div className="mt-10 empty:hidden">

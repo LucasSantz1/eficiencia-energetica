@@ -158,7 +158,7 @@ test.describe("conta no cadastro (calibração)", () => {
     await expect(page.getByRole("button", { name: "Ver o resultado" })).toBeFocused();
     await expect(page.locator("#conta-valor-erro"), "indo para um botão, a mensagem ainda não entra").toHaveCount(0);
     await page.keyboard.press("Enter");
-    await conferirErro(page, "conta-valor", "Escreva só o número. Para centavos, use vírgula: 135,90.");
+    await conferirErro(page, "conta-valor", "Digite só o número. Para centavos, use vírgula: 135,90.");
     await expect(entrada(page, "conta-valor")).toBeFocused();
     await expect(entrada(page, "conta-valor"), "o texto digitado continua").toHaveValue("1,2,5");
   });

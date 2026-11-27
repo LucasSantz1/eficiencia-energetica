@@ -130,4 +130,79 @@ select pg_temp.deve_falhar('select * from public.tentativas', 'logado lendo tent
 select pg_temp.deve_falhar($$select public.contar_tentativa('entrar-ip', sha256('x'))$$, 'logado chamando a contagem');
 reset role;
 
+-- 9. Lançamento (ADR-009): contas não confirmadas há mais de 7 dias somem; as confirmadas e as novas ficam.
+insert into auth.users (id, email, email_confirmed_at, created_at) values
+  ('00000000-0000-4000-8000-0000000000c1', 'velha-sem-confirmar@exemplo.org', null, now() - interval '8 days'),
+  ('00000000-0000-4000-8000-0000000000c2', 'nova-sem-confirmar@exemplo.org', null, now() - interval '1 day'),
+  ('00000000-0000-4000-8000-0000000000c3', 'velha-confirmada@exemplo.org', now() - interval '20 days', now() - interval '20 days');
+do $$ begin
+  if public.limpar_contas_nao_confirmadas() <> 1 then raise exception 'devia apagar só a conta velha sem confirmar'; end if;
+  if exists (select 1 from auth.users where id = '00000000-0000-4000-8000-0000000000c1') then raise exception 'a conta velha sem confirmar ficou'; end if;
+  if (select count(*) from auth.users where id in ('00000000-0000-4000-8000-0000000000c2', '00000000-0000-4000-8000-0000000000c3')) <> 2 then raise exception 'apagou conta que não devia'; end if;
+end $$;
+select pg_temp.como('anon', null);
+select pg_temp.deve_falhar('select public.limpar_contas_nao_confirmadas()', 'anon chamando a limpeza');
+select pg_temp.deve_falhar('select public.limpeza_diaria()', 'anon chamando a limpeza diária');
+reset role;
+select pg_temp.como('authenticated', '00000000-0000-4000-8000-00000000000b');
+select pg_temp.deve_falhar('select public.limpar_contas_nao_confirmadas()', 'logado chamando a limpeza');
+select pg_temp.deve_falhar('select public.limpeza_diaria()', 'logado chamando a limpeza diária');
+reset role;
+select pg_temp.como('anon', null);
+
+-- 10. Uso e opinião: anon só conta e opina pela função, de listas fixas; ninguém lê as tabelas pela API.
+do $$ begin
+  perform public.contar_uso('visita');
+  perform public.contar_uso('visita');
+  perform public.registrar_opiniao('painel', 5::smallint, '  Me ajudou a ver o chuveiro  ');
+  perform public.registrar_opiniao('dica', 2::smallint, '   ');
+end $$;
+select pg_temp.deve_falhar($$select public.contar_uso('inventado')$$, 'evento fora da lista');
+select pg_temp.deve_falhar($$select public.registrar_opiniao('outro', 3::smallint, null)$$, 'momento fora da lista');
+select pg_temp.deve_falhar($$select public.registrar_opiniao('painel', 6::smallint, null)$$, 'nota 6');
+select pg_temp.deve_falhar($$select public.registrar_opiniao('painel', 4::smallint, repeat('a', 281))$$, 'texto longo');
+select pg_temp.deve_falhar($$select public.registrar_opiniao('painel', 4::smallint, '=HYPERLINK("x")')$$, 'fórmula de planilha');
+select pg_temp.deve_falhar($$select public.registrar_opiniao('painel', 4::smallint, 'oi' || chr(8238) || 'xyz')$$, 'troca de direção');
+select pg_temp.deve_falhar($$select public.registrar_opiniao('painel', 4::smallint, 'oi' || chr(8203))$$, 'caractere invisível');
+select pg_temp.deve_falhar('select * from public.uso_por_dia', 'anon lendo o uso');
+select pg_temp.deve_falhar('select * from public.opinioes', 'anon lendo opiniões');
+select pg_temp.deve_falhar($$insert into public.opinioes (dia, momento, nota) values (current_date, 'painel', 5)$$, 'anon gravando opinião direto');
+do $$ begin
+  if not public.contar_tentativa('opiniao-ip', sha256('ip')) then raise exception 'ação nova do limite'; end if;
+end $$;
+-- O uso não passa pelo limite de tentativas: não fica nem o código do IP (A1 da seguranca).
+select pg_temp.deve_falhar($$select public.contar_tentativa('uso-ip', sha256('ip'))$$, 'uso-ip não existe mais');
+reset role;
+select pg_temp.como('authenticated', '00000000-0000-4000-8000-00000000000b');
+select pg_temp.deve_falhar($$select public.contar_uso('visita')$$, 'logado contando uso direto');
+select pg_temp.deve_falhar('select * from public.opinioes', 'logado lendo opiniões');
+reset role;
+do $$ begin
+  if (select quantas from public.uso_por_dia where evento = 'visita') <> 2 then raise exception 'a contagem devia somar'; end if;
+  if (select count(*) from public.uso_por_dia) <> 1 then raise exception 'uma linha por dia e evento'; end if;
+  if (select texto from public.opinioes where nota = 5) <> 'Me ajudou a ver o chuveiro' then raise exception 'o texto devia sair sem espaços nas pontas'; end if;
+  if (select texto from public.opinioes where nota = 2) is not null then raise exception 'texto só de espaços vira vazio'; end if;
+end $$;
+
+-- 11. "Concordo" copiado para uma tabela que a pessoa não muda; a limpeza diária tira tentativas velhas e texto antigo.
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-4000-8000-0000000000d1', 'com-termos@exemplo.org', '{"termos_versao": "2026-11-27", "termos_aceitos_em": "2026-11-27T12:00:00Z"}'),
+  ('00000000-0000-4000-8000-0000000000d2', 'sem-termos@exemplo.org', null);
+do $$ begin
+  if (select versao_dos_termos from public.consentimentos where dono = '00000000-0000-4000-8000-0000000000d1') <> '2026-11-27' then raise exception 'o concordo devia ser registrado'; end if;
+  if exists (select 1 from public.consentimentos where dono = '00000000-0000-4000-8000-0000000000d2') then raise exception 'sem concordo, sem registro'; end if;
+end $$;
+select pg_temp.como('authenticated', '00000000-0000-4000-8000-0000000000d1');
+select pg_temp.deve_falhar('select * from public.consentimentos', 'logado lendo consentimentos');
+select pg_temp.deve_falhar($$update public.consentimentos set versao_dos_termos = 'x'$$, 'logado mudando o concordo');
+reset role;
+insert into public.tentativas (acao, chave, janela) values ('entrar-ip', sha256('velha'), now() - interval '2 days');
+insert into public.opinioes (dia, momento, nota, texto) values (current_date - 400, 'painel', 4, 'texto antigo');
+select public.limpeza_diaria();
+do $$ begin
+  if exists (select 1 from public.tentativas where chave = sha256('velha')) then raise exception 'tentativa velha ficou'; end if;
+  if (select texto from public.opinioes where dia = current_date - 400) is not null then raise exception 'texto de mais de 12 meses ficou'; end if;
+  if (select nota from public.opinioes where dia = current_date - 400) <> 4 then raise exception 'a nota devia ficar'; end if;
+end $$;
+
 \echo 'RLS: tudo certo'

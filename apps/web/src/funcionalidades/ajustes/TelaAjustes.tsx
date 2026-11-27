@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Download } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -8,7 +8,9 @@ import { distribuidorasDaCidade, ehUf, ESTADOS, formatarReais, precoKwh, type Ar
 import { useCasa } from "@/aplicacao/casa";
 import { useConta } from "@/aplicacao/conta-estado";
 import { useMunicipios } from "@/aplicacao/dados-publicos";
+import { baixarMeusDados } from "@/aplicacao/exportar";
 import { apagarPreferenciaDeLeitura } from "@/aplicacao/leitura";
+import { apagarMarcasDeOpiniao } from "@/aplicacao/opiniao";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { Aviso } from "@/ui/Aviso";
 import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
@@ -22,6 +24,7 @@ import { Folha } from "@/ui/Folha";
 import { Opcao } from "@/ui/Opcao";
 import { NavegacaoDosAjustes } from "./NavegacaoDosAjustes";
 import { SecaoConta } from "./SecaoConta";
+import { SecaoContagem } from "./SecaoContagem";
 import { GrupoDeAjustes, SecaoDeAjuste } from "./SecaoDeAjuste";
 import { SecaoInstalar } from "./SecaoInstalar";
 import { SecaoLeitura } from "./SecaoLeitura";
@@ -219,6 +222,7 @@ export function TelaAjustes() {
             <GrupoDeAjustes id="ajustes-aparelho" nome="Neste aparelho">
               <SecaoLeitura />
               <SecaoInstalar />
+              <SecaoContagem />
             </GrupoDeAjustes>
 
             <GrupoDeAjustes id="ajustes-dados" nome="Privacidade">
@@ -260,7 +264,8 @@ function SeusDados() {
   const router = useRouter();
   const apagarTudo = useCasa((s) => s.apagarTudo);
   const [confirmarApagar, setConfirmarApagar] = useState(false);
-  const comConta = useConta().tipo === "conectada";
+  const conta = useConta();
+  const comConta = conta.tipo === "conectada";
   const [erroDaConta, setErroDaConta] = useState<"sessao" | "falha">();
   return (
     <SecaoDeAjuste
@@ -274,6 +279,12 @@ function SeusDados() {
       }
     >
       <div>
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <Botao variante="secundario" onClick={() => baixarMeusDados(conta.tipo === "conectada" ? conta.email : undefined)}>
+            <Download className="size-5" aria-hidden /> Baixar meus dados
+          </Botao>
+          <span className="text-[0.95rem] text-tinta-suave">Um arquivo com a casa e as escolhas guardadas neste aparelho. Ele fica na pasta de downloads: apague depois, se o celular for de mais gente.</span>
+        </div>
         {!confirmarApagar ? (
           <Botao variante="perigo" onClick={() => setConfirmarApagar(true)}>
             Apagar todos os meus dados
@@ -293,6 +304,7 @@ function SeusDados() {
                 apagarTudo();
                 // A escolha de leitura mora numa chave própria: "todos os meus dados" inclui ela (LGPD, HIS-102).
                 apagarPreferenciaDeLeitura();
+                apagarMarcasDeOpiniao();
                 router.push("/");
               }}
             >

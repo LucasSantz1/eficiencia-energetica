@@ -8,7 +8,11 @@ const TAMANHO_MAXIMO_DO_CORPO = 600_000;
 type Acao = (ctx: Contexto, cookie: string | undefined, corpo: Record<string, unknown>) => Promise<RespostaDaConta>;
 
 function json(resposta: RespostaDaConta): NextResponse {
-  const saida = NextResponse.json(resposta.corpo, { status: resposta.status, headers: { "Cache-Control": "no-store" } });
+  // 204 não pode ter corpo (a contagem de uso responde assim).
+  const saida =
+    resposta.status === 204
+      ? new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } })
+      : NextResponse.json(resposta.corpo, { status: resposta.status, headers: { "Cache-Control": "no-store" } });
   if (resposta.cookie?.tipo === "gravar") saida.cookies.set(NOME_DO_COOKIE, resposta.cookie.valor, ATRIBUTOS_DO_COOKIE);
   if (resposta.cookie?.tipo === "apagar") saida.cookies.set(NOME_DO_COOKIE, "", { ...ATRIBUTOS_DO_COOKIE, maxAge: 0 });
   return saida;

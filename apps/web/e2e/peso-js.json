@@ -1,41 +1,41 @@
 {
-  "medidoNoCommit": "54296d9",
-  "decisao": "Redesenho de Minha casa (26/11, pedido do dono, modo turbo): /casa/ajustes +1,2 kB no HTML acumulado desde 259c76a, pelo índice das partes (âncoras e IntersectionObserver para marcar a parte na tela) e pelo cartão comum dos ajustes; as outras rotas variaram só com as PRs #49 a #51 (tela de entrar, convite pós-cadastro e limites). Aceito: o índice resolve a tela comprida no celular e no computador.",
+  "medidoNoCommit": "931f548",
+  "decisao": "Lançamento (27/11, pedido do dono, modo turbo): JS do HTML +0,6 a +1,3 kB pela contagem anônima de uso, pelo 'Isto te ajudou?' (o cartão baixa à parte, só quando aparece), por 'Sair de todos os aparelhos' e por 'Baixar meus dados'. O total com prefetch sobe +9 kB (página inicial) e +20 kB (Minha casa) porque o Turbopack, com o código novo, passou a copiar a casa guardada e as distribuidoras dentro do pedaço de cada rota; esse prefetch acontece com a página parada e fica em cache. Testado e recusado: minChunkSize 20000 (tira as cópias, mas sobe o JS do HTML em +3 a +5 kB, pior para o 3G), clusters e maxMergeChunkSize (sem efeito). Aceito: o primeiro carregamento é o que pesa para quem tem internet fraca.",
   "rotas": {
     "/": {
-      "jsDoHtml": 175617,
-      "totalComPrefetch": 206892
+      "jsDoHtml": 176401,
+      "totalComPrefetch": 216337
     },
     "/comecar": {
-      "jsDoHtml": 193784,
-      "totalComPrefetch": 206892
+      "jsDoHtml": 194492,
+      "totalComPrefetch": 216337
     },
     "/casa": {
-      "jsDoHtml": 205570,
-      "totalComPrefetch": 284397
+      "jsDoHtml": 206846,
+      "totalComPrefetch": 304947
     },
     "/casa/comodos": {
-      "jsDoHtml": 194960,
-      "totalComPrefetch": 284397
+      "jsDoHtml": 195551,
+      "totalComPrefetch": 304947
     },
     "/casa/dicas": {
-      "jsDoHtml": 183145,
-      "totalComPrefetch": 284397
+      "jsDoHtml": 184162,
+      "totalComPrefetch": 304947
     },
     "/casa/ajustes": {
-      "jsDoHtml": 187905,
-      "totalComPrefetch": 284397
+      "jsDoHtml": 189188,
+      "totalComPrefetch": 304947
     },
     "/sobre": {
-      "jsDoHtml": 140892,
-      "totalComPrefetch": 179695
+      "jsDoHtml": 141587,
+      "totalComPrefetch": 180479
     },
     "/tarifa-social": {
-      "jsDoHtml": 167129,
-      "totalComPrefetch": 188885
+      "jsDoHtml": 167824,
+      "totalComPrefetch": 189669
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 256641
+      "totalComPrefetch": 268530
     }
   }
 }

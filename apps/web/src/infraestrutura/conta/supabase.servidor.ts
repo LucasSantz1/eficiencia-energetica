@@ -21,7 +21,7 @@ export interface CasaNoServidor {
 }
 
 /** As ações que o banco limita (supabase/migrations/20261126160000_limites_e_casa_cifrada.sql). */
-export type AcaoLimitada = "entrar-ip" | "entrar-email" | "cadastrar-ip" | "esqueci-ip" | "esqueci-email" | "link-ip" | "convidado-ip";
+export type AcaoLimitada = "entrar-ip" | "entrar-email" | "cadastrar-ip" | "esqueci-ip" | "esqueci-email" | "link-ip" | "convidado-ip" | "opiniao-ip";
 
 export interface ConviteNoServidor {
   id: string;
@@ -58,8 +58,19 @@ function erroDe(erro: { status?: number; code?: string; message?: string } | nul
  * Cadastro com e-mail e senha. O Supabase manda o e-mail de confirmação (modelo com o link para /conta/confirmar).
  * Sempre a mesma resposta, exista ou não a conta: ninguém descobre pelo site quais e-mails têm conta.
  */
-export async function cadastrar(config: ConfiguracaoDaConta, email: string, senha: string, enderecoDoSite: string): Promise<Resultado<null>> {
-  const { error } = await cliente(config).auth.signUp({ email, password: senha, options: { emailRedirectTo: `${enderecoDoSite}/conta/confirmar` } });
+export async function cadastrar(
+  config: ConfiguracaoDaConta,
+  email: string,
+  senha: string,
+  enderecoDoSite: string,
+  concordo: { versao: string; em: string },
+): Promise<Resultado<null>> {
+  // O registro do "concordo" (B10 da seguranca, LGPD): qual versão dos termos e quando, guardado no próprio usuário.
+  const { error } = await cliente(config).auth.signUp({
+    email,
+    password: senha,
+    options: { emailRedirectTo: `${enderecoDoSite}/conta/confirmar`, data: { termos_versao: concordo.versao, termos_aceitos_em: concordo.em } },
+  });
   return respostaQueNaoRevela(error);
 }
 
@@ -110,11 +121,16 @@ export async function renovar(config: ConfiguracaoDaConta, renovacao: string): P
   return { ok: true, valor: tokens };
 }
 
-/** Sair: o Supabase invalida a sessão dele (o refresh token não vale mais), além de o site apagar o cookie. */
-export async function sair(config: ConfiguracaoDaConta, tokens: TokensDaSessao): Promise<void> {
+/**
+ * Sair: o Supabase invalida a sessão dele (o refresh token não vale mais), além de o site apagar o cookie. "global":
+ * todas as sessões da pessoa, em todo aparelho (B4 da seguranca); "local": só esta.
+ */
+export async function sair(config: ConfiguracaoDaConta, tokens: TokensDaSessao, escopo: "local" | "global" = "local"): Promise<Resultado<null>> {
   const sessao = cliente(config);
   const { error } = await sessao.auth.setSession({ access_token: tokens.acesso, refresh_token: tokens.renovacao });
-  if (!error) await sessao.auth.signOut({ scope: "local" });
+  if (error) return { ok: false, erro: erroDeSessao(error) };
+  const saiu = await sessao.auth.signOut({ scope: escopo });
+  return saiu.error ? { ok: false, erro: "indisponivel" } : { ok: true, valor: null };
 }
 
 export async function pedirNovaSenha(config: ConfiguracaoDaConta, email: string, enderecoDoSite: string): Promise<Resultado<null>> {
@@ -232,4 +248,18 @@ export async function contarTentativa(config: ConfiguracaoDaConta, acao: AcaoLim
 export async function apagarConta(config: ConfiguracaoDaConta, acesso: string): Promise<Resultado<null>> {
   const { error } = await cliente(config, acesso).rpc("apagar_minha_conta");
   return error ? { ok: false, erro: "indisponivel" } : { ok: true, valor: null };
+}
+
+/** Uma contagem a mais no dia, para o evento (ADR-009). Sem identificar ninguém: o banco só soma. */
+export async function contarUso(config: ConfiguracaoDaConta, evento: string): Promise<Resultado<null>> {
+  const { error } = await cliente(config).rpc("contar_uso", { nome_do_evento: evento });
+  return error ? { ok: false, erro: "indisponivel" } : { ok: true, valor: null };
+}
+
+/** "Isto te ajudou?" (ADR-009): momento, nota e texto opcional já conferidos (conferirOpiniao, do core). */
+export async function registrarOpiniao(config: ConfiguracaoDaConta, momento: string, nota: number, texto: string | undefined): Promise<Resultado<null>> {
+  const { data, error } = await cliente(config).rpc("registrar_opiniao", { nome_do_momento: momento, nota_dada: nota, texto_livre: texto ?? null });
+  if (error) return { ok: false, erro: "indisponivel" };
+  // `false`: o teto de opiniões do dia chegou e nada foi guardado; a pessoa não pode ver "Obrigado" (seguranca, 27/11).
+  return data === false ? { ok: false, erro: "muitas-tentativas" } : { ok: true, valor: null };
 }

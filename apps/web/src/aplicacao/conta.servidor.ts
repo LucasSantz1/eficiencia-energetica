@@ -1,8 +1,9 @@
 import "server-only"; // primeiro import: casos de uso da conta, só no servidor (ADR-007)
 import { conferirEmail, conferirNomeDoConvite, conferirSenha, FORMATO_DO_CODIGO_DO_CONVITE, lerCasaSalva, VERSAO_DO_FORMATO_DA_CASA } from "@ee/core";
+import { VERSAO_DOS_TERMOS } from "@/config/termos";
 import { hashDoCodigo, novoCodigoDeConvite } from "@/infraestrutura/conta/codigos.servidor";
 import { configuracaoDaConta, type ConfiguracaoDaConta } from "@/infraestrutura/conta/configuracao.servidor";
-import { cifrarSessao, decifrarSessao, type TokensDaSessao } from "@/infraestrutura/conta/sessao.servidor";
+import { cifrarSessao, decifrarSessao, DURACAO_DA_SESSAO_S, type TokensDaSessao } from "@/infraestrutura/conta/sessao.servidor";
 import * as supabase from "@/infraestrutura/conta/supabase.servidor";
 import { chaveDaTentativa } from "@/infraestrutura/conta/tentativas.servidor";
 
@@ -58,6 +59,11 @@ function comSessao(config: ConfiguracaoDaConta, tokens: TokensDaSessao): AcaoNoC
   return { tipo: "gravar", valor: cifrarSessao(tokens, config.segredoDaSessao) };
 }
 
+/** Sessão nova (senha ou link do e-mail): marca o início, que conta o limite total de 30 dias (B4). */
+function sessaoNova(ctx: Contexto, tokens: TokensDaSessao): TokensDaSessao {
+  return { ...tokens, inicio: Math.floor(ctx.agora() / 1000) };
+}
+
 type Autenticado = { ok: true; tokens: TokensDaSessao; cookie: AcaoNoCookie; id: string; email: string } | { ok: false; resposta: RespostaDaConta };
 
 /**
@@ -70,11 +76,19 @@ type Autenticado = { ok: true; tokens: TokensDaSessao; cookie: AcaoNoCookie; id:
 async function autenticar(ctx: Contexto & { config: ConfiguracaoDaConta }, cookie: string | undefined): Promise<Autenticado> {
   let tokens = decifrarSessao(cookie, ctx.config.segredoDaSessao);
   if (!tokens) return { ok: false, resposta: SEM_SESSAO };
+  const agoraS = Math.floor(ctx.agora() / 1000);
+  // Cookie de antes do limite total (sem início): conta a partir de agora.
+  const inicio = tokens.inicio ?? agoraS;
+  // Limite total de 30 dias desde que a pessoa entrou (B4): depois disso, só com a senha de novo.
+  if (agoraS - inicio > DURACAO_DA_SESSAO_S) {
+    await ctx.gateway.sair(ctx.config, tokens).catch(() => undefined);
+    return { ok: false, resposta: SEM_SESSAO };
+  }
   let novoCookie: AcaoNoCookie;
   if (tokens.expiraEm - ctx.agora() / 1000 <= MARGEM_DE_RENOVACAO_S) {
     const renovado = await ctx.gateway.renovar(ctx.config, tokens.renovacao);
     if (!renovado.ok) return { ok: false, resposta: renovado.erro === "sessao" ? SEM_SESSAO : falha(renovado.erro) };
-    tokens = renovado.valor;
+    tokens = { ...renovado.valor, inicio };
     novoCookie = comSessao(ctx.config, tokens);
   }
   const quem = await ctx.gateway.quemEsta(ctx.config, tokens.acesso);
@@ -82,7 +96,7 @@ async function autenticar(ctx: Contexto & { config: ConfiguracaoDaConta }, cooki
   return { ok: true, tokens, cookie: novoCookie, ...quem.valor };
 }
 
-function ligada(ctx: Contexto): ctx is Contexto & { config: ConfiguracaoDaConta } {
+export function ligada(ctx: Contexto): ctx is Contexto & { config: ConfiguracaoDaConta } {
   return ctx.config !== undefined;
 }
 
@@ -94,7 +108,7 @@ type Limite = { acao: supabase.AcaoLimitada; tipo: "ip" | "email"; valor: string
  * "muitas-tentativas" (429). Banco sem resposta: "indisponivel" (falha fechada). Sem IP (fora da Vercel), conta tudo
  * junto numa chave só.
  */
-async function dentroDoLimite(ctx: Contexto & { config: ConfiguracaoDaConta }, limites: Limite[]): Promise<"ok" | supabase.ErroDaConta> {
+export async function dentroDoLimite(ctx: Contexto & { config: ConfiguracaoDaConta }, limites: Limite[]): Promise<"ok" | supabase.ErroDaConta> {
   for (const { acao, tipo, valor } of limites) {
     const contado = await ctx.gateway.contarTentativa(ctx.config, acao, chaveDaTentativa(ctx.config.segredoDaSessao, tipo, valor ?? "desconhecido"));
     if (!contado.ok) return contado.erro;
@@ -118,10 +132,10 @@ export async function cadastrar(ctx: Contexto, corpo: Record<string, unknown>): 
   const senha = conferirSenha(corpo["senha"]);
   if (!senha.ok) return ENTRADA_INVALIDA(senha.mensagem);
   // LGPD: a casa só vai para o servidor com o "concordo" marcado na hora de criar a conta.
-  if (corpo["concordo"] !== true) return ENTRADA_INVALIDA("Marque que concorda em guardar a sua casa na conta.");
+  if (corpo["concordo"] !== true) return ENTRADA_INVALIDA("Marque que concorda com os termos e em guardar a sua casa na conta.");
   const limite = await dentroDoLimite(ctx, [{ acao: "cadastrar-ip", tipo: "ip", valor: ctx.ip }]);
   if (limite !== "ok") return falha(limite);
-  const feito = await ctx.gateway.cadastrar(ctx.config, email.valor, senha.valor, ctx.enderecoDoSite);
+  const feito = await ctx.gateway.cadastrar(ctx.config, email.valor, senha.valor, ctx.enderecoDoSite, { versao: VERSAO_DOS_TERMOS, em: new Date(ctx.agora()).toISOString() });
   return feito.ok ? { status: 200, corpo: { ok: true } } : falha(feito.erro);
 }
 
@@ -138,7 +152,7 @@ export async function entrar(ctx: Contexto, corpo: Record<string, unknown>): Pro
   if (limite !== "ok") return falha(limite);
   const tokens = await ctx.gateway.entrar(ctx.config, email.valor, corpo["senha"]);
   if (!tokens.ok) return falha(tokens.erro);
-  return { status: 200, corpo: { ok: true }, cookie: comSessao(ctx.config, tokens.valor) };
+  return { status: 200, corpo: { ok: true }, cookie: comSessao(ctx.config, sessaoNova(ctx, tokens.valor)) };
 }
 
 const HASH_DO_TOKEN = /^[A-Za-z0-9_-]{8,200}$/;
@@ -151,7 +165,9 @@ export async function confirmarEmail(ctx: Contexto, corpo: Record<string, unknow
   if (limite !== "ok") return falha(limite);
   const tokens = await ctx.gateway.confirmarLink(ctx.config, hash, "email");
   if (!tokens.ok) return falha(tokens.erro);
-  return { status: 200, corpo: { ok: true }, cookie: comSessao(ctx.config, tokens.valor) };
+  // Contagem anônima (ADR-009): falhar aqui não atrapalha a pessoa.
+  await ctx.gateway.contarUso(ctx.config, "conta-confirmada").catch(() => undefined);
+  return { status: 200, corpo: { ok: true }, cookie: comSessao(ctx.config, sessaoNova(ctx, tokens.valor)) };
 }
 
 export async function pedirNovaSenha(ctx: Contexto, corpo: Record<string, unknown>): Promise<RespostaDaConta> {
@@ -183,14 +199,24 @@ export async function trocarSenhaPeloLink(ctx: Contexto, corpo: Record<string, u
   const trocou = await ctx.gateway.trocarSenha(ctx.config, tokens.valor, senha.valor);
   // O link já foi gasto e a pessoa já entrou: mesmo com a senha recusada (fraca), ela fica na conta e pode tentar de
   // novo sem outro e-mail (B7 da seguranca).
-  if (!trocou.ok) return falha(trocou.erro, comSessao(ctx.config, tokens.valor));
-  return { status: 200, corpo: { ok: true }, cookie: comSessao(ctx.config, tokens.valor) };
+  if (!trocou.ok) return falha(trocou.erro, comSessao(ctx.config, sessaoNova(ctx, tokens.valor)));
+  return { status: 200, corpo: { ok: true }, cookie: comSessao(ctx.config, sessaoNova(ctx, tokens.valor)) };
 }
 
-export async function sair(ctx: Contexto, cookie: string | undefined): Promise<RespostaDaConta> {
+/**
+ * Sair. `{ todos: true }`: sai de todos os aparelhos (B4 da seguranca). Aí o Supabase TEM de confirmar: se não
+ * responder, a pessoa fica na conta e recebe erro, para não achar que os outros aparelhos saíram. Só deste aparelho:
+ * mesmo se o Supabase não responder, o cookie sai.
+ */
+export async function sair(ctx: Contexto, cookie: string | undefined, corpo: Record<string, unknown> = {}): Promise<RespostaDaConta> {
   if (!ligada(ctx)) return { status: 200, corpo: { ok: true }, cookie: { tipo: "apagar" } };
   const tokens = decifrarSessao(cookie, ctx.config.segredoDaSessao);
-  // Mesmo se o Supabase não responder, o cookie sai deste aparelho.
+  if (corpo["todos"] === true) {
+    if (!tokens) return SEM_SESSAO;
+    const saiu = await ctx.gateway.sair(ctx.config, tokens, "global");
+    if (!saiu.ok) return saiu.erro === "sessao" ? SEM_SESSAO : falha(saiu.erro);
+    return { status: 200, corpo: { ok: true }, cookie: { tipo: "apagar" } };
+  }
   if (tokens) await ctx.gateway.sair(ctx.config, tokens).catch(() => undefined);
   return { status: 200, corpo: { ok: true }, cookie: { tipo: "apagar" } };
 }
@@ -255,6 +281,7 @@ export async function criarConvite(ctx: Contexto, cookie: string | undefined, co
   const codigo = novoCodigoDeConvite();
   const criado = await ctx.gateway.criarConvite(ctx.config, quem.tokens.acesso, quem.id, hashDoCodigo(codigo), nome.valor);
   if (!criado.ok) return falha(criado.erro, quem.cookie);
+  await ctx.gateway.contarUso(ctx.config, "convite-criado").catch(() => undefined);
   return { status: 200, corpo: { convite: criado.valor, codigo }, cookie: quem.cookie };
 }
 
