@@ -27,7 +27,7 @@ test("as linhas da conta detalhada somam o valor do cartão", async ({ page }) =
   const total = reais(valores.at(-1) ?? "");
   const soma = valores.slice(0, -1).reduce((s, v) => s + reais(v), 0);
   expect(Math.round(soma * 100)).toBe(Math.round(total * 100));
-  const grande = reais((await page.locator("#titulo-conta + p").textContent()) ?? "");
+  const grande = reais((await page.locator("div:has(> #titulo-conta) + p").textContent()) ?? "");
   expect(total).toBe(grande);
 
   const resultado = await analisarAcessibilidade(page);

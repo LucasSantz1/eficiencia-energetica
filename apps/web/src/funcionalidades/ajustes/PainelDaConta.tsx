@@ -39,7 +39,7 @@ export function PainelDaConta() {
   };
   if (conta.tipo === "desligada" || conta.tipo === "carregando") return null;
   return (
-    <SecaoDeAjuste titulo="Sua conta" id="conta-online" descricao="Opcional. Para abrir a casa em outro celular e mandar um link para a família acompanhar.">
+    <SecaoDeAjuste titulo="Sua conta" id="conta-online" icone="familia" descricao="Opcional. Para abrir a casa em outro celular e mandar um link para a família acompanhar.">
       {conta.tipo === "sem-internet" && <p className="text-tinta-suave">Sem internet agora. A sua casa continua neste aparelho.</p>}
       {conta.tipo === "sem-conta" && (
         <>

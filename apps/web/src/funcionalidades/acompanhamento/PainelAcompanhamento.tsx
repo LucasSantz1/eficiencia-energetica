@@ -1,12 +1,13 @@
 "use client";
 
-import { ChevronRight, Info, Lightbulb, Tag, Target, TrendingUp, Zap } from "lucide-react";
+import { ChevronRight, Info, Zap } from "lucide-react";
 import Link from "next/link";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { COMODOS_PADRAO, consumoDaCasaForaDoComum, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
+import { COMODOS_PADRAO, consumoDaCasaForaDoComum, formatarKwh, formatarPorcentagem, formatarReais, frasesDoResumo, itemDoCatalogo, type Aparelho } from "@ee/core";
 import { useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { useMeta } from "@/aplicacao/meta";
 import { useOpiniao } from "@/aplicacao/opiniao";
+import { useOuvir } from "@/aplicacao/ouvir";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { contarUso } from "@/aplicacao/uso";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
@@ -15,11 +16,12 @@ import { AvisoConsumoAlto } from "@/ui/AvisoConsumoAlto";
 import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { BlocoDeResumo } from "@/ui/BlocoDeResumo";
 import { BotaoLink } from "@/ui/Botao";
+import { BotaoOuvir } from "@/ui/BotaoOuvir";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
 import { ExplicaKwh } from "@/ui/ExplicaKwh";
 import { Folha } from "@/ui/Folha";
-import { Icone } from "@/ui/Icone";
+import { Icone, IconeComFundo } from "@/ui/Icone";
 import { IgnorarFalha } from "@/ui/IgnorarFalha";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Acompanhamento } from "./Acompanhamento";
@@ -67,6 +69,17 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
   const { conta } = resumo;
   const maior = resumo.aparelhos[0]?.kwhMes ?? 0;
   const melhor = dicas.find((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id));
+  // HIS-101: lê a conta, quem mais pesa, o plano e a melhor dica, como estão na tela no momento do toque.
+  const ouvir = useOuvir("resumo", () => {
+    const topo = resumo.aparelhos[0];
+    return frasesDoResumo({
+      contaPorMes: conta.valor,
+      consumoKwh: conta.consumoKwh,
+      maior: topo ? { nome: topo.aparelho.nome, valorMes: topo.valorMes } : undefined,
+      contaComPlano: resumoPlano?.conta.valor,
+      dica: melhor ? { titulo: melhor.titulo, economiaMes: melhor.economiaMes } : undefined,
+    });
+  });
 
   if (carregando && !distribuidora) return <div className="h-48 animate-pulse rounded-[var(--radius-cartao)] bg-papel" aria-busy aria-label="Carregando" />;
 
@@ -103,9 +116,16 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           na tela dele ou numa folha. No celular, 2 colunas; no computador, a conta à esquerda e os blocos 2 × 2 à direita. */}
       <div className="grid grid-cols-1 gap-3 min-[22rem]:grid-cols-2 lg:grid-cols-4 lg:[grid-area:resumo]">
         <section aria-labelledby="titulo-conta" className="surgir rounded-[var(--radius-cartao)] bg-papel px-5 py-5 min-[22rem]:col-span-2 lg:row-span-2 lg:px-7 lg:py-6">
-          <h1 id="titulo-conta" className="flex items-center gap-1.5 text-[0.95rem] font-bold text-energia">
-            <Zap className="size-[1.125rem]" aria-hidden /> Sua conta estimada por mês
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h1 id="titulo-conta" className="flex items-center gap-1.5 text-[0.95rem] font-bold text-energia">
+              <Zap className="size-[1.125rem]" aria-hidden /> Sua conta estimada por mês
+            </h1>
+            {ouvir.disponivel && (
+              <span data-sem-impressao>
+                <BotaoOuvir falando={ouvir.falando} aoTocar={ouvir.alternar} rotulo="Ouvir o resumo da conta" />
+              </span>
+            )}
+          </div>
           <p className="numeros mt-2 text-[clamp(2.75rem,12vw,4.25rem)] leading-none font-extrabold tracking-tight">
             <ValorAnimado valor={conta.valor} formatar={(v) => formatarReais(v)} duracao={1100} />
           </p>
@@ -169,7 +189,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
         </section>
 
         <BlocoDeResumo
-          icone={<Target />}
+          icone={<Icone nome="meta" />}
           rotulo="Sua meta"
           valor={meta.metaReais === undefined ? "Sem meta" : formatarReais(meta.metaReais)}
           legenda={legendaDoBlocoDaMeta(meta.situacao)}
@@ -177,7 +197,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           className="surgir [animation-delay:80ms]"
         />
         <BlocoDeResumo
-          icone={<Tag />}
+          icone={<Icone nome="dinheiro" />}
           rotulo="Preço da luz"
           valor={formatarReais(preco.valor)}
           legenda={preco.origem === "conta" ? "por kWh, da sua conta" : "por kWh, sem impostos"}
@@ -191,7 +211,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           )}
         </BlocoDeResumo>
         {topo && (
-          <BlocoDeResumo icone={<TrendingUp />} rotulo="Gasta mais" valor={formatarPorcentagem(topo.participacao)} legenda={nomeDoTopo} href="#ranking" className="surgir [animation-delay:200ms]">
+          <BlocoDeResumo icone={<Icone nome="grafico" />} rotulo="Gasta mais" valor={formatarPorcentagem(topo.participacao)} legenda={nomeDoTopo} href="#ranking" className="surgir [animation-delay:200ms]">
             <span className="mt-auto block pt-3" aria-hidden>
               <span className="block h-1.5 overflow-hidden rounded-full bg-fundo">
                 <span className={`cresce-x block h-full rounded-full ${COR_FAIXA[faixaDoPeso(topo.participacao)]}`} style={{ width: `${Math.max(4, topo.participacao * 100)}%` }} />
@@ -201,7 +221,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
         )}
         {melhor && (
           <BlocoDeResumo
-            icone={<Lightbulb />}
+            icone={<Icone nome="lightbulb" />}
             rotulo="Melhor dica"
             valor={formatarReais(melhor.economiaMes ?? 0)}
             legenda={`a menos por mês: ${melhor.titulo.charAt(0).toLowerCase()}${melhor.titulo.slice(1)}`}
@@ -246,9 +266,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
               <li key={c.id} className="surgir w-[10.5rem] shrink-0 snap-start lg:w-auto" style={{ animationDelay: `${150 + indice * 70}ms` }}>
                 <Link href={`/casa/comodos#comodo-${c.id}`} transitionTypes={["nav-forward"]} className="flex h-full flex-col rounded-[var(--radius-cartao)] bg-papel p-4 hover:bg-white/70">
                   <span className="flex items-center justify-between">
-                    <span className="grid size-10 place-items-center rounded-[0.7rem] bg-energia-claro text-energia">
-                      <Icone nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} className="size-6" />
-                    </span>
+                    <IconeComFundo nome={COMODOS_PADRAO.find((p) => p.tipo === c.tipo)?.icone} />
                     <span className="numeros text-[0.9rem] text-tinta-suave">{formatarPorcentagem(participacao)}</span>
                   </span>{" "}
                   <span className="mt-3 block truncate font-bold">{c.nome}</span>{" "}
@@ -299,7 +317,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
                     {/* Os {" "} entre blocos não aparecem na tela (itens flex/bloco), mas separam as palavras no texto
                         visível que o axe junta sem espaço; sem eles, "Banheiro" e "41%" viram uma palavra só. */}
                     <span className="flex items-center gap-2">
-                      <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-5 text-tinta-suave" />
+                      <Icone nome={itemDoCatalogo(aparelho.catalogoId)?.icone} className="size-6" />
                       <span className="min-w-0 flex-1 truncate font-bold">
                         {aparelho.quantidade > 1 && <span className="numeros">{quantidade}</span>}
                         {aparelho.nome}
@@ -333,9 +351,7 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           <ul className="mt-3 divide-y divide-separador overflow-hidden rounded-[var(--radius-cartao)] bg-papel">
             {maisDicas.map((d) => (
               <li key={d.id} className="flex items-center gap-3 px-4 py-3.5">
-                <span className="grid size-10 shrink-0 place-items-center rounded-[0.7rem] bg-energia-claro text-energia">
-                  <Icone nome={d.icone} className="size-6" />
-                </span>
+                <IconeComFundo nome={d.icone} />
                 <span className="min-w-0 flex-1 font-bold">{d.titulo}</span>
                 <span className="numeros shrink-0 text-right">
                   <span className="block font-extrabold text-energia-forte">{formatarReais(d.economiaMes ?? 0)}</span>

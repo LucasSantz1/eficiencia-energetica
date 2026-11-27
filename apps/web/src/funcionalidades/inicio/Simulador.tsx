@@ -59,7 +59,7 @@ export function Simulador() {
               onClick={() => setEscolhido(o.id)}
               className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 font-bold transition-colors ${ativo ? "bg-faisca text-tinta" : "bg-white/10 text-white hover:bg-white/20"}`}
             >
-              <Icone nome={itemDoCatalogo(o.id)?.icone} className="size-5" />
+              <Icone nome={itemDoCatalogo(o.id)?.icone} className="size-6" />
               {o.rotulo}
             </button>
           );

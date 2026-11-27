@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { consumoMensalKwh, formatarReais, itemDoCatalogo, LIMITES, type PrecoKwh } from "@ee/core";
 import { Contador } from "@/ui/Contador";
-import { Icone } from "@/ui/Icone";
+import { IconeComFundo } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
 import { SeletorFrequencia, SeletorTempo, SeletorVariantes } from "./TempoUso";
@@ -36,9 +36,7 @@ export function LinhaAparelho({
   return (
     <li className={`rounded-[var(--radius-controle)] border-2 px-3 py-3 transition-[background-color,border-color] duration-300 sm:px-4 ${ativo ? "border-linha bg-papel" : "border-transparent bg-papel/50"}`}>
       <div className="flex flex-wrap items-center gap-2.5">
-        <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${ativo ? "bg-energia-claro text-energia" : "bg-fundo text-tinta-suave"}`}>
-          <Icone nome={catalogo?.icone} className="size-6" />
-        </span>
+        <IconeComFundo nome={catalogo?.icone} apagado={!ativo} />
         <div className="min-w-[7rem] flex-1">
           {aoAbrirDetalhes ? (
             <button type="button" onClick={aoAbrirDetalhes} className="block max-w-full text-left leading-snug font-bold [overflow-wrap:anywhere] underline-offset-4 hover:underline">

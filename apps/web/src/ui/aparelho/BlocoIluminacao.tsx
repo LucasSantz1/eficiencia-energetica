@@ -2,7 +2,7 @@
 
 import { consumoMensalKwh, formatarReais, formatarTempo, itemDoCatalogo, type PrecoKwh } from "@ee/core";
 import { Contador } from "@/ui/Contador";
-import { Icone } from "@/ui/Icone";
+import { IconeComFundo } from "@/ui/Icone";
 import { ValorAnimado } from "@/ui/Movimento";
 import { Pilulas } from "@/ui/Pilulas";
 import type { ItemComodo } from "./tipos";
@@ -29,9 +29,7 @@ export function BlocoIluminacao({ lampada, aoMudar, preco }: { lampada: ItemComo
   return (
     <div className="rounded-[var(--radius-controle)] border-2 border-faisca/60 bg-faisca-claro px-3 py-3 sm:px-4">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-faisca text-tinta">
-          <Icone nome="lightbulb" className="size-6" />
-        </span>
+        <IconeComFundo nome="lightbulb" className="bg-faisca" />
         <div className="min-w-[7rem] flex-1">
           <span className="block font-bold">Lâmpadas</span>
           <span className="block text-[0.95rem] text-tinta-suave">{ativo ? `Acesas ${lampada.minutosPorDia >= 720 ? "a noite toda" : formatarTempo(lampada.minutosPorDia)} por dia` : "Nenhuma lâmpada neste cômodo"}</span>

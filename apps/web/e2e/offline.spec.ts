@@ -33,6 +33,9 @@ test("sem internet: as telas da casa abrem, até as que a pessoa não tinha aber
   // A mesma página com outro endereço (a tela lê o ?visao no navegador).
   await page.goto("/casa/comodos?visao=geral");
   await expect(page.getByRole("heading", { name: "Cômodos e aparelhos" })).toBeVisible();
+  // Os ícones desenhados vêm de um arquivo só (/icones-v1.svg), guardado na instalação: sem ele, ficariam em branco.
+  const iconeGuardado = await page.evaluate(async () => (await caches.match("/icones-v1.svg"))?.ok ?? false);
+  expect(iconeGuardado, "o arquivo de ícones foi guardado na instalação").toBe(true);
 
   // Página que o site não tem guardada: o aviso curto do service worker, não a tela de erro do navegador.
   await page.goto("/pagina-que-nao-existe");
