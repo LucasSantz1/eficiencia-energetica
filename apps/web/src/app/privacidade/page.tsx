@@ -29,6 +29,10 @@ export default function Privacidade() {
           vai para nenhum servidor.
         </p>
         <p>Para mostrar os preços, o site baixa arquivos públicos da ANEEL e do IBGE, iguais para todo mundo. Baixar esses arquivos não envia nada seu.</p>
+        <p>
+          O botão &quot;Ouvir&quot; lê a tela com a voz do próprio aparelho. O texto não sai dele: se o aparelho só tem voz pela internet, o botão não
+          aparece.
+        </p>
       </section>
 
       <section aria-labelledby="contagem">

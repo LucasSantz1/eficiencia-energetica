@@ -3,10 +3,11 @@
 import { ChevronRight, Info, Zap } from "lucide-react";
 import Link from "next/link";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { COMODOS_PADRAO, consumoDaCasaForaDoComum, formatarKwh, formatarPorcentagem, formatarReais, itemDoCatalogo, type Aparelho } from "@ee/core";
+import { COMODOS_PADRAO, consumoDaCasaForaDoComum, formatarKwh, formatarPorcentagem, formatarReais, frasesDoResumo, itemDoCatalogo, type Aparelho } from "@ee/core";
 import { useEdicaoDeAparelho } from "@/aplicacao/casa";
 import { useMeta } from "@/aplicacao/meta";
 import { useOpiniao } from "@/aplicacao/opiniao";
+import { useOuvir } from "@/aplicacao/ouvir";
 import { nomeDistribuidora, useResumo } from "@/aplicacao/resumo";
 import { contarUso } from "@/aplicacao/uso";
 import { EditorAparelho } from "@/ui/aparelho/EditorAparelho";
@@ -15,6 +16,7 @@ import { AvisoConsumoAlto } from "@/ui/AvisoConsumoAlto";
 import { AvisoFalhaDeCarga } from "@/ui/AvisoFalhaDeCarga";
 import { BlocoDeResumo } from "@/ui/BlocoDeResumo";
 import { BotaoLink } from "@/ui/Botao";
+import { BotaoOuvir } from "@/ui/BotaoOuvir";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { BarraEtiqueta, faixaDoPeso, LegendaEtiqueta, SeloBandeira } from "@/ui/Etiqueta";
 import { ExplicaKwh } from "@/ui/ExplicaKwh";
@@ -67,6 +69,17 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
   const { conta } = resumo;
   const maior = resumo.aparelhos[0]?.kwhMes ?? 0;
   const melhor = dicas.find((d) => d.simulavel && (d.economiaMes ?? 0) >= 0.5 && !plano.includes(d.id));
+  // HIS-101: lê a conta, quem mais pesa, o plano e a melhor dica, como estão na tela no momento do toque.
+  const ouvir = useOuvir("resumo", () => {
+    const topo = resumo.aparelhos[0];
+    return frasesDoResumo({
+      contaPorMes: conta.valor,
+      consumoKwh: conta.consumoKwh,
+      maior: topo ? { nome: topo.aparelho.nome, valorMes: topo.valorMes } : undefined,
+      contaComPlano: resumoPlano?.conta.valor,
+      dica: melhor ? { titulo: melhor.titulo, economiaMes: melhor.economiaMes } : undefined,
+    });
+  });
 
   if (carregando && !distribuidora) return <div className="h-48 animate-pulse rounded-[var(--radius-cartao)] bg-papel" aria-busy aria-label="Carregando" />;
 
@@ -103,9 +116,16 @@ function ConteudoDoPainel({ dados }: { dados: Resumo }) {
           na tela dele ou numa folha. No celular, 2 colunas; no computador, a conta à esquerda e os blocos 2 × 2 à direita. */}
       <div className="grid grid-cols-1 gap-3 min-[22rem]:grid-cols-2 lg:grid-cols-4 lg:[grid-area:resumo]">
         <section aria-labelledby="titulo-conta" className="surgir rounded-[var(--radius-cartao)] bg-papel px-5 py-5 min-[22rem]:col-span-2 lg:row-span-2 lg:px-7 lg:py-6">
-          <h1 id="titulo-conta" className="flex items-center gap-1.5 text-[0.95rem] font-bold text-energia">
-            <Zap className="size-[1.125rem]" aria-hidden /> Sua conta estimada por mês
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h1 id="titulo-conta" className="flex items-center gap-1.5 text-[0.95rem] font-bold text-energia">
+              <Zap className="size-[1.125rem]" aria-hidden /> Sua conta estimada por mês
+            </h1>
+            {ouvir.disponivel && (
+              <span data-sem-impressao>
+                <BotaoOuvir falando={ouvir.falando} aoTocar={ouvir.alternar} rotulo="Ouvir o resumo da conta" />
+              </span>
+            )}
+          </div>
           <p className="numeros mt-2 text-[clamp(2.75rem,12vw,4.25rem)] leading-none font-extrabold tracking-tight">
             <ValorAnimado valor={conta.valor} formatar={(v) => formatarReais(v)} duracao={1100} />
           </p>

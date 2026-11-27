@@ -2,11 +2,13 @@
 
 import { Check, ChevronDown } from "lucide-react";
 import { lazy, Suspense, useState } from "react";
-import { formatarKwh, formatarReais, type Dica } from "@ee/core";
+import { formatarKwh, formatarReais, frasesDasDicas, type Dica } from "@ee/core";
 import { useCasa } from "@/aplicacao/casa";
 import { useOpiniao } from "@/aplicacao/opiniao";
+import { useOuvir } from "@/aplicacao/ouvir";
 import { useResumo } from "@/aplicacao/resumo";
 import { contarUso } from "@/aplicacao/uso";
+import { BotaoOuvir } from "@/ui/BotaoOuvir";
 import { EspacoReservado } from "@/ui/EspacoReservado";
 import { IconeComFundo } from "@/ui/Icone";
 import { IgnorarFalha } from "@/ui/IgnorarFalha";
@@ -31,16 +33,22 @@ export function TelaDicas() {
   const comPlano = resumoPlano?.conta.valor ?? atual;
   const economia = atual - comPlano;
   const semCusto = simulaveis.filter((d) => d.tipo === "habito");
+  // Lê as dicas que estão na tela agora (com o filtro escolhido), as que mais economizam primeiro (HIS-101).
+  const ouvir = useOuvir("dicas", () => frasesDasDicas(visiveis));
 
   // No computador (HIS-112, L5): o plano e o "Também ajuda" numa coluna à direita e as dicas em grade à esquerda. A ordem do código
   // continua a do celular (plano, depois a lista); a grade só muda o lugar na tela.
   return (
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:grid-rows-[auto_auto_auto_1fr] lg:gap-x-8">
       <h1 className="text-[2rem] leading-tight font-extrabold tracking-tight lg:col-span-2">Dicas e plano de economia</h1>
-      <p className="mt-2 max-w-[56ch] text-lg text-tinta-suave lg:col-span-2">
-        Marque as que você vai fazer e veja quanto a conta cai.
-        {semCusto.length > 0 && ` ${semCusto.length} delas não custam nada.`}
-      </p>
+      {/* O "Ouvir" fica na mesma linha da explicação: a grade do computador tem as linhas contadas (o plano na 3ª). */}
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 lg:col-span-2">
+        <p className="max-w-[56ch] text-lg text-tinta-suave">
+          Marque as que você vai fazer e veja quanto a conta cai.
+          {semCusto.length > 0 && ` ${semCusto.length} delas não custam nada.`}
+        </p>
+        {ouvir.disponivel && visiveis.length > 0 && <BotaoOuvir falando={ouvir.falando} aoTocar={ouvir.alternar} rotulo="Ouvir as dicas" />}
+      </div>
 
       {/* Resumo do plano */}
       <section aria-label="Seu plano de economia" aria-live="polite" className="sticky top-2 z-10 mt-6 rounded-[var(--radius-cartao)] bg-papel px-5 py-4 shadow-[0_8px_24px_-14px_rgb(19_35_63/0.35)] sm:px-6 lg:static lg:col-start-2 lg:row-start-3 lg:self-start lg:shadow-none">
