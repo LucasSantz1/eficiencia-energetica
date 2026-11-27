@@ -67,7 +67,7 @@ export function Acompanhamento({ estimativaKwhMes }: { estimativaKwhMes: number 
       <h2 id="titulo-acompanhamento" className="text-[1.375rem] font-bold tracking-tight">
         Mês a mês
       </h2>
-      <p className="mt-1 max-w-[56ch] text-tinta-suave">Anote suas contas de luz ou o número do relógio de luz para ver como o consumo real se compara com a estimativa.</p>
+      <p className="mt-1 max-w-[56ch] text-tinta-suave">Anote as contas de luz e compare com a estimativa.</p>
       </div>
       <div className="mt-4 lg:mt-0 lg:shrink-0">
         <Pilulas
@@ -264,16 +264,16 @@ function ComparacaoConta({ ultima, anterior, estimativaKwhMes }: { ultima: Conta
   const frases: string[] = [];
   if (anterior) {
     const dif = ultima.kwh - anterior.kwh;
-    if (Math.abs(dif) >= 1) frases.push(`Em ${formatarCompetencia(ultima.competencia)} você gastou ${formatarKwh(Math.abs(dif))} ${dif > 0 ? "a mais" : "a menos"} que no mês anterior.`);
+    if (Math.abs(dif) >= 1) frases.push(`${formatarKwh(Math.abs(dif))} ${dif > 0 ? "a mais" : "a menos"} que no mês anterior.`);
   }
   if (ultima.kwh === 0) {
     // Comparar 0 kWh com a estimativa diria "o tempo de uso pode estar maior", e não é isso (qa, 25/11).
     frases.push("Esta conta veio sem consumo (0 kWh). Com a casa fechada, paga-se só o mínimo da ligação e as taxas, por isso ela fica fora da comparação com a estimativa.");
   } else if (estimativaKwhMes > 0) {
     const razao = ultima.kwh / estimativaKwhMes;
-    if (razao > 1.25) frases.push("A conta real está bem acima da estimativa: talvez algum aparelho fique ligado mais tempo do que o cadastrado. Vale revisar o tempo de uso do chuveiro e do ar-condicionado.");
-    else if (razao < 0.75) frases.push("A conta real está abaixo da estimativa: o tempo de uso de algum aparelho pode estar maior que o real.");
-    else frases.push("A estimativa está perto da conta real. Ótimo: as dicas estão calculadas com números confiáveis.");
+    if (razao > 1.25) frases.push("A conta veio bem acima da estimativa: algum aparelho pode ficar mais tempo ligado do que o cadastrado.");
+    else if (razao < 0.75) frases.push("A conta veio abaixo da estimativa: algum tempo de uso pode estar maior que o real.");
+    else frases.push("A estimativa está perto da conta real.");
   }
   if (frases.length === 0) return null;
   return (

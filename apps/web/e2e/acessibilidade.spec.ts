@@ -113,7 +113,7 @@ const ABRIR: Record<string, Abrir> = {
   "/casa · sem casa": comTitulo("/casa", "Vamos cadastrar a sua casa", false),
   "/casa/comodos · sem casa": comTitulo("/casa/comodos", "Vamos cadastrar a sua casa", false),
   "/casa/dicas · sem casa": comTitulo("/casa/dicas", "Vamos cadastrar a sua casa", false),
-  "/casa/ajustes · sem casa": comTitulo("/casa/ajustes", "Vamos cadastrar a sua casa", false),
+  "/casa/ajustes · sem casa": comTitulo("/casa/ajustes", "Minha casa", false),
   "/sobre · sem casa": comTitulo("/sobre", "Sobre o projeto", false),
   "/ · com casa": async (pagina, contexto) => {
     await semearCasa(contexto, lerFixture("casa-v2.json"));

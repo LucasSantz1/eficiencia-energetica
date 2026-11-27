@@ -106,17 +106,23 @@ test("Apagar todos os meus dados também apaga a escolha de leitura", async ({ p
   expect(await marcasDoHtml(page)).not.toHaveProperty("contraste");
 });
 
-test("sem casa cadastrada: a letra maior também fica no topo do cadastro e da casa", async ({ page }) => {
+test("sem casa cadastrada: a letra maior fica só em Minha casa, que abre mesmo sem casa (dono, 27/11)", async ({ page }) => {
+  // O cadastro e a Casca sem casa não mostram mais o controle no topo.
   await page.goto("/comecar");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Em qual estado você mora?");
-  await interruptor(page, "Letra maior").click();
-  await expect(interruptor(page, "Letra maior")).toHaveAttribute("aria-checked", "true");
-  expect(await marcasDoHtml(page)).toMatchObject({ letra: "maior" });
-
-  // A Casca sem casa ("Vamos cadastrar") mostra o mesmo controle, já ligado.
+  await expect(interruptor(page, "Letra maior")).toHaveCount(0);
   await page.goto("/casa");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Vamos cadastrar a sua casa");
-  await expect(interruptor(page, "Letra maior")).toHaveAttribute("aria-checked", "true");
+  await expect(interruptor(page, "Letra maior")).toHaveCount(0);
+
+  // Minha casa abre na primeira visita, com a leitura e o convite para cadastrar.
+  await page.goto("/casa/ajustes");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Minha casa");
+  await expect(page.getByRole("link", { name: "Começar" })).toHaveAttribute("href", "/comecar");
+  await abrirAjuste(page, "Leitura");
   await interruptor(page, "Letra maior").click();
-  expect(await marcasDoHtml(page)).not.toHaveProperty("letra");
+  expect(await marcasDoHtml(page)).toMatchObject({ letra: "maior" });
+  // Sem nada guardado, não há "Seus dados" para apagar.
+  await fecharAjuste(page);
+  await expect(page.getByText("Seus dados", { exact: true })).toHaveCount(0);
 });
