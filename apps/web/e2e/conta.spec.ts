@@ -36,8 +36,9 @@ test("/entrar avisa que a conta não está ligada e deixa seguir sem conta", asy
 test("Minha casa sem a conta ligada: a seção 'Sua conta' não aparece", async ({ page, context }) => {
   await semearCasa(context, { ...lerFixture("casa-v2.json"), version: 3 });
   await page.goto("/casa/ajustes");
-  await expect(page.getByRole("heading", { name: "Usar sem internet" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Sua conta", exact: true })).toHaveCount(0);
+  // No celular, cada ajuste é uma linha da lista; no computador, um cartão com título.
+  await expect(page.getByText("Usar sem internet", { exact: true }).filter({ visible: true })).toHaveCount(1);
+  await expect(page.getByText("Sua conta", { exact: true })).toHaveCount(0);
 });
 
 test("convidado sem código no endereço: pede o link, sem chamar o servidor", async ({ page }) => {

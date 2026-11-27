@@ -1,41 +1,41 @@
 {
-  "medidoNoCommit": "fb70c9d",
-  "decisao": "HIS-101 Ouvir (pedido do dono para o lançamento): +1,7 kB no JS do HTML de /casa e /casa/dicas, o botão, a voz do aparelho e o texto falado (reais e kWh por extenso, no core). Aceito: é a função para quem lê com dificuldade.",
+  "medidoNoCommit": "c2c0e43",
+  "decisao": "Minha casa no celular como lista de configurações (pedido do dono, 27/11): +1,9 kB no JS do HTML de /casa/ajustes (a folha de cada ajuste, a setinha e os links do grupo Sobre). As outras rotas caíram de 3 a 16 kB com a nova divisão do Turbopack.",
   "rotas": {
     "/": {
-      "jsDoHtml": 176408,
-      "totalComPrefetch": 216344
+      "jsDoHtml": 172585,
+      "totalComPrefetch": 209093
     },
     "/comecar": {
-      "jsDoHtml": 194499,
-      "totalComPrefetch": 216344
+      "jsDoHtml": 191071,
+      "totalComPrefetch": 209093
     },
     "/casa": {
-      "jsDoHtml": 208602,
-      "totalComPrefetch": 308416
+      "jsDoHtml": 204889,
+      "totalComPrefetch": 292053
     },
     "/casa/comodos": {
-      "jsDoHtml": 195558,
-      "totalComPrefetch": 308416
+      "jsDoHtml": 191757,
+      "totalComPrefetch": 292053
     },
     "/casa/dicas": {
-      "jsDoHtml": 185882,
-      "totalComPrefetch": 308416
+      "jsDoHtml": 182437,
+      "totalComPrefetch": 292053
     },
     "/casa/ajustes": {
-      "jsDoHtml": 189195,
-      "totalComPrefetch": 308416
+      "jsDoHtml": 191093,
+      "totalComPrefetch": 292053
     },
     "/sobre": {
       "jsDoHtml": 141594,
-      "totalComPrefetch": 180486
+      "totalComPrefetch": 176663
     },
     "/tarifa-social": {
       "jsDoHtml": 167831,
-      "totalComPrefetch": 189676
+      "totalComPrefetch": 185853
     },
     "/casa (com casa)": {
-      "totalComPrefetch": 271999
+      "totalComPrefetch": 259064
     }
   }
 }

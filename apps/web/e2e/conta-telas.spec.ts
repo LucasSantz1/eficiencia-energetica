@@ -7,6 +7,7 @@ import type { Page } from "@playwright/test";
 import { analisarAcessibilidade, descreverViolacoes, violacoesQueReprovam } from "./apoio/axe";
 import { irAteAConta } from "./apoio/cadastro";
 import { casaSalva, lerFixture, semearCasa } from "./apoio/casa";
+import { abrirAjuste } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 
 test.use({ reducedMotion: "reduce" });
@@ -45,13 +46,13 @@ test("conectada: a casa só vai para a conta depois do 'Guardar na conta' (A1), 
   await semearCasa(context, CASA);
   const { gravadas } = await simularConta(page, null);
   await page.goto("/casa/ajustes");
-  const secao = page.getByRole("region", { name: "Sua conta" });
-  await expect(secao.getByText("ana@exemplo.org")).toBeVisible();
   // A conta está vazia e o aparelho tem casa: pergunta, com o e-mail à vista, e nada vai antes do toque.
   await expect(page.getByText("Guardar a casa deste aparelho na conta ana@exemplo.org?")).toBeVisible();
   await page.waitForTimeout(2500);
   expect(gravadas).toHaveLength(0);
   await page.getByRole("button", { name: "Guardar na conta" }).click();
+  const secao = await abrirAjuste(page, "Sua conta");
+  await expect(secao.getByText("ana@exemplo.org")).toBeVisible();
   await expect(secao.getByText("A sua casa está guardada na conta.")).toBeVisible();
   expect(gravadas).toHaveLength(1);
 

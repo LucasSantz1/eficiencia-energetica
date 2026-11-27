@@ -5,6 +5,7 @@
  */
 import type { Page, Route } from "@playwright/test";
 import { lerFixture, semearCasa } from "./apoio/casa";
+import { abrirAjuste } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 
 const TARIFAS = "**/dados/tarifas.json";
@@ -126,6 +127,7 @@ for (const tarifa of [-1, "0,87"]) {
     await tarifaTrocada(page, "ambar-amazonas", tarifa);
     await page.goto("/casa/ajustes");
     await expect(titulo(page)).toHaveText("Minha casa");
+    await abrirAjuste(page, "Onde você mora");
     await expect(page.getByText(/^Distribuidora: .+, tarifa de R\$\s[\d,]+ por kWh sem impostos$/)).toBeVisible();
     await expect(alerta(page)).toHaveCount(0);
   });
@@ -136,7 +138,8 @@ test("tarifa -1 na distribuidora da casa: o número não aparece nem corrigido (
   await tarifaTrocada(page, "ess", -1);
   await page.goto("/casa/ajustes");
   await expect(titulo(page)).toHaveText("Minha casa");
-  await expect(page.getByText("Presidente Prudente – SP")).toBeVisible();
+  const ondeMora = await abrirAjuste(page, "Onde você mora");
+  await expect(ondeMora.getByText("Presidente Prudente – SP", { exact: true })).toBeVisible();
   await page.waitForLoadState("networkidle");
   await expect(page.getByText(/por kWh sem impostos/)).toHaveCount(0);
   await expect(page.locator("main")).not.toContainText("-1");

@@ -9,7 +9,7 @@ import { SecaoDeAjuste } from "./SecaoDeAjuste";
 export function SecaoContagem() {
   const [contar, mudar] = useContarMeuUso();
   return (
-    <SecaoDeAjuste titulo="Contagem de uso" id="contagem-de-uso" icone="grafico" descricao="Ajuda a saber se o site está ajudando. Só o total do dia, sem saber quem é você.">
+    <SecaoDeAjuste titulo="Contagem de uso" id="contagem-de-uso" icone="grafico" valor={contar ? "Ligada" : "Desligada"} descricao="Ajuda a saber se o site está ajudando. Só o total do dia, sem saber quem é você.">
       <Interruptor
         rotulo="Contar o meu uso"
         descricao="Desligado, este aparelho não manda nenhuma contagem."

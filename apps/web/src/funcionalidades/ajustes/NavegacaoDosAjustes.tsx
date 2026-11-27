@@ -33,7 +33,7 @@ export function NavegacaoDosAjustes({ itens }: { itens: ItemDosAjustes[] }) {
   }, [itens]);
 
   return (
-    <nav aria-label="Partes de Minha casa" className="lg:sticky lg:top-24 lg:self-start">
+    <nav aria-label="Partes de Minha casa" className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
       <ul className="flex flex-wrap gap-2 lg:flex-col lg:gap-1">
         {itens.map(({ id, nome }) => {
           const marcado = atual === id;
