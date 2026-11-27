@@ -166,8 +166,9 @@ test.describe("com a casa salva", () => {
 
   test("ordem de foco a 1440 px igual à do celular nas telas com uma coluna só no celular (critério 8)", async ({ page }) => {
     // Só dentro do <main>: a navegação das abas fica embaixo no celular desde antes (fora da HIS-112). Os cômodos
-    // trocam de desenho de propósito (L4) e têm o teste próprio acima.
-    for (const tela of ["/casa", "/casa/dicas", "/casa/ajustes"] as const) {
+    // trocam de desenho de propósito (L4) e têm o teste próprio acima. A Minha casa também, desde 27/11 (pedido do
+    // dono): no celular é uma lista de configurações, que abre cada ajuste numa folha; no computador, cartões abertos.
+    for (const tela of ["/casa", "/casa/dicas"] as const) {
       const ordens: string[][] = [];
       for (const largura of [390, 1440]) {
         await abrir(page, tela, largura);

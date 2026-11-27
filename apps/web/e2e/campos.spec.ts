@@ -7,7 +7,7 @@ import type { Locator, Page } from "@playwright/test";
 import { analisarAcessibilidade, descreverViolacoes, violacoesQueReprovam } from "./apoio/axe";
 import { irAteAConta } from "./apoio/cadastro";
 import { casaSalva, lerFixture, semearCasa } from "./apoio/casa";
-import { abrirComodo, dataEmBrasilia, dialogoAberto } from "./apoio/telas";
+import { abrirAjuste, abrirComodo, dataEmBrasilia, dialogoAberto, fecharAjuste } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 
 const casa = lerFixture("casa-v2.json");
@@ -230,8 +230,12 @@ test.describe("conta na Minha casa (Ajustes)", () => {
 
   test("valor que o store recusaria (acima do máximo) não mostra Pronto; valor certo mostra e grava", async ({ page }) => {
     // Sem benefício: com a Tarifa Social da fixture, a conta não mostra o preço do kWh (outro aviso).
+    await fecharAjuste(page);
+    await abrirAjuste(page, "Benefício na conta de luz");
     await page.getByRole("radio", { name: /^Não tenho benefício/ }).click();
     await expect.poll(async () => JSON.stringify((await casaSalva(page))?.state.residencia)).toContain('"beneficio":"nenhum"');
+    await fecharAjuste(page);
+    await abrirAjuste(page, "Sua conta de luz");
     await entrada(page, "aj-kwh").fill("150");
     await entrada(page, "aj-valor").fill("99999999");
     await page.getByRole("button", { name: "Usar estes valores" }).click();

@@ -5,6 +5,7 @@
 import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { lerFixture, semearCasa } from "./apoio/casa";
+import { abrirAjuste } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 
 test.use({ serviceWorkers: "allow" });
@@ -73,6 +74,7 @@ test("'Apagar todos os meus dados' apaga também as cópias de /dados (dizem o e
   await esperarServicoOffline(page);
   await expect.poll(() => page.evaluate(async () => (await caches.keys()).some((n) => n.startsWith("dados-")))).toBe(true);
 
+  await abrirAjuste(page, "Seus dados");
   await page.getByRole("button", { name: "Apagar todos os meus dados" }).click();
   await page.getByRole("button", { name: "Sim, apagar" }).click();
   await page.waitForURL("/");
@@ -82,7 +84,7 @@ test("'Apagar todos os meus dados' apaga também as cópias de /dados (dizem o e
 test("Minha casa explica como usar sem internet e como pôr na tela inicial", async ({ page, context }) => {
   await semearCasa(context, { ...lerFixture("casa-v2.json"), version: 3 });
   await page.goto("/casa/ajustes");
-  const secao = page.getByRole("region", { name: "Usar sem internet" });
+  const secao = await abrirAjuste(page, "Usar sem internet");
   await expect(secao.getByText(/No Android \(Chrome\):/)).toBeVisible();
   await expect(secao.getByText(/No iPhone \(Safari\):/)).toBeVisible();
 });

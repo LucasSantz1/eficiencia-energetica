@@ -56,8 +56,8 @@ export function PaginaInicial({ numeros, contaLigada = false }: { numeros: Numer
     <div className="min-h-dvh bg-papel">
       {/* Topo e abertura, em fundo noturno de largura total */}
       <div className="bg-noite text-white">
-        <header className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 pt-4 sm:px-8">
-          <Marca />
+        <header className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 pt-4 sm:gap-4 sm:px-8">
+          <Marca soSimboloNoEstreito />
           <nav aria-label="Página inicial" className="hidden items-center gap-7 font-bold text-white/80 md:flex">
             <a href="#como-funciona" className="hover:text-white">
               Como funciona

@@ -15,7 +15,7 @@ import { readFileSync } from "node:fs";
 import type { BrowserContext, Page } from "@playwright/test";
 import { analisarAcessibilidade, violacoesQueReprovam } from "./apoio/axe";
 import { CHAVE_CASA, casaSalva, semearCasa, type CasaGuardada } from "./apoio/casa";
-import { aba } from "./apoio/telas";
+import { aba, abrirAjuste, fecharAjuste } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 
 interface DistribuidoraPublicada {
@@ -180,8 +180,10 @@ test.describe("troca de distribuidora (HIS-111, critério 8)", () => {
     await aba(page, "Minha casa").click();
     await expect(page.getByRole("heading", { name: "Minha casa", level: 1 })).toBeVisible();
     await expect(aviso).toBeVisible();
-    await expect(page.getByText(`Distribuidora: RGE, tarifa de ${reais(RGE.tarifaKwh)} por kWh`)).toBeVisible();
     await info.attach("minha casa com o aviso", { body: await page.screenshot({ fullPage: true, animations: "disabled" }), contentType: "image/png" });
+    await abrirAjuste(page, "Onde você mora");
+    await expect(page.getByText(`Distribuidora: RGE, tarifa de ${reais(RGE.tarifaKwh)} por kWh`)).toBeVisible();
+    await fecharAjuste(page);
 
     // "Entendi" fecha e leva o foco ao h1; a região de status fica, vazia.
     await page.getByRole("button", { name: "Entendi" }).click();

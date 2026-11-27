@@ -12,11 +12,15 @@ export function Simbolo({ className = "size-9" }: { className?: string }) {
   );
 }
 
-export function Marca({ href = "/" }: { href?: string }) {
+/**
+ * `soSimboloNoEstreito`: abaixo de 360 px (celulares muito estreitos), mostra só a lâmpada, para o topo com dois botões
+ * não quebrar o nome em quatro linhas. O nome continua no link, para o leitor de tela.
+ */
+export function Marca({ href = "/", soSimboloNoEstreito = false }: { href?: string; soSimboloNoEstreito?: boolean }) {
   return (
-    <Link href={href} className="inline-flex items-center gap-2.5 rounded-lg py-1 font-extrabold tracking-tight">
+    <Link href={href} className={`inline-flex items-center gap-2.5 rounded-lg py-1 font-extrabold tracking-tight ${soSimboloNoEstreito ? "shrink-0" : ""}`}>
       <Simbolo />
-      <span className="text-[1.15rem] leading-none">
+      <span className={`text-[1.15rem] leading-none ${soSimboloNoEstreito ? "max-[22.5rem]:sr-only" : ""}`}>
         Eficiência
         <br />
         Energética

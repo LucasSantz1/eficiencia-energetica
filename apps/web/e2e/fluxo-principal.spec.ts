@@ -188,7 +188,8 @@ test("fluxo principal: cadastro → acompanhamento → cômodos → dicas → mi
     await expect(page).toHaveURL(/\/casa\/ajustes$/);
     await transicoes(1, "aba Minha casa");
 
-    await page.getByRole("link", { name: "De onde vêm as tarifas e como o cálculo é feito" }).click();
+    // No celular, a linha "Sobre o site" do fim da lista; no computador, o link em "Seus dados".
+    await page.getByRole("link", { name: /^(Sobre o site|De onde vêm as tarifas e como o cálculo é feito)/ }).filter({ visible: true }).first().click();
     await expect(page).toHaveURL(/\/sobre$/);
     await transicoes(1, "link para /sobre");
     await fotografar("sobre");

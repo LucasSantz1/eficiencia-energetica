@@ -6,6 +6,7 @@
 import type { Page } from "@playwright/test";
 import { analisarAcessibilidade, descreverViolacoes, violacoesQueReprovam } from "./apoio/axe";
 import { lerFixture, semearCasa, semearTextos, textoGuardado } from "./apoio/casa";
+import { abrirAjuste, fecharAjuste } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 
 const CHAVE_LEITURA = "eficiencia-energetica:leitura";
@@ -18,6 +19,7 @@ const marcasDoHtml = (pagina: Page) => pagina.evaluate(() => ({ ...document.docu
 test("ligar os dois, recarregar e abrir outra tela: continua ligado", async ({ page, context }) => {
   await semearCasa(context, lerFixture("casa-v2.json"));
   await page.goto("/casa/ajustes");
+  await abrirAjuste(page, "Leitura");
   await expect(interruptor(page, "Letra maior")).toHaveAttribute("aria-checked", "false");
 
   await interruptor(page, "Letra maior").click();
@@ -28,6 +30,7 @@ test("ligar os dois, recarregar e abrir outra tela: continua ligado", async ({ p
   expect(JSON.parse((await textoGuardado(page, CHAVE_LEITURA)) ?? "null")).toEqual({ letraMaior: true, maisContraste: true });
 
   await page.reload();
+  await abrirAjuste(page, "Leitura");
   await expect(interruptor(page, "Letra maior")).toHaveAttribute("aria-checked", "true");
   await expect(interruptor(page, "Mais contraste")).toHaveAttribute("aria-checked", "true");
 
@@ -38,6 +41,7 @@ test("ligar os dois, recarregar e abrir outra tela: continua ligado", async ({ p
 
   // Desligar volta ao normal na hora.
   await page.goto("/casa/ajustes");
+  await abrirAjuste(page, "Leitura");
   await interruptor(page, "Letra maior").click();
   await expect(interruptor(page, "Letra maior")).toHaveAttribute("aria-checked", "false");
   expect(await marcasDoHtml(page)).not.toHaveProperty("letra");
@@ -89,9 +93,12 @@ test("com os dois ligados, 390 e 1440 px: cabe sem rolar para o lado e o axe nã
 test("Apagar todos os meus dados também apaga a escolha de leitura", async ({ page, context }) => {
   await semearCasa(context, lerFixture("casa-v2.json"));
   await page.goto("/casa/ajustes");
+  await abrirAjuste(page, "Leitura");
   await interruptor(page, "Mais contraste").click();
   expect(await textoGuardado(page, CHAVE_LEITURA)).not.toBeNull();
 
+  await fecharAjuste(page);
+  await abrirAjuste(page, "Seus dados");
   await page.getByRole("button", { name: "Apagar todos os meus dados" }).click();
   await page.getByRole("button", { name: "Sim, apagar" }).click();
   await expect(page).toHaveURL((url) => url.pathname === "/");

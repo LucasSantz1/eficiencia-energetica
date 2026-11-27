@@ -74,3 +74,25 @@ export async function esperarComodoAberto(pagina: Page, nome: string): Promise<v
   else await expect(regiao.locator("button[aria-expanded]").first()).toHaveAttribute("aria-expanded", "true");
   await expect(regiao).toBeInViewport();
 }
+
+/**
+ * Minha casa no celular é uma lista, como as configurações do celular (27/11): o ajuste abre numa folha ao tocar na
+ * linha. No computador, os cartões já estão abertos. Devolve onde procurar os controles: a folha ou a página.
+ */
+export async function abrirAjuste(pagina: Page, titulo: string): Promise<Locator> {
+  const largura = pagina.viewportSize()?.width ?? 0;
+  if (largura >= 1024) return pagina.locator("main");
+  // O nome do botão é o texto da linha inteira ("Leitura Padrão"): acha pela parte do título, exata.
+  await pagina.getByRole("button").filter({ has: pagina.getByText(titulo, { exact: true }) }).click();
+  const folha = pagina.getByRole("dialog", { name: titulo });
+  await expect(folha).toBeVisible();
+  return folha;
+}
+
+/** Fecha a folha do ajuste no celular (no computador não há folha). */
+export async function fecharAjuste(pagina: Page): Promise<void> {
+  const folha = dialogoAberto(pagina);
+  if ((await folha.count()) === 0) return;
+  await folha.getByRole("button", { name: "Fechar" }).last().click();
+  await expect(folha).toHaveCount(0);
+}

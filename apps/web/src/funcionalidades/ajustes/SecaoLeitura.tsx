@@ -8,7 +8,12 @@ import { SecaoDeAjuste } from "./SecaoDeAjuste";
 export function SecaoLeitura() {
   const [leitura, mudar] = useLeitura();
   return (
-    <SecaoDeAjuste titulo="Leitura" id="leitura" icone="leitura" descricao="A escolha fica guardada só neste aparelho.">
+    <SecaoDeAjuste
+      titulo="Leitura"
+      id="leitura"
+      icone="leitura"
+      valor={[leitura.letraMaior && "Letra maior", leitura.maisContraste && "Mais contraste"].filter(Boolean).join(" · ") || "Padrão"}
+      descricao="A escolha fica guardada só neste aparelho.">
       <div className="space-y-2">
         <Interruptor
           rotulo="Letra maior"

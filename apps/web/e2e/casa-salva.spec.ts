@@ -10,6 +10,7 @@
  */
 import type { BrowserContext, Page } from "@playwright/test";
 import { CHAVE_CASA, CHAVE_CASA_ILEGIVEL, casaSalva, lerFixture, semearCasa, semearTextos, textoGuardado, type CasaGuardada } from "./apoio/casa";
+import { abrirAjuste, fecharAjuste } from "./apoio/telas";
 import { expect, test } from "./apoio/teste";
 
 const T1A = "Parte do que estava salvo aqui tinha um problema e foi tirada.";
@@ -98,11 +99,11 @@ test("(c) uf \"../x\": T1b, nenhum pedido fora das 27 UFs (R7) e a casa volta ao
 
   await aviso(page).getByRole("link", { name: "Escolher minha cidade" }).click();
   await expect(page).toHaveURL(/\/casa\/ajustes$/);
-  await page.locator("main").getByRole("button", { name: "Escolher minha cidade" }).click();
+  await (await abrirAjuste(page, "Onde você mora")).getByRole("button", { name: "Escolher minha cidade" }).click();
   await page.locator("#troca-uf").selectOption("SP");
   await page.locator("#busca-cidade").fill("Presidente Prudente");
   await page.getByRole("radio", { name: "Presidente Prudente", exact: true }).click();
-  await expect(page.getByText("Presidente Prudente – SP")).toBeVisible();
+  await expect(page.getByText(/Presidente Prudente – SP/).filter({ visible: true }).first()).toBeVisible();
   for (const pedido of municipiosPedidos) expect(pedido, "só UFs da lista").toMatch(/^\/dados\/municipios\/[A-Z]{2}\.json$/);
 
   const depois = await casaSalva(page);
@@ -200,6 +201,7 @@ test("HIS-111 · (h) distribuidora substituída: a casa com rge-sul mostra o pre
 
 /** "Apagar todos os meus dados" na Minha casa, confirmado: volta para a / (LGPD). */
 async function apagarTudoPelaMinhaCasa(pagina: Page): Promise<void> {
+  await abrirAjuste(pagina, "Seus dados");
   await pagina.getByRole("button", { name: "Apagar todos os meus dados" }).click();
   await pagina.getByRole("button", { name: "Sim, apagar" }).click();
   await expect(pagina).toHaveURL((url) => url.pathname === "/");
@@ -212,9 +214,11 @@ test.describe("Minha casa sem cidade (D-3a-1 e D-3a-2)", () => {
     await expect(aviso(page)).toContainText(T1B);
     // D-3a-2: aqui o link "Escolher minha cidade" do aviso não levaria a lugar nenhum; fica só o botão da tela.
     await expect(aviso(page).getByRole("link", { name: "Escolher minha cidade" })).toHaveCount(0);
-    await page.locator("main").getByRole("button", { name: "Escolher minha cidade" }).click();
+    await (await abrirAjuste(page, "Onde você mora")).getByRole("button", { name: "Escolher minha cidade" }).click();
     await expect(page.getByRole("dialog", { name: "Mudar cidade" })).toBeVisible();
-    await page.getByRole("dialog").getByRole("button", { name: "Fechar" }).click();
+    await page.getByRole("dialog", { name: "Mudar cidade" }).getByRole("button", { name: "Fechar" }).click();
+    await expect(page.getByRole("dialog", { name: "Mudar cidade" })).toBeHidden();
+    await fecharAjuste(page);
 
     // D-3a-1: com aparelhos guardados e sem cidade, dá para apagar tudo.
     await apagarTudoPelaMinhaCasa(page);
@@ -227,7 +231,7 @@ test.describe("Minha casa sem cidade (D-3a-1 e D-3a-2)", () => {
     await semearTextos(context, { [CHAVE_CASA_ILEGIVEL]: "texto que não deu para ler" });
     await page.goto("/casa/ajustes");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Minha casa");
-    await expect(page.locator("main").getByRole("button", { name: "Escolher minha cidade" }), "sem aparelhos, não há cidade a escolher").toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^(Onde você mora|Escolher minha cidade)$/ }), "sem aparelhos, não há cidade a escolher").toHaveCount(0);
     await apagarTudoPelaMinhaCasa(page);
     expect(await textoGuardado(page, CHAVE_CASA_ILEGIVEL)).toBeNull();
   });
@@ -235,7 +239,7 @@ test.describe("Minha casa sem cidade (D-3a-1 e D-3a-2)", () => {
   test("nada guardado: a Minha casa continua mandando cadastrar", async ({ page }) => {
     await page.goto("/casa/ajustes");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Vamos cadastrar a sua casa");
-    await expect(page.getByRole("button", { name: "Apagar todos os meus dados" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^(Seus dados|Apagar todos os meus dados)$/ })).toHaveCount(0);
   });
 });
 
@@ -313,8 +317,7 @@ test.describe("trava da gravação (D10 2)", () => {
     await semAviso(page);
 
     await page.goto("/casa/ajustes");
-    await page.getByRole("button", { name: "Apagar todos os meus dados" }).click();
-    await page.getByRole("button", { name: "Sim, apagar" }).click();
+    await apagarTudoPelaMinhaCasa(page);
     await expect(page).toHaveURL((url) => url.pathname === "/");
     expect(await textoGuardado(page, CHAVE_CASA_ILEGIVEL), "Apagar tudo tira a cópia (LGPD)").toBeNull();
     await page.reload();

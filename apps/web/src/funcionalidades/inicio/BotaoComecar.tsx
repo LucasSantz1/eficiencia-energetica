@@ -26,7 +26,21 @@ export function BotaoComecar({ estilo = "principal", compacto = false, texto }: 
       transitionTypes={jaComecou ? ENTRAR_NO_PAINEL : IR_ADIANTE}
       className={`inline-flex items-center justify-center rounded-[var(--radius-controle)] font-bold transition-colors ${compacto ? "min-h-11 px-4 py-2 whitespace-nowrap" : "min-h-14 px-7 text-lg"} ${ESTILOS[estilo]}`}
     >
-      {jaComecou ? "Ver a minha casa" : compacto ? "Começar" : (texto ?? "Calcular a minha conta")}
+      {jaComecou ? (
+        compacto ? (
+          // No topo do celular, o texto curto: com "Ver a minha casa", o topo não cabia numa linha em 360 px.
+          <>
+            <span className="sm:hidden">Minha casa</span>
+            <span className="hidden sm:inline">Ver a minha casa</span>
+          </>
+        ) : (
+          "Ver a minha casa"
+        )
+      ) : compacto ? (
+        "Começar"
+      ) : (
+        (texto ?? "Calcular a minha conta")
+      )}
     </Link>
   );
 }
