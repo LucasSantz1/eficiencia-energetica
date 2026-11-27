@@ -10,6 +10,20 @@ Uma entrada por tarefa, da mais nova para a mais antiga. Formato:
 - Próximos passos:
 ```
 
+## 2026-11-27 · (sem HIS) · fontes para "Por que minha conta veio alta?"
+- O que fiz:
+  - Levantei a REN 1.000 (dias de leitura, bandeira pro rata, média, reclamação, devolução em dobro).
+  - Li a FAQ de bandeiras da ANEEL e a página do 167 no gov.br.
+  - Li Cemig e Neoenergia (teste do relógio) e Cemig, Copel e Elektro (estação).
+  - Escrevi T1–T8.
+- Decisões e porquê:
+  - Sem "nº de dias obrigatório", porque o art. 327 não diz isso.
+  - Sem disjuntor geral, porque não há fonte.
+  - Sem números das matérias sobre estação.
+  - O CDC fica de fora até conferir no Planalto.
+- Arquivos: `/tmp/claude-0/fontes-conta-alta.md`, minha pasta.
+- Próximos passos: conferir no cedoc; ver a REN 1.147 (bandeira na Tarifa Social).
+
 ## 2026-11-13 · HIS-103 · regras do guia da Tarifa Social e 9 defeitos no ar
 - O que fiz: validei quem tem direito, descontos, inscrição automática, documentos, onde ir e reclamação (Lei 12.212
   atualizada, Lei 15.235, ANEEL, MME, gov.br, Decretos 11.016/2022 e 12.797/2025). Rascunhei as perguntas e os casos

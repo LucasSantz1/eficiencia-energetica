@@ -42,7 +42,20 @@
   história `HIS-103-guia-tarifa-social.md`.
 - Defeitos no ar D1–D9 registrados na história (D1 e D2 prometem mais do que a família recebe).
 
+## Decisões em vigor ("Por que minha conta veio alta?", 27/11/2026)
+
+- Fontes em `/tmp/claude-0/fontes-conta-alta.md`. REN 1.000 lida em cópia da Cemig, porque o cedoc estava bloqueado.
+- Comparar kWh por dia. A leitura vai de 27 a 33 dias (art. 260); fora dessa faixa vale o art. 285.
+- A bandeira é proporcional aos dias (art. 307). O adicional do site é rotulado "sem impostos": a FAQ da ANEEL diz que
+  os tributos incidem sobre ele.
+- Reclamação: distribuidora (5/10 dias úteis, art. 408) → Ouvidoria (10 dias úteis, art. 421) → ANEEL 167 /
+  0800 727 0167. Devolução em dobro: art. 323 § 2º. O CDC art. 42 não foi confirmado.
+- O teste do relógio segue Cemig e Neoenergia. Nenhuma das duas manda desligar o disjuntor geral.
+
 ## Pendências
+
+- Conta alta: conferir no cedoc os arts. 260, 285, 288 § 2º, 307, 323, 408, 413, 419, 421, 422 e 423, e o Módulo 11
+  do PRODIST (nº de dias na fatura).
 
 - HIS-103: Tarifa Social × custo de disponibilidade (trifásica 100 kWh > 80 grátis): conferir no texto da REN
   1.147/2025 (cedoc não abriu em 13/11/2026). `calculos.ts:107-109` hoje ignora o mínimo para a Tarifa Social.

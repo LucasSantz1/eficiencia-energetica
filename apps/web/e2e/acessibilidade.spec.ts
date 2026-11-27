@@ -126,6 +126,7 @@ const ABRIR: Record<string, Abrir> = {
   "/casa/comodos · com casa": comTitulo("/casa/comodos", "Cômodos e aparelhos", true),
   "/casa/dicas · com casa": comTitulo("/casa/dicas", "Dicas e plano de economia", true),
   "/casa/ajustes · com casa": comTitulo("/casa/ajustes", "Minha casa", true),
+  "/casa/conta-alta · com casa": comTitulo("/casa/conta-alta", "Por que a conta veio alta?", true),
   "/comecar · passo cidade": passoDoCadastro("cidade"),
   "/comecar · passo benefício": passoDoCadastro("benefício"),
   "/comecar · passo pessoas": passoDoCadastro("pessoas"),
